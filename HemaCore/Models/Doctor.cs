@@ -16,7 +16,7 @@ namespace HemaCore.Models
         [StringLength(50, ErrorMessage = "Surname can't be longer than 50 characters")]
         public string Surname { get; set; }
 
-        public bool IsActive = true;
+        public bool IsActive { get; set; }
 
         [Required]
         [StringLength(30)]
