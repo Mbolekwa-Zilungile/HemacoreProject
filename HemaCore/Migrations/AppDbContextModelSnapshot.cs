@@ -22,18 +22,52 @@ namespace HemaCore.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HemaCore.Models.Doctor", b =>
+            modelBuilder.Entity("HemaCore.Models.Consumable", b =>
                 {
-                    b.Property<int>("DoctorID")
+                    b.Property<int>("ConsumableId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DoctorID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConsumableId"));
 
-                    b.Property<string>("HPCSANumber")
+                    b.Property<string>("ConsumableName")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuantityInHand")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReorderLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ConsumableId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("Consumables");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.LabTechnician", b =>
+                {
+                    b.Property<int>("LabTechnicianId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LabTechnicianId"));
+
+                    b.Property<string>("EmployeeNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IDNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -53,11 +87,88 @@ namespace HemaCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("DoctorID");
+                    b.HasKey("LabTechnicianId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Doctors");
+                    b.ToTable("LabTechnicians");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Order", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
+
+                    b.Property<string>("CancelReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DateCancelled")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateCompleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.OrderItem", b =>
+                {
+                    b.Property<int>("OrderItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderItemId"));
+
+                    b.Property<int>("ConsumableId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DateReceived")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateRejected")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RejectReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderItemId");
+
+                    b.HasIndex("ConsumableId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Patient", b =>
@@ -102,13 +213,115 @@ namespace HemaCore.Migrations
                     b.ToTable("Patients");
                 });
 
-            modelBuilder.Entity("HemaCore.Models.TestCategory", b =>
+            modelBuilder.Entity("HemaCore.Models.Sample", b =>
                 {
-                    b.Property<int>("CategoryID")
+                    b.Property<int>("SampleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SampleId"));
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateTimeReceived")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SampleTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestRequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SampleId");
+
+                    b.HasIndex("SampleTypeId");
+
+                    b.HasIndex("TestRequestId");
+
+                    b.ToTable("Samples");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.SampleType", b =>
+                {
+                    b.Property<int>("SampleTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SampleTypeId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SampleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SampleTypeId");
+
+                    b.ToTable("SampleTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
+                {
+                    b.Property<int>("SupplierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplierId"));
+
+                    b.Property<string>("ContactPerson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("SupplierId1")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SupplierId");
+
+                    b.HasIndex("SupplierId1");
+
+                    b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TechnicianTestType", b =>
+                {
+                    b.Property<int>("LabTechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LabTechnicianId", "TestTypeId");
+
+                    b.HasIndex("TestTypeId");
+
+                    b.ToTable("TechnicianTestTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestCategory", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
                     b.Property<string>("CategoryDescription")
                         .IsRequired()
@@ -118,9 +331,166 @@ namespace HemaCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CategoryID");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CategoryId");
 
                     b.ToTable("TestCategories");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestRequest", b =>
+                {
+                    b.Property<int>("TestRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestRequestId"));
+
+                    b.HasKey("TestRequestId");
+
+                    b.ToTable("TestRequests");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestRequestTestType", b =>
+                {
+                    b.Property<int>("LabTechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestResultId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LabTechnicianId", "TestResultId");
+
+                    b.HasIndex("TestResultId");
+
+                    b.ToTable("TestRequestTestTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResult", b =>
+                {
+                    b.Property<int>("TestResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestResultId"));
+
+                    b.Property<DateTime>("DateCaptured")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAbnormal")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResultValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TestResultId");
+
+                    b.ToTable("TestResults");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResultVerification", b =>
+                {
+                    b.Property<int>("TestResultVerificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestResultVerificationId"));
+
+                    b.Property<string>("ReviewNotes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TestResultId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("VerificationDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VerifiedByTechnicianId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TestResultVerificationId");
+
+                    b.HasIndex("TestResultId")
+                        .IsUnique();
+
+                    b.ToTable("TestResultVerifications");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestType", b =>
+                {
+                    b.Property<int>("TestTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestTypeId"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("NormalRangeMax")
+                        .HasColumnType("float");
+
+                    b.Property<double>("NormalRangeMin")
+                        .HasColumnType("float");
+
+                    b.Property<string>("TestTypeName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TurnAroundTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UnitOfMeasurement")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TestTypeId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("TestTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestTypeConsumable", b =>
+                {
+                    b.Property<int>("TestTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ConsumableId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TestTypeId", "ConsumableId");
+
+                    b.HasIndex("ConsumableId");
+
+                    b.ToTable("testTypeConsumables");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestTypeSample", b =>
+                {
+                    b.Property<int>("TestTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SampleTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TestTypeId", "SampleTypeId");
+
+                    b.HasIndex("SampleTypeId");
+
+                    b.ToTable("TestTypeSamples");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Users", b =>
@@ -325,7 +695,18 @@ namespace HemaCore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("HemaCore.Models.Doctor", b =>
+            modelBuilder.Entity("HemaCore.Models.Consumable", b =>
+                {
+                    b.HasOne("HemaCore.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.LabTechnician", b =>
                 {
                     b.HasOne("HemaCore.Models.Users", "User")
                         .WithMany()
@@ -334,6 +715,36 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Order", b =>
+                {
+                    b.HasOne("HemaCore.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.OrderItem", b =>
+                {
+                    b.HasOne("HemaCore.Models.Consumable", "Consumable")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("ConsumableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Consumable");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Patient", b =>
@@ -345,6 +756,130 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Sample", b =>
+                {
+                    b.HasOne("HemaCore.Models.SampleType", "SampleType")
+                        .WithMany("Samples")
+                        .HasForeignKey("SampleTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestRequest", "TestRequest")
+                        .WithMany()
+                        .HasForeignKey("TestRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SampleType");
+
+                    b.Navigation("TestRequest");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
+                {
+                    b.HasOne("HemaCore.Models.Supplier", null)
+                        .WithMany("Suppliers")
+                        .HasForeignKey("SupplierId1");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TechnicianTestType", b =>
+                {
+                    b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
+                        .WithMany("TechnicianTests")
+                        .HasForeignKey("LabTechnicianId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestType", "TestType")
+                        .WithMany("TechnicianTestType")
+                        .HasForeignKey("TestTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LabTechnician");
+
+                    b.Navigation("TestType");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestRequestTestType", b =>
+                {
+                    b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
+                        .WithMany()
+                        .HasForeignKey("LabTechnicianId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestResult", "TestResult")
+                        .WithMany()
+                        .HasForeignKey("TestResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LabTechnician");
+
+                    b.Navigation("TestResult");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResultVerification", b =>
+                {
+                    b.HasOne("HemaCore.Models.TestResult", "TestResult")
+                        .WithOne("TestResultVerification")
+                        .HasForeignKey("HemaCore.Models.TestResultVerification", "TestResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TestResult");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestType", b =>
+                {
+                    b.HasOne("HemaCore.Models.TestCategory", "Category")
+                        .WithMany("TestTypes")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestTypeConsumable", b =>
+                {
+                    b.HasOne("HemaCore.Models.Consumable", "Consumable")
+                        .WithMany("TestTypeConsumables")
+                        .HasForeignKey("ConsumableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestType", "TestType")
+                        .WithMany("TestTypeConsumables")
+                        .HasForeignKey("TestTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consumable");
+
+                    b.Navigation("TestType");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestTypeSample", b =>
+                {
+                    b.HasOne("HemaCore.Models.SampleType", "SampleType")
+                        .WithMany("TestTypeSample")
+                        .HasForeignKey("SampleTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestType", "TestType")
+                        .WithMany("TestTypeSample")
+                        .HasForeignKey("TestTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SampleType");
+
+                    b.Navigation("TestType");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -396,6 +931,55 @@ namespace HemaCore.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Consumable", b =>
+                {
+                    b.Navigation("OrderItems");
+
+                    b.Navigation("TestTypeConsumables");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.LabTechnician", b =>
+                {
+                    b.Navigation("TechnicianTests");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.SampleType", b =>
+                {
+                    b.Navigation("Samples");
+
+                    b.Navigation("TestTypeSample");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
+                {
+                    b.Navigation("Suppliers");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestCategory", b =>
+                {
+                    b.Navigation("TestTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResult", b =>
+                {
+                    b.Navigation("TestResultVerification")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestType", b =>
+                {
+                    b.Navigation("TechnicianTestType");
+
+                    b.Navigation("TestTypeConsumables");
+
+                    b.Navigation("TestTypeSample");
                 });
 #pragma warning restore 612, 618
         }

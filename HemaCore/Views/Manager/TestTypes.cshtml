@@ -1,0 +1,216 @@
+﻿@model List<HemaCore.Models.TestType>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box-open me-2"></i>
+
+            <span>Test Types</span>
+
+            <span class="badge blue-badge ms-2">
+                @ViewBag.TestTypeCount
+            </span>
+        </div>
+
+        <a asp-action="AddTestType"
+           class="btn btn-primary-custom btn-sm">
+            + Add Test Type
+        </a>
+
+    </div>
+
+    <!-- SEARCH -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Type to search test type..." />
+
+    <!-- TABLE -->
+    <div class="card shadow-sm">
+
+        <div class="card-body p-0">
+
+            <table class="modern-table">
+
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Category</th>
+                        <th>Unit</th>
+                        <th>Normal Range</th>
+                        <th>Turnaround Time</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="TestTypeTable">
+
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var test in Model)
+                        {
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    @test.TestTypeName
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-info text-dark">
+                                        @test.Category?.CategoryName
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @test.UnitOfMeasurement
+                                </td>
+
+                                <td>
+                                    @test.NormalRangeMin - @test.NormalRangeMax
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        @test.TurnAroundTime min
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a asp-action="EditTestType"
+                                       asp-route-id="@test.TestTypeId"
+                                       class="btn btn-sm btn-outline-primary me-1">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="DeleteTestType"
+                                       asp-route-id="@test.TestTypeId"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No test types found
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LIVE SEARCH SCRIPT -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $("#searchBox").on("input", function () {
+
+            var term = $(this).val();
+
+            $.ajax({
+                url: '@Url.Action("SearchTestTypesLive", "Manager")',
+                type: 'GET',
+                data: { term: term },
+
+                success: function (data) {
+
+                    var tableBody = $("#TestTypeTable");
+                    tableBody.empty();
+
+                    if (!data || data.length === 0) {
+
+                        tableBody.append(`
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No test types found
+                                </td>
+                            </tr>
+                        `);
+
+                        return;
+                    }
+
+                    $.each(data, function (index, test) {
+
+                        var row = `
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    ${test.name ?? ''}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-info text-dark">
+                                        ${test.category ?? ''}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    ${test.unit ?? ''}
+                                </td>
+
+                                <td>
+                                    ${test.min ?? ''} - ${test.max ?? ''}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        ${test.turnaround ?? ''} min
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a href="/Manager/EditTestType/${test.testTypeID}"
+                                       class="btn btn-sm btn-outline-primary me-1">
+                                        Edit
+                                    </a>
+
+                                    <a href="/Manager/DeleteTestType/${test.testTypeID}"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        `;
+
+                        tableBody.append(row);
+                    });
+                },
+
+                error: function () {
+                    alert("Search failed. Please try again.");
+                }
+            });
+
+        });
+
+    });
+</script>

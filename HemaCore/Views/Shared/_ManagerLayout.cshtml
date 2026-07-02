@@ -51,7 +51,13 @@
                         <i class="fas fa-microscope"></i>
                         <span class="menu-text">Test Types</span>
                     </a>
+               <li class="@(ViewContext.RouteData.Values["action"].ToString() == "TestTypes" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="SampleTypes">
+                        <i class="fas fa-microscope"></i>
+                        <span class="menu-text">Sample </span>
+                    </a>
                 </li>
+
 
                 <li class="section-label">STOCK MANAGEMENT</li>
                 <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Consumables" ? "active" : "")">

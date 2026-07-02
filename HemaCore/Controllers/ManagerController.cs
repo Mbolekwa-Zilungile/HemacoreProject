@@ -1,4 +1,6 @@
 ﻿using HemaCore.Data;
+using HemaCore.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,30 +22,47 @@ namespace HemaCore.Controllers
         #region Test Catagories
         public async Task<IActionResult> TestCategories()
         {
-            var category = await _context.TestCategories.OrderBy(c => c.CategoryName).ToListAsync();
+            var categories = await _context.TestCategories
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
 
-            //var testTypes = await _context.TestTypes.ToListAsync();
+            var testTypeCountByCategory = await _context.TestTypes
+                .GroupBy(t => t.CategoryId)
+                .ToDictionaryAsync(g => g.Key, g => g.Count());
 
-            //var testTypeCount = testTypes
-            //    .GroupBy(t => t.CategoryID)
-            //    .ToDictionary(g => g.Key, g => g.Count());
+            ViewBag.TestTypeCountByCategory = testTypeCountByCategory;
+            ViewBag.CategoryCount = categories.Count;
 
-            //ViewBag.TestTypeCount = testTypeCount;
-
-            //ViewBag.CategoryCount = category.Count;
-
-            return View(category);
+            return View(categories);
         }
 
         #endregion
 
-        #region Doctor
-        public async Task<IActionResult> Doctors()
+        #region TestTypes
+
+        public async Task<IActionResult> TestTypes()
         {
-            var doctors = await _context.Doctors.Include(x=> x.User).OrderBy(c=> c.Surname).ThenBy(c => c.Name).ToListAsync();
-            @ViewBag.DoctorCount = doctors.Count();
-            return View(doctors);
+            var testtype =  await _context.TestTypes
+                .Include(t => t.Category)
+                .OrderBy(t => t.TestTypeName)
+                .ToListAsync();
+
+            return View(testtype);
         }
+
+
+        #endregion
+
+        #region Sample Type
+
+        public async Task<IActionResult> Sampletypes()
+        {
+            var sampletype = await _context.SampleTypes.OrderBy(t => t.SampleName).ToListAsync();
+            return View(sampletype);
+        }
+        #endregion
+        #region Doctor
+
         #endregion
     }
 }

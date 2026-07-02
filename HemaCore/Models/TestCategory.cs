@@ -5,11 +5,11 @@ namespace HemaCore.Models
     public class TestCategory
     {
         [Key]
-        public int CategoryID { get; set; }
-
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; }
         public string CategoryDescription { get; set; }
-
-        //public List<TestType> TestTypes { get; set; } = new List<TestType>();
+        public bool IsActive { get; set; }
+        //TestType relationship
+        public ICollection<TestType> TestTypes { get; set; }
     }
 }
