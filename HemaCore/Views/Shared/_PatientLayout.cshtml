@@ -1,0 +1,149 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    <link rel="stylesheet" href="~/css/Layout.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="wrapper">
+
+        <!-- SIDEBAR -->
+        <nav id="sidebar">
+
+            <div class="sidebar-header">
+    <div class="header-top">
+        <button id="sidebarToggle" class="toggle-btn">
+            <i class="fas fa-angle-left"></i>
+        </button>
+
+        <h3>HemaCore</h3>
+    </div>
+
+    <p>Patient PORTAL</p>
+</div>
+
+            <ul class="list-unstyled components">
+
+                <li class="section-label">OVERVIEW</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
+                   
+                    <a asp-controller="Manager" asp-action="Index">
+                        <i class="fas fa-home"></i>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="section-label">TEST CATALOGUE</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "TestCategories" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="TestCategories">
+                        <i class="fas fa-folder"></i>
+                        <span class="menu-text">Test Categories</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "TestTypes" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="TestTypes">
+                        <i class="fas fa-microscope"></i>
+                        <span class="menu-text">Test Types</span>
+                    </a>
+               <li class="@(ViewContext.RouteData.Values["action"].ToString() == "TestTypes" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="SampleTypes">
+                        <i class="fas fa-microscope"></i>
+                        <span class="menu-text">Sample </span>
+                    </a>
+                </li>
+
+
+                <li class="section-label">STOCK MANAGEMENT</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Consumables" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Consumables">
+                        <i class="fas fa-box"></i>
+                        <span class="menu-text">Consumables</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Suppliers" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Suppliers">
+                        <i class="fas fa-industry"></i>
+                        <span class="menu-text">Suppliers</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Orders">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="menu-text">Orders</span>
+                    </a>
+                </li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
+
+                <li class="section-label">USER MANAGEMENT</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Doctors" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Doctors">
+                        <i class="fas fa-user-doctor"></i>
+                        <span class="menu-text">Doctors</span>
+                    </a>
+                </li>
+
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Technicians" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Technicians">
+                        <i class="fas fa-user-nurse"></i>
+                        <span class="menu-text">Technicians</span>
+                    </a>
+                </li>
+
+
+                <li class="section-label">REPORTING</li>
+                <li >
+                    <a href="#">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="menu-text">Reports</span>
+                    </a>
+                </li>
+
+            </ul>
+
+            <div class="logout">
+                <a asp-controller="Account" asp-action="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="menu-text">Logout</span>
+                </a>
+            </div>
+
+        </nav>
+
+        <!-- CONTENT -->
+        <div id="content">
+            @RenderBody()
+        </div>
+
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+            const sidebar = document.getElementById("sidebar"); 
+            const content = document.getElementById("content");
+            const toggleBtn = document.getElementById("sidebarToggle");
+            const icon = toggleBtn.querySelector("i");
+
+            toggleBtn.addEventListener("click", function () {
+
+                sidebar.classList.toggle("collapsed");
+                content.classList.toggle("expanded");
+
+                if (sidebar.classList.contains("collapsed")) {
+                    icon.classList.remove("fa-angle-left");
+                    icon.classList.add("fa-angle-right");
+                } else {
+                    icon.classList.remove("fa-angle-right");
+                    icon.classList.add("fa-angle-left");
+                }
+            });
+    </script>
+        @RenderSection("Scripts", required: false)
+</body>
+</html>

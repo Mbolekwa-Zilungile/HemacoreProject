@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HemaCore.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260702183029_Initial")]
+    [Migration("20260730122252_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

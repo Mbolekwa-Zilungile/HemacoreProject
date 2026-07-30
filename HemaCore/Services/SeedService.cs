@@ -55,7 +55,34 @@ namespace HemaCore.Services
                     }
 
                 }
-               
+
+                logger.LogInformation("Seeding manager user");
+                var adminEmail = "admin@gmail.com";
+                if (await userManager.FindByEmailAsync(adminEmail) == null)
+                {
+                    var adminUser = new Users
+                    {
+                        FullName = "Esethu Mbolekwa",
+                        UserName = adminEmail,
+                        NormalizedUserName = adminEmail.ToUpper(),
+                        Email = adminEmail,
+                        NormalizedEmail = adminEmail.ToUpper(),
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString()
+                    };
+                    var result = await userManager.CreateAsync(adminUser, "Admin@123");
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("Assigning Manager role to the manager user.");
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
+                    else
+                    {
+                        logger.LogError("Failed to create manager user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+
+                }
+
             }
             catch (Exception ex)
             {
