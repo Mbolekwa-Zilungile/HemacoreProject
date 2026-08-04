@@ -37,7 +37,7 @@
         </div>
 
         <a asp-action="AddCategory"
-        >
+           class="btn btn-primary-custom btn-sm">
             + Add Category
         </a>
 
@@ -87,7 +87,7 @@
                         <td>
                             @(ViewBag.TestTypeCountByCategory != null &&
                                                 ViewBag.TestTypeCountByCategory.ContainsKey(category.CategoryId)
-                                                ?  ViewBag.TestTypeCountByCategory[category.CategoryId]
+                                                ? ViewBag.TestTypeCountByCategory[category.CategoryId]
                                                 : 0)
                         </td>
 
