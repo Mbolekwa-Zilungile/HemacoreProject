@@ -22,6 +22,160 @@ namespace HemaCore.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HemaCore.Models.Allergy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Allergies");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.AllergyCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AllergyCategories");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Condition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Conditions");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConditionCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConditionCategories");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Consent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Consents");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConsentTestAccess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestRequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsentId");
+
+                    b.HasIndex("TestRequestId");
+
+                    b.ToTable("ConsentTestAccesses");
+                });
+
             modelBuilder.Entity("HemaCore.Models.Consumable", b =>
                 {
                     b.Property<int>("ConsumableId")
@@ -48,6 +202,38 @@ namespace HemaCore.Migrations
                     b.HasIndex("SupplierId");
 
                     b.ToTable("Consumables");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Doctor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PracticeNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Doctors");
                 });
 
             modelBuilder.Entity("HemaCore.Models.LabTechnician", b =>
@@ -92,6 +278,53 @@ namespace HemaCore.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("LabTechnicians");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Medication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Medications");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.MedicationCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MedicationCategories");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Order", b =>
@@ -211,6 +444,93 @@ namespace HemaCore.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Patients");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientAllergy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AllergyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Severity")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AllergyId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientAllergies");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientCondition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConditionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("DiagnosedDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConditionId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientConditions");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientMedication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Dosage")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Frequency")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MedicationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicationId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientMedications");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Sample", b =>
@@ -347,7 +667,12 @@ namespace HemaCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestRequestId"));
 
+                    b.Property<int?>("DoctorId")
+                        .HasColumnType("int");
+
                     b.HasKey("TestRequestId");
+
+                    b.HasIndex("DoctorId");
 
                     b.ToTable("TestRequests");
                 });
@@ -378,6 +703,9 @@ namespace HemaCore.Migrations
                     b.Property<DateTime>("DateCaptured")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DoctorId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsAbnormal")
                         .HasColumnType("bit");
 
@@ -390,6 +718,8 @@ namespace HemaCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("TestResultId");
+
+                    b.HasIndex("DoctorId");
 
                     b.ToTable("TestResults");
                 });
@@ -695,6 +1025,66 @@ namespace HemaCore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("HemaCore.Models.Allergy", b =>
+                {
+                    b.HasOne("HemaCore.Models.AllergyCategory", "Category")
+                        .WithMany("Allergies")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Condition", b =>
+                {
+                    b.HasOne("HemaCore.Models.ConditionCategory", "Category")
+                        .WithMany("Conditions")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Consent", b =>
+                {
+                    b.HasOne("HemaCore.Models.Doctor", "Doctor")
+                        .WithMany("ConsentsReceived")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConsentTestAccess", b =>
+                {
+                    b.HasOne("HemaCore.Models.Consent", "Consent")
+                        .WithMany("TestAccesses")
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.TestRequest", "TestRequest")
+                        .WithMany()
+                        .HasForeignKey("TestRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consent");
+
+                    b.Navigation("TestRequest");
+                });
+
             modelBuilder.Entity("HemaCore.Models.Consumable", b =>
                 {
                     b.HasOne("HemaCore.Models.Supplier", "Supplier")
@@ -715,6 +1105,17 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Medication", b =>
+                {
+                    b.HasOne("HemaCore.Models.MedicationCategory", "Category")
+                        .WithMany("Medications")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Order", b =>
@@ -756,6 +1157,63 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientAllergy", b =>
+                {
+                    b.HasOne("HemaCore.Models.Allergy", "Allergy")
+                        .WithMany("PatientAllergies")
+                        .HasForeignKey("AllergyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Allergy");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientCondition", b =>
+                {
+                    b.HasOne("HemaCore.Models.Condition", "Condition")
+                        .WithMany("PatientConditions")
+                        .HasForeignKey("ConditionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Condition");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientMedication", b =>
+                {
+                    b.HasOne("HemaCore.Models.Medication", "Medication")
+                        .WithMany("PatientMedications")
+                        .HasForeignKey("MedicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Medication");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Sample", b =>
@@ -803,6 +1261,13 @@ namespace HemaCore.Migrations
                     b.Navigation("TestType");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.TestRequest", b =>
+                {
+                    b.HasOne("HemaCore.Models.Doctor", null)
+                        .WithMany("TestRequests")
+                        .HasForeignKey("DoctorId");
+                });
+
             modelBuilder.Entity("HemaCore.Models.TestRequestTestType", b =>
                 {
                     b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
@@ -820,6 +1285,13 @@ namespace HemaCore.Migrations
                     b.Navigation("LabTechnician");
 
                     b.Navigation("TestResult");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResult", b =>
+                {
+                    b.HasOne("HemaCore.Models.Doctor", null)
+                        .WithMany("VerifiedResults")
+                        .HasForeignKey("DoctorId");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestResultVerification", b =>
@@ -933,6 +1405,31 @@ namespace HemaCore.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("HemaCore.Models.Allergy", b =>
+                {
+                    b.Navigation("PatientAllergies");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.AllergyCategory", b =>
+                {
+                    b.Navigation("Allergies");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Condition", b =>
+                {
+                    b.Navigation("PatientConditions");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConditionCategory", b =>
+                {
+                    b.Navigation("Conditions");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Consent", b =>
+                {
+                    b.Navigation("TestAccesses");
+                });
+
             modelBuilder.Entity("HemaCore.Models.Consumable", b =>
                 {
                     b.Navigation("OrderItems");
@@ -940,9 +1437,28 @@ namespace HemaCore.Migrations
                     b.Navigation("TestTypeConsumables");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.Doctor", b =>
+                {
+                    b.Navigation("ConsentsReceived");
+
+                    b.Navigation("TestRequests");
+
+                    b.Navigation("VerifiedResults");
+                });
+
             modelBuilder.Entity("HemaCore.Models.LabTechnician", b =>
                 {
                     b.Navigation("TechnicianTests");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Medication", b =>
+                {
+                    b.Navigation("PatientMedications");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.MedicationCategory", b =>
+                {
+                    b.Navigation("Medications");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Order", b =>

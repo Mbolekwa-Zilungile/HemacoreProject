@@ -1,0 +1,252 @@
+﻿@model List<HemaCore.Models.Allergy>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Allergies";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-allergies me-2"></i>
+            <span>All Allergies</span>
+            <span class="badge blue-badge ms-2">
+                @ViewBag.AllergyCount
+            </span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Add Category Button -->
+            <a asp-action="AddAllergyCategory"
+               asp-controller="Admin"
+               class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Category
+            </a>
+
+            <!-- Add Allergy Button -->
+            <a asp-action="AddAllergy"
+               class="btn btn-primary-custom btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Allergy
+            </a>
+        </div>
+
+    </div>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text"
+                       id="searchBox"
+                       class="form-control border-start-0 ps-0"
+                       placeholder="Search allergies..." />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="fas fa-filter text-muted"></i>
+                </span>
+                <select id="categoryFilter" class="form-select border-start-0 ps-0">
+                    <option value="">All Categories</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var category in ViewBag.Categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <table class="modern-table">
+
+        <thead>
+            <tr>
+                <th>Allergy Name</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="allergyTable">
+
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        No allergies available. Click "Add Allergy" to create one.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var allergy in Model)
+                {
+                    <tr data-category-id="@allergy.CategoryId">
+                        <td class="fw-semibold blue-text">
+                            @allergy.Name
+                        </td>
+
+                        <td>
+                            @allergy.Category?.Name
+                        </td>
+
+                        <td>
+                            <span class="badge @(allergy.IsActive ? "bg-success" : "bg-secondary")">
+                                @(allergy.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+
+                        <td>
+                            <a asp-action="EditAllergy"
+                               asp-route-id="@allergy.Id"
+                               class="btn btn-sm btn-primary me-1">
+                                Edit
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm @(allergy.IsActive ? "btn-danger" : "btn-success")"
+                                    onclick="toggleStatus(@allergy.Id)">
+                                @(allergy.IsActive ? "Deactivate" : "Activate")
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+    // Search functionality
+    document.getElementById("searchBox").addEventListener("keyup", function () {
+        filterTable();
+    });
+
+    // Category filter functionality
+    document.getElementById("categoryFilter").addEventListener("change", function () {
+        filterTable();
+    });
+
+    function filterTable() {
+        let searchTerm = document.getElementById("searchBox").value.toLowerCase();
+        let categoryId = document.getElementById("categoryFilter").value;
+        let rows = document.querySelectorAll("#allergyTable tr");
+
+        rows.forEach(row => {
+            // Skip if it's the "no results" row
+            if (row.querySelector("td[colspan]")) return;
+
+            let allergyName = row.querySelector("td:first-child")?.textContent?.toLowerCase() || "";
+            let categoryName = row.querySelector("td:nth-child(2)")?.textContent?.toLowerCase() || "";
+            
+            let rowCategoryId = row.getAttribute("data-category-id");
+
+            // Check if search term matches
+            let matchesSearch = allergyName.includes(searchTerm) || 
+                               categoryName.includes(searchTerm);
+
+            // Check if category filter matches
+            let matchesCategory = categoryId === "" || rowCategoryId === categoryId;
+
+            // Show/hide row
+            if (matchesSearch && matchesCategory) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        // Show "no results" message if all rows are hidden
+        let visibleRows = document.querySelectorAll("#allergyTable tr[style*='display: none']");
+        let allRows = document.querySelectorAll("#allergyTable tr:not([style*='display: none'])");
+        
+        let noResultsRow = document.querySelector("#allergyTable tr td[colspan]");
+        
+        if (allRows.length === 1 && allRows[0].querySelector("td[colspan]")) {
+            return;
+        }
+
+        if (visibleRows.length === document.querySelectorAll("#allergyTable tr:not([style*='display: none']):not([style*='display'])").length) {
+            if (!noResultsRow) {
+                let tbody = document.getElementById("allergyTable");
+                let tr = document.createElement("tr");
+                tr.id = "noResultsRow";
+                tr.innerHTML = `
+                    <td colspan="4" class="text-center text-muted">
+                        No results found.
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        } else {
+            let noResults = document.getElementById("noResultsRow");
+            if (noResults) {
+                noResults.remove();
+            }
+        }
+    }
+
+    // Toggle status function
+    function toggleStatus(id) {
+        if (!confirm("Are you sure you want to change the status of this allergy?")) {
+            return;
+        }
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        fetch('/Admin/ToggleAllergyStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token || ''
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || "An error occurred while changing the status.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while processing your request.");
+        });
+    }
+</script>

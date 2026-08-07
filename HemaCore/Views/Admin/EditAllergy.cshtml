@@ -1,0 +1,86 @@
+﻿@model HemaCore.Models.Allergy
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Allergy";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="content-card">
+
+    <div class="section-title d-flex align-items-center">
+        <i class="fas fa-edit me-2"></i>
+        <span>Edit Allergy</span>
+    </div>
+
+    <form asp-action="EditAllergy" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <!-- Category Selection -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="CategoryId" class="form-label fw-semibold">
+                    Category <span class="text-danger">*</span>
+                </label>
+                <select asp-for="CategoryId" class="form-select" required>
+                    <option value="">-- Select Category --</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Id" selected="@(cat.Id == Model.CategoryId)">
+                                @cat.Name
+                            </option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+
+            <!-- Allergy Name -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="Name" class="form-label fw-semibold">
+                    Allergy Name <span class="text-danger">*</span>
+                </label>
+                <input asp-for="Name" class="form-control" placeholder="Enter allergy name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+                <small class="text-muted">Example: Penicillin, Peanuts, Pollen, etc.</small>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary-custom">
+                <i class="fas fa-save me-2"></i> Update Allergy
+            </button>
+            <a asp-action="Allergies" class="btn btn-secondary">
+                <i class="fas fa-times me-2"></i> Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -29,6 +29,19 @@ namespace HemaCore.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<Patient> Patients { get; set; }
 
+        public DbSet<Doctor> Doctors => Set<Doctor>();
+        public DbSet<ConditionCategory> ConditionCategories => Set<ConditionCategory>();
+        public DbSet<Condition> Conditions => Set<Condition>();
+        public DbSet<AllergyCategory> AllergyCategories => Set<AllergyCategory>();
+        public DbSet<Allergy> Allergies => Set<Allergy>();
+        public DbSet<MedicationCategory> MedicationCategories => Set<MedicationCategory>();
+        public DbSet<Medication> Medications => Set<Medication>();
+        public DbSet<PatientCondition> PatientConditions => Set<PatientCondition>();
+        public DbSet<PatientAllergy> PatientAllergies => Set<PatientAllergy>();
+        public DbSet<PatientMedication> PatientMedications => Set<PatientMedication>();
+        public DbSet<Consent> Consents => Set<Consent>();
+        public DbSet<ConsentTestAccess> ConsentTestAccesses => Set<ConsentTestAccess>();
+
         protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
             base.OnModelCreating(modelbuilder);

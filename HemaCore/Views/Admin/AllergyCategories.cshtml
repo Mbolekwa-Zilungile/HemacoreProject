@@ -1,0 +1,199 @@
+﻿@model List<HemaCore.Models.AllergyCategory>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Allergy Categories";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box-open me-2"></i>
+            <span>Allergy Categories</span>
+            <span class="badge blue-badge ms-2">
+                @ViewBag.CategoryCount
+            </span>
+        </div>
+
+        <a asp-action="AddAllergyCategory"
+           class="btn btn-primary-custom btn-sm">
+            + Add Category
+        </a>
+
+    </div>
+
+    <!-- SEARCH -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Search allergy categories..." />
+
+    <!-- TABLE -->
+    <table class="modern-table">
+
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Allergies</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="categoryTable">
+
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        No allergy categories available.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var category in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold blue-text">
+                            @category.Name
+                        </td>
+
+                        <td>
+                            @(ViewBag.AllergyCountByCategory != null &&
+                                ViewBag.AllergyCountByCategory.ContainsKey(category.Id)
+                                ? ViewBag.AllergyCountByCategory[category.Id]
+                                : 0)
+                        </td>
+
+                        <td>
+                            <span class="badge @(category.IsActive ? "bg-success" : "bg-secondary")">
+                                @(category.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+
+                        <td>
+                            <a asp-action="EditAllergyCategory"
+                               asp-route-id="@category.Id"
+                               class="btn btn-sm btn-primary me-1">
+                                Edit
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm @(category.IsActive ? "btn-danger" : "btn-success")"
+                                    onclick="toggleStatus(@category.Id)">
+                                @(category.IsActive ? "Deactivate" : "Activate")
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+    document.getElementById("searchBox").addEventListener("keyup", function () {
+        let term = this.value;
+
+        fetch('/Admin/SearchAllergyCategoriesLive?term=' + term)
+            .then(res => res.json())
+            .then(data => {
+                let rows = "";
+
+                if (data.length === 0) {
+                    rows = `
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                No results found.
+                            </td>
+                        </tr>
+                    `;
+                }
+                else {
+                    data.forEach(item => {
+                        rows += `
+                            <tr>
+                                <td class="fw-semibold blue-text">
+                                    ${item.name}
+                                </td>
+                                <td>${item.allergyCount}</td>
+                                <td>
+                                    <span class="badge ${item.isActive ? "bg-success" : "bg-secondary"}">
+                                        ${item.isActive ? "Active" : "Inactive"}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/Admin/EditAllergyCategory/${item.id}"
+                                       class="btn btn-sm btn-primary me-1">
+                                        Edit
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm ${item.isActive ? "btn-danger" : "btn-success"}"
+                                            onclick="toggleStatus(${item.id})">
+                                        ${item.isActive ? "Deactivate" : "Activate"}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                document.getElementById("categoryTable").innerHTML = rows;
+            });
+    });
+
+    function toggleStatus(id) {
+        if (!confirm("Are you sure you want to change the status of this category?")) {
+            return;
+        }
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        fetch('/Admin/ToggleAllergyCategoryStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token || ''
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || "An error occurred while changing the status.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while processing your request.");
+        });
+    }
+</script>
