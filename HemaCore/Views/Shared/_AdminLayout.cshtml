@@ -1,4 +1,4 @@
-﻿﻿﻿
+﻿﻿﻿﻿
 <!DOCTYPE html>
 <html>
 <head>
@@ -63,6 +63,14 @@
                     <a href="#">
                         <i class="fas fa-chart-bar"></i>
                         <span class="menu-text">Reports</span>
+                    </a>
+                </li>
+
+                <li class="section-label">ACCOUNT</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Profile" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="Profile">
+                        <i class="fas fa-user-cog"></i>
+                        <span class="menu-text">Profile</span>
                     </a>
                 </li>
 

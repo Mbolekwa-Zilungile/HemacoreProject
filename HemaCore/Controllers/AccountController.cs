@@ -126,5 +126,13 @@ namespace HemaCore.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
+        // GET: Account/Logout
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login", "Account");
+        }
     }
 }
