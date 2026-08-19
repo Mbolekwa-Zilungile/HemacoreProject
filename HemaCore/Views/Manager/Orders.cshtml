@@ -1,0 +1,154 @@
+﻿@model List<HemaCore.Models.Order>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box-open me-2"></i>
+            <span>Orders</span>
+
+            <span class="badge blue-badge ms-2">
+                @ViewBag.OrdersCount
+            </span>
+        </div>
+
+        <a asp-action="CreateOrder"
+           class="btn btn-primary-custom btn-sm">
+            + Add new order
+        </a>
+
+    </div>
+
+    <!-- SEARCH -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Search by order number (e.g. ORD-2026-001)" />
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>ORDER NO.</th>
+                        <th>Supplier</th>
+                        <th>Date Ordered</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="orderTableBody">
+
+                    @foreach (var order in Model)
+                    {
+                        var itemCount = order.OrderItems?.Count ?? 0;
+                        var supplierName = order.Supplier?.SupplierName ?? "Unknown";
+
+                        <tr>
+                            <td>@order.OrderNumber</td>
+                            <td>@supplierName</td>
+                            <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                            <td>@itemCount</td>
+
+                            <td>
+                                @if (order.Status.ToString() == "Ordered")
+                                {
+                                    <span class="badge bg-warning">Ordered</span>
+                                }
+                                else if (order.Status.ToString() == "Completed")
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else if (order.Status.ToString() == "Rejected")
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@order.Status</span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-action="OrderDetails" asp-route-id="@order.OrderId"
+                                   class="btn btn-sm btn-primary">
+                                    View / Manage
+                                </a>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<!-- AJAX SEARCH -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $("#searchBox").on("keyup", function () {
+
+    var value = $(this).val();
+
+    $.ajax({
+    url: '/Manager/SearchOrders',
+    type: 'GET',
+    data: { term: value },
+    success: function (data) {
+
+    var rows = "";
+
+    data.forEach(function (o) {
+
+    let badge = "";
+
+    if (o.status === "Ordered") {
+    badge = '<span class="badge bg-warning">Ordered</span>';
+    }
+    else if (o.status === "Completed") {
+    badge = '<span class="badge bg-success">Completed</span>';
+    }
+    else if (o.status === "Rejected") {
+    badge = '<span class="badge bg-danger">Rejected</span>';
+    }
+    else {
+    badge = '<span class="badge bg-secondary">' + o.status + '</span>';
+    }
+
+    rows += `
+    <tr>
+    <td>${o.orderNumber}</td>
+    <td>${o.supplierName}</td>
+    <td>${o.orderDate}</td>
+    <td>${o.itemCount}</td>
+    <td>${badge}</td>
+    <td>
+    <a href="/Manager/OrderDetails/${o.orderID}"
+    class="btn btn-sm btn-primary">
+    View / Manage
+    </a>
+    </td>
+    </tr>
+    `;
+    });
+
+    $("#orderTableBody").html(rows);
+    }
+    });
+    });
+</script>

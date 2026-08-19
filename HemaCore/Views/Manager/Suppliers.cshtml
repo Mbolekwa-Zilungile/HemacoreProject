@@ -1,0 +1,149 @@
+﻿@model List<HemaCore.Models.Supplier>
+@{
+    Layout = "_ManagerLayout";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box-open me-2"></i>
+
+            <span>Suppliers (@Model.Count)</span>
+
+            <span class="badge blue-badge ms-2">
+                @ViewBag.TestTypeCount
+            </span>
+        </div>
+
+        <a asp-action="AddSupplier"
+           class="btn btn-primary-custom btn-sm">
+            + Add Supplier
+        </a>
+
+    </div>
+    <!-- LIVE SEARCH INPUT -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Type to search suppliers..." />
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Consumables</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="supplierTable">
+                    @foreach (var supplier in Model)
+                    {
+
+                        int total = 0;
+                        if (ViewBag.SupplierConsumableCount.ContainsKey(supplier.SupplierId))
+                        {
+                            total = ViewBag.SupplierConsumableCount[supplier.SupplierId];
+                        }
+                        <tr>
+                            <td>@supplier.SupplierName</td>
+                            <td>@supplier.ContactPerson</td>
+                            <td>@supplier.Email</td>
+                            <td>@total</td>
+                            <td>
+                                <a asp-action="EditSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-primary">Edit</a>
+                                <a asp-action="DeleteSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-danger">Deactivate</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById("searchBox").addEventListener("keyup", function () {
+
+        let term = this.value;
+
+        fetch('/Manager/SearchSupplierLive?term=' + encodeURIComponent(term))
+            .then(res => res.json())
+            .then(data => {
+
+                let rows = "";
+
+                if (!data || data.length === 0) {
+                    rows = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No suppliers found.
+                            </td>
+                        </tr>
+                    `;
+                }
+                else {
+                    data.forEach(item => {
+
+                        rows += `
+                            <tr>
+                                <td class="fw-semibold blue-text">
+                                    ${item.name || ""}
+                                </td>
+
+                                <td>
+                                    ${item.contactperson || ""}
+                                </td>
+
+                                <td>
+                                    ${item.email || ""}
+                                </td>
+
+                              <td>${item.totalConsumables}</td>
+
+                                <td>
+                                    <a href="/Manager/EditSupplier/${item.supplierid}"
+                                       class="btn btn-sm btn-primary me-1">
+                                        Edit
+                                    </a>
+
+                                    <a href="/Manager/DeleteSupplier/${item.supplierid}"
+                                       class="btn btn-sm btn-danger">
+                                        Deactivate
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                document.getElementById("supplierTable").innerHTML = rows;
+            })
+            .catch(err => {
+                console.error("Search error:", err);
+            });
+    });
+</script>

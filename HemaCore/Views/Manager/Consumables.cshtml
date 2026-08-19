@@ -1,0 +1,242 @@
+﻿@model List<HemaCore.Models.Consumable>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<!-- JQUERY -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- TEMP MESSAGES -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-2">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-2">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 class="mb-0 d-flex align-items-center">
+            <i class="fas fa-box-open me-2"></i>
+            Consumables (@Model.Count)
+        </h5>
+
+        <a asp-action="AddConsumable"
+           class="btn btn-primary btn-sm">
+            + Add
+        </a>
+
+    </div>
+
+    <!-- LIVE SEARCH -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Search consumables..." />
+
+    <!-- TABLE -->
+    <div class="table-responsive">
+
+        <table class="modern-table">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Supplier</th>
+                    <th>Reorder</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th width="220">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="ConsumableTable">
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            No consumables found
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        var status = item.Status.ToString();
+
+                        var badgeClass = status switch
+                        {
+                            "OutOfStock" => "bg-danger",
+                            "LowStock" => "bg-warning text-dark",
+                            "InStock" => "bg-success",
+                            _ => "bg-secondary"
+                        };
+
+                        <tr>
+
+                            <td>@item.ConsumableName</td>
+                            <td>@item.Supplier?.SupplierName</td>
+                            <td>@item.ReorderLevel</td>
+                            <td>@item.QuantityInHand</td>
+
+                            <td>
+                                <span class="badge @badgeClass">
+                                    @status
+                                </span>
+                            </td>
+
+                            <!-- ACTIONS -->
+                            <td>
+                                <div class="d-flex gap-2 flex-nowrap">
+
+                                    <a asp-action="AdjustStock"
+                                       asp-route-id="@item.ConsumableId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Adjust
+                                    </a>
+
+                                    <a asp-action="EditConsumable"
+                                       asp-route-id="@item.ConsumableId"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="DeleteConsumable"
+                                       asp-route-id="@item.ConsumableId"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Delete this item?');">
+                                        Deactivate
+                                    </a>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- LIVE SEARCH SCRIPT -->
+<script>
+
+    $(document).ready(function () {
+
+    $("#searchBox").on("input", function () {
+
+    var term = $(this).val();
+
+    $.ajax({
+
+    url: '@Url.Action("SearchConsumablesLive", "Manager")',
+    type: 'GET',
+    data: { term: term },
+
+    success: function (data) {
+
+    var tableBody = $("#ConsumableTable");
+    tableBody.empty();
+
+    if (!data || data.length === 0) {
+
+    tableBody.append(`
+    <tr>
+    <td colspan="6" class="text-center text-muted py-3">
+    No consumables found
+    </td>
+    </tr>
+    `);
+    return;
+    }
+
+    $.each(data, function (index, item) {
+
+    var badgeClass = "bg-secondary";
+
+    if (item.status === "OutOfStock") {
+    badgeClass = "bg-danger";
+    }
+    else if (item.status === "LowStock") {
+    badgeClass = "bg-warning text-dark";
+    }
+    else if (item.status === "InStock") {
+    badgeClass = "bg-success";
+    }
+
+    var row = `
+    <tr>
+
+    <td>${item.consumablename}</td>
+    <td>${item.suppliername}</td>
+    <td>${item.reorderlevel}</td>
+    <td>${item.quantityinhand}</td>
+
+    <td>
+    <span class="badge ${badgeClass}">
+    ${item.status}
+    </span>
+    </td>
+
+    <td>
+    <div class="d-flex gap-2 flex-nowrap">
+
+    <a href="/Manager/AdjustStock/${item.consumableId}"
+    class="btn btn-sm btn-outline-primary">
+    Adjust
+    </a>
+
+    <a href="/Manager/EditConsumable/${item.consumableId}"
+    class="btn btn-sm btn-outline-secondary">
+    Edit
+    </a>
+
+    <a href="/Manager/DeleteConsumable/${item.consumableId}"
+    class="btn btn-sm btn-outline-danger"
+    onclick="return confirm('Delete this item?');">
+    Deactivate
+    </a>
+
+    </div>
+    </td>
+
+    </tr>
+    `;
+
+    tableBody.append(row);
+    });
+    },
+
+    error: function () {
+    alert("Error loading search results.");
+    }
+
+    });
+
+    });
+
+    });
+
+</script>

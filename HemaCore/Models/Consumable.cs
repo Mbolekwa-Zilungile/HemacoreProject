@@ -12,6 +12,8 @@ namespace HemaCore.Models
 
         public int QuantityInHand { get; set; }
 
+        public bool IsActive { get; set; }
+
         public ConsumableStatus Status
         {
 
@@ -29,7 +31,7 @@ namespace HemaCore.Models
         }
         public ICollection<TestTypeConsumable> TestTypeConsumables { get; set; } = new List<TestTypeConsumable>();
         public int SupplierId { get; set; }
-        public Supplier Supplier { get; set; }//Supplier navigation property
+        public Supplier Supplier { get; set; }//Supplier navigation property 
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }
