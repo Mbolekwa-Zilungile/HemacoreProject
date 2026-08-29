@@ -58,8 +58,7 @@ namespace HemaCore.Data
                 { t.LabTechnicianId, t.TestTypeId });
             //Composite Primary key for TestRequestTestType
             modelbuilder.Entity<TestRequestTestType>()
-                .HasKey(t => new
-                { t.LabTechnicianId, t.TestResultId });
+    .HasKey(t => t.TestRequestTestTypeId);
             //Composite Primary key for TestTypeSample
             modelbuilder.Entity<TestTypeSample>()
                 .HasKey(t => new

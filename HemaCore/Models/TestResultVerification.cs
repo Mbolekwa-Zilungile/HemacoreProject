@@ -1,4 +1,4 @@
-﻿using Microsoft.Identity.Client;
+﻿//using Microsoft.Identity.Client;
 using System.ComponentModel.DataAnnotations;
 
 namespace HemaCore.Models
