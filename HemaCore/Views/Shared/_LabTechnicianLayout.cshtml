@@ -1,105 +1,111 @@
-﻿﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<HemaCore.Models.Users> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+
+<!DOCTYPE html>
+
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
 
+    
     <link rel="stylesheet" href="~/css/Layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+
 </head>
 
 <body>
     <div class="wrapper">
 
+        
         <!-- SIDEBAR -->
         <nav id="sidebar">
 
             <div class="sidebar-header">
-    <div class="header-top">
-        <button id="sidebarToggle" class="toggle-btn">
-            <i class="fas fa-angle-left"></i>
-        </button>
 
-        <h3>HemaCore</h3>
-    </div>
+                <div class="header-top">
 
-    <p>LABTECH</p>
-</div>
+                    <button id="sidebarToggle" class="toggle-btn">
+                        <i class="fas fa-angle-left"></i>
+                    </button>
+
+                    <h3>HemaCore</h3>
+
+                </div>
+
+                
+
+                <div class="technician-name">
+                    <i class="fas fa-user-circle"></i>
+                    <span>@currentUser?.FullName</span>
+                </div>
+
+            </div>
+
 
             <ul class="list-unstyled components">
 
+                <!-- OVERVIEW -->
                 <li class="section-label">OVERVIEW</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
-                   
-                    <a asp-controller="Manager" asp-action="Index">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="Index">
                         <i class="fas fa-home"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
                 </li>
 
-                <li class="section-label">TEST CATALOGUE</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Receive Samples" ? "active" : "")">
+
+                <!-- TEST PROCESSING -->
+                <li class="section-label">TEST PROCESSING</li>
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReceiveSample" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="ReceiveSample">
-                        <i class="fas fa-folder"></i>
+                        <i class="fas fa-vial"></i>
                         <span class="menu-text">Receive Samples</span>
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Process Tests" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="TestTypes">
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ProcessTests" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="ProcessTests">
                         <i class="fas fa-microscope"></i>
-                        <span class="menu-text">Test Types</span>
-                    </a>
-                </li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Capture Results" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="SampleTypes">
-                        <i class="fas fa-vial"></i>
-                        <span class="menu-text">Sample Types</span>
-                    </a>
-                </li>
-              
-                <li class="section-label">STOCK MANAGEMENT</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Consumables" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Consumables">
-                        <i class="fas fa-box"></i>
-                        <span class="menu-text">Consumables</span>
+                        <span class="menu-text">Process Tests</span>
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Suppliers" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Suppliers">
-                        <i class="fas fa-industry"></i>
-                        <span class="menu-text">Suppliers</span>
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "CaptureResults" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="CaptureResults">
+                        <i class="fas fa-flask"></i>
+                        <span class="menu-text">Capture Results</span>
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Orders">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="menu-text">Orders</span>
-                    </a>
-                </li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
-
-                <li class="section-label">USER MANAGEMENT</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Doctors" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Doctors">
-                        <i class="fas fa-user-doctor"></i>
-                        <span class="menu-text">Doctors</span>
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "VerifyResults" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="VerifyResults">
+                        <i class="fas fa-check-double"></i>
+                        <span class="menu-text">Verify Results</span>
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Technicians" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Technicians">
-                        <i class="fas fa-user-nurse"></i>
-                        <span class="menu-text">Technicians</span>
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReviewResults" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="ReviewResults">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span class="menu-text">Review Results</span>
                     </a>
                 </li>
 
 
+                <!-- REPORTING -->
                 <li class="section-label">REPORTING</li>
-                <li >
-                    <a href="#">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="Reports">
                         <i class="fas fa-chart-bar"></i>
                         <span class="menu-text">Reports</span>
                     </a>
@@ -107,43 +113,61 @@
 
             </ul>
 
+
+            <!-- LOGOUT -->
             <div class="logout">
+
                 <a asp-controller="Account" asp-action="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="menu-text">Logout</span>
                 </a>
+
             </div>
 
         </nav>
 
+
         <!-- CONTENT -->
         <div id="content">
+
             @RenderBody()
+
         </div>
 
     </div>
 
-    <!-- SCRIPT -->
+
+    <!-- SIDEBAR SCRIPT -->
     <script>
-            const sidebar = document.getElementById("sidebar"); 
+
+            const sidebar = document.getElementById("sidebar");
             const content = document.getElementById("content");
             const toggleBtn = document.getElementById("sidebarToggle");
             const icon = toggleBtn.querySelector("i");
 
-            toggleBtn.addEventListener("click", function () {
+            toggleBtn.addEventListener("click", function() {
 
                 sidebar.classList.toggle("collapsed");
                 content.classList.toggle("expanded");
 
                 if (sidebar.classList.contains("collapsed")) {
+
                     icon.classList.remove("fa-angle-left");
                     icon.classList.add("fa-angle-right");
+
                 } else {
+
                     icon.classList.remove("fa-angle-right");
                     icon.classList.add("fa-angle-left");
+
                 }
+
             });
+
     </script>
-        @RenderSection("Scripts", required: false)
+
+    @RenderSection("Scripts", required: false)
+    
+
 </body>
 </html>

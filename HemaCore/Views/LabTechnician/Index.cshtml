@@ -1,6 +1,894 @@
-﻿@{
-    Layout = "~/Views/Shared/_LabTechnicianLayout.cshtml";
-    ViewBag.Title = "Lab Technician Dashboard";
+﻿@model HemaCore.Models.ViewModels.LabTechnicianDashboardViewModel
+
+@{
+    ViewData["Title"] = "Lab Technician Dashboard";
+    Layout = "_LabTechnicianLayout";
 }
 
-<h1>Lab Technician Dashboard</h1>
+<div class="container-fluid px-4 py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">Lab Technician Dashboard</h2>
+            <p class="text-muted mb-0">
+                Overview of your laboratory workload and test activities.
+            </p>
+        </div>
+
+        <div>
+            <span class="text-muted">
+                <i class="fas fa-calendar-day me-2"></i>
+                @DateTime.Now.ToString("dd MMMM yyyy")
+            </span>
+        </div>
+
+    </div>
+
+
+    <!-- KPI CARDS -->
+    <div class="row g-4 mb-4">
+
+        <!-- My Selected Tests -->
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100 shadow-sm border-0 clickable-card"
+                 data-filter="selected"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted mb-2">
+                                My Selected Tests
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                @Model.MySelectedTests
+                            </h2>
+                        </div>
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+                        Tests currently assigned to you
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Waiting to be Selected -->
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100 shadow-sm border-0 clickable-card"
+                 data-filter="waiting"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted mb-2">
+                                Waiting to be Selected
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                @Model.WaitingToBeSelected
+                            </h2>
+                        </div>
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+                        Tests available for selection
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Waiting Verification -->
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100 shadow-sm border-0 clickable-card"
+                 data-filter="verification"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted mb-2">
+                                Waiting Verification
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                @Model.WaitingVerification
+                            </h2>
+                        </div>
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+                        Results waiting for verification
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Waiting Review -->
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100 shadow-sm border-0 clickable-card"
+                 data-filter="review"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <p class="text-muted mb-2">
+                                Waiting Review
+                            </p>
+
+                            <h2 class="fw-bold mb-0">
+                                @Model.WaitingReview
+                            </h2>
+                        </div>
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+
+                    </div>
+
+                    <small class="text-muted">
+                        Results returned for review
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ALERT CARDS -->
+    <div class="row g-4 mb-4">
+
+        <!-- STAT -->
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm h-100 clickable-card"
+                 data-filter="urgent"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center mb-3">
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+
+                        <h5 class="fw-bold mb-0 ms-3">
+                            Urgent / STAT Tests
+                        </h5>
+
+                    </div>
+
+                    <h2 class="fw-bold">
+                        @Model.UrgentTests
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Urgent tests requiring immediate attention.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- OVERDUE -->
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm h-100 clickable-card"
+                 data-filter="overdue"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center mb-3">
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+
+                        <h5 class="fw-bold mb-0 ms-3">
+                            Overdue Tests
+                        </h5>
+
+                    </div>
+
+                    <h2 class="fw-bold">
+                        @Model.OverdueTests
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Tests that have exceeded their turnaround time.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- NEARING LIMIT -->
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm h-100 clickable-card"
+                 data-filter="nearing"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center mb-3">
+
+                        <div class="dashboard-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+
+                        <h5 class="fw-bold mb-0 ms-3">
+                            Nearing Turnaround Limit
+                        </h5>
+
+                    </div>
+
+                    <h2 class="fw-bold">
+                        @Model.NearingTurnaround
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Tests approaching their expected completion time.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILTERS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex align-items-center mb-3">
+
+                <i class="fas fa-filter me-2"></i>
+
+                <h5 class="fw-bold mb-0">
+                    Filter Tests
+                </h5>
+
+            </div>
+
+            <div class="row g-3">
+
+                <!-- Urgency -->
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Urgency
+                    </label>
+
+                    <select id="urgencyFilter"
+                            class="form-select">
+
+                        <option value="">
+                            All
+                        </option>
+
+                        <option value="Routine">
+                            Routine
+                        </option>
+
+                        <option value="Urgent">
+                            Urgent
+                        </option>
+
+                        <option value="STAT">
+                            STAT
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Test Type -->
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Test Type
+                    </label>
+
+                    <select id="testTypeFilter"
+                            class="form-select">
+
+                        <option value="">
+                            All Test Types
+                        </option>
+
+                        @foreach (var testType in Model.Workload
+                            .Select(x => x.TestTypeName)
+                            .Where(x => !string.IsNullOrEmpty(x))
+                            .Distinct())
+                        {
+                            <option value="@testType">
+                                @testType
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <!-- Status -->
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <select id="statusFilter"
+                            class="form-select">
+
+                        <option value="">
+                            All
+                        </option>
+
+                        <option value="Submitted">
+                            Submitted
+                        </option>
+
+                        <option value="In Progress">
+                            In Progress
+                        </option>
+
+                        <option value="Completed">
+                            Completed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Request Number -->
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Request Number
+                    </label>
+
+                    <input type="text"
+                           id="requestFilter"
+                           class="form-control"
+                           placeholder="Search request number">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TEST WORKLOAD TABLE -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        <i class="fas fa-microscope me-2"></i>
+                        Test Workload
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        Tests requiring your attention.
+                    </p>
+
+                </div>
+
+                <span id="testCount"
+                      class="badge bg-secondary">
+
+                    @Model.Workload.Count Tests
+
+                </span>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle"
+                       id="workloadTable">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Request No.</th>
+
+                            <th>Patient</th>
+
+                            <th>Test Type</th>
+
+                            <th>Urgency</th>
+
+                            <th>Status</th>
+
+                            <th>Due Time</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @if (Model.Workload == null || !Model.Workload.Any())
+                        {
+                            <tr>
+
+                                <td colspan="6"
+                                    class="text-center text-muted py-5">
+
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+
+                                    No tests currently require your attention.
+
+                                </td>
+
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var test in Model.Workload)
+                            {
+                                <tr class="workload-row"
+                                    data-urgency="@test.Urgency"
+                                    data-testtype="@test.TestTypeName"
+                                    data-status="@test.Status"
+                                    data-request="@test.TestRequestId"
+                                    data-due="@test.DueTime">
+
+                                    <td>
+                                        #@test.TestRequestId
+                                    </td>
+
+                                    <td>
+                                        @test.PatientName
+                                    </td>
+
+                                    <td>
+                                        @test.TestTypeName
+                                    </td>
+
+                                    <td>
+
+                                        @if (test.Urgency == "STAT")
+                                        {
+                                            <span class="badge bg-danger">
+                                                STAT
+                                            </span>
+                                        }
+                                        else if (test.Urgency == "Urgent")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                Urgent
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @test.Urgency
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        @if (test.Status == "Completed")
+                                        {
+                                            <span class="badge bg-success">
+                                                Completed
+                                            </span>
+                                        }
+                                        else if (test.Status == "In Progress")
+                                        {
+                                            <span class="badge bg-primary">
+                                                In Progress
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                @test.Status
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        @(test.DueTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                            <tr id="noFilterResults"
+                                style="display:none;">
+
+                                <td colspan="6"
+                                    class="text-center text-muted py-5">
+
+                                    <i class="fas fa-search fa-2x mb-3 d-block"></i>
+
+                                    No tests match the selected filter.
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const urgencyFilter =
+            document.getElementById("urgencyFilter");
+
+        const testTypeFilter =
+            document.getElementById("testTypeFilter");
+
+        const statusFilter =
+            document.getElementById("statusFilter");
+
+        const requestFilter =
+            document.getElementById("requestFilter");
+
+        const rows =
+            document.querySelectorAll(".workload-row");
+
+        const testCount =
+            document.getElementById("testCount");
+
+        const noResults =
+            document.getElementById("noFilterResults");
+
+
+        function filterTests(
+            cardFilter = null
+        ) {
+
+            let visibleCount = 0;
+
+
+            rows.forEach(function(row) {
+
+                let show = true;
+
+
+                const urgency =
+                    row.dataset.urgency || "";
+
+                const testType =
+                    row.dataset.testtype || "";
+
+                const status =
+                    row.dataset.status || "";
+
+                const request =
+                    row.dataset.request || "";
+
+                const due =
+                    row.dataset.due || "";
+
+
+                // Normal filters
+
+                if (
+                    urgencyFilter.value &&
+                    urgency.toLowerCase() !==
+                    urgencyFilter.value.toLowerCase()
+                ) {
+                    show = false;
+                }
+
+
+                if (
+                    testTypeFilter.value &&
+                    testType.toLowerCase() !==
+                    testTypeFilter.value.toLowerCase()
+                ) {
+                    show = false;
+                }
+
+
+                if (
+                    statusFilter.value &&
+                    status.toLowerCase() !==
+                    statusFilter.value.toLowerCase()
+                ) {
+                    show = false;
+                }
+
+
+                if (
+                    requestFilter.value &&
+                    !request.toLowerCase().includes(
+                        requestFilter.value.toLowerCase()
+                    )
+                ) {
+                    show = false;
+                }
+
+
+                // Dashboard card filters
+
+                if (cardFilter === "selected") {
+
+                    if (
+                        status === "Completed" ||
+                        status === "Submitted"
+                    ) {
+                        show = false;
+                    }
+
+                }
+
+
+                if (cardFilter === "waiting") {
+
+                    if (
+                        status !== "Submitted"
+                    ) {
+                        show = false;
+                    }
+
+                }
+
+
+                if (cardFilter === "verification") {
+
+                    if (
+                        status !== "Completed"
+                    ) {
+                        show = false;
+                    }
+
+                }
+
+
+                if (cardFilter === "urgent") {
+
+                    if (
+                        urgency !== "STAT"
+                    ) {
+                        show = false;
+                    }
+
+                }
+
+
+                if (cardFilter === "overdue") {
+
+                    if (!due) {
+
+                        show = false;
+
+                    }
+                    else {
+
+                        const dueDate =
+                            new Date(due);
+
+                        if (
+                            dueDate >= new Date() ||
+                            status === "Completed"
+                        ) {
+                            show = false;
+                        }
+
+                    }
+
+                }
+
+
+                if (cardFilter === "nearing") {
+
+                    if (!due) {
+
+                        show = false;
+
+                    }
+                    else {
+
+                        const dueDate =
+                            new Date(due);
+
+                        const now =
+                            new Date();
+
+                        const twoHours =
+                            new Date(
+                                now.getTime()
+                                + (2 * 60 * 60 * 1000)
+                            );
+
+                        if (
+                            dueDate <= now ||
+                            dueDate > twoHours ||
+                            status === "Completed"
+                        ) {
+                            show = false;
+                        }
+
+                    }
+
+                }
+
+
+                if (show) {
+
+                    row.style.display = "";
+
+                    visibleCount++;
+
+                }
+                else {
+
+                    row.style.display = "none";
+
+                }
+
+            });
+
+
+            testCount.textContent =
+                visibleCount + " Tests";
+
+
+            if (noResults) {
+
+                noResults.style.display =
+                    visibleCount === 0
+                        ? ""
+                        : "none";
+
+            }
+
+        }
+
+
+        // Normal filters
+
+        urgencyFilter.addEventListener(
+            "change",
+            function() {
+                filterTests();
+            }
+        );
+
+
+        testTypeFilter.addEventListener(
+            "change",
+            function() {
+                filterTests();
+            }
+        );
+
+
+        statusFilter.addEventListener(
+            "change",
+            function() {
+                filterTests();
+            }
+        );
+
+
+        requestFilter.addEventListener(
+            "keyup",
+            function() {
+                filterTests();
+            }
+        );
+
+
+        // Dashboard cards
+
+        document
+            .querySelectorAll(".clickable-card")
+            .forEach(function(card) {
+
+                card.addEventListener(
+                    "click",
+                    function() {
+
+                        const filter =
+                            card.dataset.filter;
+
+                        filterTests(filter);
+
+                    }
+                );
+
+            });
+
+    });
+
+</script>
