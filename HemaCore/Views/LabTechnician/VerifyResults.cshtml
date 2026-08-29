@@ -1,0 +1,133 @@
+﻿
+@model IEnumerable<HemaCore.Models.TestResult>
+
+@{
+    ViewData["Title"] = "Verify Test Results";
+    Layout = "_LabTechnicianLayout";
+}
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+
+        <h2 class="fw-bold">
+            Verify Test Results
+        </h2>
+
+        <p class="text-muted mb-0">
+            Review completed test results before they are released.
+        </p>
+
+    </div>
+
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            There are currently no test results waiting for verification.
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>Request No.</th>
+
+                                <th>Patient</th>
+
+                                <th>Test Type</th>
+
+                                <th>Result</th>
+
+                                <th>Date Captured</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var result in Model)
+                            {
+                                var test =
+                                    result.TestRequestTestType.FirstOrDefault();
+
+                                <tr>
+
+                                    <td>
+                                        #@test?.TestRequestId
+                                    </td>
+
+                                    <td>
+                                        @test?.TestRequest?.Patient?.Name
+                                        @test?.TestRequest?.Patient?.Surname
+                                    </td>
+
+                                    <td>
+                                        @test?.TestType?.TestTypeName
+                                    </td>
+
+                                    <td>
+
+                                        @if (result.IsAbnormal)
+                                        {
+                                            <span class="badge bg-danger">
+                                                @result.ResultValue
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                @result.ResultValue
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+                                        @result.DateCaptured.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+
+                                    <td>
+
+                                        <a asp-action="VerifyResultDetails"
+                                           asp-route-id="@result.TestResultId"
+                                           class="btn btn-primary btn-sm">
+
+                                            <i class="fas fa-check-double me-1"></i>
+                                            Review
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+

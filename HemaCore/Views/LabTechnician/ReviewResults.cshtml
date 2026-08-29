@@ -1,0 +1,141 @@
+﻿
+@model IEnumerable<HemaCore.Models.TestResultVerification>
+
+@{
+    ViewData["Title"] = "Review Test Results";
+    Layout = "_LabTechnicianLayout";
+}
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+
+        <h2 class="fw-bold">
+            Review Test Results
+        </h2>
+
+        <p class="text-muted mb-0">
+            Review test results that have been returned for further attention.
+        </p>
+
+    </div>
+
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+
+            <i class="fas fa-info-circle me-2"></i>
+
+            There are currently no test results requiring review.
+
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>Request No.</th>
+
+                                <th>Patient</th>
+
+                                <th>Test Type</th>
+
+                                <th>Result</th>
+
+                                <th>Review Notes</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var verification in Model)
+                            {
+                                var result = verification.TestResult;
+
+                                var test =
+                                    result?.TestRequestTestType.FirstOrDefault();
+
+                                <tr>
+
+                                    <td>
+                                        #@test?.TestRequestId
+                                    </td>
+
+                                    <td>
+                                        @test?.TestRequest?.Patient?.Name
+                                        @test?.TestRequest?.Patient?.Surname
+                                    </td>
+
+                                    <td>
+                                        @test?.TestType?.TestTypeName
+                                    </td>
+
+                                    <td>
+
+                                        @if (result?.IsAbnormal == true)
+                                        {
+                                            <span class="badge bg-danger">
+                                                @result.ResultValue
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                @result?.ResultValue
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(verification.ReviewNotes)
+                                            ? "No review notes"
+                                            : verification.ReviewNotes)
+                                    </td>
+
+                                    <td>
+
+                                        <a asp-action="ReviewResultDetails"
+                                           asp-route-id="@verification.TestResultVerificationId"
+                                           class="btn btn-primary btn-sm">
+
+                                            <i class="fas fa-eye me-1"></i>
+
+                                            Review
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+

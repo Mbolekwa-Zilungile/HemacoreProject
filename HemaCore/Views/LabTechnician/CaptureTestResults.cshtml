@@ -1,0 +1,194 @@
+﻿
+@model HemaCore.Models.TestRequestTestType
+
+@{
+    ViewData["Title"] = "Capture Test Result";
+    Layout = "_LabTechnicianLayout";
+}
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+
+        <h2 class="fw-bold">
+            Capture Test Result
+        </h2>
+
+        <p class="text-muted">
+            Enter the result for the test currently being processed.
+        </p>
+
+    </div>
+
+
+    <!-- TEST INFORMATION -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-3">
+                <i class="fas fa-microscope me-2"></i>
+                Test Information
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <label class="text-muted">
+                        Request Number
+                    </label>
+
+                    <div class="fw-semibold">
+                        #@Model.TestRequestId
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label class="text-muted">
+                        Patient
+                    </label>
+
+                    <div class="fw-semibold">
+                        @Model.TestRequest?.Patient?.Name
+                        @Model.TestRequest?.Patient?.Surname
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label class="text-muted">
+                        Test Type
+                    </label>
+
+                    <div class="fw-semibold">
+                        @Model.TestType?.TestTypeName
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label class="text-muted">
+                        Status
+                    </label>
+
+                    <div>
+                        <span class="badge bg-primary">
+                            @Model.Status
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULT FORM -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-4">
+                <i class="fas fa-vial me-2"></i>
+                Test Result
+            </h5>
+
+
+            <form asp-action="SaveTestResult"
+                  method="post">
+
+                <input type="hidden"
+                       name="testRequestTestTypeId"
+                       value="@Model.TestRequestTestTypeId" />
+
+
+                <!-- RESULT VALUE -->
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Result Value
+                    </label>
+
+                    <input type="text"
+                           name="resultValue"
+                           class="form-control"
+                           placeholder="Enter test result"
+                           required />
+
+                </div>
+
+
+                <!-- NOTES -->
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Notes
+                    </label>
+
+                    <textarea name="notes"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Enter any relevant notes"></textarea>
+
+                </div>
+
+
+                <!-- ABNORMAL -->
+                <div class="form-check mb-4">
+
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="isAbnormal"
+                           value="true"
+                           id="isAbnormal" />
+
+                    <label class="form-check-label"
+                           for="isAbnormal">
+
+                        Mark result as abnormal
+
+                    </label>
+
+                </div>
+
+
+                <!-- BUTTONS -->
+                <div class="d-flex gap-2">
+
+                    <a asp-action="ProcessTests"
+                       class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="fas fa-save me-2"></i>
+                        Save Result
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+

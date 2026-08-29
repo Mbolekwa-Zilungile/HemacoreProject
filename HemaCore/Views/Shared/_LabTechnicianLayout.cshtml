@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿
+@using Microsoft.AspNetCore.Identity
 @inject UserManager<HemaCore.Models.Users> UserManager
 
 @{
@@ -12,18 +13,17 @@
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
 
-    
     <link rel="stylesheet" href="~/css/Layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 </head>
 
 <body>
+
     <div class="wrapper">
 
-        
         <!-- SIDEBAR -->
         <nav id="sidebar">
 
@@ -39,11 +39,12 @@
 
                 </div>
 
-                
-
                 <div class="technician-name">
+
                     <i class="fas fa-user-circle"></i>
+
                     <span>@currentUser?.FullName</span>
+
                 </div>
 
             </div>
@@ -52,63 +53,120 @@
             <ul class="list-unstyled components">
 
                 <!-- OVERVIEW -->
-                <li class="section-label">OVERVIEW</li>
+                <li class="section-label">
+                    OVERVIEW
+                </li>
 
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="Index">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="Index">
+
                         <i class="fas fa-home"></i>
-                        <span class="menu-text">Dashboard</span>
+
+                        <span class="menu-text">
+                            Dashboard
+                        </span>
+
                     </a>
+
                 </li>
 
 
                 <!-- TEST PROCESSING -->
-                <li class="section-label">TEST PROCESSING</li>
+                <li class="section-label">
+                    TEST PROCESSING
+                </li>
 
+
+                <!-- RECEIVE SAMPLES -->
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReceiveSample" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="ReceiveSample">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="ReceiveSample">
+
                         <i class="fas fa-vial"></i>
-                        <span class="menu-text">Receive Samples</span>
+
+                        <span class="menu-text">
+                            Receive Samples
+                        </span>
+
                     </a>
+
                 </li>
 
+
+                <!-- PROCESS TESTS -->
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ProcessTests" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="ProcessTests">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="ProcessTests">
+
                         <i class="fas fa-microscope"></i>
-                        <span class="menu-text">Process Tests</span>
+
+                        <span class="menu-text">
+                            Process Tests
+                        </span>
+
                     </a>
+
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "CaptureResults" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="CaptureResults">
-                        <i class="fas fa-flask"></i>
-                        <span class="menu-text">Capture Results</span>
-                    </a>
-                </li>
 
+                <!-- VERIFY RESULTS -->
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "VerifyResults" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="VerifyResults">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="VerifyResults">
+
                         <i class="fas fa-check-double"></i>
-                        <span class="menu-text">Verify Results</span>
+
+                        <span class="menu-text">
+                            Verify Results
+                        </span>
+
                     </a>
+
                 </li>
 
+
+                <!-- REVIEW RESULTS -->
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReviewResults" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="ReviewResults">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="ReviewResults">
+
                         <i class="fas fa-clipboard-check"></i>
-                        <span class="menu-text">Review Results</span>
+
+                        <span class="menu-text">
+                            Review Results
+                        </span>
+
                     </a>
+
                 </li>
 
 
                 <!-- REPORTING -->
-                <li class="section-label">REPORTING</li>
+                <li class="section-label">
+                    REPORTING
+                </li>
 
+
+                <!-- REPORTS -->
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="Reports">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="Reports">
+
                         <i class="fas fa-chart-bar"></i>
-                        <span class="menu-text">Reports</span>
+
+                        <span class="menu-text">
+                            Reports
+                        </span>
+
                     </a>
+
                 </li>
 
             </ul>
@@ -117,9 +175,15 @@
             <!-- LOGOUT -->
             <div class="logout">
 
-                <a asp-controller="Account" asp-action="Logout">
+                <a asp-controller="Account"
+                   asp-action="Logout">
+
                     <i class="fas fa-sign-out-alt"></i>
-                    <span class="menu-text">Logout</span>
+
+                    <span class="menu-text">
+                        Logout
+                    </span>
+
                 </a>
 
             </div>
@@ -167,7 +231,7 @@
     </script>
 
     @RenderSection("Scripts", required: false)
-    
 
 </body>
 </html>
+

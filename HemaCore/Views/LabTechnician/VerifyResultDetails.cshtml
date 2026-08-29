@@ -1,0 +1,263 @@
+﻿
+@model HemaCore.Models.TestResult
+
+@{
+    ViewData["Title"] = "Review Test Result";
+    Layout = "_LabTechnicianLayout";
+
+    var test = Model.TestRequestTestType.FirstOrDefault();
+}
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+
+        <h2 class="fw-bold">
+            Review Test Result
+        </h2>
+
+        <p class="text-muted mb-0">
+            Review the captured result before verification.
+        </p>
+
+    </div>
+
+
+    <!-- PATIENT & TEST INFORMATION -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-4">
+                <i class="fas fa-user me-2"></i>
+                Patient & Test Information
+            </h5>
+
+            <div class="row g-4">
+
+                <div class="col-md-3">
+
+                    <small class="text-muted">
+                        Request Number
+                    </small>
+
+                    <div class="fw-semibold">
+                        #@test?.TestRequestId
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <small class="text-muted">
+                        Patient
+                    </small>
+
+                    <div class="fw-semibold">
+                        @test?.TestRequest?.Patient?.Name
+                        @test?.TestRequest?.Patient?.Surname
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <small class="text-muted">
+                        Test Type
+                    </small>
+
+                    <div class="fw-semibold">
+                        @test?.TestType?.TestTypeName
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <small class="text-muted">
+                        Date Captured
+                    </small>
+
+                    <div class="fw-semibold">
+                        @Model.DateCaptured.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULT -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-4">
+                <i class="fas fa-vial me-2"></i>
+                Test Result
+            </h5>
+
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+
+                    <small class="text-muted">
+                        Result Value
+                    </small>
+
+                    <div class="mt-2">
+
+                        @if (Model.IsAbnormal)
+                        {
+                            <span class="badge bg-danger fs-6">
+                                @Model.ResultValue
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success fs-6">
+                                @Model.ResultValue
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <small class="text-muted">
+                        Result Status
+                    </small>
+
+                    <div class="mt-2">
+
+                        @if (Model.IsAbnormal)
+                        {
+                            <span class="badge bg-danger">
+                                Abnormal
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                Normal
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-12">
+
+                    <small class="text-muted">
+                        Notes
+                    </small>
+
+                    <div class="border rounded p-3 mt-2 bg-light">
+
+                        @(string.IsNullOrWhiteSpace(Model.Notes)
+                            ? "No notes were provided."
+                            : Model.Notes)
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- VERIFICATION ACTIONS -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-3">
+                Verification
+            </h5>
+
+            <p class="text-muted">
+                Confirm whether this test result is accurate and ready
+                to proceed to the next stage.
+            </p>
+
+
+            <form asp-action="VerifyResult"
+                  method="post">
+
+                <input type="hidden"
+                       name="id"
+                       value="@Model.TestResultId" />
+
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Review Notes
+                    </label>
+
+                    <textarea name="reviewNotes"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Enter verification notes (optional)"></textarea>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <a asp-action="VerifyResults"
+                       class="btn btn-secondary">
+
+                        Back
+
+                    </a>
+
+
+                    <button type="submit"
+                            name="action"
+                            value="SendBack"
+                            class="btn btn-warning">
+
+                        <i class="fas fa-undo me-1"></i>
+                        Send Back
+
+                    </button>
+
+
+                    <button type="submit"
+                            name="action"
+                            value="Verify"
+                            class="btn btn-success">
+
+                        <i class="fas fa-check me-1"></i>
+                        Verify Result
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+

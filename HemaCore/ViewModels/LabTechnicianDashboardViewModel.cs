@@ -2,6 +2,7 @@
 {
     public class LabTechnicianDashboardViewModel
     {
+        public string TechnicianName { get; set; }
         public int MySelectedTests { get; set; }
 
         public int WaitingToBeSelected { get; set; }
