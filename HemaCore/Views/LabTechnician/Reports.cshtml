@@ -1,0 +1,490 @@
+﻿@model HemaCore.Models.ViewModels.LabTechnicianReportViewModel
+
+@{
+    ViewData["Title"] = "Lab Technician Reporting";
+    Layout = "_LabTechnicianLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-chart-bar me-2"></i>
+
+            <span>Lab Technician Reporting</span>
+
+        </div>
+
+    </div>
+
+    <p class="text-muted mb-4">
+        Generate reports on laboratory test processing, results,
+        verification and turnaround times.
+    </p>
+
+
+    <!-- REPORT FILTERS -->
+
+    <div class="section-title mb-3">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-filter me-2"></i>
+
+            <span>Report Filters</span>
+
+        </div>
+
+    </div>
+
+
+    <form asp-action="Reports" method="get">
+
+        <div class="row g-3 mb-4">
+
+            <!-- FROM DATE -->
+            <div class="col-md-3">
+
+                <label class="form-label fw-semibold">
+                    From Date
+                </label>
+
+                <input type="date"
+                       name="fromDate"
+                       value="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
+                       class="form-control" />
+
+            </div>
+
+
+            <!-- TO DATE -->
+            <div class="col-md-3">
+
+                <label class="form-label fw-semibold">
+                    To Date
+                </label>
+
+                <input type="date"
+                       name="toDate"
+                       value="@(Model.ToDate?.ToString("yyyy-MM-dd"))"
+                       class="form-control" />
+
+            </div>
+
+
+            <!-- TEST TYPE -->
+            <div class="col-md-2">
+
+                <label class="form-label fw-semibold">
+                    Test Type
+                </label>
+
+                <select name="testType" class="form-select">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="Full Blood Count"
+                            selected="@(Model.TestType == "Full Blood Count")">
+                        Full Blood Count
+                    </option>
+
+                    <option value="ESR"
+                            selected="@(Model.TestType == "ESR")">
+                        ESR
+                    </option>
+
+                    <option value="Blood Group"
+                            selected="@(Model.TestType == "Blood Group")">
+                        Blood Group
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- STATUS -->
+            <div class="col-md-2">
+
+                <label class="form-label fw-semibold">
+                    Status
+                </label>
+
+                <select name="status" class="form-select">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="Completed"
+                            selected="@(Model.Status == "Completed")">
+                        Completed
+                    </option>
+
+                    <option value="InProgress"
+                            selected="@(Model.Status == "InProgress")">
+                        In Progress
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- URGENCY -->
+            <div class="col-md-2">
+
+                <label class="form-label fw-semibold">
+                    Urgency
+                </label>
+
+                <select name="urgency" class="form-select">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="Routine"
+                            selected="@(Model.Urgency == "Routine")">
+                        Routine
+                    </option>
+
+                    <option value="Urgent"
+                            selected="@(Model.Urgency == "Urgent")">
+                        Urgent
+                    </option>
+
+                    <option value="STAT"
+                            selected="@(Model.Urgency == "STAT")">
+                        STAT
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <div class="d-flex gap-2 mb-4">
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="fas fa-chart-bar me-1"></i>
+
+                Generate Report
+
+            </button>
+
+            <a asp-action="Reports"
+               class="btn btn-secondary">
+
+                <i class="fas fa-rotate-left me-1"></i>
+
+                Clear Filters
+
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <!-- SUMMARY -->
+
+    <div class="section-title mb-3">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-chart-pie me-2"></i>
+
+            <span>Report Summary</span>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4 col-lg">
+
+            <div class="border rounded p-3">
+
+                <small class="text-muted">
+                    Total Tests
+                </small>
+
+                <h3 class="fw-bold mb-0">
+                    @Model.TotalTests
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg">
+
+            <div class="border rounded p-3">
+
+                <small class="text-muted">
+                    Completed
+                </small>
+
+                <h3 class="fw-bold mb-0">
+                    @Model.CompletedTests
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg">
+
+            <div class="border rounded p-3">
+
+                <small class="text-muted">
+                    In Progress
+                </small>
+
+                <h3 class="fw-bold mb-0">
+                    @Model.InProgressTests
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg">
+
+            <div class="border rounded p-3">
+
+                <small class="text-muted">
+                    Abnormal Results
+                </small>
+
+                <h3 class="fw-bold mb-0">
+                    @Model.AbnormalResults
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- REPORT TABLE -->
+
+    <div class="section-title mb-3">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-table me-2"></i>
+
+            <span>Generated Report</span>
+
+            <span class="badge blue-badge ms-2">
+                @(Model.Tests?.Count ?? 0)
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="modern-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Request No.</th>
+
+                    <th>Patient</th>
+
+                    <th>Test Type</th>
+
+                    <th>Technician</th>
+
+                    <th>Urgency</th>
+
+                    <th>Status</th>
+
+                    <th>Result</th>
+
+                    <th>Turnaround</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                @if (Model.Tests == null || !Model.Tests.Any())
+                {
+                    <tr>
+
+                        <td colspan="8"
+                            class="text-center text-muted py-4">
+
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+
+                            <div class="fw-semibold">
+                                No test results found for the selected filters.
+                            </div>
+
+                            <small>
+                                Try changing the date range or report filters.
+                            </small>
+
+                        </td>
+
+                    </tr>
+                }
+                else
+                {
+                    foreach (var test in Model.Tests)
+                    {
+                        <tr>
+
+                            <td class="fw-semibold blue-text">
+                                #@test.TestRequestId
+                            </td>
+
+                            <td>
+                                @test.PatientName
+                            </td>
+
+                            <td>
+                                @test.TestTypeName
+                            </td>
+
+                            <td>
+                                @test.TechnicianName
+                            </td>
+
+                            <td>
+                                @test.Urgency
+                            </td>
+
+                            <td>
+
+                                @if (test.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">
+                                        Completed
+                                    </span>
+                                }
+                                else if (test.Status == "InProgress")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        In Progress
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @test.Status
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if (test.IsAbnormal)
+                                {
+                                    <span class="badge bg-danger">
+                                        @test.ResultValue
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        @test.ResultValue
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if (test.TurnaroundMinutes.HasValue)
+                                {
+                                    var minutes =
+                                        Math.Round(test.TurnaroundMinutes.Value);
+
+                                    if (minutes < 60)
+                                    {
+                                        @($"{minutes} min")
+                                    }
+                                    else
+                                    {
+                                        var hours =
+                                            Math.Floor(minutes / 60);
+
+                                        var remainingMinutes =
+                                            minutes % 60;
+
+                                        @($"{hours}h {remainingMinutes}min")
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- PDF BUTTON - WE WILL CONNECT THIS NEXT -->
+
+    <div class="mt-4">
+
+        <a asp-action="ExportReportPdf"
+           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-testType="@Model.TestType"
+           asp-route-status="@Model.Status"
+           asp-route-urgency="@Model.Urgency"
+           class="btn btn-outline-danger">
+
+            <i class="fas fa-file-pdf me-1"></i>
+
+            Export PDF
+
+        </a>
+
+        <small class="text-muted ms-2">
+            PDF export will be added next.
+        </small>
+
+    </div>
+
+</div>

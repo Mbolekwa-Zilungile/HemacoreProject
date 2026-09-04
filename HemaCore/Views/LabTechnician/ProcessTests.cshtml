@@ -5,88 +5,144 @@
     Layout = "_LabTechnicianLayout";
 }
 
-<div class="container mt-4">
+<link rel="stylesheet" href="~/css/doctor.css" />
 
-    <h2>Select & Process Tests</h2>
+<div class="content-card">
 
-    <p class="text-muted">
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-microscope me-2"></i>
+
+            <span>Select & Process Tests</span>
+
+            <span class="badge blue-badge ms-2">
+                @(Model?.Count() ?? 0)
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- DESCRIPTION -->
+    <p class="text-muted mb-3">
         Select a test to begin processing.
     </p>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            There are currently no tests waiting to be processed.
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
 
-            <table class="table table-bordered table-hover">
+    <!-- TABLE -->
+    <div class="table-responsive">
 
-                <thead class="table-dark">
+        <table class="modern-table">
 
+            <thead>
+
+                <tr>
+                    <th>Request Number</th>
+                    <th>Patient</th>
+                    <th>Test Type</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (!Model.Any())
+                {
                     <tr>
-                        <th>Request Number</th>
-                        <th>Patient</th>
-                        <th>Test Type</th>
-                        <th>Urgency</th>
-                        <th>Status</th>
-                        <th>Action</th>
+
+                        <td colspan="6"
+                            class="text-center text-muted py-4">
+
+                            <i class="fas fa-microscope fa-2x mb-2"></i>
+
+                            <div class="fw-semibold">
+                                There are currently no tests waiting to be processed.
+                            </div>
+
+                            <small>
+                                Tests will appear here when samples have been received.
+                            </small>
+
+                        </td>
+
                     </tr>
-
-                </thead>
-
-                <tbody>
-
+                }
+                else
+                {
                     @foreach (var test in Model)
                     {
                         <tr>
 
-                            <td>
+                            <!-- REQUEST NUMBER -->
+                            <td class="fw-semibold blue-text">
                                 #@test.TestRequestId
                             </td>
 
+
+                            <!-- PATIENT -->
                             <td>
                                 @test.TestRequest?.Patient?.Name
                                 @test.TestRequest?.Patient?.Surname
                             </td>
 
+
+                            <!-- TEST TYPE -->
                             <td>
                                 @test.TestType?.TestTypeName
                             </td>
 
+
+                            <!-- URGENCY -->
                             <td>
                                 @test.TestRequest?.Urgency
                             </td>
 
+
+                            <!-- STATUS -->
                             <td>
+
                                 <span class="badge bg-warning text-dark">
                                     @test.Status
                                 </span>
+
                             </td>
 
+
+                            <!-- ACTION -->
                             <td>
+
                                 <form asp-action="StartProcessing"
                                       asp-route-id="@test.TestRequestTestTypeId"
                                       method="post">
 
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-primary">
+
+                                        <i class="fas fa-play me-1"></i>
+
                                         Start Processing
+
                                     </button>
 
                                 </form>
+
                             </td>
 
                         </tr>
                     }
+                }
 
-                </tbody>
+            </tbody>
 
-            </table>
+        </table>
 
-        </div>
-    }
+    </div>
 
 </div>

@@ -1,133 +1,157 @@
-﻿
-@model IEnumerable<HemaCore.Models.TestResult>
+﻿@model IEnumerable<HemaCore.Models.TestResult>
 
 @{
     ViewData["Title"] = "Verify Test Results";
     Layout = "_LabTechnicianLayout";
 }
 
-<div class="container-fluid px-4 py-4">
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
 
     <!-- HEADER -->
-    <div class="mb-4">
+    <div class="section-title d-flex align-items-center justify-content-between">
 
-        <h2 class="fw-bold">
-            Verify Test Results
-        </h2>
+        <div class="d-flex align-items-center">
 
-        <p class="text-muted mb-0">
-            Review completed test results before they are released.
-        </p>
+            <i class="fas fa-check-double me-2"></i>
+
+            <span>Verify Test Results</span>
+
+            <span class="badge blue-badge ms-2">
+                @(Model?.Count() ?? 0)
+            </span>
+
+        </div>
 
     </div>
 
+    <p class="text-muted mb-3">
+        Review completed test results before they are released.
+    </p>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            There are currently no test results waiting for verification.
-        </div>
-    }
-    else
-    {
-        <div class="card border-0 shadow-sm">
 
-            <div class="card-body">
+    <!-- TABLE -->
+    <div class="table-responsive">
 
-                <div class="table-responsive">
+        <table class="modern-table">
 
-                    <table class="table table-hover align-middle">
+            <thead>
 
-                        <thead class="table-light">
+                <tr>
 
-                            <tr>
+                    <th>Request Number</th>
 
-                                <th>Request No.</th>
+                    <th>Patient</th>
 
-                                <th>Patient</th>
+                    <th>Test Type</th>
 
-                                <th>Test Type</th>
+                    <th>Result</th>
 
-                                <th>Result</th>
+                    <th>Date Captured</th>
 
-                                <th>Date Captured</th>
+                    <th>Action</th>
 
-                                <th>Action</th>
+                </tr>
 
-                            </tr>
+            </thead>
 
-                        </thead>
+            <tbody>
 
-                        <tbody>
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
 
-                            @foreach (var result in Model)
-                            {
-                                var test =
-                                    result.TestRequestTestType.FirstOrDefault();
+                        <td colspan="6" class="text-center text-muted py-4">
 
-                                <tr>
+                            <i class="fas fa-check-double fa-2x mb-2"></i>
 
-                                    <td>
-                                        #@test?.TestRequestId
-                                    </td>
+                            <div class="fw-semibold">
+                                There are currently no test results waiting for verification.
+                            </div>
 
-                                    <td>
-                                        @test?.TestRequest?.Patient?.Name
-                                        @test?.TestRequest?.Patient?.Surname
-                                    </td>
+                            <small>
+                                Completed test results will appear here when they are ready for verification.
+                            </small>
 
-                                    <td>
-                                        @test?.TestType?.TestTypeName
-                                    </td>
+                        </td>
 
-                                    <td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var result in Model)
+                    {
+                        var test = result.TestRequestTestType.FirstOrDefault();
 
-                                        @if (result.IsAbnormal)
-                                        {
-                                            <span class="badge bg-danger">
-                                                @result.ResultValue
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success">
-                                                @result.ResultValue
-                                            </span>
-                                        }
+                        <tr>
 
-                                    </td>
+                            <!-- REQUEST NUMBER -->
+                            <td class="fw-semibold blue-text">
+                                #@test?.TestRequestId
+                            </td>
 
-                                    <td>
-                                        @result.DateCaptured.ToString("dd/MM/yyyy HH:mm")
-                                    </td>
 
-                                    <td>
+                            <!-- PATIENT -->
+                            <td>
+                                @test?.TestRequest?.Patient?.Name
+                                @test?.TestRequest?.Patient?.Surname
+                            </td>
 
-                                        <a asp-action="VerifyResultDetails"
-                                           asp-route-id="@result.TestResultId"
-                                           class="btn btn-primary btn-sm">
 
-                                            <i class="fas fa-check-double me-1"></i>
-                                            Review
+                            <!-- TEST TYPE -->
+                            <td>
+                                @test?.TestType?.TestTypeName
+                            </td>
 
-                                        </a>
 
-                                    </td>
+                            <!-- RESULT -->
+                            <td>
 
-                                </tr>
-                            }
+                                @if (result.IsAbnormal)
+                                {
+                                    <span class="badge bg-danger">
+                                        @result.ResultValue
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        @result.ResultValue
+                                    </span>
+                                }
 
-                        </tbody>
+                            </td>
 
-                    </table>
 
-                </div>
+                            <!-- DATE CAPTURED -->
+                            <td>
+                                @result.DateCaptured.ToString("dd/MM/yyyy HH:mm")
+                            </td>
 
-            </div>
 
-        </div>
-    }
+                            <!-- ACTION -->
+                            <td>
+
+                                <a asp-action="VerifyResultDetails"
+                                   asp-route-id="@result.TestResultId"
+                                   class="btn btn-primary btn-sm">
+
+                                    <i class="fas fa-check-double me-1"></i>
+                                    Review
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
-

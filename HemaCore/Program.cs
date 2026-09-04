@@ -3,6 +3,7 @@ using HemaCore.Models;
 using HemaCore.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,8 @@ builder.Services.AddIdentity<Users, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 

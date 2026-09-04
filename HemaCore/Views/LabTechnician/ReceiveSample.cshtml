@@ -5,89 +5,141 @@
     Layout = "_LabTechnicianLayout";
 }
 
-<div class="container mt-4">
+<link rel="stylesheet" href="~/css/doctor.css" />
 
-    ```
-    <h2>Receive Patient Samples</h2>
+<div class="content-card">
 
-    <p class="text-muted">
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-vial me-2"></i>
+
+            <span>Receive Patient Samples</span>
+
+            <span class="badge blue-badge ms-2">
+                @(Model?.Count() ?? 0)
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- DESCRIPTION -->
+    <p class="text-muted mb-3">
         Select a submitted test request to receive its samples.
     </p>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            There are currently no submitted test requests waiting for samples.
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
 
-            <table class="table table-bordered table-hover">
+    <!-- TABLE -->
+    <div class="table-responsive">
 
-                <thead class="table-dark">
+        <table class="modern-table">
+
+            <thead>
+                <tr>
+                    <th>Request Number</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Request Date</th>
+                    <th>Urgency</th>
+                    <th>Samples</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (!Model.Any())
+                {
                     <tr>
-                        <th>Request Number</th>
-                        <th>Patient</th>
-                        <th>Doctor</th>
-                        <th>Request Date</th>
-                        <th>Urgency</th>
-                        <th>Samples</th>
-                        <th>Action</th>
+
+                        <td colspan="7"
+                            class="text-center text-muted py-4">
+
+                            <i class="fas fa-vial fa-2x mb-2"></i>
+
+                            <div class="fw-semibold">
+                                There are currently no submitted test requests waiting for samples.
+                            </div>
+
+                            <small>
+                                Submitted test requests will appear here when they are available.
+                            </small>
+
+                        </td>
+
                     </tr>
-                </thead>
-
-                <tbody>
-
+                }
+                else
+                {
                     @foreach (var request in Model)
                     {
                         <tr>
 
-                            <td>
+                            <!-- REQUEST NUMBER -->
+                            <td class="fw-semibold blue-text">
                                 #@request.TestRequestId
                             </td>
 
+
+                            <!-- PATIENT -->
                             <td>
                                 @request.Patient?.Name
                                 @request.Patient?.Surname
                             </td>
 
+
+                            <!-- DOCTOR -->
                             <td>
                                 @request.Doctor?.Name
                                 @request.Doctor?.Surname
                             </td>
 
+
+                            <!-- REQUEST DATE -->
                             <td>
                                 @request.RequestDate.ToString("dd/MM/yyyy HH:mm")
                             </td>
 
+
+                            <!-- URGENCY -->
                             <td>
                                 @request.Urgency
                             </td>
 
+
+                            <!-- SAMPLES -->
                             <td>
                                 @request.Samples.Count
                             </td>
 
+
+                            <!-- ACTION -->
                             <td>
+
                                 <a asp-action="ReceiveSampleDetails"
                                    asp-route-id="@request.TestRequestId"
-                                   class="btn btn-primary">
-                                    <i class="fas fa-vial me-2"></i>
+                                   class="btn btn-sm btn-primary">
+
+                                    <i class="fas fa-vial me-1"></i>
+
                                     Receive Sample
+
                                 </a>
+
                             </td>
 
                         </tr>
                     }
+                }
 
-                </tbody>
+            </tbody>
 
-            </table>
+        </table>
 
-        </div>
-    }
-    ```
+    </div>
 
 </div>

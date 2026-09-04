@@ -7,167 +7,313 @@
 }
 
 <style>
+
     /* ==============================
-           DASHBOARD CARDS
+           PROFESSIONAL LAB THEME
            ============================== */
 
-    .dashboard-card,
-    .alert-card {
-        border-radius: 14px;
-        overflow: hidden;
-        transition: all 0.2s ease;
-        position: relative;
+    body {
+        background-color: #f5f6f8;
+        color: #212529;
     }
 
-        .dashboard-card:hover,
-        .alert-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10) !important;
-        }
-
-        .dashboard-card h2,
-        .alert-card h2 {
-            font-size: 30px;
-            letter-spacing: -0.5px;
-        }
 
     /* ==============================
-           ICONS
+           PAGE HEADER
            ============================== */
 
-    .dashboard-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+    .page-title {
+        color: #1d2939;
+    }
+
+    .page-subtitle {
+        color: #667085;
+    }
+
+
+    /* ==============================
+           TOP KPI CARDS
+           ============================== */
+
+    .kpi-card {
+        border: 1px solid #eaecf0 !important;
+        border-radius: 8px;
+        background: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-1px);
+            border-color: #d0d5dd !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .kpi-card .card-body {
+            padding: 16px 18px;
+        }
+
+
+    /* TOP KPI ICON */
+
+    .kpi-icon {
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        border-radius: 7px;
+        background: #f2f4f7;
+        color: #475467;
+        font-size: 14px;
         flex-shrink: 0;
     }
 
-    /* ==============================
-           KPI CARD COLOURS
-           ============================== */
 
-    .selected-card {
-        border-left: 5px solid #4e73df !important;
-        background: linear-gradient(135deg, #ffffff 70%, #eef2ff);
+    /* TOP KPI LABEL */
+
+    .kpi-label {
+        color: #667085;
+        font-size: 12px;
+        font-weight: 500;
     }
 
-        .selected-card .dashboard-icon {
-            background: #e8edff;
-            color: #4e73df;
-        }
 
-    .waiting-card {
-        border-left: 5px solid #f6c23e !important;
-        background: linear-gradient(135deg, #ffffff 70%, #fff8df);
+    /* TOP KPI NUMBER */
+
+    .kpi-number {
+        color: #1d2939;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
     }
 
-        .waiting-card .dashboard-icon {
-            background: #fff4cc;
-            color: #d89b00;
-        }
-
-    .verification-card {
-        border-left: 5px solid #1cc88a !important;
-        background: linear-gradient(135deg, #ffffff 70%, #eafff6);
-    }
-
-        .verification-card .dashboard-icon {
-            background: #dcfaef;
-            color: #16a673;
-        }
-
-    .review-card {
-        border-left: 5px solid #6f42c1 !important;
-        background: linear-gradient(135deg, #ffffff 70%, #f3edff);
-    }
-
-        .review-card .dashboard-icon {
-            background: #eee5ff;
-            color: #6f42c1;
-        }
 
     /* ==============================
-           ALERT CARD COLOURS
+           ALERT KPI CARDS
            ============================== */
+
+    .alert-kpi-card {
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid #eaecf0 !important;
+        transition: all 0.2s ease;
+    }
+
+        .alert-kpi-card:hover {
+            transform: translateY(-1px);
+            border-color: #d0d5dd !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .alert-kpi-card .card-body {
+            padding: 15px 18px;
+        }
+
+
+    /* ALERT ICON */
+
+    .alert-kpi-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+
+    /* URGENT / STAT */
 
     .urgent-card {
-        border-left: 5px solid #dc3545 !important;
-        background: linear-gradient(135deg, #ffffff 70%, #fff0f1);
+        border-left: 4px solid #b42318 !important;
     }
 
-        .urgent-card .dashboard-icon {
-            background: #ffe1e4;
-            color: #dc3545;
-        }
+    .urgent-icon {
+        background: #fef3f2;
+        color: #b42318;
+    }
+
+
+    /* OVERDUE */
 
     .overdue-card {
-        border-left: 5px solid #fd7e14 !important;
-        background: linear-gradient(135deg, #ffffff 70%, #fff3e8);
+        border-left: 4px solid #b42318 !important;
     }
 
-        .overdue-card .dashboard-icon {
-            background: #ffe8d2;
-            color: #e76500;
-        }
+    .overdue-icon {
+        background: #fef3f2;
+        color: #b42318;
+    }
+
+
+    /* NEARING TURNAROUND */
 
     .nearing-card {
-        border-left: 5px solid #20c997 !important;
-        background: linear-gradient(135deg, #ffffff 70%, #eafff8);
+        border-left: 4px solid #667085 !important;
     }
 
-        .nearing-card .dashboard-icon {
-            background: #dffaf2;
-            color: #159b75;
-        }
+    .nearing-icon {
+        background: #f2f4f7;
+        color: #667085;
+    }
+
+
+    /* ALERT LABEL */
+
+    .alert-kpi-label {
+        color: #475467;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+
+    /* ALERT NUMBER */
+
+    .alert-kpi-number {
+        color: #1d2939;
+        font-size: 21px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+
+    /* ALERT DESCRIPTION */
+
+    .alert-kpi-text {
+        color: #98a2b3;
+        font-size: 11px;
+    }
+
 
     /* ==============================
-           OTHER CARDS
+           GENERAL CARDS
            ============================== */
 
     .card.border-0.shadow-sm {
-        border-radius: 14px;
+        border-radius: 9px;
+        background: #ffffff;
     }
+
+
+    /* ==============================
+           SECTION TITLES
+           ============================== */
+
+    .section-title {
+        color: #1d2939;
+    }
+
+
+    /* ==============================
+           FILTER SECTION
+           ============================== */
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #344054;
+    }
+
+    .form-select,
+    .form-control {
+        border-color: #d0d5dd;
+        border-radius: 7px;
+    }
+
+        .form-select:focus,
+        .form-control:focus {
+            border-color: #344054;
+            box-shadow: 0 0 0 2px rgba(52, 64, 84, 0.10);
+        }
+
+
+    /* ==============================
+           TABLE
+           ============================== */
+
+    #workloadTable thead th {
+        background-color: #f2f4f7;
+        color: #344054;
+        font-size: 13px;
+        font-weight: 600;
+        border-bottom: 1px solid #d0d5dd;
+    }
+
+    #workloadTable tbody td {
+        font-size: 14px;
+        color: #344054;
+    }
+
+    #workloadTable tbody tr {
+        border-bottom: 1px solid #eaecf0;
+    }
+
+
+    /* ==============================
+           BADGES
+           ============================== */
 
     .badge {
         padding: 6px 10px;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
     }
+
+
+    /* ==============================
+           TEST COUNT
+           ============================== */
+
+    #testCount {
+        background-color: #344054 !important;
+    }
+
 </style>
 
 
 <div class="container-fluid px-4 py-4">
 
-    <!-- HEADER -->
+
+    <!-- ==============================
+         PAGE HEADER
+         ============================== -->
+
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
-            <h2 class="fw-bold mb-1">
-                Hi, @Model.TechnicianName 👋
+
+            <h2 class="fw-bold mb-1 page-title">
+                Welcome, @Model.TechnicianName
             </h2>
 
-            <p class="text-muted mb-0">
+            <p class="mb-0 page-subtitle">
                 Here's your laboratory workload and test activity for today.
             </p>
+
         </div>
+
 
         <div class="text-end">
 
             <div class="fw-semibold">
+
                 <i class="fas fa-calendar-day me-2"></i>
+
                 @DateTime.Now.ToString("dd MMMM yyyy")
+
             </div>
 
+
             <div class="text-muted mt-1">
+
                 <i class="fas fa-clock me-2"></i>
 
                 <span id="currentTime">
                     @DateTime.Now.ToString("HH:mm:ss")
                 </span>
+
             </div>
 
         </div>
@@ -175,41 +321,46 @@
     </div>
 
 
-    <!-- KPI CARDS -->
-    <div class="row g-4 mb-4">
+
+    <!-- ==============================
+         TOP KPI CARDS
+         ============================== -->
+
+    <div class="row g-3 mb-3">
+
 
         <!-- MY SELECTED TESTS -->
+
         <div class="col-xl-3 col-md-6">
 
-            <div class="card dashboard-card selected-card h-100 shadow-sm border-0 clickable-card"
+            <div class="card kpi-card h-100 shadow-sm clickable-card"
                  data-filter="selected"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center">
 
-                        <div>
+                        <div class="kpi-icon">
 
-                            <p class="text-muted mb-2">
+                            <i class="fas fa-microscope"></i>
+
+                        </div>
+
+
+                        <div class="ms-3">
+
+                            <p class="kpi-label mb-1">
                                 My Selected Tests
                             </p>
 
-                            <h2 class="fw-bold mb-0">
+                            <h3 class="kpi-number mb-0">
                                 @Model.MySelectedTests
-                            </h2>
+                            </h3>
 
-                        </div>
-
-                        <div class="dashboard-icon">
-                            <i class="fas fa-microscope"></i>
                         </div>
 
                     </div>
-
-                    <small class="text-muted">
-                        Tests currently assigned to you
-                    </small>
 
                 </div>
 
@@ -218,38 +369,39 @@
         </div>
 
 
+
         <!-- WAITING TO BE SELECTED -->
+
         <div class="col-xl-3 col-md-6">
 
-            <div class="card dashboard-card waiting-card h-100 shadow-sm border-0 clickable-card"
+            <div class="card kpi-card h-100 shadow-sm clickable-card"
                  data-filter="waiting"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center">
 
-                        <div>
+                        <div class="kpi-icon">
 
-                            <p class="text-muted mb-2">
+                            <i class="fas fa-hourglass-half"></i>
+
+                        </div>
+
+
+                        <div class="ms-3">
+
+                            <p class="kpi-label mb-1">
                                 Waiting to be Selected
                             </p>
 
-                            <h2 class="fw-bold mb-0">
+                            <h3 class="kpi-number mb-0">
                                 @Model.WaitingToBeSelected
-                            </h2>
+                            </h3>
 
-                        </div>
-
-                        <div class="dashboard-icon">
-                            <i class="fas fa-hourglass-half"></i>
                         </div>
 
                     </div>
-
-                    <small class="text-muted">
-                        Tests available for selection
-                    </small>
 
                 </div>
 
@@ -258,38 +410,39 @@
         </div>
 
 
+
         <!-- WAITING VERIFICATION -->
+
         <div class="col-xl-3 col-md-6">
 
-            <div class="card dashboard-card verification-card h-100 shadow-sm border-0 clickable-card"
+            <div class="card kpi-card h-100 shadow-sm clickable-card"
                  data-filter="verification"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center">
 
-                        <div>
+                        <div class="kpi-icon">
 
-                            <p class="text-muted mb-2">
+                            <i class="fas fa-check-double"></i>
+
+                        </div>
+
+
+                        <div class="ms-3">
+
+                            <p class="kpi-label mb-1">
                                 Waiting Verification
                             </p>
 
-                            <h2 class="fw-bold mb-0">
+                            <h3 class="kpi-number mb-0">
                                 @Model.WaitingVerification
-                            </h2>
+                            </h3>
 
-                        </div>
-
-                        <div class="dashboard-icon">
-                            <i class="fas fa-check-double"></i>
                         </div>
 
                     </div>
-
-                    <small class="text-muted">
-                        Results waiting for verification
-                    </small>
 
                 </div>
 
@@ -298,38 +451,39 @@
         </div>
 
 
+
         <!-- WAITING REVIEW -->
+
         <div class="col-xl-3 col-md-6">
 
-            <div class="card dashboard-card review-card h-100 shadow-sm border-0 clickable-card"
+            <div class="card kpi-card h-100 shadow-sm clickable-card"
                  data-filter="review"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center">
 
-                        <div>
+                        <div class="kpi-icon">
 
-                            <p class="text-muted mb-2">
+                            <i class="fas fa-clipboard-list"></i>
+
+                        </div>
+
+
+                        <div class="ms-3">
+
+                            <p class="kpi-label mb-1">
                                 Waiting Review
                             </p>
 
-                            <h2 class="fw-bold mb-0">
+                            <h3 class="kpi-number mb-0">
                                 @Model.WaitingReview
-                            </h2>
+                            </h3>
 
-                        </div>
-
-                        <div class="dashboard-icon">
-                            <i class="fas fa-clipboard-list"></i>
                         </div>
 
                     </div>
-
-                    <small class="text-muted">
-                        Results returned for review
-                    </small>
 
                 </div>
 
@@ -340,37 +494,55 @@
     </div>
 
 
-    <!-- ALERT CARDS -->
-    <div class="row g-4 mb-4">
 
-        <!-- STAT -->
+    <!-- ==============================
+         ALERT KPI CARDS
+         ============================== -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- URGENT / STAT -->
+
         <div class="col-lg-4">
 
-            <div class="card alert-card urgent-card border-0 shadow-sm h-100 clickable-card"
+            <div class="card alert-kpi-card urgent-card shadow-sm clickable-card"
                  data-filter="urgent"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center">
 
-                        <div class="dashboard-icon">
+                        <div class="alert-kpi-icon urgent-icon">
+
                             <i class="fas fa-bolt"></i>
+
                         </div>
 
-                        <h5 class="fw-bold mb-0 ms-3">
-                            Urgent / STAT Tests
-                        </h5>
+
+                        <div class="ms-3">
+
+                            <p class="alert-kpi-label mb-1">
+                                Urgent / STAT Tests
+                            </p>
+
+
+                            <div class="d-flex align-items-baseline">
+
+                                <h3 class="alert-kpi-number mb-0">
+                                    @Model.UrgentTests
+                                </h3>
+
+                                <span class="alert-kpi-text ms-2">
+                                    requiring attention
+                                </span>
+
+                            </div>
+
+                        </div>
 
                     </div>
-
-                    <h2 class="fw-bold">
-                        @Model.UrgentTests
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Urgent tests requiring immediate attention.
-                    </p>
 
                 </div>
 
@@ -379,34 +551,48 @@
         </div>
 
 
+
         <!-- OVERDUE -->
+
         <div class="col-lg-4">
 
-            <div class="card alert-card overdue-card border-0 shadow-sm h-100 clickable-card"
+            <div class="card alert-kpi-card overdue-card shadow-sm clickable-card"
                  data-filter="overdue"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center">
 
-                        <div class="dashboard-icon">
+                        <div class="alert-kpi-icon overdue-icon">
+
                             <i class="fas fa-clock"></i>
+
                         </div>
 
-                        <h5 class="fw-bold mb-0 ms-3">
-                            Overdue Tests
-                        </h5>
+
+                        <div class="ms-3">
+
+                            <p class="alert-kpi-label mb-1">
+                                Overdue Tests
+                            </p>
+
+
+                            <div class="d-flex align-items-baseline">
+
+                                <h3 class="alert-kpi-number mb-0">
+                                    @Model.OverdueTests
+                                </h3>
+
+                                <span class="alert-kpi-text ms-2">
+                                    past turnaround time
+                                </span>
+
+                            </div>
+
+                        </div>
 
                     </div>
-
-                    <h2 class="fw-bold">
-                        @Model.OverdueTests
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Tests that have exceeded their turnaround time.
-                    </p>
 
                 </div>
 
@@ -415,34 +601,48 @@
         </div>
 
 
+
         <!-- NEARING TURNAROUND -->
+
         <div class="col-lg-4">
 
-            <div class="card alert-card nearing-card border-0 shadow-sm h-100 clickable-card"
+            <div class="card alert-kpi-card nearing-card shadow-sm clickable-card"
                  data-filter="nearing"
                  style="cursor:pointer;">
 
                 <div class="card-body">
 
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center">
 
-                        <div class="dashboard-icon">
+                        <div class="alert-kpi-icon nearing-icon">
+
                             <i class="fas fa-stopwatch"></i>
+
                         </div>
 
-                        <h5 class="fw-bold mb-0 ms-3">
-                            Nearing Turnaround Limit
-                        </h5>
+
+                        <div class="ms-3">
+
+                            <p class="alert-kpi-label mb-1">
+                                Nearing Turnaround Limit
+                            </p>
+
+
+                            <div class="d-flex align-items-baseline">
+
+                                <h3 class="alert-kpi-number mb-0">
+                                    @Model.NearingTurnaround
+                                </h3>
+
+                                <span class="alert-kpi-text ms-2">
+                                    approaching limit
+                                </span>
+
+                            </div>
+
+                        </div>
 
                     </div>
-
-                    <h2 class="fw-bold">
-                        @Model.NearingTurnaround
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Tests approaching their expected completion time.
-                    </p>
 
                 </div>
 
@@ -453,7 +653,11 @@
     </div>
 
 
-    <!-- FILTERS -->
+
+    <!-- ==============================
+         FILTERS
+         ============================== -->
+
     <div class="card border-0 shadow-sm mb-4">
 
         <div class="card-body">
@@ -462,13 +666,17 @@
 
                 <i class="fas fa-filter me-2"></i>
 
-                <h5 class="fw-bold mb-0">
+                <h5 class="fw-bold mb-0 section-title">
                     Filter Tests
                 </h5>
 
             </div>
 
+
             <div class="row g-3">
+
+
+                <!-- URGENCY -->
 
                 <div class="col-md-3">
 
@@ -479,15 +687,29 @@
                     <select id="urgencyFilter"
                             class="form-select">
 
-                        <option value="">All</option>
-                        <option value="Routine">Routine</option>
-                        <option value="Urgent">Urgent</option>
-                        <option value="STAT">STAT</option>
+                        <option value="">
+                            All
+                        </option>
+
+                        <option value="Routine">
+                            Routine
+                        </option>
+
+                        <option value="Urgent">
+                            Urgent
+                        </option>
+
+                        <option value="STAT">
+                            STAT
+                        </option>
 
                     </select>
 
                 </div>
 
+
+
+                <!-- TEST TYPE -->
 
                 <div class="col-md-3">
 
@@ -517,6 +739,9 @@
                 </div>
 
 
+
+                <!-- STATUS -->
+
                 <div class="col-md-3">
 
                     <label class="form-label">
@@ -526,15 +751,29 @@
                     <select id="statusFilter"
                             class="form-select">
 
-                        <option value="">All</option>
-                        <option value="Submitted">Submitted</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
+                        <option value="">
+                            All
+                        </option>
+
+                        <option value="Submitted">
+                            Submitted
+                        </option>
+
+                        <option value="In Progress">
+                            In Progress
+                        </option>
+
+                        <option value="Completed">
+                            Completed
+                        </option>
 
                     </select>
 
                 </div>
 
+
+
+                <!-- REQUEST NUMBER -->
 
                 <div class="col-md-3">
 
@@ -556,7 +795,11 @@
     </div>
 
 
-    <!-- TEST WORKLOAD TABLE -->
+
+    <!-- ==============================
+         TEST WORKLOAD
+         ============================== -->
+
     <div class="card border-0 shadow-sm">
 
         <div class="card-body">
@@ -565,7 +808,7 @@
 
                 <div>
 
-                    <h5 class="fw-bold mb-1">
+                    <h5 class="fw-bold mb-1 section-title">
 
                         <i class="fas fa-microscope me-2"></i>
 
@@ -573,14 +816,16 @@
 
                     </h5>
 
-                    <p class="text-muted mb-0">
+
+                    <p class="card-description mb-0">
                         Tests requiring your attention.
                     </p>
 
                 </div>
 
+
                 <span id="testCount"
-                      class="badge bg-secondary">
+                      class="badge">
 
                     @Model.Workload.Count Tests
 
@@ -589,25 +834,44 @@
             </div>
 
 
+
             <div class="table-responsive">
 
                 <table class="table table-hover align-middle"
                        id="workloadTable">
 
-                    <thead class="table-light">
+                    <thead>
 
                         <tr>
 
-                            <th>Request No.</th>
-                            <th>Patient</th>
-                            <th>Test Type</th>
-                            <th>Urgency</th>
-                            <th>Status</th>
-                            <th>Due Time</th>
+                            <th>
+                                Request No.
+                            </th>
+
+                            <th>
+                                Patient
+                            </th>
+
+                            <th>
+                                Test Type
+                            </th>
+
+                            <th>
+                                Urgency
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Due Time
+                            </th>
 
                         </tr>
 
                     </thead>
+
 
 
                     <tbody>
@@ -642,13 +906,16 @@
                                         #@test.TestRequestId
                                     </td>
 
+
                                     <td>
                                         @test.PatientName
                                     </td>
 
+
                                     <td>
                                         @test.TestTypeName
                                     </td>
+
 
                                     <td>
 
@@ -673,6 +940,7 @@
 
                                     </td>
 
+
                                     <td>
 
                                         @if (test.Status == "Completed")
@@ -696,12 +964,14 @@
 
                                     </td>
 
+
                                     <td>
                                         @(test.DueTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")
                                     </td>
 
                                 </tr>
                             }
+
 
                             <tr id="noFilterResults"
                                 style="display:none;">
@@ -731,9 +1001,11 @@
 </div>
 
 
+
 <script>
 
     document.addEventListener("DOMContentLoaded", function() {
+
 
         /* ==============================
            LIVE CLOCK
@@ -753,7 +1025,9 @@
                 document.getElementById("currentTime");
 
             if (timeElement) {
+
                 timeElement.textContent = time;
+
             }
 
         }
@@ -761,6 +1035,7 @@
         updateTime();
 
         setInterval(updateTime, 1000);
+
 
 
         /* ==============================
@@ -789,6 +1064,7 @@
             document.getElementById("noFilterResults");
 
 
+
         /* ==============================
            FILTER TESTS
            ============================== */
@@ -797,9 +1073,11 @@
 
             let visibleCount = 0;
 
+
             rows.forEach(function(row) {
 
                 let show = true;
+
 
                 const urgency =
                     row.dataset.urgency || "";
@@ -817,14 +1095,19 @@
                     row.dataset.due || "";
 
 
-                /* NORMAL FILTERS */
+
+                /* ==============================
+                   NORMAL FILTERS
+                   ============================== */
 
                 if (
                     urgencyFilter.value &&
                     urgency.toLowerCase() !==
                     urgencyFilter.value.toLowerCase()
                 ) {
+
                     show = false;
+
                 }
 
 
@@ -833,7 +1116,9 @@
                     testType.toLowerCase() !==
                     testTypeFilter.value.toLowerCase()
                 ) {
+
                     show = false;
+
                 }
 
 
@@ -842,7 +1127,9 @@
                     status.toLowerCase() !==
                     statusFilter.value.toLowerCase()
                 ) {
+
                     show = false;
+
                 }
 
 
@@ -852,11 +1139,16 @@
                         requestFilter.value.toLowerCase()
                     )
                 ) {
+
                     show = false;
+
                 }
 
 
-                /* DASHBOARD CARD FILTERS */
+
+                /* ==============================
+                   DASHBOARD CARD FILTERS
+                   ============================== */
 
                 if (cardFilter === "selected") {
 
@@ -864,7 +1156,9 @@
                         status === "Completed" ||
                         status === "Submitted"
                     ) {
+
                         show = false;
+
                     }
 
                 }
@@ -873,7 +1167,9 @@
                 if (cardFilter === "waiting") {
 
                     if (status !== "Submitted") {
+
                         show = false;
+
                     }
 
                 }
@@ -882,7 +1178,9 @@
                 if (cardFilter === "verification") {
 
                     if (status !== "Completed") {
+
                         show = false;
+
                     }
 
                 }
@@ -898,7 +1196,9 @@
                 if (cardFilter === "urgent") {
 
                     if (urgency !== "STAT") {
+
                         show = false;
+
                     }
 
                 }
@@ -920,7 +1220,9 @@
                             dueDate >= new Date() ||
                             status === "Completed"
                         ) {
+
                             show = false;
+
                         }
 
                     }
@@ -949,12 +1251,15 @@
                                 (2 * 60 * 60 * 1000)
                             );
 
+
                         if (
                             dueDate <= now ||
                             dueDate > twoHours ||
                             status === "Completed"
                         ) {
+
                             show = false;
+
                         }
 
                     }
@@ -962,7 +1267,10 @@
                 }
 
 
-                /* SHOW / HIDE */
+
+                /* ==============================
+                   SHOW / HIDE
+                   ============================== */
 
                 if (show) {
 
@@ -980,13 +1288,19 @@
             });
 
 
-            /* UPDATE COUNT */
+
+            /* ==============================
+               UPDATE COUNT
+               ============================== */
 
             testCount.textContent =
                 visibleCount + " Tests";
 
 
-            /* NO RESULTS */
+
+            /* ==============================
+               NO RESULTS
+               ============================== */
 
             if (noResults) {
 
@@ -1000,38 +1314,55 @@
         }
 
 
-        /* NORMAL FILTER EVENTS */
+
+        /* ==============================
+           NORMAL FILTER EVENTS
+           ============================== */
 
         urgencyFilter.addEventListener(
             "change",
             function() {
+
                 filterTests();
+
             }
         );
+
 
         testTypeFilter.addEventListener(
             "change",
             function() {
+
                 filterTests();
+
             }
         );
+
 
         statusFilter.addEventListener(
             "change",
             function() {
+
                 filterTests();
+
             }
         );
+
 
         requestFilter.addEventListener(
             "keyup",
             function() {
+
                 filterTests();
+
             }
         );
 
 
-        /* DASHBOARD CARD EVENTS */
+
+        /* ==============================
+           DASHBOARD CARD EVENTS
+           ============================== */
 
         document
             .querySelectorAll(".clickable-card")
@@ -1044,7 +1375,9 @@
                         const filter =
                             card.dataset.filter;
 
+
                         filterTests(filter);
+
 
                         document
                             .getElementById("workloadTable")
@@ -1061,4 +1394,3 @@
     });
 
 </script>
-

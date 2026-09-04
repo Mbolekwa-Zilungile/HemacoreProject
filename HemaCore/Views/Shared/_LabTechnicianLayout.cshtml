@@ -1,5 +1,4 @@
-﻿
-@using Microsoft.AspNetCore.Identity
+﻿@using Microsoft.AspNetCore.Identity
 @inject UserManager<HemaCore.Models.Users> UserManager
 
 @{
@@ -10,52 +9,89 @@
 
 <html>
 <head>
+
     <meta name="viewport" content="width=device-width" />
+
     <title>@ViewBag.Title</title>
 
     <link rel="stylesheet" href="~/css/Layout.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 </head>
 
+
 <body>
 
     <div class="wrapper">
 
-        <!-- SIDEBAR -->
+
+        <!-- =========================================
+             SIDEBAR
+             ========================================= -->
+
         <nav id="sidebar">
+
+
+            <!-- SIDEBAR HEADER -->
 
             <div class="sidebar-header">
 
                 <div class="header-top">
 
-                    <button id="sidebarToggle" class="toggle-btn">
+                    <button id="sidebarToggle"
+                            class="toggle-btn"
+                            type="button">
+
                         <i class="fas fa-angle-left"></i>
+
                     </button>
 
-                    <h3>HemaCore</h3>
+
+                    <h3>
+                        HemaCore
+                    </h3>
 
                 </div>
+
+
+                <!-- TECHNICIAN NAME -->
 
                 <div class="technician-name">
 
                     <i class="fas fa-user-circle"></i>
 
-                    <span>@currentUser?.FullName</span>
+                    <span>
+                        @currentUser?.FullName
+                    </span>
 
                 </div>
 
             </div>
 
 
+
+            <!-- =========================================
+                 SIDEBAR MENU
+                 ========================================= -->
+
             <ul class="list-unstyled components">
 
-                <!-- OVERVIEW -->
+
+                <!-- =====================================
+                     OVERVIEW
+                     ===================================== -->
+
                 <li class="section-label">
                     OVERVIEW
                 </li>
+
+
+                <!-- DASHBOARD -->
 
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
 
@@ -73,13 +109,19 @@
                 </li>
 
 
-                <!-- TEST PROCESSING -->
+
+                <!-- =====================================
+                     TEST PROCESSING
+                     ===================================== -->
+
                 <li class="section-label">
                     TEST PROCESSING
                 </li>
 
 
+
                 <!-- RECEIVE SAMPLES -->
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReceiveSample" ? "active" : "")">
 
                     <a asp-controller="LabTechnician"
@@ -96,7 +138,9 @@
                 </li>
 
 
+
                 <!-- PROCESS TESTS -->
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ProcessTests" ? "active" : "")">
 
                     <a asp-controller="LabTechnician"
@@ -113,7 +157,9 @@
                 </li>
 
 
+
                 <!-- VERIFY RESULTS -->
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "VerifyResults" ? "active" : "")">
 
                     <a asp-controller="LabTechnician"
@@ -130,7 +176,9 @@
                 </li>
 
 
+
                 <!-- REVIEW RESULTS -->
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReviewResults" ? "active" : "")">
 
                     <a asp-controller="LabTechnician"
@@ -147,13 +195,19 @@
                 </li>
 
 
-                <!-- REPORTING -->
+
+                <!-- =====================================
+                     REPORTING
+                     ===================================== -->
+
                 <li class="section-label">
                     REPORTING
                 </li>
 
 
+
                 <!-- REPORTS -->
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
 
                     <a asp-controller="LabTechnician"
@@ -172,11 +226,16 @@
             </ul>
 
 
-            <!-- LOGOUT -->
+
+            <!-- =========================================
+                 LOGOUT
+                 ========================================= -->
+
             <div class="logout">
 
-                <a asp-controller="Account"
-                   asp-action="Logout">
+                <a href="#"
+                   data-bs-toggle="modal"
+                   data-bs-target="#logoutModal">
 
                     <i class="fas fa-sign-out-alt"></i>
 
@@ -188,40 +247,177 @@
 
             </div>
 
+
         </nav>
 
 
-        <!-- CONTENT -->
+
+        <!-- =========================================
+             MAIN CONTENT
+             ========================================= -->
+
         <div id="content">
 
             @RenderBody()
 
         </div>
 
+
     </div>
 
 
-    <!-- SIDEBAR SCRIPT -->
+
+    <!-- =============================================
+         LOGOUT CONFIRMATION MODAL
+         ============================================= -->
+
+    <div class="modal fade"
+         id="logoutModal"
+         tabindex="-1"
+         aria-labelledby="logoutModalLabel"
+         aria-hidden="true">
+
+
+        <div class="modal-dialog modal-dialog-centered">
+
+
+            <div class="modal-content border-0 shadow">
+
+
+                <!-- MODAL HEADER -->
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title fw-bold"
+                        id="logoutModalLabel">
+
+                        Confirm Logout
+
+                    </h5>
+
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+
+                </div>
+
+
+
+                <!-- MODAL BODY -->
+
+                <div class="modal-body text-center py-4">
+
+
+                    <div class="mb-3">
+
+                        <i class="fas fa-sign-out-alt fa-2x text-secondary"></i>
+
+                    </div>
+
+
+                    <h6 class="fw-bold">
+
+                        Are you sure you want to logout?
+
+                    </h6>
+
+
+                    <p class="text-muted mb-0">
+
+                        You will be signed out of HemaCore.
+
+                    </p>
+
+
+                </div>
+
+
+
+                <!-- MODAL FOOTER -->
+
+                <div class="modal-footer justify-content-center">
+
+
+                    <!-- CANCEL -->
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+
+                    <!-- LOGOUT -->
+
+                    <a asp-controller="Account"
+                       asp-action="Logout"
+                       class="btn btn-danger">
+
+                        <i class="fas fa-sign-out-alt me-1"></i>
+
+                        Logout
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =============================================
+         SIDEBAR SCRIPT
+         ============================================= -->
+
     <script>
 
-            const sidebar = document.getElementById("sidebar");
-            const content = document.getElementById("content");
-            const toggleBtn = document.getElementById("sidebarToggle");
-            const icon = toggleBtn.querySelector("i");
+            const sidebar =
+                document.getElementById("sidebar");
+
+            const content =
+                document.getElementById("content");
+
+            const toggleBtn =
+                document.getElementById("sidebarToggle");
+
+            const icon =
+                toggleBtn.querySelector("i");
+
 
             toggleBtn.addEventListener("click", function() {
 
+
                 sidebar.classList.toggle("collapsed");
+
                 content.classList.toggle("expanded");
+
 
                 if (sidebar.classList.contains("collapsed")) {
 
+
                     icon.classList.remove("fa-angle-left");
+
                     icon.classList.add("fa-angle-right");
 
-                } else {
+
+                }
+                else {
+
 
                     icon.classList.remove("fa-angle-right");
+
                     icon.classList.add("fa-angle-left");
 
                 }
@@ -230,8 +426,24 @@
 
     </script>
 
+
+
+    <!-- =============================================        
+         BOOTSTRAP JAVASCRIPT
+         ============================================= -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+    <!-- =============================================
+         ADDITIONAL PAGE SCRIPTS
+         ============================================= -->
     @RenderSection("Scripts", required: false)
 
-</body>
-</html>
 
+</body>
+
+</html>
