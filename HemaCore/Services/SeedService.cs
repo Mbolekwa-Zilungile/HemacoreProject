@@ -82,6 +82,39 @@ namespace HemaCore.Services
                     }
 
                 }
+                /////LABTECH
+                logger.LogInformation("Seeding lab technician user");
+
+                var labTechEmail = "labtech@gmail.com";
+
+                if (await userManager.FindByEmailAsync(labTechEmail) == null)
+                {
+                    var labTechUser = new Users
+                    {
+                        FullName = "Didi Lecoge",
+                        UserName = labTechEmail,
+                        NormalizedUserName = labTechEmail.ToUpper(),
+                        Email = labTechEmail,
+                        NormalizedEmail = labTechEmail.ToUpper(),
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString()
+                    };
+
+                    var result = await userManager.CreateAsync(labTechUser, "Welcome@2026");
+
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("Assigning LabTechnician role to lab technician user.");
+                        await userManager.AddToRoleAsync(labTechUser, "LabTechnician");
+                    }
+                    else
+                    {
+                        logger.LogError(
+                            "Failed to create lab technician user: {Errors}",
+                            string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+                }
+
 
             }
             catch (Exception ex)
