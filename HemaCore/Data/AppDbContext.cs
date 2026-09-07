@@ -74,6 +74,37 @@ namespace HemaCore.Data
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelbuilder.Entity<PatientMedication>()
+                .HasKey(pm => pm.Id);
+
+            modelbuilder.Entity<PatientMedication>()
+                .HasOne(pm => pm.Patient)
+                .WithMany()
+                .HasForeignKey(pm => pm.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelbuilder.Entity<PatientMedication>()
+                .HasOne(pm => pm.Medication)
+                .WithMany(m => m.PatientMedications)
+                .HasForeignKey(pm => pm.MedicationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+
+            modelbuilder.Entity<Supplier>()
+                .Ignore(s => s.Suppliers);
+            // Alert decimal precision
+            modelbuilder.Entity<Alert>()
+                .Property(a => a.NormalRangeMax)
+                .HasPrecision(18, 2);
+
+            modelbuilder.Entity<Alert>()
+                .Property(a => a.NormalRangeMin)
+                .HasPrecision(18, 2);
+
+            modelbuilder.Entity<Alert>()
+                .Property(a => a.ResultValue)
+                .HasPrecision(18, 2);
+
         }
 
 

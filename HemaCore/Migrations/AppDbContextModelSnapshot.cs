@@ -22,6 +22,59 @@ namespace HemaCore.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HemaCore.Models.Alert", b =>
+                {
+                    b.Property<int>("AlertId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AlertId"));
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DoctorID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("NormalRangeMax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("NormalRangeMin")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PatientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ResultValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TestName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TestRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UnitOfMeasurement")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AlertId");
+
+                    b.ToTable("Alert");
+                });
+
             modelBuilder.Entity("HemaCore.Models.Allergy", b =>
                 {
                     b.Property<int>("Id")
@@ -609,16 +662,11 @@ namespace HemaCore.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("SupplierId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("SupplierName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SupplierId");
-
-                    b.HasIndex("SupplierId1");
 
                     b.ToTable("Suppliers");
                 });
@@ -1253,13 +1301,13 @@ namespace HemaCore.Migrations
                     b.HasOne("HemaCore.Models.Medication", "Medication")
                         .WithMany("PatientMedications")
                         .HasForeignKey("MedicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("HemaCore.Models.Users", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Medication");
@@ -1284,13 +1332,6 @@ namespace HemaCore.Migrations
                     b.Navigation("SampleType");
 
                     b.Navigation("TestRequest");
-                });
-
-            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
-                {
-                    b.HasOne("HemaCore.Models.Supplier", null)
-                        .WithMany("Suppliers")
-                        .HasForeignKey("SupplierId1");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TechnicianTestType", b =>
@@ -1546,11 +1587,6 @@ namespace HemaCore.Migrations
                     b.Navigation("Samples");
 
                     b.Navigation("TestTypeSample");
-                });
-
-            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
-                {
-                    b.Navigation("Suppliers");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestCategory", b =>
