@@ -104,6 +104,17 @@ namespace HemaCore.Data
             modelbuilder.Entity<Alert>()
                 .Property(a => a.ResultValue)
                 .HasPrecision(18, 2);
+            modelbuilder.Entity<ConsentTestAccess>()
+    .HasOne(x => x.TestRequest)
+    .WithMany()
+    .HasForeignKey(x => x.TestRequestId)
+    .OnDelete(DeleteBehavior.NoAction);
+
+            modelbuilder.Entity<ConsentTestAccess>()
+                .HasOne(x => x.Consent)
+                .WithMany()
+                .HasForeignKey(x => x.ConsentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
 

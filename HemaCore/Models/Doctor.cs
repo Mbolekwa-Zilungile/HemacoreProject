@@ -5,15 +5,24 @@ namespace HemaCore.Models
 {
     public class Doctor
     {
-        public int Id { get; set; }
-        [Required, MaxLength(100)] public string Name { get; set; } = string.Empty;
-        [Required, MaxLength(100)] public string Surname { get; set; } = string.Empty;
-        [Required, MaxLength(200)] public string Email { get; set; } = string.Empty;
-        [MaxLength(50)] public string? PracticeNumber { get; set; }
+        [Key]
+        public int DoctorID { get; set; }
 
-        public ICollection<TestRequest> TestRequests { get; set; } = [];
-        public ICollection<Consent> ConsentsReceived { get; set; } = [];
-        public ICollection<TestResult> VerifiedResults { get; set; } = [];
-    
-}
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(50, ErrorMessage = "Name can't be longer than 50 characters")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Surname is required")]
+        [StringLength(50, ErrorMessage = "Surname can't be longer than 50 characters")]
+        public string Surname { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public string HPCSANumber { get; set; }
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [RegularExpression(@"^\+27\d{9}$", ErrorMessage = "Phone number must be in the format +27756455676")]
+        public string PhoneNumber { get; set; }
+
+    }
 }

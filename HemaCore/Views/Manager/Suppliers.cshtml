@@ -29,9 +29,6 @@
 
             <span>Suppliers (@Model.Count)</span>
 
-            <span class="badge blue-badge ms-2">
-                @ViewBag.TestTypeCount
-            </span>
         </div>
 
         <a asp-action="AddSupplier"
@@ -60,24 +57,37 @@
                 </thead>
 
                 <tbody id="supplierTable">
-                    @foreach (var supplier in Model)
-                    {
 
-                        int total = 0;
-                        if (ViewBag.SupplierConsumableCount.ContainsKey(supplier.SupplierId))
-                        {
-                            total = ViewBag.SupplierConsumableCount[supplier.SupplierId];
-                        }
+                    @if (!Model.Any())
+                    {
                         <tr>
-                            <td>@supplier.SupplierName</td>
-                            <td>@supplier.ContactPerson</td>
-                            <td>@supplier.Email</td>
-                            <td>@total</td>
-                            <td>
-                                <a asp-action="EditSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-primary">Edit</a>
-                                <a asp-action="DeleteSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-danger">Deactivate</a>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No supplier available.
                             </td>
                         </tr>
+                    }
+                    else
+                    {
+
+                        @foreach (var supplier in Model)
+                        {
+
+                            int total = 0;
+                            if (ViewBag.SupplierConsumableCount.ContainsKey(supplier.SupplierId))
+                            {
+                                total = ViewBag.SupplierConsumableCount[supplier.SupplierId];
+                            }
+                            <tr>
+                                <td>@supplier.SupplierName</td>
+                                <td>@supplier.ContactPerson</td>
+                                <td>@supplier.Email</td>
+                                <td>@total</td>
+                                <td>
+                                    <a asp-action="EditSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-primary">Edit</a>
+                                    <a asp-action="DeleteSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-danger">Deactivate</a>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>

@@ -214,8 +214,83 @@ namespace HemaCore.Controllers
             );
         }
 
+ 
+       [HttpPost]
+       public async Task<IActionResult> RejectItem(int orderId, int orderItemId, string reason)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var item = order.OrderItems
+                .FirstOrDefault(i => i.OrderItemId == orderItemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            if (item.Status != OrderItemStatus.Pending)
+            {
+                return RedirectToAction(
+                    "OrderDetails",
+                    new { id = orderId }
+                );
+            }
+
+            item.Status = OrderItemStatus.Rejected;
+            item.DateRejected = DateTime.Now;
+            item.RejectReason = reason;
+
+            var items = order.OrderItems.ToList();
+
+            if (items.All(i => i.Status == OrderItemStatus.Received))
+            {
+                order.Status = OrderStatus.Completed;
+                order.DateCompleted = DateTime.Now;
+            }
+            else if (items.All(i => i.Status == OrderItemStatus.Rejected))
+            {
+                order.Status = OrderStatus.Rejected;
+                order.DateCancelled = DateTime.Now;
+            }
+            else if (items.Any(i => i.Status == OrderItemStatus.Received) &&
+                     items.Any(i => i.Status == OrderItemStatus.Rejected))
+            {
+                order.Status = OrderStatus.PartiallyCompleted;
+            }
+            else
+            {
+                order.Status = OrderStatus.Ordered;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(
+                "OrderDetails",
+                new { id = orderId }
+            );
+        }
+
         #endregion
+
         #region Doctor
+
+        public async Task<IActionResult> Doctors()
+        {
+            var doctor = await _context.Doctors
+                .Where(x => x.IsActive)
+                .OrderBy(x=> x.Surname) 
+                .ThenBy(x => x.Name)
+                .ToListAsync()  ;
+
+            return View(doctor);
+        }
 
         #endregion
     }

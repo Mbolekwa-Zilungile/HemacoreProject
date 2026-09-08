@@ -14,11 +14,7 @@
         <div class="d-flex align-items-center">
             <i class="fas fa-box-open me-2"></i>
 
-            <span>Samples Types</span>
-
-            <span class="badge blue-badge ms-2">
-                @ViewBag.TestTypeCount
-            </span>
+            <span>Samples Types (@Model.Count)</span>
         </div>
 
         <a asp-action="AddTestType"
@@ -90,7 +86,7 @@
                     {
                         <tr>
                             <td colspan="6" class="text-center text-muted py-3">
-                                No test types found
+                                No sample types available.
                             </td>
                         </tr>
                     }
