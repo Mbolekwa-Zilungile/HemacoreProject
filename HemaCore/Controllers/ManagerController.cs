@@ -1,6 +1,8 @@
 ﻿using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Models.Enums;
+using HemaCore.ViewModels.ManagerVM;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +12,12 @@ namespace HemaCore.Controllers
     public class ManagerController : Controller
     {
         private AppDbContext _context;
+        private readonly UserManager<Users> _userManager;
 
-        public ManagerController(AppDbContext context) 
+        public ManagerController(AppDbContext context, UserManager<Users> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
         public IActionResult Index()
         {
@@ -284,6 +288,7 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> Doctors()
         {
             var doctor = await _context.Doctors
+                .Include(x=>x.User)
                 .Where(x => x.IsActive)
                 .OrderBy(x=> x.Surname) 
                 .ThenBy(x => x.Name)
@@ -291,6 +296,175 @@ namespace HemaCore.Controllers
 
             return View(doctor);
         }
+        // ==========================================
+        // ADD DOCTOR - GET
+        // ==========================================
+
+        [HttpGet]
+        public IActionResult AddDoctor()
+        {
+            return View(new AddDoctorViewModel());
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddDoctor(AddDoctorViewModel model)
+        {
+          
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+
+
+            string email = model.Email.Trim();
+            string phoneNumber = model.PhoneNumber.Trim();
+            string name = model.Name.Trim();
+            string surname = model.Surname.Trim();
+            string hpcsaNumber = model.HPCSANumber.Trim();
+    
+
+            var existingUser = await _userManager
+                .FindByEmailAsync(email);
+
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "This email is already registered."
+                );
+
+                return View(model);
+            }
+
+
+            bool hpcsaExists = await _context.Doctors
+                .AnyAsync(d => d.HPCSANumber == hpcsaNumber);
+
+            if (hpcsaExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.HPCSANumber),
+                    "This HPCSA number is already registered."
+                );
+
+                return View(model);
+            }
+
+            string temporaryPassword = GeneratePassword();
+
+
+
+            var user = new Users
+            {
+                FullName = $"{name} {surname}",
+                UserName = email,
+                Email = email,
+                PhoneNumber = phoneNumber,
+                EmailConfirmed = true
+            };
+
+
+            var userResult = await _userManager
+                .CreateAsync(user, temporaryPassword);
+
+
+            if (!userResult.Succeeded)
+            {
+                foreach (var error in userResult.Errors)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description
+                    );
+                }
+
+                return View(model);
+            }
+
+            var roleResult = await _userManager
+                .AddToRoleAsync(user, "Doctor");
+
+
+            if (!roleResult.Succeeded)
+            {
+                // Delete user if role assignment fails
+                await _userManager.DeleteAsync(user);
+
+                foreach (var error in roleResult.Errors)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description
+                    );
+                }
+
+                return View(model);
+            }
+
+
+            var doctor = new Doctor
+            {
+                Name = name,
+                Surname = surname,
+                PhoneNumber = phoneNumber,
+                HPCSANumber = hpcsaNumber,
+                UserId = user.Id,
+                IsActive = true
+            };
+
+
+
+            _context.Doctors.Add(doctor);
+
+            await _context.SaveChangesAsync();
+
+
+
+
+            TempData["Success"] =
+                $"Doctor {name} {surname} was added successfully. " +
+                $"HPCSA Number: {hpcsaNumber}. " +
+                $"Temporary password: {temporaryPassword}";
+
+
+            return RedirectToAction(nameof(Doctors));
+        }
+
+
+        private string GeneratePassword()
+        {
+            return "Doc@" +
+                   Guid.NewGuid()
+                       .ToString("N")
+                       .Substring(0, 8);
+        }
+
+
+        #endregion
+
+        #region LabTechnician
+
+        public async Task<IActionResult> LabTechnician()
+        {
+            var technicians = await _context.LabTechnicians
+                .Include(x => x.User)
+                .Include(x => x.TechnicianTests)
+                    .ThenInclude(tt => tt.TestType)
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.Surname)
+                .ThenBy(x => x.Name)
+                .ToListAsync();
+
+            ViewBag.TechnicianCount = technicians.Count;
+
+            return View(technicians);
+        }
+
+
 
         #endregion
     }

@@ -116,8 +116,18 @@ namespace HemaCore.Data
                 .HasForeignKey(x => x.ConsentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+
+
+            modelbuilder.Entity<Doctor>()
+     .HasOne(d => d.User)
+     .WithMany()
+     .HasForeignKey(d => d.UserId)
+     .OnDelete(DeleteBehavior.NoAction);
+
+
         }
 
 
     }
+
 }
