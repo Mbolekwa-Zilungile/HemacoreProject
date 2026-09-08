@@ -19,11 +19,107 @@ namespace HemaCore.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
         }
+        #region Index
 
-        public IActionResult Index()
+        // GET: Admin
+        public async Task<IActionResult> Index()
         {
+            var conditionCount = await _context.Conditions
+                .CountAsync(c => c.IsActive);
+
+            var conditionCategoryCount = await _context.ConditionCategories
+                .CountAsync(c => c.IsActive);
+
+            var allergyCount = await _context.Allergies
+                .CountAsync(a => a.IsActive);
+
+            var allergyCategoryCount = await _context.AllergyCategories
+                .CountAsync(c => c.IsActive);
+
+            var medicationCount = await _context.Medications
+                .CountAsync(m => m.IsActive);
+
+            var medicationCategoryCount = await _context.MedicationCategories
+                .CountAsync(c => c.IsActive);
+
+            var conditionRecords = await _context.PatientConditions
+                .CountAsync();
+
+            var allergyRecords = await _context.PatientAllergies
+                .CountAsync();
+
+            var medicationRecords = await _context.PatientMedications
+                .CountAsync();
+
+            var patientRecordCount =
+                conditionRecords +
+                allergyRecords +
+                medicationRecords;
+
+            ViewBag.ConditionCount = conditionCount;
+            ViewBag.ConditionCategoryCount = conditionCategoryCount;
+
+            ViewBag.AllergyCount = allergyCount;
+            ViewBag.AllergyCategoryCount = allergyCategoryCount;
+
+            ViewBag.MedicationCount = medicationCount;
+            ViewBag.MedicationCategoryCount = medicationCategoryCount;
+
+            ViewBag.PatientRecordCount = patientRecordCount;
+
             return View();
         }
+        #endregion
+
+        #region Dashboard
+        // GET: Admin/DashboardStats
+        [HttpGet]
+        public async Task<IActionResult> DashboardStats()
+        {
+            var conditionCount = await _context.Conditions
+                .CountAsync(c => c.IsActive);
+
+            var conditionCategoryCount = await _context.ConditionCategories
+                .CountAsync(c => c.IsActive);
+
+            var allergyCount = await _context.Allergies
+                .CountAsync(a => a.IsActive);
+
+            var allergyCategoryCount = await _context.AllergyCategories
+                .CountAsync(c => c.IsActive);
+
+            var medicationCount = await _context.Medications
+                .CountAsync(m => m.IsActive);
+
+            var medicationCategoryCount = await _context.MedicationCategories
+                .CountAsync(c => c.IsActive);
+
+            var conditionRecords = await _context.PatientConditions
+                .CountAsync();
+
+            var allergyRecords = await _context.PatientAllergies
+                .CountAsync();
+
+            var medicationRecords = await _context.PatientMedications
+                .CountAsync();
+
+            var patientRecordCount =
+                conditionRecords +
+                allergyRecords +
+                medicationRecords;
+
+            return Json(new
+            {
+                conditionCount,
+                conditionCategoryCount,
+                allergyCount,
+                allergyCategoryCount,
+                medicationCount,
+                medicationCategoryCount,
+                patientRecordCount
+            });
+        }
+        #endregion
 
         #region Condition
         // GET: Admin/Conditions
@@ -274,31 +370,34 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleConditionStatus/{id}
+        // POST: Admin/ToggleConditionStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleConditionStatus(int id)
         {
-            try
-            {
-                var condition = await _context.Conditions.FindAsync(id);
-                if (condition == null)
-                {
-                    return Json(new { success = false, message = "Condition not found" });
-                }
+            var condition = await _context.Conditions
+                .FirstOrDefaultAsync(c => c.Id == id);
 
-                condition.IsActive = !condition.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = condition.IsActive,
-                    message = condition.IsActive ? "Condition activated" : "Condition deactivated"
-                });
-            }
-            catch (Exception ex)
+            if (condition == null)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                TempData["Error"] = "Condition not found.";
+                return RedirectToAction(nameof(Conditions));
             }
+
+            condition.IsActive = !condition.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            if (condition.IsActive)
+            {
+                TempData["Success"] = "Condition activated successfully.";
+            }
+            else
+            {
+                TempData["Success"] = "Condition deactivated successfully.";
+            }
+
+            return RedirectToAction(nameof(Conditions));
         }
 
         private async Task<bool> ConditionExists(int id)
@@ -351,20 +450,25 @@ namespace HemaCore.Controllers
 
 
         // GET: Admin/ConditionCategories
+        // GET: Admin/ConditionCategories
         public async Task<IActionResult> ConditionCategories()
         {
             var categories = await _context.ConditionCategories
-                .Where(c => c.IsActive)
                 .Include(c => c.Conditions)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            // Get count of conditions per category
             var conditionCountByCategory = await _context.Conditions
                 .Where(c => c.IsActive)
                 .GroupBy(c => c.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count);
 
             ViewBag.CategoryCount = categories.Count;
             ViewBag.ConditionCountByCategory = conditionCountByCategory;
@@ -520,50 +624,43 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleCategoryStatus/{id}
+        // POST: Admin/ToggleCategoryStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleCategoryStatus(int id)
         {
-            try
+            var category = await _context.ConditionCategories
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
             {
-                var category = await _context.ConditionCategories
-                    .Include(c => c.Conditions)
-                    .FirstOrDefaultAsync(c => c.Id == id);
-
-                if (category == null)
-                {
-                    return Json(new { success = false, message = "Category not found" });
-                }
-
-                // If deactivating, check if category has active conditions
-                if (category.IsActive)
-                {
-                    var hasActiveConditions = await _context.Conditions
-                        .AnyAsync(c => c.CategoryId == id && c.IsActive);
-
-                    if (hasActiveConditions)
-                    {
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Cannot deactivate category with active conditions. Please deactivate or move the conditions first."
-                        });
-                    }
-                }
-
-                category.IsActive = !category.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = category.IsActive,
-                    message = category.IsActive ? "Category activated" : "Category deactivated"
-                });
+                TempData["Error"] = "Condition category not found.";
+                return RedirectToAction(nameof(ConditionCategories));
             }
-            catch (Exception ex)
+
+            if (category.IsActive)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                var hasActiveConditions = await _context.Conditions
+                    .AnyAsync(c => c.CategoryId == id && c.IsActive);
+
+                if (hasActiveConditions)
+                {
+                    TempData["Error"] =
+                        "Cannot deactivate this category because it still contains active conditions. Please deactivate or move the conditions first.";
+
+                    return RedirectToAction(nameof(ConditionCategories));
+                }
             }
+
+            category.IsActive = !category.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = category.IsActive
+                ? "Condition category activated successfully!"
+                : "Condition category deactivated successfully!";
+
+            return RedirectToAction(nameof(ConditionCategories));
         }
 
         // GET: Admin/SearchCategoriesLive
@@ -850,31 +947,34 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleAllergyStatus/{id}
+        // POST: Admin/ToggleAllergyStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleAllergyStatus(int id)
         {
-            try
-            {
-                var allergy = await _context.Allergies.FindAsync(id);
-                if (allergy == null)
-                {
-                    return Json(new { success = false, message = "Allergy not found" });
-                }
+            var allergy = await _context.Allergies
+                .FirstOrDefaultAsync(a => a.Id == id);
 
-                allergy.IsActive = !allergy.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = allergy.IsActive,
-                    message = allergy.IsActive ? "Allergy activated" : "Allergy deactivated"
-                });
-            }
-            catch (Exception ex)
+            if (allergy == null)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                TempData["Error"] = "Allergy not found.";
+                return RedirectToAction(nameof(Allergies));
             }
+
+            allergy.IsActive = !allergy.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            if (allergy.IsActive)
+            {
+                TempData["Success"] = "Allergy activated successfully.";
+            }
+            else
+            {
+                TempData["Success"] = "Allergy deactivated successfully.";
+            }
+
+            return RedirectToAction(nameof(Allergies));
         }
 
         private async Task<bool> AllergyExists(int id)
@@ -923,20 +1023,25 @@ namespace HemaCore.Controllers
         }
 
         // GET: Admin/AllergyCategories
+        // GET: Admin/AllergyCategories
         public async Task<IActionResult> AllergyCategories()
         {
             var categories = await _context.AllergyCategories
-                .Where(c => c.IsActive)
                 .Include(c => c.Allergies)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            // Get count of allergies per category
             var allergyCountByCategory = await _context.Allergies
                 .Where(a => a.IsActive)
                 .GroupBy(a => a.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count);
 
             ViewBag.CategoryCount = categories.Count;
             ViewBag.AllergyCountByCategory = allergyCountByCategory;
@@ -1092,50 +1197,43 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleAllergyCategoryStatus/{id}
+        // POST: Admin/ToggleAllergyCategoryStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleAllergyCategoryStatus(int id)
         {
-            try
+            var category = await _context.AllergyCategories
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
             {
-                var category = await _context.AllergyCategories
-                    .Include(c => c.Allergies)
-                    .FirstOrDefaultAsync(c => c.Id == id);
-
-                if (category == null)
-                {
-                    return Json(new { success = false, message = "Category not found" });
-                }
-
-                // If deactivating, check if category has active allergies
-                if (category.IsActive)
-                {
-                    var hasActiveAllergies = await _context.Allergies
-                        .AnyAsync(a => a.CategoryId == id && a.IsActive);
-
-                    if (hasActiveAllergies)
-                    {
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Cannot deactivate category with active allergies. Please deactivate or move the allergies first."
-                        });
-                    }
-                }
-
-                category.IsActive = !category.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = category.IsActive,
-                    message = category.IsActive ? "Category activated" : "Category deactivated"
-                });
+                TempData["Error"] = "Allergy category not found.";
+                return RedirectToAction(nameof(AllergyCategories));
             }
-            catch (Exception ex)
+
+            if (category.IsActive)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                var hasActiveAllergies = await _context.Allergies
+                    .AnyAsync(a => a.CategoryId == id && a.IsActive);
+
+                if (hasActiveAllergies)
+                {
+                    TempData["Error"] =
+                        "Cannot deactivate this category because it still contains active allergies. Please deactivate or move the allergies first.";
+
+                    return RedirectToAction(nameof(AllergyCategories));
+                }
             }
+
+            category.IsActive = !category.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = category.IsActive
+                ? "Allergy category activated successfully!"
+                : "Allergy category deactivated successfully!";
+
+            return RedirectToAction(nameof(AllergyCategories));
         }
 
         // GET: Admin/SearchAllergyCategoriesLive
@@ -1422,31 +1520,34 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleMedicationStatus/{id}
+        // POST: Admin/ToggleMedicationStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleMedicationStatus(int id)
         {
-            try
-            {
-                var medication = await _context.Medications.FindAsync(id);
-                if (medication == null)
-                {
-                    return Json(new { success = false, message = "Medication not found" });
-                }
+            var medication = await _context.Medications
+                .FirstOrDefaultAsync(m => m.Id == id);
 
-                medication.IsActive = !medication.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = medication.IsActive,
-                    message = medication.IsActive ? "Medication activated" : "Medication deactivated"
-                });
-            }
-            catch (Exception ex)
+            if (medication == null)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                TempData["Error"] = "Medication not found.";
+                return RedirectToAction(nameof(Medications));
             }
+
+            medication.IsActive = !medication.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            if (medication.IsActive)
+            {
+                TempData["Success"] = "Medication activated successfully.";
+            }
+            else
+            {
+                TempData["Success"] = "Medication deactivated successfully.";
+            }
+
+            return RedirectToAction(nameof(Medications));
         }
 
         private async Task<bool> MedicationExists(int id)
@@ -1495,20 +1596,25 @@ namespace HemaCore.Controllers
         }
 
         // GET: Admin/MedicationCategories
+        // GET: Admin/MedicationCategories
         public async Task<IActionResult> MedicationCategories()
         {
             var categories = await _context.MedicationCategories
-                .Where(c => c.IsActive)
                 .Include(c => c.Medications)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            // Get count of medications per category
             var medicationCountByCategory = await _context.Medications
                 .Where(m => m.IsActive)
                 .GroupBy(m => m.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count);
 
             ViewBag.CategoryCount = categories.Count;
             ViewBag.MedicationCountByCategory = medicationCountByCategory;
@@ -1664,52 +1770,44 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleMedicationCategoryStatus/{id}
+        // POST: Admin/ToggleMedicationCategoryStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleMedicationCategoryStatus(int id)
         {
-            try
+            var category = await _context.MedicationCategories
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
             {
-                var category = await _context.MedicationCategories
-                    .Include(c => c.Medications)
-                    .FirstOrDefaultAsync(c => c.Id == id);
-
-                if (category == null)
-                {
-                    return Json(new { success = false, message = "Category not found" });
-                }
-
-                // If deactivating, check if category has active medications
-                if (category.IsActive)
-                {
-                    var hasActiveMedications = await _context.Medications
-                        .AnyAsync(m => m.CategoryId == id && m.IsActive);
-
-                    if (hasActiveMedications)
-                    {
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Cannot deactivate category with active medications. Please deactivate or move the medications first."
-                        });
-                    }
-                }
-
-                category.IsActive = !category.IsActive;
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    isActive = category.IsActive,
-                    message = category.IsActive ? "Category activated" : "Category deactivated"
-                });
+                TempData["Error"] = "Medication category not found.";
+                return RedirectToAction(nameof(MedicationCategories));
             }
-            catch (Exception ex)
+
+            if (category.IsActive)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                var hasActiveMedications = await _context.Medications
+                    .AnyAsync(m => m.CategoryId == id && m.IsActive);
+
+                if (hasActiveMedications)
+                {
+                    TempData["Error"] =
+                        "Cannot deactivate this category because it still contains active medications. Please deactivate or move the medications first.";
+
+                    return RedirectToAction(nameof(MedicationCategories));
+                }
             }
+
+            category.IsActive = !category.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = category.IsActive
+                ? "Medication category activated successfully!"
+                : "Medication category deactivated successfully!";
+
+            return RedirectToAction(nameof(MedicationCategories));
         }
-
         // GET: Admin/SearchMedicationCategoriesLive
         public async Task<IActionResult> SearchMedicationCategoriesLive(string term)
         {

@@ -11,7 +11,11 @@
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
 }
 
@@ -19,9 +23,14 @@
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
 }
+
 
 <div class="content-card">
 
@@ -29,85 +38,194 @@
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-box-open me-2"></i>
-            <span>Allergy Categories</span>
+
+            <i class="fas fa-folder-open me-2"></i>
+
+            <span>
+                Allergy Categories
+            </span>
+
             <span class="badge blue-badge ms-2">
                 @ViewBag.CategoryCount
             </span>
+
         </div>
 
-        <a asp-action="AddAllergyCategory"
-           class="btn btn-primary-custom btn-sm">
-            + Add Category
-        </a>
+
+        <div>
+
+            <a asp-controller="Admin"
+               asp-action="AddAllergyCategory"
+               class="btn btn-success btn-sm">
+
+                <i class="fas fa-plus me-1"></i>
+
+                Add Category
+
+            </a>
+
+        </div>
 
     </div>
 
+
     <!-- SEARCH -->
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Search allergy categories..." />
+    <div class="row mb-3">
+
+        <div class="col-md-8">
+
+            <div class="input-group">
+
+                <span class="input-group-text bg-transparent border-end-0">
+
+                    <i class="fas fa-search text-muted"></i>
+
+                </span>
+
+                <input type="text"
+                       id="searchBox"
+                       class="form-control border-start-0 ps-0"
+                       placeholder="Search allergy categories..." />
+
+            </div>
+
+        </div>
+
+    </div>
+
 
     <!-- TABLE -->
     <table class="modern-table">
 
         <thead>
+
             <tr>
-                <th>Category Name</th>
-                <th>Allergies</th>
-                <th>Status</th>
-                <th>Actions</th>
+
+                <th>
+                    Category Name
+                </th>
+
+                <th>
+                    Allergies
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Actions
+                </th>
+
             </tr>
+
         </thead>
+
 
         <tbody id="categoryTable">
 
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="4" class="text-center text-muted">
+
+                    <td colspan="4"
+                        class="text-center text-muted">
+
                         No allergy categories available.
+
                     </td>
+
                 </tr>
             }
             else
             {
+
                 @foreach (var category in Model)
                 {
+
+                    var allergyCount = 0;
+
+                    if (ViewBag.AllergyCountByCategory != null &&
+                        ViewBag.AllergyCountByCategory.ContainsKey(category.Id))
+                    {
+                        allergyCount =
+                            ViewBag.AllergyCountByCategory[category.Id];
+                    }
+
+
                     <tr>
+
                         <td class="fw-semibold blue-text">
+
                             @category.Name
+
                         </td>
 
-                        <td>
-                            @(ViewBag.AllergyCountByCategory != null &&
-                                ViewBag.AllergyCountByCategory.ContainsKey(category.Id)
-                                ? ViewBag.AllergyCountByCategory[category.Id]
-                                : 0)
-                        </td>
 
                         <td>
-                            <span class="badge @(category.IsActive ? "bg-success" : "bg-secondary")">
-                                @(category.IsActive ? "Active" : "Inactive")
+
+                            <span class="badge bg-info">
+
+                                @allergyCount
+
                             </span>
+
                         </td>
 
+
                         <td>
-                            <a asp-action="EditAllergyCategory"
+
+                            <span class="badge @(category.IsActive ? "bg-success" : "bg-secondary")">
+
+                                @(category.IsActive ? "Active" : "Inactive")
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <a asp-controller="Admin"
+                               asp-action="EditAllergyCategory"
                                asp-route-id="@category.Id"
                                class="btn btn-sm btn-primary me-1">
+
+                                <i class="fas fa-edit me-1"></i>
+
                                 Edit
+
                             </a>
 
-                            <button type="button"
-                                    class="btn btn-sm @(category.IsActive ? "btn-danger" : "btn-success")"
-                                    onclick="toggleStatus(@category.Id)">
-                                @(category.IsActive ? "Deactivate" : "Activate")
-                            </button>
+
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleAllergyCategoryStatus"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to change the status of this category?');">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@category.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm @(category.IsActive ? "btn-danger" : "btn-success")">
+
+                                    <i class="fas @(category.IsActive ? "fa-ban" : "fa-check") me-1"></i>
+
+                                    @(category.IsActive ? "Deactivate" : "Activate")
+
+                                </button>
+
+                            </form>
+
                         </td>
+
                     </tr>
                 }
+
             }
 
         </tbody>
@@ -116,84 +234,42 @@
 
 </div>
 
-<!-- SCRIPT -->
+
 <script>
-    document.getElementById("searchBox").addEventListener("keyup", function () {
-        let term = this.value;
 
-        fetch('/Admin/SearchAllergyCategoriesLive?term=' + term)
-            .then(res => res.json())
-            .then(data => {
-                let rows = "";
+    document.getElementById("searchBox")
+        .addEventListener("keyup", function () {
 
-                if (data.length === 0) {
-                    rows = `
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">
-                                No results found.
-                            </td>
-                        </tr>
-                    `;
+            let searchTerm =
+                this.value.toLowerCase();
+
+            let rows =
+                document.querySelectorAll("#categoryTable tr");
+
+            rows.forEach(function (row) {
+
+                if (row.querySelector("td[colspan]")) {
+                    return;
+                }
+
+                let categoryName =
+                    row.querySelector("td:first-child")
+                       ?.textContent
+                       ?.toLowerCase() || "";
+
+                if (categoryName.includes(searchTerm)) {
+
+                    row.style.display = "";
+
                 }
                 else {
-                    data.forEach(item => {
-                        rows += `
-                            <tr>
-                                <td class="fw-semibold blue-text">
-                                    ${item.name}
-                                </td>
-                                <td>${item.allergyCount}</td>
-                                <td>
-                                    <span class="badge ${item.isActive ? "bg-success" : "bg-secondary"}">
-                                        ${item.isActive ? "Active" : "Inactive"}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="/Admin/EditAllergyCategory/${item.id}"
-                                       class="btn btn-sm btn-primary me-1">
-                                        Edit
-                                    </a>
-                                    <button type="button"
-                                            class="btn btn-sm ${item.isActive ? "btn-danger" : "btn-success"}"
-                                            onclick="toggleStatus(${item.id})">
-                                        ${item.isActive ? "Deactivate" : "Activate"}
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+
+                    row.style.display = "none";
+
                 }
 
-                document.getElementById("categoryTable").innerHTML = rows;
             });
-    });
 
-    function toggleStatus(id) {
-        if (!confirm("Are you sure you want to change the status of this category?")) {
-            return;
-        }
-
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-
-        fetch('/Admin/ToggleAllergyCategoryStatus', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': token || ''
-            },
-            body: JSON.stringify({ id: id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message || "An error occurred while changing the status.");
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("An error occurred while processing your request.");
         });
-    }
+
 </script>

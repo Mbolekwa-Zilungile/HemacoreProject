@@ -133,11 +133,24 @@
                                 Edit
                             </a>
 
-                            <button type="button"
-                                    class="btn btn-sm @(medication.IsActive ? "btn-danger" : "btn-success")"
-                                    onclick="toggleStatus(@medication.Id)">
-                                @(medication.IsActive ? "Deactivate" : "Activate")
-                            </button>
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleMedicationStatus"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to change the status of this medication?');">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@medication.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm @(medication.IsActive ? "btn-danger" : "btn-success")">
+                                    @(medication.IsActive ? "Deactivate" : "Activate")
+                                </button>
+
+                            </form>
                         </td>
                     </tr>
                 }
@@ -172,11 +185,11 @@
 
             let medicationName = row.querySelector("td:first-child")?.textContent?.toLowerCase() || "";
             let categoryName = row.querySelector("td:nth-child(2)")?.textContent?.toLowerCase() || "";
-            
+
             let rowCategoryId = row.getAttribute("data-category-id");
 
             // Check if search term matches
-            let matchesSearch = medicationName.includes(searchTerm) || 
+            let matchesSearch = medicationName.includes(searchTerm) ||
                                categoryName.includes(searchTerm);
 
             // Check if category filter matches
@@ -193,9 +206,9 @@
         // Show "no results" message if all rows are hidden
         let visibleRows = document.querySelectorAll("#medicationTable tr[style*='display: none']");
         let allRows = document.querySelectorAll("#medicationTable tr:not([style*='display: none'])");
-        
+
         let noResultsRow = document.querySelector("#medicationTable tr td[colspan]");
-        
+
         if (allRows.length === 1 && allRows[0].querySelector("td[colspan]")) {
             return;
         }
@@ -218,35 +231,5 @@
                 noResults.remove();
             }
         }
-    }
-
-    // Toggle status function
-    function toggleStatus(id) {
-        if (!confirm("Are you sure you want to change the status of this medication?")) {
-            return;
-        }
-
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        
-        fetch('/Admin/ToggleMedicationStatus', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': token || ''
-            },
-            body: JSON.stringify({ id: id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message || "An error occurred while changing the status.");
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("An error occurred while processing your request.");
-        });
     }
 </script>
