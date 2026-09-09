@@ -1,0 +1,215 @@
+﻿@model List<HemaCore.Models.LabTechnician>
+
+@{
+    ViewData["Title"] = "Lab Technicians";
+    Layout = "~/Views/Shared/_LabManagerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-user-cog"></i>
+
+            <span>Technicians (@ViewBag.TechnicianCount)</span>
+
+            <span class="badge blue-badge ms-2">
+                @Model.Count
+            </span>
+        </div>
+
+        <a asp-action="AddTechnician"
+               class="btn btn-primary-custom btn-sm">
+            + Add Technician
+        </a>
+
+    </div>
+
+    <!-- SEARCH -->
+    <input type="text"
+           id="searchBox"
+           class="form-control mb-3"
+           placeholder="Type to search technicians..." />
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ID Number</th>
+                        <th>Employee Number</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Assigned Test Types</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="technicianTable">
+                    @foreach (var technician in Model)
+                    {
+                        <tr>
+                            <td>@technician.Surname @technician.Name</td>
+                            <td>@technician.IDNumber</td>
+                            <td>@technician.EmployeeNumber</td>
+
+                            <td>
+                                <a href="mailto:@technician.User.Email">
+                                    @technician.User.Email
+                                </a>
+                            </td>
+
+                            <td>@technician.PhoneNumber</td>
+
+                            <td>
+                                @if (technician.TechnicianTests != null &&
+                                     technician.TechnicianTests.Any())
+                                {
+                                    <ul class="mb-0 ps-3">
+                                        @foreach (var assignment in technician.TechnicianTests)
+                                        {
+                                            <li>
+                                                @assignment.TestType.TestTypeName
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        No test types assigned
+                                    </span>
+                                }
+                            </td>
+
+
+                            <!-- ACTIONS -->
+                            <td>
+                                <a asp-action="EditTechnician"
+                                       asp-route-id="@technician.LabTechnicianId"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    Edit
+                                </a>
+
+                                <a asp-action="DeleteTechnician"
+                                       asp-route-id="@technician.LabTechnicianId"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Deactivate
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const searchBox = document.getElementById("searchBox");
+    const tableBody = document.getElementById("technicianTable");
+
+    let debounceTimer;
+
+    searchBox.addEventListener("keyup", function () {
+
+        clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+
+            let term = searchBox.value;
+
+            fetch('/Manager/SearchTechniciansLive?term=' + encodeURIComponent(term))
+                .then(res => {
+                    if (!res.ok) throw new Error("Network response failed");
+                    return res.json();
+                })
+                .then(data => {
+
+                    let rows = "";
+
+                    if (!data || data.length === 0) {
+                        rows = `
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    No technicians found.
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+
+                        data.forEach(item => {
+
+                            let testTypes = "";
+
+                            if (item.testTypes && item.testTypes.length > 0) {
+                                testTypes = "<ul class='mb-0 ps-3'>";
+                                item.testTypes.forEach(t => {
+                                    testTypes += `<li>${t.testTypeName}</li>`;
+                                });
+                                testTypes += "</ul>";
+                            } else {
+                                testTypes = "<span class='text-muted'>No test types assigned</span>";
+                            }
+
+                            rows += `
+                                <tr>
+                                    <td>${item.surname || ""} ${item.name || ""}</td>
+
+                                    <td>${item.idNumber || ""}</td>
+
+                                    <td>${item.employeeNumber || ""}</td>
+
+                                    <td>
+                                        <a href="mailto:${item.email || ""}">
+                                            ${item.email || ""}
+                                        </a>
+                                    </td>
+
+                                    <td>${item.phoneNumber || ""}</td>
+
+                                    <td>${testTypes}</td>
+
+                                    <td>
+                                        <a href="/Manager/EditTechnician/${item.labTechnicianID}"
+                                           class="btn btn-sm btn-primary">
+                                            Edit
+                                        </a>
+
+                                        <a href="/Manager/DeleteTechnician/${item.labTechnicianID}"
+                                           class="btn btn-sm btn-danger">
+                                            Deactivate
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    tableBody.innerHTML = rows;
+                })
+                .catch(err => {
+                    console.error("Search error:", err);
+
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-danger">
+                                Error loading technicians.
+                            </td>
+                        </tr>
+                    `;
+                });
+
+        }, 300); // debounce delay (ms)
+
+    });
+</script>
