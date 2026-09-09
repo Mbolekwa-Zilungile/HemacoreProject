@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Lab Technicians";
-    Layout = "~/Views/Shared/_LabManagerLayout.cshtml";
+    Layout = "_ManagerLayout";
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
@@ -52,59 +52,70 @@
                 </thead>
 
                 <tbody id="technicianTable">
-                    @foreach (var technician in Model)
+                      @if (!Model.Any())
                     {
                         <tr>
-                            <td>@technician.Surname @technician.Name</td>
-                            <td>@technician.IDNumber</td>
-                            <td>@technician.EmployeeNumber</td>
-
-                            <td>
-                                <a href="mailto:@technician.User.Email">
-                                    @technician.User.Email
-                                </a>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No lab technician available.
                             </td>
-
-                            <td>@technician.PhoneNumber</td>
-
-                            <td>
-                                @if (technician.TechnicianTests != null &&
-                                     technician.TechnicianTests.Any())
-                                {
-                                    <ul class="mb-0 ps-3">
-                                        @foreach (var assignment in technician.TechnicianTests)
-                                        {
-                                            <li>
-                                                @assignment.TestType.TestTypeName
-                                            </li>
-                                        }
-                                    </ul>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">
-                                        No test types assigned
-                                    </span>
-                                }
-                            </td>
-
-
-                            <!-- ACTIONS -->
-                            <td>
-                                <a asp-action="EditTechnician"
-                                       asp-route-id="@technician.LabTechnicianId"
-                                   class="btn btn-sm btn-outline-primary me-1">
-                                    Edit
-                                </a>
-
-                                <a asp-action="DeleteTechnician"
-                                       asp-route-id="@technician.LabTechnicianId"
-                                   class="btn btn-sm btn-outline-danger">
-                                    Deactivate
-                                </a>
-                            </td>
-
                         </tr>
+                    }
+                    else
+                    {
+                        @foreach (var technician in Model)
+                        {
+                            <tr>
+                                <td>@technician.Surname @technician.Name</td>
+                                <td>@technician.IDNumber</td>
+                                <td>@technician.EmployeeNumber</td>
+
+                                <td>
+                                    <a href="mailto:@technician.User.Email">
+                                        @technician.User.Email
+                                    </a>
+                                </td>
+
+                                <td>@technician.PhoneNumber</td>
+
+                                <td>
+                                    @if (technician.TechnicianTests != null &&
+                                                                                             technician.TechnicianTests.Any())
+                                    {
+                                        <ul class="mb-0 ps-3">
+                                            @foreach (var assignment in technician.TechnicianTests)
+                                            {
+                                                <li>
+                                                    @assignment.TestType.TestTypeName
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            No test types assigned
+                                        </span>
+                                    }
+                                </td>
+
+
+                                <!-- ACTIONS -->
+                                <td>
+                                    <a asp-action="EditTechnician"
+                                    asp-route-id="@technician.LabTechnicianId"
+                                    class="btn btn-sm btn-outline-primary me-1">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="DeleteTechnician"
+                                    asp-route-id="@technician.LabTechnicianId"
+                                    class="btn btn-sm btn-outline-danger">
+                                        Deactivate
+                                    </a>
+                                </td>
+
+                            </tr>
+                        }
                     }
                 </tbody>
 

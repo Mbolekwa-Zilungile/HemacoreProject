@@ -54,33 +54,42 @@
                 </thead>
 
                 <tbody id="doctorTable">
-
-                    @foreach (var doctor in Model)
+                      @if (!Model.Any())
                     {
                         <tr>
-                            <td>Dr @doctor.Surname @doctor.Name</td>
-                            <td>
-                                <a href="mailto:@doctor.User.Email">@doctor.User.Email</a>
-                            </td>
-                            <td>@doctor.HPCSANumber</td>
-                            <td>@doctor.PhoneNumber</td>
-
-                            <td class="text-center">
-                                <a asp-action="EditDoctor"
-                                   asp-route-id="@doctor.DoctorId"
-                                   class="btn btn-sm btn-outline-primary me-1">
-                                    Edit
-                                </a>
-
-                                <a asp-action="DeleteDoctor"
-                                   asp-route-id="@doctor.DoctorId"
-                                   class="btn btn-sm btn-outline-danger">
-                                   Deactivate
-                                </a>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No doctor available.
                             </td>
                         </tr>
                     }
+                    else
+                    {
+                        @foreach (var doctor in Model)
+                        {
+                            <tr>
+                                <td>Dr @doctor.Surname @doctor.Name</td>
+                                <td>
+                                    <a href="mailto:@doctor.User.Email">@doctor.User.Email</a>
+                                </td>
+                                <td>@doctor.HPCSANumber</td>
+                                <td>@doctor.PhoneNumber</td>
 
+                                <td class="text-center">
+                                    <a asp-action="EditDoctor"
+                                    asp-route-id="@doctor.DoctorId"
+                                    class="btn btn-sm btn-outline-primary me-1">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="DeleteDoctor"
+                                    asp-route-id="@doctor.DoctorId"
+                                    class="btn btn-sm btn-outline-danger">
+                                        Deactivate
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
 
             </table>
