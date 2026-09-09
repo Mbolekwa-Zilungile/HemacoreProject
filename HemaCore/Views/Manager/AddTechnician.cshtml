@@ -1,0 +1,148 @@
+﻿```cshtml
+@model HemaCore.ViewModels.ManagerVM.TechnicianViewModel
+
+@{
+    ViewData["Title"] = "Add Lab Technician";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <!-- HEADER -->
+        <div class="mb-4">
+            <h3 class="fw-bold">Add Lab Technician</h3>
+            <p class="text-muted">
+                Fill in the details below to register a lab technician in the system.
+            </p>
+        </div>
+
+        <form asp-action="AddTechnician" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <!-- ACCOUNT INFORMATION -->
+            <h5 class="mb-3 text-secondary">Account Information</h5>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email"
+                           class="form-control"
+                           placeholder="Enter email address" />
+                    <span asp-validation-for="Email"
+                          class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           placeholder="Enter phone number" />
+                    <span asp-validation-for="PhoneNumber"
+                          class="text-danger small"></span>
+                </div>
+
+            </div>
+
+            <!-- PERSONAL INFORMATION -->
+            <h5 class="mt-4 mb-3 text-secondary">Personal Information</h5>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name"
+                           class="form-control"
+                           placeholder="First name" />
+                    <span asp-validation-for="Name"
+                          class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Surname" class="form-label"></label>
+                    <input asp-for="Surname"
+                           class="form-control"
+                           placeholder="Last name" />
+                    <span asp-validation-for="Surname"
+                          class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="IDNumber" class="form-label"></label>
+                    <input asp-for="IDNumber"
+                           class="form-control"
+                           placeholder="Enter ID number" />
+                    <span asp-validation-for="IDNumber"
+                          class="text-danger small"></span>
+                </div>
+
+            </div>
+
+            <!-- TEST SPECIALIZATIONS -->
+            <h5 class="mt-4 mb-3 text-secondary">Test Specializations</h5>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body"
+                     style="max-height: 250px; overflow-y: auto;">
+
+                    <p class="text-muted small">
+                        Select the tests this technician is qualified to perform:
+                    </p>
+
+                    @foreach (var test in Model.TestTypes)
+                    {
+                        <div class="form-check mb-2">
+
+                            <input type="checkbox"
+                                   name="SelectedTestTypeIds"
+                                   value="@test.TestTypeId"
+                                   id="test_@test.TestTypeId"
+                                   class="form-check-input" />
+
+                            <label class="form-check-label"
+                                   for="test_@test.TestTypeId">
+                                <strong>@test.TestTypeName</strong>
+                            </label>
+
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="LabTechnician"
+                   class="btn btn-outline-secondary">
+                    ← Back
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+                    + Add Technician
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+```

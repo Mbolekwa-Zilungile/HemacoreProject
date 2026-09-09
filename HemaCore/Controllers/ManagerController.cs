@@ -48,7 +48,7 @@ namespace HemaCore.Controllers
 
         public async Task<IActionResult> TestTypes()
         {
-            var testtype =  await _context.TestTypes
+            var testtype = await _context.TestTypes
                 .Include(t => t.Category)
                 .Where(c => c.IsActive)
                 .OrderBy(t => t.TestTypeName)
@@ -65,7 +65,7 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> SampleTypes()
         {
             var sampletype = await _context.SampleTypes
-                .Where(c=> c.IsActive)
+                .Where(c => c.IsActive)
                 .OrderBy(t => t.SampleName)
                 .ToListAsync();
             return View(sampletype);
@@ -77,8 +77,8 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> Consumables()
         {
             var consumables = await _context.Consumables
-                .Include(c=> c.Supplier)
-                .Where(c=> c.IsActive)
+                .Include(c => c.Supplier)
+                .Where(c => c.IsActive)
                 .OrderBy(c => c.ConsumableName)
                 .ToListAsync();
             return View(consumables);
@@ -117,7 +117,7 @@ namespace HemaCore.Controllers
                 .Include(o => o.Supplier)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Consumable)
-                .OrderByDescending(c=> c.OrderId)
+                .OrderByDescending(c => c.OrderId)
                 .ToListAsync();
 
             ViewBag.OrdersCount = orders.Count;
@@ -218,9 +218,9 @@ namespace HemaCore.Controllers
             );
         }
 
- 
-       [HttpPost]
-       public async Task<IActionResult> RejectItem(int orderId, int orderItemId, string reason)
+
+        [HttpPost]
+        public async Task<IActionResult> RejectItem(int orderId, int orderItemId, string reason)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
@@ -288,11 +288,11 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> Doctors()
         {
             var doctor = await _context.Doctors
-                .Include(x=>x.User)
+                .Include(x => x.User)
                 .Where(x => x.IsActive)
-                .OrderBy(x=> x.Surname) 
+                .OrderBy(x => x.Surname)
                 .ThenBy(x => x.Name)
-                .ToListAsync()  ;
+                .ToListAsync();
 
             return View(doctor);
         }
@@ -311,7 +311,7 @@ namespace HemaCore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDoctor(AddDoctorViewModel model)
         {
-          
+
 
             if (!ModelState.IsValid)
             {
@@ -325,7 +325,7 @@ namespace HemaCore.Controllers
             string name = model.Name.Trim();
             string surname = model.Surname.Trim();
             string hpcsaNumber = model.HPCSANumber.Trim();
-    
+
 
             var existingUser = await _userManager
                 .FindByEmailAsync(email);
@@ -465,7 +465,233 @@ namespace HemaCore.Controllers
         }
 
 
+        // GET: Manager/AddTechnician
+        [HttpGet]
+        public async Task<IActionResult> AddTechnician()
+        {
+            var model = new TechnicianViewModel
+            {
+                TestTypes = await _context.TestTypes
+                    .Where(t => t.IsActive)
+                    .Select(t => new TestTypeViewModel
+                    {
+                        TestTypeId = t.TestTypeId,
+                        TestTypeName = t.TestTypeName
+                    })
+                    .ToListAsync()
+            };
+
+            return View(model);
+        }
+
+
+        // POST: Manager/AddTechnician
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTechnician(
+            TechnicianViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.TestTypes = await _context.TestTypes
+                    .Where(t => t.IsActive)
+                    .Select(t => new TestTypeViewModel
+                    {
+                        TestTypeId = t.TestTypeId,
+                        TestTypeName = t.TestTypeName
+                    })
+                    .ToListAsync();
+
+                return View(model);
+            }
+
+            // =========================
+            // CLEAN INPUT
+            // =========================
+
+            string email = model.Email.Trim();
+            string phoneNumber = model.PhoneNumber.Trim();
+            string name = model.Name.Trim();
+            string surname = model.Surname.Trim();
+            string idNumber = model.IDNumber.Trim();
+
+            // =========================
+            // CHECK EMAIL
+            // =========================
+
+            var existingUser = await _userManager
+                .FindByEmailAsync(email);
+
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "This email is already registered.");
+
+                await LoadTechnicianTestTypes(model);
+
+                return View(model);
+            }
+
+            // =========================
+            // CHECK ID NUMBER
+            // =========================
+
+            bool idExists = await _context.LabTechnicians
+                .AnyAsync(t => t.IDNumber == idNumber);
+
+            if (idExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.IDNumber),
+                    "This ID number is already registered.");
+
+                await LoadTechnicianTestTypes(model);
+
+                return View(model);
+            }
+
+            // =========================
+            // GENERATE EMPLOYEE NUMBER
+            // =========================
+
+            string employeeNumber =
+                "TECH" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            // =========================
+            // GENERATE RANDOM PASSWORD
+            // =========================
+
+            string temporaryPassword = GenerateTechnicianPassword();
+
+            // =========================
+            // CREATE IDENTITY USER
+            // =========================
+
+            var user = new Users
+            {
+                FullName = $"{name} {surname}",
+                UserName = email,
+                Email = email,
+                PhoneNumber = phoneNumber,
+                EmailConfirmed = true
+            };
+
+            var userResult = await _userManager
+                .CreateAsync(user, temporaryPassword);
+
+            if (!userResult.Succeeded)
+            {
+                foreach (var error in userResult.Errors)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description);
+                }
+
+                await LoadTechnicianTestTypes(model);
+
+                return View(model);
+            }
+
+            // =========================
+            // ASSIGN TECHNICIAN ROLE
+            // =========================
+
+            var roleResult = await _userManager
+                .AddToRoleAsync(user, "LabTechnician");
+
+            if (!roleResult.Succeeded)
+            {
+                // Remove user if role assignment fails
+                await _userManager.DeleteAsync(user);
+
+                foreach (var error in roleResult.Errors)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description);
+                }
+
+                await LoadTechnicianTestTypes(model);
+
+                return View(model);
+            }
+
+            // =========================
+            // CREATE LAB TECHNICIAN
+            // =========================
+
+            var technician = new LabTechnician
+            {
+                Name = name,
+                Surname = surname,
+                IDNumber = idNumber,
+                PhoneNumber = phoneNumber,
+                EmployeeNumber = employeeNumber,
+                IsActive = true,
+
+                // Link technician to Identity user
+                UserId = user.Id
+            };
+
+            _context.LabTechnicians.Add(technician);
+
+            await _context.SaveChangesAsync();
+
+            // =========================
+            // ASSIGN TEST TYPES
+            // =========================
+
+            if (model.SelectedTestTypeIds != null &&
+                model.SelectedTestTypeIds.Any())
+            {
+                foreach (var testTypeId in model.SelectedTestTypeIds)
+                {
+                    var technicianTest = new TechnicianTestType
+                    {
+                        LabTechnicianId = technician.LabTechnicianId,
+                        TestTypeId = testTypeId
+                    };
+
+                    _context.TechnicianTestTypes.Add(technicianTest);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] =
+                $"Technician {name} {surname} was added successfully. " +
+                $"Employee Number: {employeeNumber}.\n " +
+                $"Temporary password: {temporaryPassword}";
+
+            return RedirectToAction(nameof(LabTechnician));
+        }
+
+        private string GenerateTechnicianPassword()
+        {
+            return "Tech@" +
+                   Guid.NewGuid()
+                       .ToString("N")
+                       .Substring(0, 8);
+        }
+
+
+        private async Task LoadTechnicianTestTypes(
+            TechnicianViewModel model)
+        {
+            model.TestTypes = await _context.TestTypes
+                .Where(t => t.IsActive)
+                .Select(t => new TestTypeViewModel
+                {
+                    TestTypeId = t.TestTypeId,
+                    TestTypeName = t.TestTypeName
+                })
+                .ToListAsync();
+        }
+
 
         #endregion
     }
 }
+
