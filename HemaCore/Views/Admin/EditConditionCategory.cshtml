@@ -1,0 +1,115 @@
+﻿@model HemaCore.Models.ConditionCategory
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Condition Category";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center">
+        <i class="fas fa-edit me-2"></i>
+        <span>Edit Condition Category</span>
+    </div>
+
+    <!-- FORM -->
+    <form asp-controller="Admin"
+          asp-action="EditConditionCategory"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+               asp-for="Id" />
+
+        <div class="mb-3">
+
+            <label asp-for="Name"
+                   class="form-label fw-semibold">
+                Category Name
+            </label>
+
+            <input asp-for="Name"
+                   class="form-control"
+                   placeholder="Enter condition category name" />
+
+            <span asp-validation-for="Name"
+                  class="text-danger">
+            </span>
+
+        </div>
+
+
+        <div class="mb-3">
+
+            <label class="form-label fw-semibold">
+                Status
+            </label>
+
+            <div>
+
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">
+                        Active
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">
+                        Inactive
+                    </span>
+                }
+
+            </div>
+
+        </div>
+
+
+        <div class="d-flex gap-2">
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="fas fa-save me-1"></i>
+                Save Changes
+
+            </button>
+
+
+            <a asp-controller="Admin"
+               asp-action="ConditionCategories"
+               class="btn btn-secondary">
+
+                <i class="fas fa-arrow-left me-1"></i>
+                Cancel
+
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

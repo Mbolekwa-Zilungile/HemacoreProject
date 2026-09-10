@@ -28,20 +28,22 @@
 
 <div class="content-card">
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="section-title d-flex align-items-center justify-content-between">
 
-        <h5 class="mb-0 d-flex align-items-center">
-            <i class="fas fa-box-open me-2"></i>
-            Consumables (@Model.Count)
-        </h5>
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box"></i>
 
-        <a asp-action="AddConsumable"
-           class="btn btn-primary btn-sm">
-            + Add
+            <span>Consumable (@Model.Count)</span>
+        </div>
+
+        <a asp-action="AddCategory"
+           class="btn btn-primary-custom btn-sm">
+            + Add Consumable
         </a>
 
     </div>
+
+  
 
     <!-- LIVE SEARCH -->
     <input type="text"
@@ -71,7 +73,7 @@
                 {
                     <tr>
                         <td colspan="6" class="text-center text-muted py-3">
-                            No consumables found
+                            No consumables available.
                         </td>
                     </tr>
                 }

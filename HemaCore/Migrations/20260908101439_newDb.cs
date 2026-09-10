@@ -5,7 +5,7 @@
 namespace HemaCore.Migrations
 {
     /// <inheritdoc />
-    public partial class change : Migration
+    public partial class newDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

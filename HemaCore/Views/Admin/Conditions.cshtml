@@ -135,11 +135,24 @@
                                 Edit
                             </a>
 
-                            <a href="#"
-                               class="btn btn-sm @(condition.IsActive ? "btn-danger" : "btn-success")"
-                               onclick="toggleStatus(@condition.Id, @(condition.IsActive ? "false" : "true"))">
-                                @(condition.IsActive ? "Deactivate" : "Activate")
-                            </a>
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleConditionStatus"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to change the status of this condition?');">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="id"
+                                       value="@condition.Id" />
+
+                                <button type="submit"
+                                        class="btn btn-sm @(condition.IsActive ? "btn-danger" : "btn-success")">
+                                    @(condition.IsActive ? "Deactivate" : "Activate")
+                                </button>
+
+                            </form>
                         </td>
                     </tr>
                 }
@@ -175,12 +188,12 @@
             let conditionName = row.querySelector("td:first-child")?.textContent?.toLowerCase() || "";
             let categoryName = row.querySelector("td:nth-child(2)")?.textContent?.toLowerCase() || "";
             let description = row.querySelector("td:nth-child(3)")?.textContent?.toLowerCase() || "";
-            
+
             let rowCategoryId = row.getAttribute("data-category-id");
 
             // Check if search term matches
-            let matchesSearch = conditionName.includes(searchTerm) || 
-                               categoryName.includes(searchTerm) || 
+            let matchesSearch = conditionName.includes(searchTerm) ||
+                               categoryName.includes(searchTerm) ||
                                description.includes(searchTerm);
 
             // Check if category filter matches
@@ -197,10 +210,10 @@
         // Show "no results" message if all rows are hidden
         let visibleRows = document.querySelectorAll("#conditionTable tr[style*='display: none']");
         let allRows = document.querySelectorAll("#conditionTable tr:not([style*='display: none'])");
-        
+
         // Check if there's already a "no results" row
         let noResultsRow = document.querySelector("#conditionTable tr td[colspan]");
-        
+
         if (allRows.length === 1 && allRows[0].querySelector("td[colspan]")) {
             // Only the no results row exists
             return;
@@ -225,29 +238,6 @@
             if (noResults) {
                 noResults.remove();
             }
-        }
-    }
-
-    // Toggle status function
-    function toggleStatus(id, activate) {
-        const action = activate ? "activate" : "deactivate";
-        if (confirm(`Are you sure you want to ${action} this condition?`)) {
-            fetch('/Admin/ToggleConditionStatus', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                },
-                body: JSON.stringify({ id: id })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            });
         }
     }
 </script>

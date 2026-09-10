@@ -74,12 +74,12 @@
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Orders" ? "active" : "")">
                     <a asp-controller="Manager" asp-action="Orders">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="menu-text">Orders</span>
                     </a>
-                </li class="@(ViewContext.RouteData.Values["action"].ToString() == "#" ? "active" : "")">
+                </li>
 
                 <li class="section-label">USER MANAGEMENT</li>
                 <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Doctors" ? "active" : "")">
@@ -89,8 +89,8 @@
                     </a>
                 </li>
 
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Technicians" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Technicians">
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "LabTechnician" ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="LabTechnician">
                         <i class="fas fa-user-nurse"></i>
                         <span class="menu-text">Technicians</span>
                     </a>

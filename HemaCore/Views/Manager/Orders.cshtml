@@ -12,12 +12,10 @@
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-box-open me-2"></i>
-            <span>Orders</span>
+            <i class="fas fa-shopping-cart"></i>
+            <span>Orders (@Model.Count)</span>
 
-            <span class="badge blue-badge ms-2">
-                @ViewBag.OrdersCount
-            </span>
+         
         </div>
 
         <a asp-action="CreateOrder"
@@ -50,45 +48,56 @@
 
                 <tbody id="orderTableBody">
 
-                    @foreach (var order in Model)
+                    @if (!Model.Any())
                     {
-                        var itemCount = order.OrderItems?.Count ?? 0;
-                        var supplierName = order.Supplier?.SupplierName ?? "Unknown";
-
                         <tr>
-                            <td>@order.OrderNumber</td>
-                            <td>@supplierName</td>
-                            <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
-                            <td>@itemCount</td>
-
-                            <td>
-                                @if (order.Status.ToString() == "Ordered")
-                                {
-                                    <span class="badge bg-warning">Ordered</span>
-                                }
-                                else if (order.Status.ToString() == "Completed")
-                                {
-                                    <span class="badge bg-success">Completed</span>
-                                }
-                                else if (order.Status.ToString() == "Rejected")
-                                {
-                                    <span class="badge bg-danger">Rejected</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">@order.Status</span>
-                                }
-                            </td>
-
-                            <td>
-                                <a asp-action="OrderDetails" asp-route-id="@order.OrderId"
-                                   class="btn btn-sm btn-primary">
-                                    View / Manage
-                                </a>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No orders available.
                             </td>
                         </tr>
                     }
+                    else
+                    {
 
+                        @foreach (var order in Model)
+                        {
+                            var itemCount = order.OrderItems?.Count ?? 0;
+                            var supplierName = order.Supplier?.SupplierName ?? "Unknown";
+
+                            <tr>
+                                <td>@order.OrderNumber</td>
+                                <td>@supplierName</td>
+                                <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                                <td>@itemCount</td>
+
+                                <td>
+                                    @if (order.Status.ToString() == "Ordered")
+                                    {
+                                        <span class="badge bg-warning">Ordered</span>
+                                    }
+                                    else if (order.Status.ToString() == "Completed")
+                                    {
+                                        <span class="badge bg-success">Completed</span>
+                                    }
+                                    else if (order.Status.ToString() == "Rejected")
+                                    {
+                                        <span class="badge bg-danger">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@order.Status</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <a asp-action="OrderDetails" asp-route-id="@order.OrderId"
+                                    class="btn btn-sm btn-primary">
+                                        View / Manage
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
 
             </table>
