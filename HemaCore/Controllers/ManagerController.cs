@@ -551,16 +551,30 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // =========================
-            // GENERATE EMPLOYEE NUMBER
-            // =========================
 
-            string employeeNumber =
-                "TECH" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            int year = DateTime.Now.Year;
+            string prefix = $"EMP-{year}-";
 
-            // =========================
-            // GENERATE RANDOM PASSWORD
-            // =========================
+            var lastEmployeeNumber = await _context.LabTechnicians
+                .Where(t => t.EmployeeNumber.StartsWith(prefix))
+                .OrderByDescending(t => t.EmployeeNumber)
+                .Select(t => t.EmployeeNumber)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+
+            if (!string.IsNullOrEmpty(lastEmployeeNumber))
+            {
+                string numberPart = lastEmployeeNumber.Substring(prefix.Length);
+
+                if (int.TryParse(numberPart, out int lastNumber))
+                {
+                    nextNumber = lastNumber + 1;
+                }
+            }
+
+            string employeeNumber = $"{prefix}{nextNumber:D3}";
+
 
             string temporaryPassword = GenerateTechnicianPassword();
 
