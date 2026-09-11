@@ -2,7 +2,7 @@
 
 namespace HemaCore.Models
 {
-    public class TestRequestTestType
+    public class TestRequestItem
     {
         [Key]
         public int TestRequestTestTypeId { get; set; }

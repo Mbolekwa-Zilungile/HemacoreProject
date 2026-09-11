@@ -30,7 +30,7 @@ namespace HemaCore.Models
             = new List<Sample>();
 
         // Tests requested in this request
-        public ICollection<TestRequestTestType> TestRequestTestTypes { get; set; }
-            = new List<TestRequestTestType>();
+        public ICollection<TestRequestItem> TestRequestTestTypes { get; set; }
+            = new List<TestRequestItem>();
     }
 }

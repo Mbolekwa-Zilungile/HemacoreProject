@@ -11,7 +11,7 @@ namespace HemaCore.Models
         public bool IsAbnormal { get; set; }
         public DateTime DateCaptured {  get; set; }
 
-        public ICollection<TestRequestTestType> TestRequestTestType = new List<TestRequestTestType>();//Test request test type navigation
+        public ICollection<TestRequestItem> TestRequestTestType = new List<TestRequestItem>();//Test request test type navigation
         public TestResultVerification TestResultVerification { get; set; }// Test result verification navigation
     }
 }

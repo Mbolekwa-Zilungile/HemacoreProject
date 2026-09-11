@@ -65,7 +65,7 @@ namespace HemaCore.Models
         public Users User { get; set; } //User navigation 
 
         public ICollection<TechnicianTestType> TechnicianTests { get; set; } = new List<TechnicianTestType>();
-        public ICollection<TestRequestTestType> TestRequestTestType = new List<TestRequestTestType>();
+        public ICollection<TestRequestItem> TestRequestTestType = new List<TestRequestItem>();
 
     }
 }

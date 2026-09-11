@@ -1,6 +1,6 @@
 ﻿namespace HemaCore.Models
 {
-    public class ConsentTestAccess
+    public class ConsentTestRequest
     {
         public int Id { get; set; }
         public int ConsentId { get; set; }

@@ -114,38 +114,6 @@ namespace HemaCore.Services
                             string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
-                logger.LogInformation("Seeding lab technician user");
-
-                var doctorEmail = "zanele@gmail.com";
-
-                if (await userManager.FindByEmailAsync(doctorEmail) == null)
-                {
-                    var doctorUser = new Users
-                    {
-                        FullName = "zanele Ndlumbini",
-                        UserName = doctorEmail,
-                        NormalizedUserName = doctorEmail.ToUpper(),
-                        Email = doctorEmail,
-                        NormalizedEmail = doctorEmail.ToUpper(),
-                        EmailConfirmed = true,
-                        SecurityStamp = Guid.NewGuid().ToString()
-                    };
-
-                    var result = await userManager.CreateAsync(doctorUser, "Doctor@123");
-
-                    if (result.Succeeded)
-                    {
-                        logger.LogInformation("Assigning LabTechnician role to lab technician user.");
-                        await userManager.AddToRoleAsync(doctorUser, "Doctor");
-                    }
-                    else
-                    {
-                        logger.LogError(
-                            "Failed to create lab technician user: {Errors}",
-                            string.Join(", ", result.Errors.Select(e => e.Description)));
-                    }
-                }
-
             }
             catch (Exception ex)
             {

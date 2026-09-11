@@ -14,7 +14,7 @@ namespace HemaCore.Data
         public DbSet<Sample> Samples { get; set; }
         public DbSet<TestRequest> TestRequests { get; set; }
         public DbSet<LabTechnician> LabTechnicians { get; set; }
-        public DbSet<TestRequestTestType> TestRequestTestTypes { get; set; }
+        public DbSet<TestRequestItem> TestRequestTestTypes { get; set; }
         public DbSet<TestResult> TestResults { get; set; }
         public DbSet<TechnicianTestType> TechnicianTestTypes { get; set; }
         public DbSet<TestResultVerification> TestResultVerifications { get; set; }
@@ -40,7 +40,7 @@ namespace HemaCore.Data
         public DbSet<PatientAllergy> PatientAllergies => Set<PatientAllergy>();
         public DbSet<PatientMedication> PatientMedications => Set<PatientMedication>();
         public DbSet<Consent> Consents => Set<Consent>();
-        public DbSet<ConsentTestAccess> ConsentTestAccesses => Set<ConsentTestAccess>();
+        public DbSet<ConsentTestRequest> ConsentTestAccesses => Set<ConsentTestRequest>();
 
         protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
@@ -57,7 +57,7 @@ namespace HemaCore.Data
                 .HasKey(t => new
                 { t.LabTechnicianId, t.TestTypeId });
             //Composite Primary key for TestRequestTestType
-            modelbuilder.Entity<TestRequestTestType>()
+            modelbuilder.Entity<TestRequestItem>()
     .HasKey(t => t.TestRequestTestTypeId);
             //Composite Primary key for TestTypeSample
             modelbuilder.Entity<TestTypeSample>()
@@ -104,13 +104,13 @@ namespace HemaCore.Data
             modelbuilder.Entity<Alert>()
                 .Property(a => a.ResultValue)
                 .HasPrecision(18, 2);
-            modelbuilder.Entity<ConsentTestAccess>()
+            modelbuilder.Entity<ConsentTestRequest>()
     .HasOne(x => x.TestRequest)
     .WithMany()
     .HasForeignKey(x => x.TestRequestId)
     .OnDelete(DeleteBehavior.NoAction);
 
-            modelbuilder.Entity<ConsentTestAccess>()
+            modelbuilder.Entity<ConsentTestRequest>()
                 .HasOne(x => x.Consent)
                 .WithMany()
                 .HasForeignKey(x => x.ConsentId)

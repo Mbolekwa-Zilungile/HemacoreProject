@@ -11,6 +11,6 @@
 
         public Users Patient { get; set; } = null!;
         public Doctor Doctor { get; set; } = null!;
-        public ICollection<ConsentTestAccess> TestAccesses { get; set; } = [];
+        public ICollection<ConsentTestRequest> TestAccesses { get; set; } = [];
     }
 }
