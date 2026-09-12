@@ -1,6 +1,7 @@
 ﻿using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Models.Enums;
+using HemaCore.Services;
 using HemaCore.ViewModels.ManagerVM;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,11 +14,13 @@ namespace HemaCore.Controllers
     {
         private AppDbContext _context;
         private readonly UserManager<Users> _userManager;
+        private readonly IEmailService _emailService;
 
-        public ManagerController(AppDbContext context, UserManager<Users> userManager)
+        public ManagerController(AppDbContext context, UserManager<Users> userManager, IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
         public IActionResult Index()
         {
@@ -422,13 +425,25 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(
+                    email,
+                    name,
+                    surname,
+                    temporaryPassword,
+                    "Doctor"
+                );
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Email not sent");
+            }
 
 
             TempData["Success"] =
-                $"Doctor {name} {surname} was added successfully. " +
-                $"HPCSA Number: {hpcsaNumber}. " +
-                $"Temporary password: {temporaryPassword}";
+                $"Doctor {name} {surname} was added successfully and email with temporary password is sent"
+                ;
 
 
             return RedirectToAction(nameof(Doctors));
@@ -674,10 +689,23 @@ namespace HemaCore.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(
+                    email,
+                    name,
+                    surname,
+                    temporaryPassword,
+                    "LabTechnician"
+                );
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Email not sent");
+            }
+
             TempData["Success"] =
-                $"Technician {name} {surname} was added successfully. " +
-                $"Employee Number: {employeeNumber}.\n " +
-                $"Temporary password: {temporaryPassword}";
+                $"Technician {name} {surname} was added successfully and email with temporary password is sent";
 
             return RedirectToAction(nameof(LabTechnician));
         }

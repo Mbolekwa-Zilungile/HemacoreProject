@@ -4,7 +4,7 @@ using MimeKit;
 
 namespace HemaCore.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
 
@@ -13,94 +13,96 @@ namespace HemaCore.Services
             _configuration = configuration;
         }
 
-        public async Task SendDoctorCredentialsAsync(
-            string doctorEmail,
-            string doctorName,
-            string temporaryPassword)
+        public async Task SendWelcomeEmailAsync(
+            string email,
+            string name,
+            string surname,
+            string temporaryPassword,
+            string role)
         {
-            var email = new MimeMessage();
+            var smtpHost = _configuration["EmailSettings:SmtpHost"];
+            var smtpPort = int.Parse(
+                _configuration["EmailSettings:SmtpPort"]!
+            );
 
-            // Sender
-            email.From.Add(new MailboxAddress(
-                _configuration["EmailSettings:SenderName"],
-                _configuration["EmailSettings:SenderEmail"]
-            ));
+            var username = _configuration["EmailSettings:Username"];
+            var password = _configuration["EmailSettings:Password"];
+            var senderEmail = _configuration["EmailSettings:SenderEmail"];
+            var senderName = _configuration["EmailSettings:SenderName"];
 
-            // Doctor
-            email.To.Add(new MailboxAddress(
-                doctorName,
-                doctorEmail
-            ));
+            var message = new MimeMessage();
 
-            // Subject
-            email.Subject = "HemaCore Doctor Account";
+            message.From.Add(
+                new MailboxAddress(senderName, senderEmail)
+            );
 
-            // Email body
-            var body = $@"
-                <html>
-                <body style='font-family: Arial, sans-serif;'>
+            message.To.Add(
+                new MailboxAddress(name, email)
+            );
 
-                    <h2>Welcome to HemaCore</h2>
+            message.Subject = "Welcome to HemaCore";
 
-                    <p>Dear Dr. {doctorName},</p>
-
-                    <p>
-                        Your doctor account has been created
-                        on the HemaCore system.
-                    </p>
-
-                    <h3>Login Details</h3>
-
-                    <p>
-                        <strong>Email:</strong> {doctorEmail}
-                    </p>
-
-                    <p>
-                        <strong>Temporary Password:</strong>
-                        {temporaryPassword}
-                    </p>
-
-                    <p>
-                        Please use the above credentials to log in.
-                    </p>
-
-                    <p>
-                        For security purposes, please change your
-                        password after your first login.
-                    </p>
-
-                    <br>
-
-                    <p>Regards,</p>
-                    <p><strong>HemaCore</strong></p>
-
-                </body>
-                </html>
-            ";
-
-            email.Body = new BodyBuilder
+            message.Body = new TextPart("html")
             {
-                HtmlBody = body
-            }.ToMessageBody();
+                Text = $@"
+                    <html>
+                    <body>
 
-            // SMTP
+                        <h2>Welcome to HemaCore</h2>
+
+                        <p>Hello <strong>{surname +name}</strong>,</p>
+
+                        <p>
+                            Your HemaCore account has been successfully
+                            created.
+                        </p>
+
+                        <p>
+                            <strong>Role:</strong> {role}
+                        </p>
+
+                        <p>
+                            <strong>Username:</strong> {email}
+                        </p>
+
+                        <p>
+                            <strong>Temporary Password:</strong>
+                            {temporaryPassword}
+                        </p>
+
+                        <p>
+                            Please log in using these details and
+                            change your password after your first login.
+                        </p>
+
+                        <br />
+
+                        <p>
+                            Regards,<br />
+                            <strong>HemaCore</strong>
+                        </p>
+
+                    </body>
+                    </html>
+                "
+            };
+
             using var smtp = new SmtpClient();
 
             await smtp.ConnectAsync(
-                _configuration["EmailSettings:SmtpServer"],
-                int.Parse(_configuration["EmailSettings:Port"]),
+                smtpHost,
+                smtpPort,
                 SecureSocketOptions.StartTls
             );
 
             await smtp.AuthenticateAsync(
-                _configuration["EmailSettings:Username"],
-                _configuration["EmailSettings:Password"]
+                username,
+                password
             );
 
-            await smtp.SendAsync(email);
+            await smtp.SendAsync(message);
 
             await smtp.DisconnectAsync(true);
         }
     }
 }
-
