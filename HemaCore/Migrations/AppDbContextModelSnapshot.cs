@@ -86,6 +86,11 @@ namespace HemaCore.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -108,6 +113,11 @@ namespace HemaCore.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -160,6 +170,11 @@ namespace HemaCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -206,7 +221,7 @@ namespace HemaCore.Migrations
                     b.ToTable("Consents");
                 });
 
-            modelBuilder.Entity("HemaCore.Models.ConsentTestAccess", b =>
+            modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -275,7 +290,8 @@ namespace HemaCore.Migrations
 
                     b.Property<string>("HPCSANumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -360,6 +376,11 @@ namespace HemaCore.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -382,6 +403,11 @@ namespace HemaCore.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -761,7 +787,7 @@ namespace HemaCore.Migrations
                     b.ToTable("TestRequests");
                 });
 
-            modelBuilder.Entity("HemaCore.Models.TestRequestTestType", b =>
+            modelBuilder.Entity("HemaCore.Models.TestRequestItem", b =>
                 {
                     b.Property<int>("TestRequestTestTypeId")
                         .ValueGeneratedOnAdd()
@@ -1173,7 +1199,7 @@ namespace HemaCore.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("HemaCore.Models.ConsentTestAccess", b =>
+            modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.HasOne("HemaCore.Models.Consent", "Consent")
                         .WithMany()
@@ -1395,7 +1421,7 @@ namespace HemaCore.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("HemaCore.Models.TestRequestTestType", b =>
+            modelBuilder.Entity("HemaCore.Models.TestRequestItem", b =>
                 {
                     b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
                         .WithMany()

@@ -125,21 +125,28 @@ namespace HemaCore.Controllers
         // GET: Admin/Conditions
         public async Task<IActionResult> Conditions()
         {
+            // IMPORTANT:
+            // Do NOT filter by IsActive here.
+            // We want both Active and Inactive conditions to remain visible.
             var conditions = await _context.Conditions
                 .Include(c => c.Category)
-                .Where(c => c.IsActive)
                 .OrderBy(c => c.Category.Name)
                 .ThenBy(c => c.Name)
                 .ToListAsync();
 
-            // Get count of conditions per category for display
             var conditionCountByCategory = await _context.Conditions
-                .Where(c => c.IsActive)
                 .GroupBy(c => c.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count
+                );
 
-            // Get all active categories for the filter dropdown
+            // Categories themselves can still be active only.
             var categories = await _context.ConditionCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
@@ -147,11 +154,10 @@ namespace HemaCore.Controllers
 
             ViewBag.ConditionCount = conditions.Count;
             ViewBag.ConditionCountByCategory = conditionCountByCategory;
-            ViewBag.Categories = categories; // For the filter dropdown
+            ViewBag.Categories = categories;
 
             return View(conditions);
         }
-
         // GET: Admin/AddCondition
         public async Task<IActionResult> AddCondition()
         {
@@ -370,7 +376,6 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleConditionStatus/{id}
-        // POST: Admin/ToggleConditionStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleConditionStatus(int id)
@@ -384,6 +389,7 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Conditions));
             }
 
+            // Toggle the current status
             condition.IsActive = !condition.IsActive;
 
             await _context.SaveChangesAsync();
@@ -705,23 +711,31 @@ namespace HemaCore.Controllers
 
         #region Allergy
         // GET: Admin/Allergies
+        // GET: Admin/Allergies
         public async Task<IActionResult> Allergies()
         {
+            // IMPORTANT:
+            // Do NOT filter by IsActive here.
+            // We want both Active and Inactive allergies to remain visible.
             var allergies = await _context.Allergies
                 .Include(a => a.Category)
-                .Where(a => a.IsActive)
                 .OrderBy(a => a.Category.Name)
                 .ThenBy(a => a.Name)
                 .ToListAsync();
 
-            // Get count of allergies per category for display
             var allergyCountByCategory = await _context.Allergies
-                .Where(a => a.IsActive)
                 .GroupBy(a => a.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count
+                );
 
-            // Get all active categories for the filter dropdown
+            // Categories themselves can still be active only.
             var categories = await _context.AllergyCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
@@ -733,7 +747,6 @@ namespace HemaCore.Controllers
 
             return View(allergies);
         }
-
         // GET: Admin/AddAllergy
         public async Task<IActionResult> AddAllergy()
         {
@@ -757,7 +770,7 @@ namespace HemaCore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddAllergy(Allergy allergy)
         {
-            // Remove navigation properties from validation to avoid issues
+            // Remove navigation properties from validation
             ModelState.Remove("Category");
             ModelState.Remove("PatientAllergies");
 
@@ -765,43 +778,58 @@ namespace HemaCore.Controllers
             {
                 try
                 {
-                    // Check if allergy with same name exists in the category (case insensitive)
+                    // Check if an active allergy with the same name
+                    // already exists in the selected category
                     var exists = await _context.Allergies
-                        .AnyAsync(a => a.Name.ToLower() == allergy.Name.Trim().ToLower() &&
-                                      a.CategoryId == allergy.CategoryId &&
-                                      a.IsActive);
+                        .AnyAsync(a =>
+                            a.Name.ToLower() == allergy.Name.Trim().ToLower() &&
+                            a.CategoryId == allergy.CategoryId &&
+                            a.IsActive);
 
                     if (exists)
                     {
-                        TempData["Error"] = "An allergy with this name already exists in the selected category.";
+                        TempData["Error"] =
+                            "An allergy with this name already exists in the selected category.";
+
                         ViewBag.Categories = await _context.AllergyCategories
                             .Where(c => c.IsActive)
                             .OrderBy(c => c.Name)
                             .ToListAsync();
+
                         return View(allergy);
                     }
 
+                    // New allergies are active by default
                     allergy.IsActive = true;
+
+                    // Clean the input
                     allergy.Name = allergy.Name.Trim();
+                    allergy.Description = allergy.Description.Trim();
 
                     _context.Allergies.Add(allergy);
+
                     await _context.SaveChangesAsync();
 
-                    TempData["Success"] = "Allergy added successfully!";
+                    TempData["Success"] =
+                        "Allergy added successfully!";
+
                     return RedirectToAction(nameof(Allergies));
                 }
                 catch (Exception ex)
                 {
-                    TempData["Error"] = "An error occurred while saving: " + ex.Message;
+                    TempData["Error"] =
+                        "An error occurred while saving: " + ex.Message;
+
                     ViewBag.Categories = await _context.AllergyCategories
                         .Where(c => c.IsActive)
                         .OrderBy(c => c.Name)
                         .ToListAsync();
+
                     return View(allergy);
                 }
             }
 
-            // If ModelState is invalid, reload categories
+            // ModelState invalid - reload categories
             ViewBag.Categories = await _context.AllergyCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
@@ -834,11 +862,15 @@ namespace HemaCore.Controllers
         // POST: Admin/EditAllergy/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditAllergy(int id, Allergy allergy)
+        public async Task<IActionResult> EditAllergy(
+            int id,
+            Allergy allergy)
         {
             if (id != allergy.Id)
             {
-                TempData["Error"] = "Invalid allergy ID.";
+                TempData["Error"] =
+                    "Invalid allergy ID.";
+
                 return RedirectToAction(nameof(Allergies));
             }
 
@@ -850,59 +882,94 @@ namespace HemaCore.Controllers
             {
                 try
                 {
-                    var existing = await _context.Allergies.FindAsync(id);
+                    var existing = await _context.Allergies
+                        .FirstOrDefaultAsync(a => a.Id == id);
+
                     if (existing == null)
                     {
-                        TempData["Error"] = "Allergy not found.";
+                        TempData["Error"] =
+                            "Allergy not found.";
+
                         return RedirectToAction(nameof(Allergies));
                     }
 
-                    // Check for duplicate name in same category (excluding current)
+                    // Check for duplicate active allergy
                     var duplicate = await _context.Allergies
-                        .AnyAsync(a => a.Name.ToLower() == allergy.Name.Trim().ToLower() &&
-                                      a.CategoryId == allergy.CategoryId &&
-                                      a.Id != id &&
-                                      a.IsActive);
+                        .AnyAsync(a =>
+                            a.Name.ToLower() ==
+                            allergy.Name.Trim().ToLower()
+                            &&
+                            a.CategoryId ==
+                            allergy.CategoryId
+                            &&
+                            a.Id != id
+                            &&
+                            a.IsActive);
 
                     if (duplicate)
                     {
-                        TempData["Error"] = "An allergy with this name already exists in the selected category.";
-                        ViewBag.Categories = await _context.AllergyCategories
-                            .Where(c => c.IsActive)
-                            .OrderBy(c => c.Name)
-                            .ToListAsync();
+                        TempData["Error"] =
+                            "An allergy with this name already exists in the selected category.";
+
+                        ViewBag.Categories =
+                            await _context.AllergyCategories
+                                .Where(c => c.IsActive)
+                                .OrderBy(c => c.Name)
+                                .ToListAsync();
+
                         return View(allergy);
                     }
 
-                    existing.Name = allergy.Name.Trim();
-                    existing.CategoryId = allergy.CategoryId;
+                    // Update all editable fields
+                    existing.Name =
+                        allergy.Name.Trim();
+
+                    existing.Description =
+                        allergy.Description.Trim();
+
+                    existing.CategoryId =
+                        allergy.CategoryId;
+
+                    // IMPORTANT:
+                    // We do NOT change IsActive here.
+                    // Editing an inactive allergy should keep it inactive.
 
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Allergy updated successfully!";
+
+                    TempData["Success"] =
+                        "Allergy updated successfully!";
+
                     return RedirectToAction(nameof(Allergies));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!await AllergyExists(allergy.Id))
                     {
-                        TempData["Error"] = "Allergy not found.";
+                        TempData["Error"] =
+                            "Allergy not found.";
+
                         return RedirectToAction(nameof(Allergies));
                     }
+
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    TempData["Error"] = "An error occurred while updating: " + ex.Message;
+                    TempData["Error"] =
+                        "An error occurred while updating: " +
+                        ex.Message;
                 }
             }
 
-            ViewBag.Categories = await _context.AllergyCategories
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            // Reload categories if validation fails
+            ViewBag.Categories =
+                await _context.AllergyCategories
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
             return View(allergy);
         }
-
         // GET: Admin/DeleteAllergy/{id}
         public async Task<IActionResult> DeleteAllergy(int id)
         {
@@ -947,7 +1014,6 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleAllergyStatus/{id}
-        // POST: Admin/ToggleAllergyStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleAllergyStatus(int id)
@@ -961,6 +1027,7 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Allergies));
             }
 
+            // Toggle the current status
             allergy.IsActive = !allergy.IsActive;
 
             await _context.SaveChangesAsync();
@@ -976,7 +1043,6 @@ namespace HemaCore.Controllers
 
             return RedirectToAction(nameof(Allergies));
         }
-
         private async Task<bool> AllergyExists(int id)
         {
             return await _context.Allergies.AnyAsync(e => e.Id == id);
@@ -997,6 +1063,7 @@ namespace HemaCore.Controllers
                         id = a.Id,
                         name = a.Name,
                         categoryName = a.Category.Name,
+                        description = a.Description,
                         isActive = a.IsActive
                     })
                     .ToListAsync();
@@ -1278,23 +1345,31 @@ namespace HemaCore.Controllers
 
         #region Medication
         // GET: Admin/Medications
+        // GET: Admin/Medications
         public async Task<IActionResult> Medications()
         {
+            // IMPORTANT:
+            // Do NOT filter by IsActive here.
+            // We want both Active and Inactive medications to remain visible.
             var medications = await _context.Medications
                 .Include(m => m.Category)
-                .Where(m => m.IsActive)
                 .OrderBy(m => m.Category.Name)
                 .ThenBy(m => m.Name)
                 .ToListAsync();
 
-            // Get count of medications per category for display
             var medicationCountByCategory = await _context.Medications
-                .Where(m => m.IsActive)
                 .GroupBy(m => m.CategoryId)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.CategoryId, v => v.Count);
+                .Select(g => new
+                {
+                    CategoryId = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.CategoryId,
+                    x => x.Count
+                );
 
-            // Get all active categories for the filter dropdown
+            // Categories themselves can still be active only.
             var categories = await _context.MedicationCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
@@ -1306,7 +1381,6 @@ namespace HemaCore.Controllers
 
             return View(medications);
         }
-
         // GET: Admin/AddMedication
         public async Task<IActionResult> AddMedication()
         {
@@ -1328,9 +1402,10 @@ namespace HemaCore.Controllers
         // POST: Admin/AddMedication
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddMedication(Medication medication)
+        public async Task<IActionResult> AddMedication(
+            Medication medication)
         {
-            // Remove navigation properties from validation to avoid issues
+            // Remove navigation properties from validation
             ModelState.Remove("Category");
             ModelState.Remove("PatientMedications");
 
@@ -1338,47 +1413,72 @@ namespace HemaCore.Controllers
             {
                 try
                 {
-                    // Check if medication with same name exists in the category (case insensitive)
+                    // Check for duplicate active medication
                     var exists = await _context.Medications
-                        .AnyAsync(m => m.Name.ToLower() == medication.Name.Trim().ToLower() &&
-                                      m.CategoryId == medication.CategoryId &&
-                                      m.IsActive);
+                        .AnyAsync(m =>
+                            m.Name.ToLower() ==
+                            medication.Name.Trim().ToLower()
+                            &&
+                            m.CategoryId ==
+                            medication.CategoryId
+                            &&
+                            m.IsActive);
 
                     if (exists)
                     {
-                        TempData["Error"] = "A medication with this name already exists in the selected category.";
-                        ViewBag.Categories = await _context.MedicationCategories
-                            .Where(c => c.IsActive)
-                            .OrderBy(c => c.Name)
-                            .ToListAsync();
+                        TempData["Error"] =
+                            "A medication with this name already exists in the selected category.";
+
+                        ViewBag.Categories =
+                            await _context.MedicationCategories
+                                .Where(c => c.IsActive)
+                                .OrderBy(c => c.Name)
+                                .ToListAsync();
+
                         return View(medication);
                     }
 
+                    // New medication is active
                     medication.IsActive = true;
-                    medication.Name = medication.Name.Trim();
+
+                    // Clean input
+                    medication.Name =
+                        medication.Name.Trim();
+
+                    medication.Description =
+                        medication.Description.Trim();
 
                     _context.Medications.Add(medication);
+
                     await _context.SaveChangesAsync();
 
-                    TempData["Success"] = "Medication added successfully!";
+                    TempData["Success"] =
+                        "Medication added successfully!";
+
                     return RedirectToAction(nameof(Medications));
                 }
                 catch (Exception ex)
                 {
-                    TempData["Error"] = "An error occurred while saving: " + ex.Message;
-                    ViewBag.Categories = await _context.MedicationCategories
-                        .Where(c => c.IsActive)
-                        .OrderBy(c => c.Name)
-                        .ToListAsync();
+                    TempData["Error"] =
+                        "An error occurred while saving: " +
+                        ex.Message;
+
+                    ViewBag.Categories =
+                        await _context.MedicationCategories
+                            .Where(c => c.IsActive)
+                            .OrderBy(c => c.Name)
+                            .ToListAsync();
+
                     return View(medication);
                 }
             }
 
-            // If ModelState is invalid, reload categories
-            ViewBag.Categories = await _context.MedicationCategories
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            // ModelState invalid
+            ViewBag.Categories =
+                await _context.MedicationCategories
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
 
             return View(medication);
         }
@@ -1407,11 +1507,15 @@ namespace HemaCore.Controllers
         // POST: Admin/EditMedication/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditMedication(int id, Medication medication)
+        public async Task<IActionResult> EditMedication(
+            int id,
+            Medication medication)
         {
             if (id != medication.Id)
             {
-                TempData["Error"] = "Invalid medication ID.";
+                TempData["Error"] =
+                    "Invalid medication ID.";
+
                 return RedirectToAction(nameof(Medications));
             }
 
@@ -1423,59 +1527,95 @@ namespace HemaCore.Controllers
             {
                 try
                 {
-                    var existing = await _context.Medications.FindAsync(id);
+                    var existing =
+                        await _context.Medications
+                            .FirstOrDefaultAsync(m => m.Id == id);
+
                     if (existing == null)
                     {
-                        TempData["Error"] = "Medication not found.";
+                        TempData["Error"] =
+                            "Medication not found.";
+
                         return RedirectToAction(nameof(Medications));
                     }
 
-                    // Check for duplicate name in same category (excluding current)
-                    var duplicate = await _context.Medications
-                        .AnyAsync(m => m.Name.ToLower() == medication.Name.Trim().ToLower() &&
-                                      m.CategoryId == medication.CategoryId &&
-                                      m.Id != id &&
-                                      m.IsActive);
+                    // Check for duplicate active medication
+                    var duplicate =
+                        await _context.Medications
+                            .AnyAsync(m =>
+                                m.Name.ToLower() ==
+                                medication.Name.Trim().ToLower()
+                                &&
+                                m.CategoryId ==
+                                medication.CategoryId
+                                &&
+                                m.Id != id
+                                &&
+                                m.IsActive);
 
                     if (duplicate)
                     {
-                        TempData["Error"] = "A medication with this name already exists in the selected category.";
-                        ViewBag.Categories = await _context.MedicationCategories
-                            .Where(c => c.IsActive)
-                            .OrderBy(c => c.Name)
-                            .ToListAsync();
+                        TempData["Error"] =
+                            "A medication with this name already exists in the selected category.";
+
+                        ViewBag.Categories =
+                            await _context.MedicationCategories
+                                .Where(c => c.IsActive)
+                                .OrderBy(c => c.Name)
+                                .ToListAsync();
+
                         return View(medication);
                     }
 
-                    existing.Name = medication.Name.Trim();
-                    existing.CategoryId = medication.CategoryId;
+                    // Update all editable fields
+                    existing.Name =
+                        medication.Name.Trim();
+
+                    existing.Description =
+                        medication.Description.Trim();
+
+                    existing.CategoryId =
+                        medication.CategoryId;
+
+                    // IMPORTANT:
+                    // Do not change IsActive when editing.
 
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Medication updated successfully!";
+
+                    TempData["Success"] =
+                        "Medication updated successfully!";
+
                     return RedirectToAction(nameof(Medications));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!await MedicationExists(medication.Id))
                     {
-                        TempData["Error"] = "Medication not found.";
+                        TempData["Error"] =
+                            "Medication not found.";
+
                         return RedirectToAction(nameof(Medications));
                     }
+
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    TempData["Error"] = "An error occurred while updating: " + ex.Message;
+                    TempData["Error"] =
+                        "An error occurred while updating: " +
+                        ex.Message;
                 }
             }
 
-            ViewBag.Categories = await _context.MedicationCategories
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            // Reload categories
+            ViewBag.Categories =
+                await _context.MedicationCategories
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
             return View(medication);
         }
-
         // GET: Admin/DeleteMedication/{id}
         public async Task<IActionResult> DeleteMedication(int id)
         {
@@ -1520,7 +1660,6 @@ namespace HemaCore.Controllers
         }
 
         // POST: Admin/ToggleMedicationStatus/{id}
-        // POST: Admin/ToggleMedicationStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleMedicationStatus(int id)
@@ -1534,6 +1673,7 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Medications));
             }
 
+            // Toggle the current status
             medication.IsActive = !medication.IsActive;
 
             await _context.SaveChangesAsync();
@@ -1570,6 +1710,7 @@ namespace HemaCore.Controllers
                         id = m.Id,
                         name = m.Name,
                         categoryName = m.Category.Name,
+                        description = m.Description,
                         isActive = m.IsActive
                     })
                     .ToListAsync();

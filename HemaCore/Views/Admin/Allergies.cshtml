@@ -10,18 +10,31 @@
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
         @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
     </div>
 }
 
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
+
         @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+
     </div>
 }
+
 
 <div class="content-card">
 
@@ -29,245 +42,426 @@
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
+
             <i class="fas fa-allergies me-2"></i>
-            <span>All Allergies</span>
+
+            <span>
+                All Allergies
+            </span>
+
             <span class="badge blue-badge ms-2">
                 @ViewBag.AllergyCount
             </span>
+
         </div>
 
+
         <div class="d-flex gap-2">
-            <!-- Add Category Button -->
-            <a asp-action="AddAllergyCategory"
-               asp-controller="Admin"
+
+            <a asp-controller="Admin"
+               asp-action="AddAllergyCategory"
                class="btn btn-success btn-sm">
-                <i class="fas fa-plus me-1"></i> Add Category
+
+                <i class="fas fa-plus me-1"></i>
+                Add Category
+
             </a>
 
-            <!-- Add Allergy Button -->
-            <a asp-action="AddAllergy"
+
+            <a asp-controller="Admin"
+               asp-action="AddAllergy"
                class="btn btn-primary-custom btn-sm">
-                <i class="fas fa-plus me-1"></i> Add Allergy
+
+                <i class="fas fa-plus me-1"></i>
+                Add Allergy
+
             </a>
+
         </div>
 
     </div>
 
+
     <!-- SEARCH AND FILTER -->
     <div class="row mb-3">
+
         <div class="col-md-8">
+
             <div class="input-group">
+
                 <span class="input-group-text bg-transparent border-end-0">
+
                     <i class="fas fa-search text-muted"></i>
+
                 </span>
+
+
                 <input type="text"
                        id="searchBox"
                        class="form-control border-start-0 ps-0"
                        placeholder="Search allergies..." />
+
             </div>
+
         </div>
 
+
         <div class="col-md-4">
+
             <div class="input-group">
+
                 <span class="input-group-text bg-transparent border-end-0">
+
                     <i class="fas fa-filter text-muted"></i>
+
                 </span>
 
-                <select id="categoryFilter" class="form-select border-start-0 ps-0">
-                    <option value="">All Categories</option>
+
+                <select id="categoryFilter"
+                        class="form-select border-start-0 ps-0">
+
+                    <option value="">
+                        All Categories
+                    </option>
 
                     @if (ViewBag.Categories != null)
                     {
                         foreach (var category in ViewBag.Categories)
                         {
-                            <option value="@category.Id">@category.Name</option>
+                            <option value="@category.Id">
+                                @category.Name
+                            </option>
                         }
                     }
+
                 </select>
+
             </div>
+
         </div>
+
     </div>
 
+
     <!-- TABLE -->
-    <table class="modern-table">
+    <div class="table-responsive">
 
-        <thead>
-            <tr>
-                <th>Allergy Name</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+        <table class="modern-table w-100">
 
-        <tbody id="allergyTable">
+            <thead>
 
-            @if (!Model.Any())
-            {
                 <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        No allergies available. Click "Add Allergy" to create one.
-                    </td>
+
+                    <th>
+                        Allergy Name
+                    </th>
+
+                    <th>
+                        Category
+                    </th>
+
+                    <th>
+                        Description
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
                 </tr>
-            }
-            else
-            {
-                @foreach (var allergy in Model)
+
+            </thead>
+
+
+            <tbody id="allergyTable">
+
+                @if (Model == null || !Model.Any())
                 {
-                    <tr data-category-id="@allergy.CategoryId">
+                    <tr>
 
-                        <td class="fw-semibold blue-text">
-                            @allergy.Name
-                        </td>
+                        <td colspan="5"
+                            class="text-center text-muted">
 
-                        <td>
-                            @allergy.Category?.Name
-                        </td>
+                            No allergies available.
+                            Click "Add Allergy" to create one.
 
-                        <td>
-                            <span class="badge @(allergy.IsActive ? "bg-success" : "bg-secondary")">
-                                @(allergy.IsActive ? "Active" : "Inactive")
-                            </span>
-                        </td>
-
-                        <td>
-                            <a asp-action="EditAllergy"
-                               asp-route-id="@allergy.Id"
-                               class="btn btn-sm btn-primary me-1">
-                                Edit
-                            </a>
-
-                            <!-- FIXED ACTIVATE / DEACTIVATE -->
-                            <form asp-controller="Admin"
-                                  asp-action="ToggleAllergyStatus"
-                                  method="post"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Are you sure you want to change the status of this allergy?');">
-
-                                @Html.AntiForgeryToken()
-
-                                <input type="hidden"
-                                       name="id"
-                                       value="@allergy.Id" />
-
-                                <button type="submit"
-                                        class="btn btn-sm @(allergy.IsActive ? "btn-danger" : "btn-success")">
-                                    @(allergy.IsActive ? "Deactivate" : "Activate")
-                                </button>
-
-                            </form>
                         </td>
 
                     </tr>
                 }
-            }
+                else
+                {
+                    foreach (var allergy in Model)
+                    {
+                        <tr data-category-id="@allergy.CategoryId">
 
-        </tbody>
+                            <!-- NAME -->
+                            <td class="fw-semibold blue-text">
 
-    </table>
+                                @allergy.Name
+
+                            </td>
+
+
+                            <!-- CATEGORY -->
+                            <td>
+
+                                @(allergy.Category?.Name ?? "No Category")
+
+                            </td>
+
+
+                            <!-- DESCRIPTION -->
+                            <td>
+
+                                @(string.IsNullOrWhiteSpace(allergy.Description)
+                                    ? "—"
+                                    : allergy.Description)
+
+                            </td>
+
+
+                            <!-- STATUS -->
+                            <td>
+
+                                @if (allergy.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Inactive
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+                            <td>
+
+                                <a asp-controller="Admin"
+                                   asp-action="EditAllergy"
+                                   asp-route-id="@allergy.Id"
+                                   class="btn btn-sm btn-primary me-1">
+
+                                    <i class="fas fa-edit me-1"></i>
+                                    Edit
+
+                                </a>
+
+
+                                <form asp-controller="Admin"
+                                      asp-action="ToggleAllergyStatus"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@allergy.Id" />
+
+
+                                    @if (allergy.IsActive)
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to deactivate this allergy?');">
+
+                                            <i class="fas fa-ban me-1"></i>
+
+                                            Deactivate
+
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-success"
+                                                onclick="return confirm('Are you sure you want to activate this allergy?');">
+
+                                            <i class="fas fa-check me-1"></i>
+
+                                            Activate
+
+                                        </button>
+                                    }
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 
-<!-- SCRIPT -->
+
 <script>
 
-    // Search functionality
-    document.getElementById("searchBox").addEventListener("keyup", function () {
-        filterTable();
-    });
+    document.addEventListener("DOMContentLoaded", function() {
 
-    // Category filter functionality
-    document.getElementById("categoryFilter").addEventListener("change", function () {
-        filterTable();
-    });
+        const searchBox =
+            document.getElementById("searchBox");
 
-    function filterTable() {
+        const categoryFilter =
+            document.getElementById("categoryFilter");
 
-        let searchTerm = document.getElementById("searchBox").value.toLowerCase();
-        let categoryId = document.getElementById("categoryFilter").value;
-        let rows = document.querySelectorAll("#allergyTable tr");
 
-        rows.forEach(row => {
+        function filterTable() {
 
-            // Skip if it's the "no results" row
-            if (row.querySelector("td[colspan]")) return;
+            const searchTerm =
+                searchBox.value
+                    .toLowerCase()
+                    .trim();
 
-            let allergyName =
-                row.querySelector("td:first-child")?.textContent?.toLowerCase() || "";
+            const categoryId =
+                categoryFilter.value;
 
-            let categoryName =
-                row.querySelector("td:nth-child(2)")?.textContent?.toLowerCase() || "";
 
-            let rowCategoryId =
-                row.getAttribute("data-category-id");
+            const rows =
+                document.querySelectorAll(
+                    "#allergyTable tr"
+                );
 
-            // Check if search term matches
-            let matchesSearch =
-                allergyName.includes(searchTerm) ||
-                categoryName.includes(searchTerm);
 
-            // Check if category filter matches
-            let matchesCategory =
-                categoryId === "" ||
-                rowCategoryId === categoryId;
+            let visibleCount = 0;
 
-            // Show/hide row
-            if (matchesSearch && matchesCategory) {
-                row.style.display = "";
+
+            rows.forEach(function(row) {
+
+                if (row.id === "noResultsRow") {
+                    return;
+                }
+
+                if (row.querySelector("td[colspan]")) {
+                    return;
+                }
+
+
+                const allergyName =
+                    row.querySelector(
+                        "td:nth-child(1)"
+                    )?.textContent
+                        ?.toLowerCase() || "";
+
+
+                const categoryName =
+                    row.querySelector(
+                        "td:nth-child(2)"
+                    )?.textContent
+                        ?.toLowerCase() || "";
+
+
+                const description =
+                    row.querySelector(
+                        "td:nth-child(3)"
+                    )?.textContent
+                        ?.toLowerCase() || "";
+
+
+                const rowCategoryId =
+                    row.getAttribute(
+                        "data-category-id"
+                    );
+
+
+                const matchesSearch =
+                    allergyName.includes(searchTerm) ||
+                    categoryName.includes(searchTerm) ||
+                    description.includes(searchTerm);
+
+
+                const matchesCategory =
+                    categoryId === "" ||
+                    rowCategoryId === categoryId;
+
+
+                if (matchesSearch && matchesCategory) {
+
+                    row.style.display = "";
+
+                    visibleCount++;
+
+                }
+                else {
+
+                    row.style.display = "none";
+
+                }
+
+            });
+
+
+            let noResultsRow =
+                document.getElementById(
+                    "noResultsRow"
+                );
+
+
+            if (visibleCount === 0 && searchTerm !== "") {
+
+                if (!noResultsRow) {
+
+                    noResultsRow =
+                        document.createElement("tr");
+
+                    noResultsRow.id =
+                        "noResultsRow";
+
+
+                    noResultsRow.innerHTML = `
+                            <td colspan="5"
+                                class="text-center text-muted">
+                                No results found.
+                            </td>
+                        `;
+
+
+                    document
+                        .getElementById("allergyTable")
+                        .appendChild(noResultsRow);
+
+                }
+
             }
             else {
-                row.style.display = "none";
-            }
-        });
 
-        // Show "no results" message if all rows are hidden
-        let visibleRows =
-            document.querySelectorAll("#allergyTable tr[style*='display: none']");
+                if (noResultsRow) {
+                    noResultsRow.remove();
+                }
 
-        let allRows =
-            document.querySelectorAll("#allergyTable tr:not([style*='display: none'])");
-
-        let noResultsRow =
-            document.querySelector("#allergyTable tr td[colspan]");
-
-        if (allRows.length === 1 && allRows[0].querySelector("td[colspan]")) {
-            return;
-        }
-
-        if (visibleRows.length ===
-            document.querySelectorAll(
-                "#allergyTable tr:not([style*='display: none']):not([style*='display'])"
-            ).length) {
-
-            if (!noResultsRow) {
-
-                let tbody =
-                    document.getElementById("allergyTable");
-
-                let tr =
-                    document.createElement("tr");
-
-                tr.id = "noResultsRow";
-
-                tr.innerHTML = `
-                    <td colspan="4" class="text-center text-muted">
-                        No results found.
-                    </td>
-                `;
-
-                tbody.appendChild(tr);
             }
 
         }
-        else {
 
-            let noResults =
-                document.getElementById("noResultsRow");
 
-            if (noResults) {
-                noResults.remove();
-            }
-        }
-    }
+        searchBox.addEventListener(
+            "input",
+            filterTable
+        );
+
+
+        categoryFilter.addEventListener(
+            "change",
+            filterTable
+        );
+
+    });
 
 </script>
