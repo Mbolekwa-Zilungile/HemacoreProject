@@ -1,89 +1,431 @@
-﻿
-@model HemaCore.Models.TestRequest
+﻿@model HemaCore.Models.TestRequest
 
 @{
-    ViewData["Title"] = "Receive Samples";
+    ViewData["Title"] = "Receive Sample";
     Layout = "_LabTechnicianLayout";
 }
 
-<div class="container mt-4">
+<style>
+    .receive-page {
+        padding-bottom: 40px;
+    }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    .page-hero {
+        background: linear-gradient(135deg, #75AABA 0%, #5f9aaa 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        box-shadow: 0 6px 18px rgba(70, 120, 140, 0.18);
+    }
 
-        <div>
-            <h2>Receive Patient Samples</h2>
+        .page-hero h2 {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
 
-            <p class="text-muted mb-0">
-                Review the test request and confirm that the samples have been received.
-            </p>
+        .page-hero p {
+            margin-bottom: 0;
+            opacity: 0.9;
+        }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        color: white;
+        border-radius: 8px;
+        padding: 9px 16px;
+    }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+    .info-card {
+        background: white;
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.07);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 17px 22px;
+        background: #f7fafb;
+        border-bottom: 1px solid #e8eef0;
+        color: #315967;
+        font-weight: 600;
+    }
+
+        .info-card-header i {
+            color: #75AABA;
+            font-size: 17px;
+        }
+
+    .info-card-body {
+        padding: 22px;
+    }
+
+    .info-item {
+        padding: 12px 15px;
+        background: #f9fbfc;
+        border-radius: 9px;
+        height: 100%;
+        border: 1px solid #edf2f4;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 12px;
+        color: #7a8b92;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #263b43;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .request-number {
+        color: #4e91a6;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 20px;
+        background: #e9f1f4;
+        color: #477888;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .urgency-badge {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 20px;
+        background: #fff3d9;
+        color: #9a6b17;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .technician-box {
+        background: #eef7f9;
+        border: 1px solid #d6eaee;
+        border-radius: 10px;
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .technician-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #75AABA;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .technician-label {
+        font-size: 12px;
+        color: #71858c;
+        margin-bottom: 2px;
+    }
+
+    .technician-name {
+        font-weight: 600;
+        color: #294b57;
+    }
+
+    .clinical-note {
+        background: #f8fafb;
+        border-left: 4px solid #75AABA;
+        border-radius: 6px;
+        padding: 15px 18px;
+        color: #455960;
+        line-height: 1.6;
+    }
+
+    .sample-table {
+        margin-bottom: 0;
+    }
+
+        .sample-table thead th {
+            background: #f3f7f8;
+            color: #58717a;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #dfe8eb;
+            padding: 13px 15px;
+        }
+
+        .sample-table tbody td {
+            padding: 16px 15px;
+            vertical-align: middle;
+            border-color: #edf1f2;
+            color: #40545b;
+        }
+
+    .barcode {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #397c91;
+        font-weight: 600;
+    }
+
+    .sample-type {
+        display: inline-block;
+        background: #edf6f8;
+        color: #477d8c;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .confirm-card {
+        background: linear-gradient(135deg, #f3fafb 0%, #ffffff 100%);
+        border: 1px solid #d8eaee;
+        border-radius: 14px;
+        padding: 28px;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(70, 120, 140, 0.08);
+    }
+
+    .confirm-icon {
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: #e2f1f4;
+        color: #5b99aa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .confirm-card h5 {
+        color: #294b57;
+        font-weight: 700;
+    }
+
+    .confirm-card p {
+        color: #718087;
+        max-width: 600px;
+        margin: 0 auto 20px;
+    }
+
+    .confirm-btn {
+        background: #5f9aaa;
+        border: none;
+        color: white;
+        padding: 11px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 3px 8px rgba(75, 135, 150, 0.2);
+    }
+
+        .confirm-btn:hover {
+            background: #4f899a;
+            color: white;
+        }
+
+    /* CONFIRMATION MODAL */
+
+    .confirmation-modal {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .modal-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        margin: 0 auto 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 27px;
+    }
+
+    .warning-icon {
+        background: #fff4df;
+        color: #d79a35;
+    }
+
+    .confirmation-modal h4 {
+        color: #294b57;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .confirmation-modal p {
+        color: #718087;
+    }
+
+    .cancel-btn {
+        border: 1px solid #d9e1e4;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #60737a;
+        background: white;
+    }
+
+        .cancel-btn:hover {
+            background: #f3f6f7;
+            color: #60737a;
+        }
+
+    .confirm-modal-btn {
+        background: #5f9aaa;
+        border: none;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
+
+        .confirm-modal-btn:hover {
+            background: #4f899a;
+            color: white;
+        }
+</style>
+
+<div class="container mt-4 receive-page">
+
+    ```
+    <!-- PAGE HEADER -->
+    <div class="page-hero">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+
+                <div class="mb-2">
+                    <i class="fas fa-vial me-2"></i>
+                    LABORATORY SAMPLE RECEIVING
+                </div>
+
+                <h2>Receive Patient Sample</h2>
+
+                <p>
+                    Review the request and sample information before confirming receipt.
+                </p>
+
+            </div>
+
+            <a asp-action="ReceiveSample"
+               class="btn back-btn">
+
+                <i class="fas fa-arrow-left me-2"></i>
+                Back
+
+            </a>
+
         </div>
-
-        <a asp-action="ReceiveSample"
-           class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>
-            Back
-        </a>
 
     </div>
 
 
-    <!-- REQUEST DETAILS -->
+    <!-- TEST REQUEST -->
+    <div class="info-card">
 
-    <div class="card shadow-sm border-0 mb-4">
-
-        <div class="card-header bg-white">
-            <h5 class="fw-bold mb-0">
-                <i class="fas fa-file-medical me-2"></i>
-                Test Request Details
-            </h5>
+        <div class="info-card-header">
+            <i class="fas fa-file-medical"></i>
+            <span>Test Request Details</span>
         </div>
 
-        <div class="card-body">
+        <div class="info-card-body">
 
             <div class="row g-3">
 
-                <div class="col-md-4">
-                    <strong>Request Number</strong>
-                    <p class="mb-0">
-                        #@Model.TestRequestId
-                    </p>
+                <div class="col-md-3">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Request Number
+                        </span>
+
+                        <span class="request-number">
+                            #@Model.TestRequestId
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <div class="col-md-4">
-                    <strong>Patient</strong>
-                    <p class="mb-0">
-                        @Model.Patient?.Name
-                        @Model.Patient?.Surname
-                    </p>
+
+                <div class="col-md-3">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Request Date
+                        </span>
+
+                        <span class="info-value">
+                            @Model.RequestDate.ToString("dd/MM/yyyy HH:mm")
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <div class="col-md-4">
-                    <strong>Doctor</strong>
-                    <p class="mb-0">
-                        @Model.Doctor?.Name
-                        @Model.Doctor?.Surname
-                    </p>
+
+                <div class="col-md-3">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Urgency
+                        </span>
+
+                        <span class="urgency-badge">
+                            @Model.Urgency
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <div class="col-md-4">
-                    <strong>Request Date</strong>
-                    <p class="mb-0">
-                        @Model.RequestDate.ToString("dd/MM/yyyy HH:mm")
-                    </p>
-                </div>
 
-                <div class="col-md-4">
-                    <strong>Urgency</strong>
-                    <p class="mb-0">
-                        @Model.Urgency
-                    </p>
-                </div>
+                <div class="col-md-3">
 
-                <div class="col-md-4">
-                    <strong>Status</strong>
-                    <p class="mb-0">
-                        @Model.Status
-                    </p>
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Status
+                        </span>
+
+                        <span class="status-badge">
+                            @Model.Status
+                        </span>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -93,34 +435,269 @@
     </div>
 
 
-    <!-- SAMPLES -->
+    <!-- PATIENT INFORMATION -->
+    <div class="info-card">
 
-    <div class="card shadow-sm border-0 mb-4">
+        <div class="info-card-header">
 
-        <div class="card-header bg-white">
+            <i class="fas fa-user"></i>
 
-            <h5 class="fw-bold mb-0">
-                <i class="fas fa-vial me-2"></i>
-                Samples
-            </h5>
+            <span>Patient Information</span>
 
         </div>
 
-        <div class="card-body">
+        <div class="info-card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Patient Name
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Patient?.Name
+                            @Model.Patient?.Surname
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            ID Number
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Patient?.IDNumber
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Date of Birth
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Patient?.DateOfBirth.ToString("dd/MM/yyyy")
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Contact Number
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Patient?.PhoneNumber
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- REQUESTING DOCTOR -->
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <i class="fas fa-user-md"></i>
+
+            <span>Requesting Doctor</span>
+
+        </div>
+
+        <div class="info-card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            Doctor
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Doctor?.Name
+                            @Model.Doctor?.Surname
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            HPCSA Number
+                        </span>
+
+                        <span class="info-value">
+                            @Model.Doctor?.HPCSANumber
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECEIVING TECHNICIAN -->
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <i class="fas fa-user-check"></i>
+
+            <span>Receiving Technician</span>
+
+        </div>
+
+        <div class="info-card-body">
+
+            <div class="technician-box">
+
+                <div class="technician-icon">
+
+                    <i class="fas fa-user-md"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="technician-label">
+                        Currently logged-in technician
+                    </div>
+
+                    <div class="technician-name">
+                        @User.Identity?.Name
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CLINICAL INFORMATION -->
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <i class="fas fa-notes-medical"></i>
+
+            <span>Clinical Information</span>
+
+        </div>
+
+        <div class="info-card-body">
+
+            <span class="info-label">
+                Clinical Notes
+            </span>
+
+            <div class="clinical-note">
+
+                @if (string.IsNullOrWhiteSpace(Model.ClinicalNotes))
+                {
+                    <span class="text-muted">
+                        No clinical notes provided.
+                    </span>
+                }
+                else
+                {
+                    @Model.ClinicalNotes
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SAMPLE INFORMATION -->
+    <div class="info-card">
+
+        <div class="info-card-header">
+
+            <i class="fas fa-vial"></i>
+
+            <span>Sample Information</span>
+
+            @if (Model.Samples != null)
+            {
+                <span class="badge ms-auto"
+                      style="background:#e2f1f4; color:#4d8393;">
+
+                    @Model.Samples.Count Sample(s)
+
+                </span>
+            }
+
+        </div>
+
+        <div class="info-card-body">
 
             @if (Model.Samples == null || !Model.Samples.Any())
             {
                 <div class="alert alert-warning mb-0">
+
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+
                     No samples are associated with this test request.
+
                 </div>
             }
             else
             {
                 <div class="table-responsive">
 
-                    <table class="table table-hover align-middle">
+                    <table class="table sample-table">
 
-                        <thead class="table-light">
+                        <thead>
 
                             <tr>
                                 <th>Barcode</th>
@@ -137,15 +714,37 @@
                                 <tr>
 
                                     <td>
-                                        @sample.Barcode
+
+                                        <span class="barcode">
+
+                                            <i class="fas fa-barcode"></i>
+
+                                            @sample.Barcode
+
+                                        </span>
+
                                     </td>
 
-                                    <td>
-                                        @sample.SampleType?.SampleName
-                                    </td>
 
                                     <td>
-                                        @sample.DateTimeReceived.ToString("dd/MM/yyyy HH:mm:ss")
+
+                                        <span class="sample-type">
+
+                                            <i class="fas fa-vial me-1"></i>
+
+                                            @sample.SampleType?.SampleName
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @sample.DateTimeReceived.ToString(
+                                            "dd/MM/yyyy HH:mm:ss"
+                                        )
+
                                     </td>
 
                                 </tr>
@@ -163,37 +762,122 @@
     </div>
 
 
-    <!-- CONFIRM -->
+    <!-- CONFIRM RECEIPT -->
+    <div class="confirm-card">
 
-    <div class="card shadow-sm border-0">
+        <div class="confirm-icon">
 
-        <div class="card-body text-center">
+            <i class="fas fa-check"></i>
 
-            <h5 class="fw-bold mb-2">
-                Confirm Sample Receipt
-            </h5>
+        </div>
 
-            <p class="text-muted">
-                Confirm that the samples for this test request have been physically received by the laboratory.
-            </p>
+        <h5>
+            Confirm Sample Receipt
+        </h5>
 
-            <form asp-action="ConfirmReceiveSample"
-                  asp-route-id="@Model.TestRequestId"
-                  method="post">
+        <p>
+            Confirm that the physical sample has been received by the laboratory.
+            Once confirmed, this request will move to the sample processing stage.
+        </p>
 
-                <button type="submit"
-                        class="btn btn-success">
+        <!-- Opens confirmation popup -->
+        <button type="button"
+                class="btn confirm-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#confirmReceiveModal">
 
-                    <i class="fas fa-check-circle me-2"></i>
-                    Confirm Sample Received
+            <i class="fas fa-check-circle me-2"></i>
 
-                </button>
+            Confirm Sample Received
 
-            </form>
+        </button>
+
+    </div>
+    ```
+
+</div>
+
+<!-- ===================================================== -->
+<!-- CONFIRMATION MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade"
+     id="confirmReceiveModal"
+     tabindex="-1"
+     aria-labelledby="confirmReceiveModalLabel"
+     aria-hidden="true">
+
+    ```
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content confirmation-modal">
+
+            <div class="modal-body text-center p-4">
+
+                <div class="modal-icon warning-icon">
+
+                    <i class="fas fa-vial"></i>
+
+                </div>
+
+                <h4 id="confirmReceiveModalLabel">
+                    Confirm Sample Receipt
+                </h4>
+
+                <p class="mb-2">
+
+                    Are you sure you want to mark
+
+                    <strong>
+                        Request #@Model.TestRequestId
+                    </strong>
+
+                    as received?
+
+                </p>
+
+                <p class="small text-muted">
+
+                    Once confirmed, this request will move to the
+                    sample processing stage.
+
+                </p>
+
+
+                <!-- ACTUAL SUBMIT FORM -->
+                <form asp-action="ConfirmReceiveSample"
+                      asp-route-id="@Model.TestRequestId"
+                      method="post">
+
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+
+                        <button type="button"
+                                class="btn cancel-btn"
+                                data-bs-dismiss="modal">
+
+                            Cancel
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="btn confirm-modal-btn">
+
+                            <i class="fas fa-check me-2"></i>
+
+                            Yes, Receive Sample
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
 
         </div>
 
     </div>
+    
 
 </div>
-

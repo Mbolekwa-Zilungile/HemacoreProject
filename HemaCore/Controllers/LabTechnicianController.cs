@@ -236,6 +236,10 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
+            TempData["SampleReceivedSuccess"] =
+                $"Request #{id} has been successfully received.";
+
+            TempData["ReceivedRequestId"] = id;
 
             return RedirectToAction(nameof(ReceiveSample));
         }
@@ -306,17 +310,7 @@ namespace HemaCore.Controllers
             test.LabTechnicianId =
                 technician.LabTechnicianId;
 
-
-            // Change status
-            test.Status = "InProgress";
-
-
-            // Record start time
-            test.StartDateTime = DateTime.Now;
-
-
             await _context.SaveChangesAsync();
-
 
             return RedirectToAction(
                 nameof(CaptureTestResult),
@@ -338,7 +332,19 @@ namespace HemaCore.Controllers
             var test = await _context.TestRequestTestTypes
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
+
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Doctor)
+
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Samples)
+                        .ThenInclude(s => s.SampleType)
+
                 .Include(t => t.TestType)
+                    .ThenInclude(tt => tt.Category)
+
+                .Include(t => t.LabTechnician)
+
                 .FirstOrDefaultAsync(t =>
                     t.TestRequestTestTypeId == id);
 
@@ -349,11 +355,47 @@ namespace HemaCore.Controllers
             }
 
 
+            // ==========================================
+            // GET PATIENT CONDITIONS
+            // ==========================================
+
+            var patientUserId = test.TestRequest.Patient.UserId;
+
+
+            var conditions = await _context.PatientConditions
+                .Include(x => x.Condition)
+                .Where(x => x.PatientId == patientUserId)
+                .ToListAsync();
+
+
+            // ==========================================
+            // GET PATIENT ALLERGIES
+            // ==========================================
+
+            var allergies = await _context.PatientAllergies
+                .Include(x => x.Allergy)
+                .Where(x => x.PatientId == patientUserId)
+                .ToListAsync();
+
+
+            // ==========================================
+            // GET PATIENT MEDICATIONS
+            // ==========================================
+
+            var medications = await _context.PatientMedications
+                .Include(x => x.Medication)
+                .Where(x => x.PatientId == patientUserId)
+                .ToListAsync();
+
+
+            // Make these available to the view
+            ViewBag.PatientConditions = conditions;
+            ViewBag.PatientAllergies = allergies;
+            ViewBag.PatientMedications = medications;
+
+
             return View(test);
         }
-
-
-
         // ==========================================
         // SAVE TEST RESULT
         // ==========================================

@@ -1,0 +1,789 @@
+﻿
+@model HemaCore.Models.TestRequestItem
+
+@{
+    ViewData["Title"] = "Capture Test Result";
+    Layout = "_LabTechnicianLayout";
+
+    var conditions = ViewBag.PatientConditions
+        as List<HemaCore.Models.PatientCondition>
+        ?? new List<HemaCore.Models.PatientCondition>();
+
+    var allergies = ViewBag.PatientAllergies
+        as List<HemaCore.Models.PatientAllergy>
+        ?? new List<HemaCore.Models.PatientAllergy>();
+
+    var medications = ViewBag.PatientMedications
+        as List<HemaCore.Models.PatientMedication>
+        ?? new List<HemaCore.Models.PatientMedication>();
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- ========================================== -->
+    <!-- HEADER -->
+    <!-- ========================================== -->
+
+    <div class="section-title d-flex align-items-center">
+
+        <i class="fas fa-microscope me-2"></i>
+
+        <span>Capture Test Result</span>
+
+    </div>
+
+    <p class="text-muted mb-4">
+        Review the patient and test information before entering the laboratory result.
+    </p>
+
+
+    <!-- ========================================== -->
+    <!-- REQUEST / TEST INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-flask me-2"></i>
+            Test Information
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <div class="info-box">
+                    <small>Request Number</small>
+                    <strong>
+                        #@Model.TestRequestId
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-box">
+                    <small>Test Type</small>
+                    <strong>
+                        @Model.TestType?.TestTypeName
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-box">
+                    <small>Category</small>
+                    <strong>
+                        @Model.TestType?.Category?.CategoryName
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-box">
+                    <small>Urgency</small>
+                    <strong>
+                        @Model.TestRequest?.Urgency
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-3 mt-1">
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Unit of Measurement</small>
+                    <strong>
+                        @Model.TestType?.UnitOfMeasurement
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Normal Range</small>
+                    <strong>
+                        @Model.TestType?.NormalRangeMin
+                        -
+                        @Model.TestType?.NormalRangeMax
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Turnaround Time</small>
+                    <strong>
+                        @Model.TestType?.TurnAroundTime hours
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- PATIENT INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-user me-2"></i>
+            Patient Information
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Patient Name</small>
+                    <strong>
+                        @Model.TestRequest?.Patient?.Name
+                        @Model.TestRequest?.Patient?.Surname
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>ID Number</small>
+                    <strong>
+                        @Model.TestRequest?.Patient?.IDNumber
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Date of Birth</small>
+                    <strong>
+                        @Model.TestRequest?.Patient?.DateOfBirth.ToString("dd/MM/yyyy")
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- CLINICAL INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-notes-medical me-2"></i>
+            Clinical Information
+        </div>
+
+        <div class="clinical-box">
+
+            <div class="clinical-label">
+                Clinical Notes
+            </div>
+
+            <div class="clinical-text">
+
+                @if (!string.IsNullOrWhiteSpace(Model.TestRequest?.ClinicalNotes))
+                {
+                    @Model.TestRequest.ClinicalNotes
+                }
+                else
+                {
+                    <span class="text-muted">
+                        No clinical notes provided.
+                    </span>
+                }
+
+            </div>
+
+        </div>
+
+
+        <div class="row g-3 mt-2">
+
+            <!-- CONDITIONS -->
+
+            <div class="col-md-4">
+
+                <div class="clinical-list-box">
+
+                    <div class="clinical-list-title">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        Conditions
+                    </div>
+
+                    @if (conditions.Any())
+                    {
+                        <ul>
+
+                            @foreach (var condition in conditions)
+                            {
+                                <li>
+                                    @condition.Condition?.Name
+
+                                    @if (condition.DiagnosedDate.HasValue)
+                                    {
+                                        <small class="text-muted">
+                                            (@condition.DiagnosedDate.Value.ToString("dd/MM/yyyy"))
+                                        </small>
+                                    }
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-muted">
+                            No recorded conditions.
+                        </span>
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- ALLERGIES -->
+
+            <div class="col-md-4">
+
+                <div class="clinical-list-box">
+
+                    <div class="clinical-list-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Allergies
+                    </div>
+
+                    @if (allergies.Any())
+                    {
+                        <ul>
+
+                            @foreach (var allergy in allergies)
+                            {
+                                <li>
+
+                                    @allergy.Allergy?.Name
+
+                                    @if (!string.IsNullOrWhiteSpace(allergy.Severity))
+                                    {
+                                        <small class="text-muted">
+                                            (@allergy.Severity)
+                                        </small>
+                                    }
+
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-muted">
+                            No recorded allergies.
+                        </span>
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- MEDICATIONS -->
+
+            <div class="col-md-4">
+
+                <div class="clinical-list-box">
+
+                    <div class="clinical-list-title">
+                        <i class="fas fa-pills me-2"></i>
+                        Medication
+                    </div>
+
+                    @if (medications.Any())
+                    {
+                        <ul>
+
+                            @foreach (var medication in medications)
+                            {
+                                <li>
+
+                                    <strong>
+                                        @medication.Medication?.Name
+                                    </strong>
+
+                                    @if (!string.IsNullOrWhiteSpace(medication.Dosage))
+                                    {
+                                        <small class="text-muted">
+                                            - @medication.Dosage
+                                        </small>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(medication.Frequency))
+                                    {
+                                        <small class="text-muted">
+                                            (@medication.Frequency)
+                                        </small>
+                                    }
+
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-muted">
+                            No recorded medication.
+                        </span>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- DOCTOR INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-user-md me-2"></i>
+            Requesting Doctor
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Doctor</small>
+                    <strong>
+                        @Model.TestRequest?.Doctor?.Name
+                        @Model.TestRequest?.Doctor?.Surname
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>HPCSA Number</small>
+                    <strong>
+                        @Model.TestRequest?.Doctor?.HPCSANumber
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Phone Number</small>
+                    <strong>
+                        @Model.TestRequest?.Doctor?.PhoneNumber
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SAMPLE INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-vial me-2"></i>
+            Sample Information
+        </div>
+
+        @if (Model.TestRequest?.Samples != null &&
+             Model.TestRequest.Samples.Any())
+        {
+            <div class="table-responsive">
+
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Sample Type</th>
+                            <th>Date Received</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var sample in Model.TestRequest.Samples)
+                        {
+                            <tr>
+
+                                <td class="fw-semibold blue-text">
+                                    @sample.Barcode
+                                </td>
+
+                                <td>
+                                    @sample.SampleType?.SampleName
+                                </td>
+
+                                <td>
+                                    @sample.DateTimeReceived.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="text-muted">
+                No sample information available.
+            </div>
+        }
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- CURRENT PROCESSING INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="info-section">
+
+        <div class="info-section-title">
+            <i class="fas fa-user-cog me-2"></i>
+            Processing Information
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Status</small>
+                    <strong>
+                        @Model.Status
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Start Date & Time</small>
+                    <strong>
+                        @if (Model.StartDateTime.HasValue)
+                        {
+                            @Model.StartDateTime.Value.ToString("dd/MM/yyyy HH:mm")
+                        }
+                        else
+                        {
+                            <span class="text-muted">
+                                Not recorded
+                            </span>
+                        }
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-box">
+                    <small>Technician</small>
+                    <strong>
+                        @if (Model.LabTechnician != null)
+                        {
+                            @Model.LabTechnician.Name
+                            @Model.LabTechnician.Surname
+                        }
+                        else
+                        {
+                            <span class="text-muted">
+                                Not assigned
+                            </span>
+                        }
+                    </strong>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- CAPTURE RESULT -->
+    <!-- ========================================== -->
+
+    <div class="result-section">
+
+        <div class="result-section-title">
+            <i class="fas fa-edit me-2"></i>
+            Enter Test Result
+        </div>
+
+        <p class="text-muted">
+            Enter the result obtained from the laboratory test.
+            Check the normal range above before marking the result as abnormal.
+        </p>
+
+
+        <form asp-action="SaveTestResult"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="testRequestTestTypeId"
+                   value="@Model.TestRequestTestTypeId" />
+
+
+            <!-- RESULT VALUE -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Result Value
+                </label>
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="resultValue"
+                           class="form-control"
+                           placeholder="Enter result"
+                           required />
+
+                    @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
+                    {
+                        <span class="input-group-text">
+                            @Model.TestType.UnitOfMeasurement
+                        </span>
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Notes
+                </label>
+
+                <textarea name="notes"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Enter any relevant observations or notes"></textarea>
+
+            </div>
+
+
+            <!-- ABNORMAL -->
+
+            <div class="abnormal-box mb-4">
+
+                <div class="form-check">
+
+                    <input type="checkbox"
+                           name="isAbnormal"
+                           value="true"
+                           class="form-check-input"
+                           id="isAbnormal" />
+
+                    <label class="form-check-label"
+                           for="isAbnormal">
+
+                        <strong>
+                            Mark result as abnormal
+                        </strong>
+
+                        <small class="d-block text-muted">
+                            Select this if the result falls outside the normal range.
+                        </small>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="d-flex justify-content-end gap-2">
+
+                <a asp-action="ProcessTests"
+                   class="btn btn-secondary">
+
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Tests
+
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    <i class="fas fa-save me-1"></i>
+                    Save Test Result
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .info-section {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-section-title {
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #344054;
+    }
+
+    .info-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px 15px;
+        min-height: 70px;
+    }
+
+        .info-box small {
+            display: block;
+            color: #667085;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info-box strong {
+            display: block;
+            color: #344054;
+            font-size: 14px;
+        }
+
+    .clinical-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .clinical-label {
+        font-size: 12px;
+        color: #667085;
+        margin-bottom: 5px;
+    }
+
+    .clinical-text {
+        color: #344054;
+        line-height: 1.5;
+    }
+
+    .clinical-list-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+        height: 100%;
+    }
+
+    .clinical-list-title {
+        font-weight: 600;
+        color: #344054;
+        margin-bottom: 10px;
+    }
+
+    .clinical-list-box ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .clinical-list-box li {
+        margin-bottom: 6px;
+        color: #475467;
+    }
+
+    .result-section {
+        background: #ffffff;
+        border: 1px solid #d9e1e7;
+        border-radius: 10px;
+        padding: 25px;
+        margin-top: 10px;
+    }
+
+    .result-section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #344054;
+        margin-bottom: 8px;
+    }
+
+    .abnormal-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #344054;
+    }
+
+    .form-control:focus {
+        border-color: #75AABA;
+        box-shadow: 0 0 0 0.2rem rgba(117, 170, 186, 0.15);
+    }
+
+</style>
+```
+
+This version uses your actual properties:
+
+* `PatientID`
+* `IDNumber`
+* `DateOfBirth`
+* `HPCSANumber`
+* `ClinicalNotes`
+* `TestType.Category`
+* `SampleType.SampleName`
+* `TestType.NormalRangeMin/Max`
+* `TestType.TurnAroundTime`
+* `PatientConditions`
+* `PatientAllergies`
+* `PatientMedications`
+
+And importantly, it does **not** try to use properties that don't exist in your models.
