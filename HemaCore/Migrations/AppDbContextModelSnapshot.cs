@@ -205,7 +205,7 @@ namespace HemaCore.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PatientId")
+                    b.Property<string>("PatientID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -216,7 +216,7 @@ namespace HemaCore.Migrations
 
                     b.HasIndex("DoctorId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("Consents");
                 });
@@ -232,17 +232,12 @@ namespace HemaCore.Migrations
                     b.Property<int>("ConsentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ConsentId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("TestRequestId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ConsentId");
-
-                    b.HasIndex("ConsentId1");
 
                     b.HasIndex("TestRequestId");
 
@@ -552,7 +547,7 @@ namespace HemaCore.Migrations
                     b.Property<int>("AllergyId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PatientId")
+                    b.Property<string>("PatientID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -564,7 +559,7 @@ namespace HemaCore.Migrations
 
                     b.HasIndex("AllergyId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("PatientAllergies");
                 });
@@ -583,7 +578,7 @@ namespace HemaCore.Migrations
                     b.Property<DateOnly?>("DiagnosedDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("PatientId")
+                    b.Property<string>("PatientID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -591,7 +586,7 @@ namespace HemaCore.Migrations
 
                     b.HasIndex("ConditionId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("PatientConditions");
                 });
@@ -615,7 +610,7 @@ namespace HemaCore.Migrations
                     b.Property<int>("MedicationId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PatientId")
+                    b.Property<string>("PatientID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -623,7 +618,7 @@ namespace HemaCore.Migrations
 
                     b.HasIndex("MedicationId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("PatientMedications");
                 });
@@ -757,6 +752,12 @@ namespace HemaCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestRequestId"));
 
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CancellationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ClinicalNotes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -764,8 +765,14 @@ namespace HemaCore.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PatientId")
+                    b.Property<int>("PatientID")
                         .HasColumnType("int");
+
+                    b.Property<string>("ReleaseNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReleasedToPatientDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("RequestDate")
                         .HasColumnType("datetime2");
@@ -782,7 +789,7 @@ namespace HemaCore.Migrations
 
                     b.HasIndex("DoctorId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("TestRequests");
                 });
@@ -1190,7 +1197,7 @@ namespace HemaCore.Migrations
 
                     b.HasOne("HemaCore.Models.Users", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
+                        .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1202,14 +1209,10 @@ namespace HemaCore.Migrations
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.HasOne("HemaCore.Models.Consent", "Consent")
-                        .WithMany()
+                        .WithMany("TestAccesses")
                         .HasForeignKey("ConsentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("HemaCore.Models.Consent", null)
-                        .WithMany("TestAccesses")
-                        .HasForeignKey("ConsentId1");
 
                     b.HasOne("HemaCore.Models.TestRequest", "TestRequest")
                         .WithMany()
@@ -1317,8 +1320,8 @@ namespace HemaCore.Migrations
 
                     b.HasOne("HemaCore.Models.Users", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Allergy");
@@ -1336,8 +1339,8 @@ namespace HemaCore.Migrations
 
                     b.HasOne("HemaCore.Models.Users", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Condition");
@@ -1355,7 +1358,7 @@ namespace HemaCore.Migrations
 
                     b.HasOne("HemaCore.Models.Users", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
+                        .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -1412,7 +1415,7 @@ namespace HemaCore.Migrations
 
                     b.HasOne("HemaCore.Models.Patient", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
+                        .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1434,7 +1437,7 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.HasOne("HemaCore.Models.TestResult", "TestResult")
-                        .WithMany()
+                        .WithMany("TestRequestTestType")
                         .HasForeignKey("TestResultId");
 
                     b.HasOne("HemaCore.Models.TestType", "TestType")
@@ -1636,6 +1639,8 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.TestResult", b =>
                 {
+                    b.Navigation("TestRequestTestType");
+
                     b.Navigation("TestResultVerification")
                         .IsRequired();
                 });

@@ -10,7 +10,7 @@ namespace HemaCore.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-
+        public DbSet<Alert> Alerts => Set<Alert>();
         public DbSet<Sample> Samples { get; set; }
         public DbSet<TestRequest> TestRequests { get; set; }
         public DbSet<LabTechnician> LabTechnicians { get; set; }
@@ -80,7 +80,7 @@ namespace HemaCore.Data
             modelbuilder.Entity<PatientMedication>()
                 .HasOne(pm => pm.Patient)
                 .WithMany()
-                .HasForeignKey(pm => pm.PatientId)
+                .HasForeignKey(pm => pm.PatientID)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelbuilder.Entity<PatientMedication>()
@@ -105,29 +105,42 @@ namespace HemaCore.Data
                 .Property(a => a.ResultValue)
                 .HasPrecision(18, 2);
             modelbuilder.Entity<ConsentTestRequest>()
-    .HasOne(x => x.TestRequest)
-    .WithMany()
-    .HasForeignKey(x => x.TestRequestId)
-    .OnDelete(DeleteBehavior.NoAction);
+                .HasOne(x => x.TestRequest)
+                .WithMany()
+                .HasForeignKey(x => x.TestRequestId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelbuilder.Entity<ConsentTestRequest>()
                 .HasOne(x => x.Consent)
-                .WithMany()
+                .WithMany(c => c.TestAccesses)
                 .HasForeignKey(x => x.ConsentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 
 
             modelbuilder.Entity<Doctor>()
-     .HasOne(d => d.User)
-     .WithMany()
-     .HasForeignKey(d => d.UserId)
-     .OnDelete(DeleteBehavior.NoAction);
+                 .HasOne(d => d.User)
+                 .WithMany()
+                 .HasForeignKey(d => d.UserId)
+                 .OnDelete(DeleteBehavior.NoAction);
+
+                        modelbuilder.Entity<PatientCondition>()
+                .HasOne(pc => pc.Patient)
+                .WithMany()
+                .HasForeignKey(pc => pc.PatientID)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelbuilder.Entity<PatientAllergy>()
+                .HasOne(pa => pa.Patient)
+                .WithMany()
+                .HasForeignKey(pa => pa.PatientID)
+                .OnDelete(DeleteBehavior.NoAction);
+
 
 
         }
 
 
     }
-
+     
 }

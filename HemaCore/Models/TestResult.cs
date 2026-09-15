@@ -22,4 +22,4 @@ namespace HemaCore.Models
         public TestResultVerification TestResultVerification { get; set; } // Test result verification navigation
     }
 }
-`
+

@@ -3,7 +3,7 @@
     public class Consent
     {
         public int Id { get; set; }
-        public string PatientId { get; set; } = string.Empty;
+        public string PatientID { get; set; } = string.Empty;
         public int DoctorId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime GrantedAt { get; set; } = DateTime.UtcNow;

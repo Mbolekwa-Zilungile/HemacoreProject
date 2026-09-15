@@ -114,6 +114,40 @@ namespace HemaCore.Services
                             string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
+                // DOCTOR
+                logger.LogInformation("Seeding doctor user");
+
+                var doctorEmail = "LihleDlilanga@gmail.com";
+
+                if (await userManager.FindByEmailAsync(doctorEmail) == null)
+                {
+                    var doctorUser = new Users
+                    {
+                        FullName = "Lihle Dlilanga",
+                        UserName = doctorEmail,
+                        NormalizedUserName = doctorEmail.ToUpper(),
+                        Email = doctorEmail,
+                        NormalizedEmail = doctorEmail.ToUpper(),
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString()
+                    };
+
+                    var result = await userManager.CreateAsync(doctorUser, "Bombibethu@2026");
+
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("Assigning Doctor role to the doctor user.");
+
+                        await userManager.AddToRoleAsync(doctorUser, "Doctor");
+                    }
+                    else
+                    {
+                        logger.LogError(
+                            "Failed to create doctor user: {Errors}",
+                            string.Join(", ", result.Errors.Select(e => e.Description))
+                        );
+                    }
+                }
             }
             catch (Exception ex)
             {

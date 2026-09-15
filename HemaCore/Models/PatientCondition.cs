@@ -3,7 +3,7 @@
     public class PatientCondition
     {
         public int Id { get; set; }
-        public string PatientId { get; set; } = string.Empty;
+        public string PatientID { get; set; } = string.Empty;
         public int ConditionId { get; set; }
         public DateOnly? DiagnosedDate { get; set; }
         public Users Patient { get; set; } = null!;

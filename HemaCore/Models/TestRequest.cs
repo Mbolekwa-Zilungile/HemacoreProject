@@ -8,7 +8,7 @@ namespace HemaCore.Models
         public int TestRequestId { get; set; }
 
         // Patient who the test request is for
-        public int PatientId { get; set; }
+        public int PatientID { get; set; }
         public Patient Patient { get; set; }
 
         // Doctor who submitted the request
@@ -24,6 +24,14 @@ namespace HemaCore.Models
 
         // Overall request status
         public string Status { get; set; }
+
+        // Cancellation details (set only if Status == "Cancelled")
+        public string? CancelReason { get; set; }
+        public DateTime? CancellationDate { get; set; }
+
+        // Release details (set only when doctor releases results to patient)
+        public string? ReleaseNote { get; set; }
+        public DateTime? ReleasedToPatientDate { get; set; }
 
         // Samples belonging to this request
         public ICollection<Sample> Samples { get; set; }
