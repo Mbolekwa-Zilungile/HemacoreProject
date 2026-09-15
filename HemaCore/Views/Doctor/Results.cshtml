@@ -1,0 +1,338 @@
+﻿@model HemaCore.ViewModels.DoctorViewModels.ResultsViewModel
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewBag.Title = "Test Results";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<style>
+    .page-header h2 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.3rem;
+    }
+
+    .page-header p {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .info-card,
+    .results-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .info-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .results-card {
+        overflow: hidden;
+    }
+
+    .results-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+        .results-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+        .table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+    .abnormal-row {
+        background: #fff7f7;
+    }
+
+    .normal-result {
+        color: #166534;
+        font-weight: 600;
+    }
+
+    .abnormal-result {
+        color: #b91c1c;
+        font-weight: 700;
+    }
+
+    .result-badge {
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-normal {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-abnormal {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .back-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+    .empty-state {
+        background: white;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            color: #475569;
+        }
+
+        .empty-state p {
+            color: #94a3b8;
+        }
+</style>
+
+<div class="container-fluid fade-in">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+
+        <div>
+            <h2>
+                <i class="fas fa-file-medical me-2"></i>
+                Test Results
+            </h2>
+
+            <p>
+                View verified laboratory results for this test request
+            </p>
+        </div>
+
+        <a asp-controller="Doctor"
+           asp-action="MyRequests"
+           class="back-link">
+
+            <i class="fas fa-arrow-left me-1"></i>
+            Back to Requests
+
+        </a>
+
+    </div>
+
+    <!-- REQUEST INFORMATION -->
+    <div class="info-card">
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3 mb-md-0">
+
+                <div class="info-label">
+                    Request Number
+                </div>
+
+                <div class="info-value">
+                    #@Model.TestRequestId
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3 mb-md-0">
+
+                <div class="info-label">
+                    Patient
+                </div>
+
+                <div class="info-value">
+                    <i class="fas fa-user text-primary me-1"></i>
+                    @Model.PatientName
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-label">
+                    Request Status
+                </div>
+
+                <div class="info-value">
+                    @Model.Status
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RESULTS -->
+    @if (Model.TestResults != null && Model.TestResults.Any())
+    {
+        <div class="results-card">
+
+            <div class="results-card-header">
+
+                <h5>
+                    <i class="fas fa-flask me-2"></i>
+                    Laboratory Results
+                </h5>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Test</th>
+                            <th>Result</th>
+                            <th>Unit</th>
+                            <th>Normal Range</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var result in Model.TestResults)
+                        {
+                            <tr class="@(result.IsAbnormal ? "abnormal-row" : "")">
+
+                                <td>
+                                    <strong>
+                                        @result.TestTypeName
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <span class="@(result.IsAbnormal ? "abnormal-result" : "normal-result")">
+                                        @result.ResultValue
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @result.UnitOfMeasurement
+                                </td>
+
+                                <td>
+                                    @result.NormalRangeMin -
+                                    @result.NormalRangeMax
+                                </td>
+
+                                <td>
+
+                                    @if (result.IsAbnormal)
+                                    {
+                                        <span class="result-badge badge-abnormal">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Abnormal
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="result-badge badge-normal">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Normal
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(result.Notes))
+                                    {
+                                        @result.Notes
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            No notes
+                                        </span>
+                                    }
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <!-- EMPTY RESULTS -->
+        <div class="empty-state">
+
+            <i class="fas fa-file-medical"></i>
+
+            <h4>No Results Available</h4>
+
+            <p>
+                There are currently no verified laboratory results for this request.
+            </p>
+
+        </div>
+    }
+
+</div>

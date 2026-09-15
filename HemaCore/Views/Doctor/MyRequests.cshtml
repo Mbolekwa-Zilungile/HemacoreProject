@@ -1,0 +1,565 @@
+﻿@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewBag.Title = "My Requests";
+}
+
+@model HemaCore.ViewModels.DoctorViewModels.MyRequestsViewModel
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<style>
+
+    .page-header h2 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.3rem;
+    }
+
+    .page-header p {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.2rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        transition: 0.2s ease;
+        cursor: pointer;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .filter-section {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+        .filter-section h5 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.9rem;
+        transition: 0.2s;
+    }
+
+        .filter-input:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+        .table thead {
+            background: #f8fafc;
+        }
+
+        .table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+    .badge-custom {
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .urgency-routine {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .urgency-urgent {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .urgency-stat {
+        background: #dc2626;
+        color: white;
+    }
+
+    .status-submitted {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .status-progress {
+        background: #fef3c7;
+        color: #a16207;
+    }
+
+    .status-completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-primary-custom {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .btn-primary-custom:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+    .action-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 1rem;
+    }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+    .empty-state {
+        background: white;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            color: #475569;
+        }
+
+        .empty-state p {
+            color: #94a3b8;
+        }
+
+</style>
+
+<div class="container-fluid fade-in">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <div>
+            <h2>
+                <i class="fas fa-list-alt me-2"></i>
+                My Test Requests
+            </h2>
+
+            <p>
+                View and track all submitted laboratory requests
+            </p>
+        </div>
+
+        <a asp-action="CreateTestRequest" asp-controller="Doctor" class="btn-primary-custom">
+            <i class="fas fa-plus"></i>
+            New Request
+        </a>
+    </div>
+
+    <!-- STATS -->
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Total Requests</div>
+                        <div class="stat-number">@Model.Requests.Count</div>
+                    </div>
+
+                    <i class="fas fa-file-medical fa-2x text-primary"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">In Progress</div>
+                        <div class="stat-number">
+                            @Model.Requests.Count(r => r.Status == "In progress")
+                        </div>
+                    </div>
+
+                    <i class="fas fa-spinner fa-2x text-warning"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-number">
+                            @Model.Requests.Count(r => r.Status == "Completed")
+                        </div>
+                    </div>
+
+                    <i class="fas fa-check-circle fa-2x text-success"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">STAT Requests</div>
+                        <div class="stat-number">
+                            @Model.Requests.Count(r => r.Urgency == "STAT")
+                        </div>
+                    </div>
+
+                    <i class="fas fa-bolt fa-2x text-danger"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-section">
+
+        <h5>
+            <i class="fas fa-filter me-2"></i>
+            Filters
+        </h5>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Search</label>
+
+                <input type="text"
+                       class="filter-input"
+                       id="searchBox"
+                       placeholder="Search patient or request #"
+                       onkeyup="filterTable()" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Status</label>
+
+                <select class="filter-input"
+                        id="statusFilter"
+                        onchange="filterTable()">
+
+                    <option value="">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="In progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+
+                </select>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Urgency</label>
+
+                <select class="filter-input"
+                        id="urgencyFilter"
+                        onchange="filterTable()">
+
+                    <option value="">All Urgency</option>
+                    <option value="Routine">Routine</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="STAT">STAT</option>
+
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end mb-3">
+                <button class="btn btn-secondary w-100"
+                        onclick="clearFilters()">
+
+                    <i class="fas fa-times"></i>
+                    Clear
+                </button>
+            </div>
+
+        </div>
+
+        <span class="text-muted" id="resultsCount"></span>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover">
+
+                <thead>
+                    <tr>
+                        <th>Request #</th>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="requestsTable">
+
+                    @foreach (var request in Model.Requests)
+                    {
+                        <tr data-search="@request.TestRequestId @request.PatientName @request.Status @request.Urgency">
+
+                            <td>
+                                <strong>#@request.TestRequestId</strong>
+                            </td>
+
+                            <td>
+                                @request.RequestDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                <i class="fas fa-user text-primary me-1"></i>
+                                @request.PatientName
+                            </td>
+
+                            <td>
+
+                                @if (request.Urgency == "Routine")
+                                {
+                                    <span class="badge-custom urgency-routine">
+                                        <i class="fas fa-calendar-check"></i>
+                                        Routine
+                                    </span>
+                                }
+                                else if (request.Urgency == "Urgent")
+                                {
+                                    <span class="badge-custom urgency-urgent">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Urgent
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-custom urgency-stat">
+                                        <i class="fas fa-bolt"></i>
+                                        STAT
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if (request.Status == "Submitted")
+                                {
+                                    <span class="badge-custom status-submitted">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Submitted
+                                    </span>
+                                }
+                                else if (request.Status == "In progress" || request.Status == "Sample(s) received")
+                                {
+                                    <span class="badge-custom status-progress">
+                                        <i class="fas fa-spinner"></i>
+                                        @request.Status
+                                    </span>
+                                }
+                                else if (request.Status == "Completed")
+                                {
+                                    <span class="badge-custom status-completed">
+                                        <i class="fas fa-check-circle"></i>
+                                        Completed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-custom status-cancelled">
+                                        <i class="fas fa-times-circle"></i>
+                                        @request.Status
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <a asp-controller="Doctor" asp-action="RequestStatus" asp-route-id="@request.TestRequestId"
+                                   class="action-link">
+
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </a>
+
+                                @if (request.Status == "Completed" || request.Status == "Released by doctor")
+                                {
+                                    <a asp-controller="Doctor" asp-action="Results" asp-route-id="@request.TestRequestId"
+                                       class="action-link">
+
+                                        <i class="fas fa-file-medical"></i>
+                                        Results
+                                    </a>
+                                }
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- EMPTY STATE -->
+    @if (!Model.Requests.Any())
+    {
+        <div class="empty-state mt-4">
+
+            <i class="fas fa-inbox"></i>
+
+            <h4>No Requests Found</h4>
+
+            <p>
+                You have not submitted any test requests yet.
+            </p>
+
+        </div>
+    }
+
+</div>
+
+<script>
+
+    function filterTable() {
+
+        let search = document.getElementById("searchBox").value.toLowerCase();
+
+        let status = document.getElementById("statusFilter").value.toLowerCase();
+
+        let urgency = document.getElementById("urgencyFilter").value.toLowerCase();
+
+        let rows = document.querySelectorAll("#requestsTable tr");
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+
+            let text = row.getAttribute("data-search").toLowerCase();
+
+            let matchSearch = text.includes(search);
+
+            let matchStatus = status === "" || text.includes(status);
+
+            let matchUrgency = urgency === "" || text.includes(urgency);
+
+            let visible = matchSearch && matchStatus && matchUrgency;
+
+            row.style.display = visible ? "" : "none";
+
+            if (visible) visibleCount++;
+
+        });
+
+        document.getElementById("resultsCount").innerText =
+            `Showing ${visibleCount} request(s)`;
+
+    }
+
+    function clearFilters() {
+
+        document.getElementById("searchBox").value = "";
+
+        document.getElementById("statusFilter").value = "";
+
+        document.getElementById("urgencyFilter").value = "";
+
+        filterTable();
+
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        filterTable();
+    });
+
+</script>

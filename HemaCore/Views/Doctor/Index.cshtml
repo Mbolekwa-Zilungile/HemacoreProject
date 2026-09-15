@@ -1,1 +1,363 @@
-﻿<h1>Doctor</h1>
+﻿@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewBag.Title = "Dashboard";
+}
+
+@model HemaCore.ViewModels.DoctorViewModels.DashboardViewModel
+
+<style>
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-item {
+        background: white;
+        border-radius: 16px;
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+        .stat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 0.5rem;
+        color: #1a202c;
+    }
+
+    .stat-desc {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #718096;
+    }
+
+    .doctor-header {
+        background: linear-gradient(135deg, #1a365d, #2c5282);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table th {
+            background: #f8fafc;
+            text-align: left;
+        }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-routine {
+        background: #edf2f7;
+        color: #4a5568;
+    }
+
+    .badge-urgent {
+        background: #feebc8;
+        color: #c05621;
+    }
+
+    .badge-stat {
+        background: #fed7d7;
+        color: #c53030;
+    }
+
+    .badge-progress {
+        background: #bee3f8;
+        color: #2b6cb0;
+    }
+
+    .badge-completed {
+        background: #c6f6d5;
+        color: #276749;
+    }
+
+    .badge-submitted {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .badge-received {
+        background: #faf089;
+        color: #975a16;
+    }
+
+    @@media(max-width:768px) {
+        .stat-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+</style>
+
+<!-- DOCTOR HEADER -->
+<div class="doctor-header">
+    <h2 style="margin:0;">Welcome, Dr. @Model.DoctorName</h2>
+    <small>@DateTime.Now.ToString("dddd, dd MMMM yyyy")</small>
+</div>
+
+<!-- CLICKABLE CARDS -->
+<div class="stat-grid">
+
+    <!-- TOTAL -->
+    <a asp-controller="Doctor" asp-action="MyRequests" class="stat-item">
+
+        <div class="stat-header">
+            <div class="stat-title">TOTAL REQUESTS</div>
+
+            <div class="stat-icon" style="background:#e6f0ff;">
+                <i class="fas fa-flask" style="color:#3182ce;"></i>
+            </div>
+        </div>
+
+        <div class="stat-value">@Model.TotalRequests</div>
+
+        <div class="stat-desc">
+            <i class="fas fa-chart-line"></i>
+            Lifetime total
+        </div>
+
+    </a>
+
+    <!-- COMPLETED -->
+    <a asp-controller="Doctor"
+       asp-action="MyRequests"
+       asp-route-status="Completed" class="stat-item">
+
+        <div class="stat-header">
+            <div class="stat-title">COMPLETED</div>
+
+            <div class="stat-icon" style="background:#e6ffed;">
+                <i class="fas fa-check-circle" style="color:#38a169;"></i>
+            </div>
+        </div>
+
+        <div class="stat-value">@Model.CompletedRequests</div>
+
+        <div class="stat-desc">
+            <i class="fas fa-check"></i>
+            Finished requests
+        </div>
+
+    </a>
+
+    <!-- IN PROGRESS -->
+    <a asp-controller="Doctor"
+       asp-action="MyRequests"
+       asp-route-status="InProgress" class="stat-item">
+
+        <div class="stat-header">
+            <div class="stat-title">IN PROGRESS</div>
+
+            <div class="stat-icon" style="background:#fff7e6;">
+                <i class="fas fa-spinner" style="color:#dd6b20;"></i>
+            </div>
+        </div>
+
+        <div class="stat-value">@Model.PendingRequests</div>
+
+        <div class="stat-desc">
+            <i class="fas fa-clock"></i>
+            Awaiting results
+        </div>
+
+    </a>
+
+    <!-- URGENT -->
+    <a asp-controller="Doctor"
+       asp-action="MyRequests"
+       asp-route-status="Urgent" class="stat-item">
+
+        <div class="stat-header">
+            <div class="stat-title">URGENT / STAT</div>
+
+            <div class="stat-icon" style="background:#ffe6e6;">
+                <i class="fas fa-exclamation-triangle" style="color:#e53e3e;"></i>
+            </div>
+        </div>
+
+        <div class="stat-value">@Model.UrgentRequests</div>
+
+        <div class="stat-desc" style="color:#e53e3e;">
+            <i class="fas fa-bolt"></i>
+            Priority attention
+        </div>
+
+    </a>
+
+</div>
+
+<!-- RECENT REQUESTS TABLE -->
+<div style="background:white; border-radius:16px; padding:1rem; border:1px solid #e2e8f0;">
+
+    <h3 style="margin-bottom:1rem;">Recent Test Requests</h3>
+
+    @if (!Model.RecentRequests.Any())
+    {
+        <p>No requests found.</p>
+    }
+    else
+    {
+        <table class="table">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var request in Model.RecentRequests)
+                {
+                    <tr>
+
+                        <td>
+                            <strong style="color:#3182ce;">
+                                #@request.TestRequestId
+                            </strong>
+                        </td>
+
+                        <td>
+                            @request.RequestDate.ToString("dd MMM yyyy")
+                        </td>
+
+                        <td>
+                            @request.PatientName
+                        </td>
+
+                        <td>
+
+                            @if (request.Urgency == "Routine")
+                            {
+                                <span class="badge badge-routine">
+                                    Routine
+                                </span>
+                            }
+                            else if (request.Urgency == "Urgent")
+                            {
+                                <span class="badge badge-urgent">
+                                    Urgent
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-stat">
+                                    STAT
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+
+                            @if (request.Status == "Submitted")
+                            {
+                                <span class="badge badge-submitted">
+                                    Submitted
+                                </span>
+                            }
+                            else if (request.Status == "Sample(s) received")
+                            {
+                                <span class="badge badge-received">
+                                    Samples Received
+                                </span>
+                            }
+                            else if (request.Status == "In progress")
+                            {
+                                <span class="badge badge-progress">
+                                    In Progress
+                                </span>
+                            }
+                            else if (request.Status == "Completed")
+                            {
+                                <span class="badge badge-completed">
+                                    Completed
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge">
+                                    @request.Status
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+                            <a asp-action="RequestStatus" asp-controller="Doctor" asp-route-id="@request.TestRequestId"
+                               style="color:#3182ce; text-decoration:none; font-weight:600;">
+
+                                View
+                                <i class="fas fa-chevron-right"></i>
+
+                            </a>
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    }
+
+</div>

@@ -1,6 +1,7 @@
 ﻿using HemaCore.Data;
 using HemaCore.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace HemaCore.Services
 {
@@ -31,7 +32,7 @@ namespace HemaCore.Services
                 // add manager user
                 logger.LogInformation("Seeding manager user");
                 var managerEmail = "manager@gmail.com";
-                if(await userManager.FindByEmailAsync(managerEmail) == null)
+                if (await userManager.FindByEmailAsync(managerEmail) == null)
                 {
                     var managerUser = new Users
                     {
@@ -119,9 +120,11 @@ namespace HemaCore.Services
 
                 var doctorEmail = "LihleDlilanga@gmail.com";
 
-                if (await userManager.FindByEmailAsync(doctorEmail) == null)
+                var doctorUser = await userManager.FindByEmailAsync(doctorEmail);
+
+                if (doctorUser == null)
                 {
-                    var doctorUser = new Users
+                    doctorUser = new Users
                     {
                         FullName = "Lihle Dlilanga",
                         UserName = doctorEmail,
@@ -137,7 +140,6 @@ namespace HemaCore.Services
                     if (result.Succeeded)
                     {
                         logger.LogInformation("Assigning Doctor role to the doctor user.");
-
                         await userManager.AddToRoleAsync(doctorUser, "Doctor");
                     }
                     else
@@ -146,6 +148,29 @@ namespace HemaCore.Services
                             "Failed to create doctor user: {Errors}",
                             string.Join(", ", result.Errors.Select(e => e.Description))
                         );
+                        doctorUser = null;
+                    }
+                }
+
+                // Ensure a matching Doctors table row exists, whether the user was just created or already existed
+                if (doctorUser != null)
+                {
+                    bool doctorRecordExists = await context.Doctors
+                        .AnyAsync(d => d.UserId == doctorUser.Id);
+
+                    if (!doctorRecordExists)
+                    {
+                        logger.LogInformation("Creating Doctors table record for the doctor user.");
+                        context.Doctors.Add(new Doctor
+                        {
+                            Name = "Lihle",
+                            Surname = "Dlilanga",
+                            HPCSANumber = "HP0000001",
+                            PhoneNumber = "+27000000000",
+                            UserId = doctorUser.Id,
+                            IsActive = true
+                        });
+                        await context.SaveChangesAsync();
                     }
                 }
             }
@@ -157,7 +182,7 @@ namespace HemaCore.Services
 
         public static async Task AddRoleAsync(RoleManager<IdentityRole> roleManager, string roleName)
         {
-            if(!await roleManager.RoleExistsAsync(roleName))
+            if (!await roleManager.RoleExistsAsync(roleName))
             {
                 var result = await roleManager.CreateAsync(new IdentityRole(roleName));
                 if (!result.Succeeded)

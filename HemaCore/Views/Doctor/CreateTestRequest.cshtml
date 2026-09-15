@@ -1,0 +1,581 @@
+﻿@model HemaCore.ViewModels.DoctorViewModels.CreateTestRequestViewModel
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "New Test Request";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="fade-in">
+
+    ```
+    <div class="page-header">
+        <h2><i class="fas fa-plus-circle"></i> Create New Test Request</h2>
+        <p>Fill in the details below to submit a laboratory test request</p>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="inline-notice error" style="margin-bottom:1.25rem;">
+            <i class="fas fa-exclamation-circle"></i>
+            Please correct the errors below before submitting the request.
+        </div>
+    }
+
+    <form asp-controller="Doctor"
+          asp-action="CreateTestRequest"
+          method="post"
+          id="createRequestForm">
+
+        @Html.AntiForgeryToken()
+
+        <!-- STEP 1: PATIENT -->
+        <div class="request-step-card">
+
+            <div class="request-step-header">
+                <div class="step-badge">1</div>
+                <div>
+                    <div class="step-title">
+                        <i class="fas fa-user"></i> Patient Selection
+                    </div>
+                    <div class="step-subtitle">
+                        Select the patient for this laboratory request
+                    </div>
+                </div>
+            </div>
+
+            <div class="request-form-group">
+
+                <label asp-for="PatientId" class="request-label">
+                    Patient
+                </label>
+
+                <select asp-for="PatientId"
+                        class="request-select"
+                        id="patientSelect">
+
+                    <option value="">-- Select Patient --</option>
+
+                    @foreach (var patient in Model.Patients)
+                    {
+                        <option value="@patient.PatientId">
+                            @patient.FullName
+                        </option>
+                    }
+
+                </select>
+
+                <span asp-validation-for="PatientId"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div id="selectedPatient"
+                 class="patient-summary"
+                 style="display:none;">
+
+                <div class="patient-summary-header">
+
+                    <div class="patient-avatar" id="patientAvatar">
+                        --
+                    </div>
+
+                    <div>
+                        <div class="patient-summary-name"
+                             id="patientName">
+                        </div>
+
+                        <div class="patient-summary-meta">
+                            Selected patient
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="request-form-row">
+
+                <div class="request-form-group">
+
+                    <label asp-for="Urgency"
+                           class="request-label">
+                        Urgency Level
+                    </label>
+
+                    <select asp-for="Urgency"
+                            class="request-select">
+
+                        <option value="">-- Select Urgency --</option>
+                        <option value="Routine">Routine</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="STAT">STAT</option>
+
+                    </select>
+
+                    <span asp-validation-for="Urgency"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="request-form-group"
+                 style="margin-top:1rem;">
+
+                <label asp-for="ClinicalNotes"
+                       class="request-label">
+                    Clinical Notes
+                </label>
+
+                <textarea asp-for="ClinicalNotes"
+                          rows="4"
+                          class="request-textarea"
+                          placeholder="Relevant clinical information for the laboratory..."></textarea>
+
+                <span asp-validation-for="ClinicalNotes"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- STEP 2: TEST TYPES -->
+        <div class="request-step-card">
+
+            <div class="request-step-header">
+
+                <div class="step-badge">2</div>
+
+                <div>
+                    <div class="step-title">
+                        <i class="fas fa-microscope"></i>
+                        Select Test Types
+                    </div>
+
+                    <div class="step-subtitle">
+                        Choose one or more tests to request
+                    </div>
+                </div>
+
+            </div>
+
+            @if (Model.TestTypes != null && Model.TestTypes.Any())
+            {
+                <div class="test-type-grid">
+
+                    @foreach (var test in Model.TestTypes)
+                    {
+                        <label class="test-type-card">
+
+                            <input type="checkbox"
+                                   name="SelectedTestTypeIds"
+                                   value="@test.TestTypeId"
+                                   class="test-checkbox"
+                            @(Model.SelectedTestTypeIds.Contains(test.TestTypeId)
+                                ? "checked"
+                                : "") />
+
+                            <div class="test-type-info">
+
+                                <div class="test-type-name">
+                                    @test.TestTypeName
+                                </div>
+
+                            </div>
+
+                            <div class="test-type-check">
+                                <i class="fas fa-check"></i>
+                            </div>
+
+                        </label>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <div class="inline-notice warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    No active test types are currently available.
+                </div>
+            }
+
+            <div class="validation-message"
+                 id="testTypeError"
+                 style="display:none;">
+                <i class="fas fa-exclamation-circle"></i>
+                Please select at least one test type.
+            </div>
+
+        </div>
+
+
+        <!-- STEP 3: SAMPLES -->
+        <div class="request-step-card">
+
+            <div class="request-step-header">
+
+                <div class="step-badge">3</div>
+
+                <div>
+                    <div class="step-title">
+                        <i class="fas fa-vial"></i>
+                        Sample Barcodes
+                    </div>
+
+                    <div class="step-subtitle">
+                        Record the barcode and sample type for each collected sample
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="inline-notice info"
+                 style="margin-bottom:1.25rem;">
+
+                <i class="fas fa-info-circle"></i>
+
+                Enter the barcode printed on each collected sample and select its sample type.
+
+            </div>
+
+
+            <div id="samplesContainer">
+
+                <div class="sample-row">
+
+                    <div class="sample-type-badge">
+                        <i class="fas fa-vial"></i>
+                        Sample 1
+                    </div>
+
+                    <div class="sample-barcode-wrap">
+
+                        <label class="request-label">
+                            Sample Type
+                        </label>
+
+                        <select name="SampleTypeIds"
+                                class="request-select"
+                                required>
+
+                            <option value="">
+                                -- Select Sample Type --
+                            </option>
+
+                            @foreach (var sampleType in Model.SampleTypes)
+                            {
+                                <option value="@sampleType.SampleTypeId">
+                                    @sampleType.SampleName
+                                </option>
+                            }
+
+                        </select>
+
+                        <label class="request-label"
+                               style="margin-top:0.75rem;">
+                            Barcode
+                        </label>
+
+                        <input type="text"
+                               name="BarcodeNumbers"
+                               required
+                               class="request-input"
+                               placeholder="e.g. BC-20260001" />
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button type="button"
+                    id="addSampleButton"
+                    class="btn-secondary-custom"
+                    style="margin-top:1rem;">
+
+                <i class="fas fa-plus"></i>
+                Add Another Sample
+
+            </button>
+
+        </div>
+
+
+        <!-- SUBMIT -->
+        <div class="request-actions">
+
+            <a asp-controller="Doctor"
+               asp-action="MyRequests"
+               class="btn-cancel-custom">
+
+                <i class="fas fa-times"></i>
+                Cancel
+
+            </a>
+
+            <button type="submit"
+                    class="btn-primary-custom btn-submit">
+
+                <i class="fas fa-paper-plane"></i>
+                Submit Request
+
+            </button>
+
+        </div>
+
+    </form>
+    ```
+
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const patientSelect = document.getElementById("patientSelect");
+        const selectedPatient = document.getElementById("selectedPatient");
+        const patientName = document.getElementById("patientName");
+        const patientAvatar = document.getElementById("patientAvatar");
+
+        /*
+         * REAL PATIENT DATA
+         *
+         * The patient list comes from Model.Patients,
+         * which is populated by the DoctorController.
+         */
+
+        const patients = [
+                @foreach (var patient in Model.Patients)
+            {
+                <text>
+                        {
+                            id: @patient.PatientId,
+                        name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.FullName))
+                            },
+                </text>
+                }
+            ];
+
+
+        patientSelect.addEventListener("change", function() {
+
+            const selectedId = parseInt(this.value);
+
+            if (!selectedId) {
+
+                selectedPatient.style.display = "none";
+                return;
+
+            }
+
+            const patient = patients.find(function(p) {
+                return p.id === selectedId;
+            });
+
+            if (!patient) {
+
+                selectedPatient.style.display = "none";
+                return;
+
+            }
+
+            patientName.textContent = patient.name;
+
+            const parts = patient.name.trim().split(" ");
+
+            let initials = "";
+
+            if (parts.length >= 2) {
+                initials =
+                    parts[0].charAt(0) +
+                    parts[parts.length - 1].charAt(0);
+            }
+            else {
+                initials = patient.name.substring(0, 2);
+            }
+
+            patientAvatar.textContent =
+                initials.toUpperCase();
+
+            selectedPatient.style.display = "block";
+
+        });
+
+
+        /*
+         * TEST TYPE CARD SELECTION
+         */
+
+        document.querySelectorAll(".test-type-card")
+            .forEach(function(card) {
+
+                const checkbox =
+                    card.querySelector(".test-checkbox");
+
+                if (!checkbox) {
+                    return;
+                }
+
+                if (checkbox.checked) {
+                    card.classList.add("selected");
+                }
+
+                checkbox.addEventListener("change", function() {
+
+                    card.classList.toggle(
+                        "selected",
+                        checkbox.checked
+                    );
+
+                });
+
+            });
+
+
+        /*
+         * ADD SAMPLE
+         */
+
+        const addSampleButton =
+            document.getElementById("addSampleButton");
+
+        const samplesContainer =
+            document.getElementById("samplesContainer");
+
+        let sampleNumber = 1;
+
+        addSampleButton.addEventListener("click", function() {
+
+            sampleNumber++;
+
+            const sampleRow =
+                document.createElement("div");
+
+            sampleRow.className = "sample-row";
+            sampleRow.style.marginTop = "1rem";
+
+            sampleRow.innerHTML = `
+                    <div class="sample-type-badge">
+                        <i class="fas fa-vial"></i>
+                        Sample ${sampleNumber}
+                    </div>
+
+                    <div class="sample-barcode-wrap">
+
+                        <label class="request-label">
+                            Sample Type
+                        </label>
+
+                        <select name="SampleTypeIds"
+                                class="request-select"
+                                required>
+
+                            <option value="">
+                                -- Select Sample Type --
+                            </option>
+
+                            @foreach (var sampleType in Model.SampleTypes)
+                            {
+                                    <option value="@sampleType.SampleTypeId">
+                                            @sampleType.SampleName
+                                    </option>
+                            }
+
+                        </select>
+
+                        <label class="request-label"
+                               style="margin-top:0.75rem;">
+                            Barcode
+                        </label>
+
+                        <input type="text"
+                               name="BarcodeNumbers"
+                               required
+                               class="request-input"
+                               placeholder="e.g. BC-20260001" />
+
+                        <button type="button"
+                                class="remove-sample-button"
+                                style="margin-top:0.75rem;">
+
+                            <i class="fas fa-trash"></i>
+                            Remove Sample
+
+                        </button>
+
+                    </div>
+                `;
+
+            samplesContainer.appendChild(sampleRow);
+
+        });
+
+
+        /*
+         * REMOVE SAMPLE
+         */
+
+        samplesContainer.addEventListener("click", function(event) {
+
+            const button =
+                event.target.closest(".remove-sample-button");
+
+            if (!button) {
+                return;
+            }
+
+            const row =
+                button.closest(".sample-row");
+
+            if (row) {
+                row.remove();
+            }
+
+        });
+
+
+        /*
+         * FORM VALIDATION
+         */
+
+        document.getElementById("createRequestForm")
+            .addEventListener("submit", function(event) {
+
+                const selectedTests =
+                    document.querySelectorAll(
+                        "input[name='SelectedTestTypeIds']:checked"
+                    );
+
+                const error =
+                    document.getElementById("testTypeError");
+
+                if (selectedTests.length === 0) {
+
+                    event.preventDefault();
+
+                    error.style.display = "flex";
+
+                    error.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+
+                    return;
+
+                }
+
+                error.style.display = "none";
+
+            });
+
+    });
+
+</script>

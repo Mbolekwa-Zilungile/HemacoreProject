@@ -72,7 +72,7 @@ namespace HemaCore.Migrations
 
                     b.HasKey("AlertId");
 
-                    b.ToTable("Alert");
+                    b.ToTable("Alerts");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Allergy", b =>

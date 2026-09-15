@@ -1,0 +1,85 @@
+﻿```cshtml
+@model HemaCore.Models.Doctor
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">My Profile</h2>
+        <p class="text-muted mb-0">
+            View your doctor profile information.
+        </p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">Name</label>
+                    <div class="fw-semibold fs-5">
+                        @Model.Name
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">Surname</label>
+                    <div class="fw-semibold fs-5">
+                        @Model.Surname
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">HPCSA Number</label>
+                    <div class="fw-semibold">
+                        @Model.HPCSANumber
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">Phone Number</label>
+                    <div class="fw-semibold">
+                        @Model.PhoneNumber
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="text-muted small">Account Status</label>
+                    <div>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">
+                                Inactive
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .badge {
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+</style>
+```

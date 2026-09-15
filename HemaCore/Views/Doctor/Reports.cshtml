@@ -1,0 +1,834 @@
+﻿@model HemaCore.ViewModels.DoctorViewModels.ReportsViewModel
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewBag.Title = "Reports";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<style>
+
+    .reports-page {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .reports-header {
+        margin-bottom: 1.5rem;
+    }
+
+        .reports-header h2 {
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+            .reports-header h2 i {
+                color: #2c7da0;
+                margin-right: 8px;
+            }
+
+        .reports-header p {
+            color: #64748b;
+            margin: 0;
+        }
+
+    /* FILTER CARD */
+
+    .report-filter-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .filter-title {
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+    }
+
+        .filter-title i {
+            color: #2c7da0;
+            margin-right: 7px;
+        }
+
+    .date-label {
+        display: block;
+        color: #475569;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .date-input {
+        width: 100%;
+        height: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        padding: 0 12px;
+        color: #334155;
+        background: white;
+    }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,0.12);
+        }
+
+    .btn-generate {
+        height: 44px;
+        background: #2c7da0;
+        border: 1px solid #2c7da0;
+        color: white;
+        border-radius: 9px;
+        padding: 0 20px;
+        font-weight: 600;
+    }
+
+        .btn-generate:hover {
+            background: #1f5068;
+            border-color: #1f5068;
+            color: white;
+        }
+
+    .btn-pdf {
+        height: 44px;
+        background: white;
+        border: 1px solid #2c7da0;
+        color: #2c7da0;
+        border-radius: 9px;
+        padding: 0 20px;
+        font-weight: 600;
+    }
+
+        .btn-pdf:hover {
+            background: #eef6f9;
+            color: #1f5068;
+        }
+
+    /* QUICK FILTERS */
+
+    .quick-filters {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .quick-label {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-right: 4px;
+    }
+
+    .quick-btn {
+        border: 1px solid #dbe3e8;
+        background: #f8fafc;
+        color: #475569;
+        border-radius: 7px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .quick-btn:hover {
+            background: #eef6f9;
+            border-color: #61a5c2;
+            color: #1f5068;
+        }
+
+    /* STATS */
+
+    .report-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .report-stat {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.15rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #eef6f9;
+        color: #2c7da0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-value {
+        color: #1e293b;
+        font-size: 1.4rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.78rem;
+    }
+
+    /* TABLE */
+
+    .report-table-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .report-table-header {
+        padding: 1.2rem 1.4rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+        .report-table-header h5 {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .report-table-header p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+    .table {
+        margin: 0;
+    }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 1rem;
+            border: none;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            border-top: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #334155;
+            font-size: 0.88rem;
+        }
+
+        .table tbody tr:hover {
+            background: #fafcfd;
+        }
+
+    /* BADGES */
+
+    .report-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-routine {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-urgent {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .badge-stat {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-submitted {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .badge-samples {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-progress {
+        background: #fef3c7;
+        color: #a16207;
+    }
+
+    .badge-completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-released {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .badge-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .action-link {
+        color: #2c7da0;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.82rem;
+    }
+
+        .action-link:hover {
+            color: #1f5068;
+            text-decoration: underline;
+        }
+
+    /* EMPTY */
+
+    .empty-state {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        background: #eef6f9;
+        color: #2c7da0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.7rem;
+    }
+
+    .empty-state h4 {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        color: #64748b;
+    }
+
+    @@media (max-width: 900px) {
+
+        .report-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 600px) {
+
+        .report-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            width: 100%;
+        }
+
+        .btn-generate,
+        .btn-pdf {
+            width: 100%;
+        }
+    }
+
+</style>
+
+
+<div class="reports-page fade-in">
+
+    <!-- HEADER -->
+
+    <div class="reports-header">
+
+        <h2>
+            <i class="fas fa-chart-bar"></i>
+            My Reports
+        </h2>
+
+        <p>
+            Generate and view reports for your submitted test requests.
+        </p>
+
+    </div>
+
+
+    <!-- FILTER CARD -->
+
+    <div class="report-filter-card">
+
+        <div class="filter-title">
+            <i class="fas fa-calendar-alt"></i>
+            Select Report Period
+        </div>
+
+        <form asp-controller="Doctor"
+              asp-action="Reports"
+              method="post"
+              id="reportForm">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+
+                    <label class="date-label" for="startDate">
+                        From Date
+                    </label>
+
+                    <input type="date"
+                           id="startDate"
+                           name="startDate"
+                           value="@Model.StartDate"
+                           class="date-input"
+                           required />
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label class="date-label" for="endDate">
+                        To Date
+                    </label>
+
+                    <input type="date"
+                           id="endDate"
+                           name="endDate"
+                           value="@Model.EndDate"
+                           class="date-input"
+                           required />
+
+                </div>
+
+
+                <div class="col-md-4 filter-actions">
+
+                    <div class="d-flex gap-2">
+
+                        <button type="submit"
+                                class="btn-generate">
+
+                            <i class="fas fa-filter me-1"></i>
+                            Generate
+
+                        </button>
+
+                        <button type="button"
+                                class="btn-pdf"
+                                onclick="generatePDF()">
+
+                            <i class="fas fa-file-pdf me-1"></i>
+                            PDF
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+
+        <!-- QUICK FILTERS -->
+
+        <div class="quick-filters">
+
+            <span class="quick-label">
+                Quick filters:
+            </span>
+
+            <button type="button"
+                    class="quick-btn"
+                    onclick="setQuickFilter(7)">
+                Last 7 Days
+            </button>
+
+            <button type="button"
+                    class="quick-btn"
+                    onclick="setQuickFilter(30)">
+                Last 30 Days
+            </button>
+
+            <button type="button"
+                    class="quick-btn"
+                    onclick="setQuickFilter(90)">
+                Last 90 Days
+            </button>
+
+        </div>
+
+    </div>
+
+
+    @if (Model.Requests == null || !Model.Requests.Any())
+    {
+        <!-- EMPTY STATE -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+
+            <h4>
+                No Requests Found
+            </h4>
+
+            <p>
+                No test requests were found for the selected date range.
+            </p>
+
+        </div>
+    }
+    else
+    {
+
+        <!-- STATISTICS -->
+
+        <div class="report-stats">
+
+            <div class="report-stat">
+
+                <div class="stat-icon">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+
+                <div>
+
+                    <div class="stat-value">
+                        @Model.Requests.Count
+                    </div>
+
+                    <div class="stat-label">
+                        Total Requests
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="report-stat">
+
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
+                <div>
+
+                    <div class="stat-value">
+                        @Model.Requests.Count(r => r.Status == "Completed")
+                    </div>
+
+                    <div class="stat-label">
+                        Completed
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="report-stat">
+
+                <div class="stat-icon">
+                    <i class="fas fa-spinner"></i>
+                </div>
+
+                <div>
+
+                    <div class="stat-value">
+                        @Model.Requests.Count(r => r.Status == "In Progress")
+                    </div>
+
+                    <div class="stat-label">
+                        In Progress
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="report-stat">
+
+                <div class="stat-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+
+                <div>
+
+                    <div class="stat-value">
+                        @Model.Requests.Count(r => r.Urgency == "STAT")
+                    </div>
+
+                    <div class="stat-label">
+                        STAT Requests
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- REQUEST TABLE -->
+
+        <div class="report-table-card">
+
+            <div class="report-table-header">
+
+                <h5>
+                    <i class="fas fa-list me-2"></i>
+                    Test Requests
+                </h5>
+
+                <p>
+                    Requests submitted by you during the selected period.
+                </p>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                        <tr>
+                            <th>Request #</th>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var request in Model.Requests)
+                        {
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        #@request.TestRequestId
+                                    </strong>
+                                </td>
+
+
+                                <td>
+                                    @request.RequestDate.ToString("dd MMM yyyy")
+                                </td>
+
+
+                                <td>
+
+                                    <i class="fas fa-user me-1"
+                                       style="color:#2c7da0;"></i>
+
+                                    @request.PatientName
+
+                                </td>
+
+
+                                <td>
+
+                                    @if (request.Urgency == "Routine")
+                                    {
+                                        <span class="report-badge badge-routine">
+                                            Routine
+                                        </span>
+                                    }
+                                    else if (request.Urgency == "Urgent")
+                                    {
+                                        <span class="report-badge badge-urgent">
+                                            Urgent
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="report-badge badge-stat">
+                                            STAT
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <td>
+
+                                    @if (request.Status == "Submitted")
+                                    {
+                                        <span class="report-badge badge-submitted">
+                                            Submitted
+                                        </span>
+                                    }
+                                    else if (request.Status == "Samples Received")
+                                    {
+                                        <span class="report-badge badge-samples">
+                                            Samples Received
+                                        </span>
+                                    }
+                                    else if (request.Status == "In Progress")
+                                    {
+                                        <span class="report-badge badge-progress">
+                                            In Progress
+                                        </span>
+                                    }
+                                    else if (request.Status == "Completed")
+                                    {
+                                        <span class="report-badge badge-completed">
+                                            Completed
+                                        </span>
+                                    }
+                                    else if (request.Status == "Released by Doctor")
+                                    {
+                                        <span class="report-badge badge-released">
+                                            Released
+                                        </span>
+                                    }
+                                    else if (request.Status == "Cancelled")
+                                    {
+                                        <span class="report-badge badge-cancelled">
+                                            Cancelled
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="report-badge badge-submitted">
+                                            @request.Status
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <td>
+
+                                    <a asp-controller="Doctor"
+                                       asp-action="RequestStatus"
+                                       asp-route-id="@request.TestRequestId"
+                                       class="action-link">
+
+                                        <i class="fas fa-eye me-1"></i>
+                                        View
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    }
+
+</div>
+
+
+<script>
+
+    function setQuickFilter(days) {
+
+        var endDate = new Date();
+
+        var startDate = new Date();
+
+        startDate.setDate(endDate.getDate() - days);
+
+        document.getElementById("startDate").value =
+            formatDate(startDate);
+
+        document.getElementById("endDate").value =
+            formatDate(endDate);
+
+        document.getElementById("reportForm").submit();
+    }
+
+
+    function formatDate(date) {
+
+        var year = date.getFullYear();
+
+        var month = String(date.getMonth() + 1).padStart(2, "0");
+
+        var day = String(date.getDate()).padStart(2, "0");
+
+        return year + "-" + month + "-" + day;
+    }
+
+
+    function generatePDF() {
+
+        var startDate =
+            document.getElementById("startDate").value;
+
+        var endDate =
+            document.getElementById("endDate").value;
+
+        if (!startDate || !endDate) {
+
+            alert("Please select a start date and end date.");
+
+            return;
+        }
+
+        window.location.href =
+            "/Doctor/GenerateReportPdf?startDate="
+            + encodeURIComponent(startDate)
+            + "&endDate="
+            + encodeURIComponent(endDate);
+    }
+
+</script>
