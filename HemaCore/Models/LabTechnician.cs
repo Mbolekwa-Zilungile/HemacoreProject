@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace HemaCore.Models
 {
-    public class LabTechnician
+    public class LabTechnician 
     {
         [Key]
         public int LabTechnicianId { get; set; }

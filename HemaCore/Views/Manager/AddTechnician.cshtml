@@ -1,5 +1,4 @@
-﻿```cshtml
-@model HemaCore.ViewModels.ManagerVM.TechnicianViewModel
+﻿@model HemaCore.ViewModels.ManagerVM.TechnicianViewModel
 
 @{
     ViewData["Title"] = "Add Lab Technician";
@@ -8,131 +7,336 @@
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
-        @TempData["Success"]
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"] <button type="button"
+                                     class="btn-close"
+                                     data-bs-dismiss="alert"
+                                     aria-label="Close"> </button>
     </div>
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
+
+    ```
     <div class="card shadow-sm p-4">
 
+        <!-- ========================= -->
         <!-- HEADER -->
+        <!-- ========================= -->
+
         <div class="mb-4">
-            <h3 class="fw-bold">Add Lab Technician</h3>
-            <p class="text-muted">
-                Fill in the details below to register a lab technician in the system.
+            <h3 class="fw-bold">
+                Add Lab Technician
+            </h3>
+
+            <p class="text-muted mb-0">
+                Fill in the details below to register a lab technician
+                in the system.
             </p>
         </div>
 
-        <form asp-action="AddTechnician" method="post">
+
+        <!-- ========================= -->
+        <!-- VALIDATION SUMMARY -->
+        <!-- ========================= -->
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger"
+             role="alert">
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- FORM -->
+        <!-- ========================= -->
+
+        <form asp-action="AddTechnician"
+              method="post">
+
             @Html.AntiForgeryToken()
 
-            <div asp-validation-summary="All" class="text-danger"></div>
 
-            <!-- ACCOUNT INFORMATION -->
-            <h5 class="mb-3 text-secondary">Account Information</h5>
+            <!-- ========================= -->
+            <!-- PERSONAL DETAILS -->
+            <!-- ========================= -->
 
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Email" class="form-label"></label>
-                    <input asp-for="Email"
-                           class="form-control"
-                           placeholder="Enter email address" />
-                    <span asp-validation-for="Email"
-                          class="text-danger small"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="PhoneNumber" class="form-label"></label>
-                    <input asp-for="PhoneNumber"
-                           class="form-control"
-                           placeholder="Enter phone number" />
-                    <span asp-validation-for="PhoneNumber"
-                          class="text-danger small"></span>
-                </div>
-
-            </div>
-
-            <!-- PERSONAL INFORMATION -->
-            <h5 class="mt-4 mb-3 text-secondary">Personal Information</h5>
+            <h5 class="text-secondary mb-3">
+                Personal Details
+            </h5>
 
             <div class="row">
 
+                <!-- NAME -->
                 <div class="col-md-6 mb-3">
-                    <label asp-for="Name" class="form-label"></label>
+
+                    <label asp-for="Name"
+                           class="form-label">
+                    </label>
+
                     <input asp-for="Name"
                            class="form-control"
-                           placeholder="First name" />
+                           placeholder="First name"
+                           autocomplete="given-name" />
+
                     <span asp-validation-for="Name"
-                          class="text-danger small"></span>
+                          class="text-danger small">
+                    </span>
+
                 </div>
 
+
+                <!-- SURNAME -->
                 <div class="col-md-6 mb-3">
-                    <label asp-for="Surname" class="form-label"></label>
+
+                    <label asp-for="Surname"
+                           class="form-label">
+                    </label>
+
                     <input asp-for="Surname"
                            class="form-control"
-                           placeholder="Last name" />
+                           placeholder="Last name"
+                           autocomplete="family-name" />
+
                     <span asp-validation-for="Surname"
-                          class="text-danger small"></span>
+                          class="text-danger small">
+                    </span>
+
                 </div>
 
+
+                <!-- ID NUMBER -->
                 <div class="col-md-6 mb-3">
-                    <label asp-for="IDNumber" class="form-label"></label>
+
+                    <label asp-for="IDNumber"
+                           class="form-label">
+                    </label>
+
                     <input asp-for="IDNumber"
                            class="form-control"
-                           placeholder="Enter ID number" />
+                           placeholder="Enter 13-digit ID number"
+                           maxlength="13"
+                           inputmode="numeric"
+                           autocomplete="off" />
+
                     <span asp-validation-for="IDNumber"
-                          class="text-danger small"></span>
+                          class="text-danger small">
+                    </span>
+
                 </div>
 
             </div>
 
+
+            <!-- ========================= -->
+            <!-- CONTACT DETAILS -->
+            <!-- ========================= -->
+
+            <h5 class="text-secondary mt-3 mb-3">
+                Contact Details
+            </h5>
+
+            <div class="row">
+
+                <!-- EMAIL -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Email"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control"
+                           placeholder="Enter email address"
+                           autocomplete="email" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- PHONE -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="PhoneNumber"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           placeholder="+27756455676"
+                           autocomplete="tel" />
+
+                    <span asp-validation-for="PhoneNumber"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================= -->
             <!-- TEST SPECIALIZATIONS -->
-            <h5 class="mt-4 mb-3 text-secondary">Test Specializations</h5>
+            <!-- ========================= -->
+
+            <h5 class="mt-4 mb-3 text-secondary">
+                Test Specializations
+            </h5>
 
             <div class="card shadow-sm mb-3">
-                <div class="card-body"
-                     style="max-height: 250px; overflow-y: auto;">
 
-                    <p class="text-muted small">
-                        Select the tests this technician is qualified to perform:
+                <div class="card-body">
+
+                    <p class="text-muted small mb-3">
+                        Select the tests this technician is qualified
+                        to perform.
                     </p>
 
-                    @foreach (var test in Model.TestTypes)
-                    {
-                        <div class="form-check mb-2">
 
-                            <input type="checkbox"
-                                   name="SelectedTestTypeIds"
-                                   value="@test.TestTypeId"
-                                   id="test_@test.TestTypeId"
-                                   class="form-check-input" />
+                    <!-- SEARCH -->
+                    <div class="input-group mb-3">
 
-                            <label class="form-check-label"
-                                   for="test_@test.TestTypeId">
-                                <strong>@test.TestTypeName</strong>
-                            </label>
+                        <span class="input-group-text">
+                            🔍
+                        </span>
 
-                        </div>
-                    }
+                        <input type="text"
+                               id="testTypeSearch"
+                               class="form-control"
+                               placeholder="Search test types..."
+                               autocomplete="off" />
+
+                        <button type="button"
+                                id="clearTestSearch"
+                                class="btn btn-outline-secondary"
+                                style="display: none;">
+                            Clear
+                        </button>
+
+                    </div>
+
+
+                    <!-- SELECTED COUNT -->
+                    <div class="d-flex justify-content-between
+                        align-items-center mb-2">
+
+                        <small class="text-muted">
+                            <span id="selectedTestCount">0</span>
+                            test(s) selected
+                        </small>
+
+                        <small class="text-muted">
+                            <span id="visibleTestCount">
+                                @(Model.TestTypes?.Count ?? 0)
+                            </span>
+                            test(s) shown
+                        </small>
+
+                    </div>
+
+
+                    <!-- TEST LIST -->
+                    <div id="testTypeList"
+                         class="border rounded p-3"
+                         style="max-height: 300px;
+                        overflow-y: auto;">
+
+                        @if (Model.TestTypes != null &&
+                             Model.TestTypes.Any())
+                        {
+                            foreach (var test in Model.TestTypes)
+                            {
+                                <div class="form-check mb-2 test-type-item"
+                                     data-test-name="@test.TestTypeName">
+
+                                    <input type="checkbox"
+                                           name="SelectedTestTypeIds"
+                                           value="@test.TestTypeId"
+                                           id="test_@test.TestTypeId"
+                                           class="form-check-input test-type-checkbox" />
+
+                                    <label class="form-check-label"
+                                           for="test_@test.TestTypeId">
+
+                                        <strong>
+                                            @test.TestTypeName
+                                        </strong>
+
+                                    </label>
+
+                                </div>
+                            }
+
+                            <div id="noTestResults"
+                                 class="text-muted text-center py-4"
+                                 style="display: none;">
+
+                                <div class="mb-2"
+                                     style="font-size: 30px;">
+                                    🔍
+                                </div>
+
+                                <strong>
+                                    No test types found
+                                </strong>
+
+                                <div class="small">
+                                    Try a different search term.
+                                </div>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+
+                                <div class="mb-2"
+                                     style="font-size: 30px;">
+                                    🧪
+                                </div>
+
+                                <strong>
+                                    No test types available
+                                </strong>
+
+                                <div class="small mt-1">
+                                    There are currently no active
+                                    test types.
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
 
                 </div>
+
             </div>
 
+
+            <!-- ========================= -->
             <!-- BUTTONS -->
+            <!-- ========================= -->
+
             <div class="d-flex justify-content-between mt-4">
 
                 <a asp-action="LabTechnician"
                    class="btn btn-outline-secondary">
+
                     ← Back
+
                 </a>
 
                 <button type="submit"
                         class="btn btn-primary px-4">
+
                     + Add Technician
+
                 </button>
 
             </div>
@@ -140,9 +344,217 @@
         </form>
 
     </div>
+    ```
+
 </div>
 
+<!-- ========================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================= -->
 @section Scripts {
+
+    ```
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const searchBox =
+                document.getElementById("testTypeSearch");
+
+            const clearButton =
+                document.getElementById("clearTestSearch");
+
+            const testItems =
+                document.querySelectorAll(".test-type-item");
+
+            const checkboxes =
+                document.querySelectorAll(".test-type-checkbox");
+
+            const noResults =
+                document.getElementById("noTestResults");
+
+            const visibleCount =
+                document.getElementById("visibleTestCount");
+
+            const selectedCount =
+                document.getElementById("selectedTestCount");
+
+
+            /*
+             * ============================
+             * SEARCH TEST TYPES
+             * ============================
+             */
+
+            function filterTestTypes() {
+
+                const searchTerm =
+                    searchBox.value
+                        .toLowerCase()
+                        .trim();
+
+                let numberVisible = 0;
+
+
+                testItems.forEach(function (item) {
+
+                    const testName =
+                        item
+                            .getAttribute("data-test-name")
+                            .toLowerCase();
+
+
+                    if (testName.includes(searchTerm)) {
+
+                        item.style.display = "";
+
+                        numberVisible++;
+
+                    }
+                    else {
+
+                        item.style.display = "none";
+
+                    }
+
+                });
+
+
+                /*
+                 * Update visible count
+                 */
+
+                visibleCount.textContent =
+                    numberVisible;
+
+
+                /*
+                 * Show/hide no results message
+                 */
+
+                if (numberVisible === 0 &&
+                    searchTerm.length > 0) {
+
+                    noResults.style.display = "block";
+
+                }
+                else {
+
+                    noResults.style.display = "none";
+
+                }
+
+
+                /*
+                 * Show/hide clear button
+                 */
+
+                if (searchTerm.length > 0) {
+
+                    clearButton.style.display = "block";
+
+                }
+                else {
+
+                    clearButton.style.display = "none";
+
+                }
+
+            }
+
+
+            /*
+             * ============================
+             * SEARCH EVENT
+             * ============================
+             */
+
+            if (searchBox) {
+
+                searchBox.addEventListener(
+                    "input",
+                    filterTestTypes
+                );
+
+            }
+
+
+            /*
+             * ============================
+             * CLEAR SEARCH
+             * ============================
+             */
+
+            if (clearButton) {
+
+                clearButton.addEventListener(
+                    "click",
+                    function () {
+
+                        searchBox.value = "";
+
+                        filterTestTypes();
+
+                        searchBox.focus();
+
+                    }
+                );
+
+            }
+
+
+            /*
+             * ============================
+             * COUNT SELECTED TESTS
+             * ============================
+             */
+
+            function updateSelectedCount() {
+
+                let count = 0;
+
+                checkboxes.forEach(function (checkbox) {
+
+                    if (checkbox.checked) {
+                        count++;
+                    }
+
+                });
+
+                selectedCount.textContent = count;
+
+            }
+
+
+            /*
+             * ============================
+             * CHECKBOX EVENTS
+             * ============================
+             */
+
+            checkboxes.forEach(function (checkbox) {
+
+                checkbox.addEventListener(
+                    "change",
+                    updateSelectedCount
+                );
+
+            });
+
+
+            /*
+             * ============================
+             * INITIAL COUNT
+             * ============================
+             */
+
+            updateSelectedCount();
+
+        });
+
+    </script>
+    ```
+
 }
-```

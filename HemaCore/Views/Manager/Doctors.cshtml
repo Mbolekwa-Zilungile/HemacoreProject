@@ -67,7 +67,7 @@
                         @foreach (var doctor in Model)
                         {
                             <tr>
-                                <td>Dr @doctor.Surname @doctor.Name</td>
+                                <td>Dr @doctor.Surname.ToUpper() @doctor.Name.ToUpper()</td>
                                 <td>
                                     <a href="mailto:@doctor.User.Email">@doctor.User.Email</a>
                                 </td>

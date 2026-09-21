@@ -11,6 +11,9 @@ namespace HemaCore.ViewModels.ManagerVM
 
 
         [Required(ErrorMessage = "Phone number is required.")]
+        [RegularExpression(
+            @"^\+27\d{9}$",
+            ErrorMessage = "Phone number must be in the format +27756455676")]
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; } = string.Empty;
 
@@ -20,11 +23,12 @@ namespace HemaCore.ViewModels.ManagerVM
         // ==========================
 
         [Required(ErrorMessage = "First name is required.")]
-        [Display(Name = "First Name")]
+        [StringLength(50, ErrorMessage = "Name can't be longer than 50 characters")]
         public string Name { get; set; } = string.Empty;
 
 
         [Required(ErrorMessage = "Surname is required.")]
+        [StringLength(50, ErrorMessage = "Surname can't be longer than 50 characters")]
         public string Surname { get; set; } = string.Empty;
 
 

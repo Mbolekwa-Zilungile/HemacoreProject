@@ -72,7 +72,7 @@
                         @foreach (var technician in Model)
                         {
                             <tr>
-                                <td>@technician.Surname @technician.Name</td>
+                                <td>@technician.Surname.ToUpper() @technician.Name.ToUpper()</td>
                                 <td>@technician.IDNumber</td>
                                 <td>@technician.EmployeeNumber</td>
 
@@ -92,7 +92,7 @@
                                             @foreach (var assignment in technician.TechnicianTests)
                                             {
                                                 <li>
-                                                    @assignment.TestType.TestTypeName
+                                                    @assignment.TestType.TestTypeName.ToUpper()
                                                 </li>
                                             }
                                         </ul>

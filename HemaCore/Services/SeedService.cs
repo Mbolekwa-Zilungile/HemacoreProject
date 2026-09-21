@@ -165,8 +165,8 @@ namespace HemaCore.Services
                         {
                             Name = "Lihle",
                             Surname = "Dlilanga",
-                            HPCSANumber = "HP0000001",
-                            PhoneNumber = "+27000000000",
+                            HPCSANumber = "MP0123456",
+                            PhoneNumber = "+27674578698",
                             UserId = doctorUser.Id,
                             IsActive = true
                         });

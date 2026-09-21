@@ -29,71 +29,6 @@
             @Html.AntiForgeryToken()
 
 
-            <!-- Validation -->
-
-            <div asp-validation-summary="ModelOnly"
-                 class="text-danger mb-3">
-            </div>
-
-
-            <!-- ================================= -->
-            <!-- ACCOUNT INFORMATION -->
-            <!-- ================================= -->
-
-            <h5 class="mb-3 text-secondary">
-                Account Information
-            </h5>
-
-            <div class="row">
-
-                <!-- EMAIL -->
-
-                <div class="col-md-6 mb-3">
-
-                    <label asp-for="Email"
-                           class="form-label">
-                    </label>
-
-                    <input asp-for="Email"
-                           class="form-control"
-                           placeholder="Enter email address" />
-
-                    <span asp-validation-for="Email"
-                          class="text-danger small">
-                    </span>
-
-                </div>
-
-
-                <!-- PHONE -->
-
-                <div class="col-md-6 mb-3">
-
-                    <label asp-for="PhoneNumber"
-                           class="form-label">
-                    </label>
-
-                    <input asp-for="PhoneNumber"
-                           class="form-control"
-                           placeholder="Enter phone number" />
-
-                    <span asp-validation-for="PhoneNumber"
-                          class="text-danger small">
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- ================================= -->
-            <!-- PERSONAL INFORMATION -->
-            <!-- ================================= -->
-
-            <h5 class="mt-4 mb-3 text-secondary">
-                Personal Information
-            </h5>
-
             <div class="row">
 
                 <!-- NAME -->
@@ -135,14 +70,45 @@
 
             </div>
 
+            <div class="row">
 
-            <!-- ================================= -->
-            <!-- PROFESSIONAL INFORMATION -->
-            <!-- ================================= -->
 
-            <h5 class="mt-4 mb-3 text-secondary">
-                Professional Information
-            </h5>
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Email"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Email"
+                           class="form-control"
+                           placeholder="Enter email address" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="PhoneNumber"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           placeholder="Enter phone number" />
+
+                    <span asp-validation-for="PhoneNumber"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
 
             <div class="row">
 
@@ -162,35 +128,11 @@
                           class="text-danger small">
                     </span>
 
-                    <small class="text-muted">
-                        HPCSA number must be entered by the manager.
-                    </small>
-
+                  
                 </div>
 
             </div>
 
-
-            <!-- ================================= -->
-            <!-- PASSWORD INFORMATION -->
-            <!-- ================================= -->
-
-            <div class="alert alert-info mt-3">
-
-                <strong>Note:</strong>
-
-                A temporary password will be generated automatically
-                for the doctor's account.
-
-                The doctor will use their email address and temporary
-                password to log in.
-
-            </div>
-
-
-            <!-- ================================= -->
-            <!-- BUTTONS -->
-            <!-- ================================= -->
 
             <div class="d-flex justify-content-between mt-4">
 
