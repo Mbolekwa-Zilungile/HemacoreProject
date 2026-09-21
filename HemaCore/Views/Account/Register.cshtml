@@ -22,6 +22,50 @@
             overflow-y: auto;
             padding: 20px;
         }
+            /* Gender select - match existing input UI */
+            .input-wrapper select {
+                width: 100%;
+                height: 100%;
+                border: none;
+                outline: none;
+                background: transparent;
+                padding: 0 45px 0 45px;
+                font-family: 'Poppins', sans-serif;
+                font-size: 14px;
+                color: #333;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                cursor: pointer;
+            }
+
+            .input-wrapper {
+                position: relative;
+            }
+
+                .input-wrapper select:focus {
+                    outline: none;
+                }
+
+                .input-wrapper select:invalid {
+                    color: #999;
+                }
+
+                .input-wrapper select option {
+                    color: #333;
+                    background: #fff;
+                }
+
+            .gender-arrow {
+                position: absolute;
+                right: 18px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #999;
+                pointer-events: none;
+                font-size: 13px;
+            }
+
     </style>
 </head>
 <body>
@@ -59,6 +103,18 @@
                         <div class="input-wrapper">
                             <i class="fas fa-user input-icon"></i>
                             <input asp-for="Surname" placeholder="Enter your surname" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-venus-mars"></i> Gender</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-venus-mars input-icon"></i>
+                            <select asp-for="Gender">
+                                <option value="">Select your gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                     </div>
 

@@ -115,6 +115,7 @@ namespace HemaCore.Controllers
                 DateOfBirth = model.DateOfBirth,
                 PhoneNumber = model.PhoneNumber,
                 Address = model.Address,
+                Gender = model.Gender,
                 UserId = user.Id
             };
 
