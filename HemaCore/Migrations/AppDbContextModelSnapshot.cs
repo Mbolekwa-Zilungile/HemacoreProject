@@ -509,6 +509,10 @@ namespace HemaCore.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("IDNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

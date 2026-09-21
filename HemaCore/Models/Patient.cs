@@ -15,7 +15,10 @@ namespace HemaCore.Models
         public string Surname { get; set; }
 
         [Required]
-        public string IDNumber { get; set; }
+        public  string Gender{get; set; }
+
+        [Required]
+        public  string IDNumber { get; set; }
 
         [Required]
         [RegularExpression(@"^\+27\d{9}$", ErrorMessage = "Phone must be +27XXXXXXXXX")]

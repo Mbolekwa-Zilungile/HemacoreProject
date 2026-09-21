@@ -25,6 +25,9 @@ namespace HemaCore.ViewModels
         [StringLength(50)]
         public string Surname { get; set; }
 
+        [Required(ErrorMessage = "Please select your gender")]
+        public string Gender { get; set; }
+
         [Required]
         [StringLength(13, MinimumLength = 13)]
         public string IDNumber { get; set; }
