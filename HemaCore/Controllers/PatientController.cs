@@ -366,7 +366,31 @@ namespace HemaCore.Controllers
             TempData["Success"] = "Password changed successfully. Please log in again.";
             return RedirectToAction("Login", "Account");
         }
+        #region Test Request 
+        // ---------------------------------------------------------------------
+        // My Test Requests
+        // ---------------------------------------------------------------------
+        [HttpGet]
+        public async Task<IActionResult> MyTestRequests()
+        {
+            var patient = await GetCurrentPatientAsync();
 
+            if (patient == null)
+                return RedirectToAction(nameof(CompleteProfile));
+
+            var requests = await _context.TestRequests
+                .Include(r => r.Doctor)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestType)
+                .Include(r => r.Samples)
+                    .ThenInclude(s => s.SampleType)
+                .Where(r => r.PatientID == patient.PatientID)
+                .OrderByDescending(r => r.RequestDate)
+                .ToListAsync();
+
+            return View(requests);
+        }
+        #endregion
         // ---------------------------------------------------------------------
         // Stub pages
         // ---------------------------------------------------------------------

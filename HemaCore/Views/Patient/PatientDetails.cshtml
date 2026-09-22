@@ -1,299 +1,383 @@
 ﻿@model HemaCore.Models.Patient
+
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewBag.Title = "My Details";
 
-    var conditions  = ViewBag.Conditions  as List<HemaCore.Models.PatientCondition>  ?? new();
-    var allergies   = ViewBag.Allergies   as List<HemaCore.Models.PatientAllergy>    ?? new();
-    var medications = ViewBag.Medications as List<HemaCore.Models.PatientMedication> ?? new();
+    var conditions =
+        ViewBag.Conditions as List<HemaCore.Models.PatientCondition>
+        ?? new();
+
+    var allergies =
+        ViewBag.Allergies as List<HemaCore.Models.PatientAllergy>
+        ?? new();
+
+    var medications =
+        ViewBag.Medications as List<HemaCore.Models.PatientMedication>
+        ?? new();
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>My Details | HemaCore</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --color-background-primary: #ffffff;
-            --color-background-secondary: #f8f9fc;
-            --color-border-tertiary: #e2e6ed;
-            --color-text-primary: #1a2634;
-            --color-text-secondary: #5b6c7f;
-            --color-text-tertiary: #8a99aa;
-            --color-primary-dark: #0C447C;
-            --color-primary-light: #E6F1FB;
-            --color-info-bg: #E6F1FB;
-            --color-info: #378ADD;
-            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.04);
-        }
+<div class="container-fluid p-4">
 
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            background: #eef2f7;
-            padding: 20px 16px;
-            min-height: 100vh;
-        }
+    <div class="content-card">
 
-        .details-container { max-width: 1000px; margin: 0 auto; }
+        <!-- HEADER -->
+        <div class="section-title d-flex align-items-center mb-2">
 
-        .chrome {
-            background: var(--color-background-primary);
-            border-radius: 16px;
-            border: 0.5px solid var(--color-border-tertiary);
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
+            <i class="fas fa-id-card me-2"></i>
 
-        .profile-header {
-            background: linear-gradient(135deg, var(--color-primary-dark) 0%, #0a3a6a 100%);
-            padding: 32px 32px 28px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
+            <span>My Details</span>
 
-        .profile-header h2 {
-            font-size: 28px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .profile-header p { font-size: 14px; opacity: 0.85; margin-top: 6px; }
-
-        .header-actions a {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            text-decoration: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .header-actions a:hover { background: rgba(255,255,255,0.28); }
-
-        .page-body { padding: 32px; }
-
-        .section {
-            margin-bottom: 32px;
-            border-bottom: 1px solid var(--color-border-tertiary);
-            padding-bottom: 24px;
-        }
-
-        .section:last-of-type { border-bottom: none; }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--color-text-primary);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--color-primary-light);
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px 32px;
-        }
-
-        .info-item { display: flex; flex-direction: column; gap: 4px; }
-
-        .info-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--color-text-tertiary);
-            font-weight: 600;
-        }
-
-        .info-value {
-            font-size: 15px;
-            color: var(--color-text-primary);
-            font-weight: 500;
-        }
-
-        .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-
-        .chip {
-            display: inline-block;
-            background: var(--color-info-bg);
-            color: var(--color-primary-dark);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .chip-allergy { background: #FCEBEB; color: #A32D2D; }
-        .chip-medication { background: #EAF3DE; color: #27500A; }
-
-        .empty-state {
-            color: var(--color-text-tertiary);
-            font-size: 13px;
-            font-style: italic;
-        }
-
-        .alert-info {
-            background: var(--color-primary-light);
-            border-left: 4px solid var(--color-primary-dark);
-            padding: 14px 20px;
-            border-radius: 12px;
-            color: var(--color-text-secondary);
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-
-        @@media (max-width: 768px) {
-            .page-body { padding: 20px; }
-            .info-grid { grid-template-columns: 1fr; }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <div class="details-container">
-        <div class="chrome">
-            <div class="profile-header">
-                <div>
-                    <h2><i class="fas fa-id-card"></i> My Details</h2>
-                    <p>Your personal information and medical history on record.</p>
-                </div>
-                <div class="header-actions">
-                    <a asp-action="EditProfile">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                </div>
-            </div>
-
-            <div class="page-body">
-                @if (string.IsNullOrWhiteSpace(Model.Name) || string.IsNullOrWhiteSpace(Model.Surname))
-                {
-                    <div class="alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        Your profile is incomplete.
-                        <a asp-action="CompleteProfile" style="color: var(--color-primary-dark); font-weight: 600;">Complete it now →</a>
-                    </div>
-                }
-
-                <!-- Personal Info -->
-                <div class="section">
-                    <div class="section-title">
-                        <i class="fas fa-user-circle"></i> Personal Information
-                    </div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">First Name</span>
-                            <span class="info-value">@(string.IsNullOrWhiteSpace(Model.Name) ? "—" : Model.Name)</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Last Name</span>
-                            <span class="info-value">@(string.IsNullOrWhiteSpace(Model.Surname) ? "—" : Model.Surname)</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">ID Number</span>
-                            <span class="info-value">@(string.IsNullOrWhiteSpace(Model.IDNumber) ? "—" : Model.IDNumber)</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Gender</span>
-                            <span class="info-value">@(string.IsNullOrWhiteSpace(Model.Gender) ? "—" : Model.Gender)</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Date of Birth</span>
-                            <span class="info-value">@(Model.DateOfBirth == default ? "—" : Model.DateOfBirth.ToString("yyyy-MM-dd"))</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Phone Number</span>
-                            <span class="info-value">@Model.PhoneNumber</span>
-                        </div>
-                        <div class="info-item" style="grid-column: span 2;">
-                            <span class="info-label">Address</span>
-                            <span class="info-value">@(string.IsNullOrWhiteSpace(Model.Address) ? "—" : Model.Address)</span>
-                        </div>
-                        <div class="info-item" style="grid-column: span 2;">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">@(Model.User?.Email ?? "—")</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Conditions -->
-                <div class="section">
-                    <div class="section-title">
-                        <i class="fas fa-notes-medical"></i> Medical Conditions (@conditions.Count)
-                    </div>
-                    @if (conditions.Any())
-                    {
-                        <div class="chip-list">
-                            @foreach (var pc in conditions)
-                            {
-                                <span class="chip">@pc.Condition?.Name</span>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">No conditions recorded.</div>
-                    }
-                </div>
-
-                <!-- Allergies -->
-                <div class="section">
-                    <div class="section-title">
-                        <i class="fas fa-allergies"></i> Allergies (@allergies.Count)
-                    </div>
-                    @if (allergies.Any())
-                    {
-                        <div class="chip-list">
-                            @foreach (var pa in allergies)
-                            {
-                                <span class="chip chip-allergy">@pa.Allergy?.Name</span>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">No allergies recorded.</div>
-                    }
-                </div>
-
-                <!-- Medications -->
-                <div class="section">
-                    <div class="section-title">
-                        <i class="fas fa-pills"></i> Current Medications (@medications.Count)
-                    </div>
-                    @if (medications.Any())
-                    {
-                        <div class="chip-list">
-                            @foreach (var pm in medications)
-                            {
-                                <span class="chip chip-medication">@pm.Medication?.Name</span>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">No medications recorded.</div>
-                    }
-                </div>
-            </div>
         </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <p class="text-muted mb-0">
+                Your personal information and medical history on record.
+            </p>
+
+            <a asp-action="EditProfile"
+               class="btn btn-primary-custom">
+
+                <i class="fas fa-edit me-2"></i>
+
+                Edit Profile
+
+            </a>
+
+        </div>
+
+
+        <!-- INCOMPLETE PROFILE -->
+        @if (string.IsNullOrWhiteSpace(Model.Name)
+            || string.IsNullOrWhiteSpace(Model.Surname))
+        {
+            <div class="alert alert-info">
+
+                <i class="fas fa-info-circle me-2"></i>
+
+                Your profile is incomplete.
+
+                <a asp-action="CompleteProfile"
+                   class="fw-semibold">
+
+                    Complete it now →
+
+                </a>
+
+            </div>
+        }
+
+
+        <!-- PERSONAL INFORMATION -->
+        <div class="mb-5">
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="fas fa-user-circle me-2"></i>
+
+                Personal Information
+
+            </h5>
+
+            <hr />
+
+
+            <div class="row g-4">
+
+                <!-- FIRST NAME -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        First Name
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.Name)
+                            ? "—"
+                            : Model.Name)
+
+                    </div>
+
+                </div>
+
+
+                <!-- LAST NAME -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Last Name
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.Surname)
+                            ? "—"
+                            : Model.Surname)
+
+                    </div>
+
+                </div>
+
+
+                <!-- ID -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        ID Number
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.IDNumber)
+                            ? "—"
+                            : Model.IDNumber)
+
+                    </div>
+
+                </div>
+
+
+                <!-- GENDER -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Gender
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.Gender)
+                            ? "—"
+                            : Model.Gender)
+
+                    </div>
+
+                </div>
+
+
+                <!-- DOB -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Date of Birth
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(Model.DateOfBirth == default
+                            ? "—"
+                            : Model.DateOfBirth.ToString("yyyy-MM-dd"))
+
+                    </div>
+
+                </div>
+
+
+                <!-- PHONE -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Phone Number
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                            ? "—"
+                            : Model.PhoneNumber)
+
+                    </div>
+
+                </div>
+
+
+                <!-- ADDRESS -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Address
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(string.IsNullOrWhiteSpace(Model.Address)
+                            ? "—"
+                            : Model.Address)
+
+                    </div>
+
+                </div>
+
+
+                <!-- EMAIL -->
+                <div class="col-md-6">
+
+                    <small class="text-muted text-uppercase fw-semibold">
+                        Email
+                    </small>
+
+                    <div class="mt-1 fw-semibold">
+
+                        @(Model.User?.Email ?? "—")
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONDITIONS -->
+        <div class="mb-5">
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="fas fa-notes-medical me-2"></i>
+
+                Medical Conditions
+
+                <span class="badge bg-primary ms-2">
+                    @conditions.Count
+                </span>
+
+            </h5>
+
+            <hr />
+
+
+            @if (conditions.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+
+                    @foreach (var pc in conditions)
+                    {
+                        <span class="badge bg-primary p-2">
+
+                            <i class="fas fa-notes-medical me-1"></i>
+
+                            @pc.Condition?.Name
+
+                        </span>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <div class="text-muted">
+
+                    <i class="fas fa-info-circle me-2"></i>
+
+                    No conditions recorded.
+
+                </div>
+            }
+
+        </div>
+
+
+        <!-- ALLERGIES -->
+        <div class="mb-5">
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="fas fa-allergies me-2"></i>
+
+                Allergies
+
+                <span class="badge bg-danger ms-2">
+                    @allergies.Count
+                </span>
+
+            </h5>
+
+            <hr />
+
+
+            @if (allergies.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+
+                    @foreach (var pa in allergies)
+                    {
+                        <span class="badge bg-danger p-2">
+
+                            <i class="fas fa-allergies me-1"></i>
+
+                            @pa.Allergy?.Name
+
+                        </span>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <div class="text-muted">
+
+                    <i class="fas fa-info-circle me-2"></i>
+
+                    No allergies recorded.
+
+                </div>
+            }
+
+        </div>
+
+
+        <!-- MEDICATIONS -->
+        <div class="mb-4">
+
+            <h5 class="fw-bold mb-3">
+
+                <i class="fas fa-pills me-2"></i>
+
+                Current Medications
+
+                <span class="badge bg-success ms-2">
+                    @medications.Count
+                </span>
+
+            </h5>
+
+            <hr />
+
+
+            @if (medications.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+
+                    @foreach (var pm in medications)
+                    {
+                        <span class="badge bg-success p-2">
+
+                            <i class="fas fa-pills me-1"></i>
+
+                            @pm.Medication?.Name
+
+                        </span>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <div class="text-muted">
+
+                    <i class="fas fa-info-circle me-2"></i>
+
+                    No medications recorded.
+
+                </div>
+            }
+
+        </div>
+
     </div>
-</body>
-</html>
+
+</div>

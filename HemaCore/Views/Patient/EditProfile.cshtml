@@ -1,522 +1,703 @@
 ﻿@model HemaCore.ViewModels.Patient.EditPatientProfileViewModel
+
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewBag.Title = "Edit Profile";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Edit Profile | HemaCore</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<div class="container-fluid p-4">
 
-        :root {
-            --color-background-primary: #ffffff;
-            --color-background-secondary: #f8f9fc;
-            --color-border-tertiary: #e2e6ed;
-            --color-border-secondary: #cdd3df;
-            --color-text-primary: #1a2634;
-            --color-text-secondary: #5b6c7f;
-            --color-text-tertiary: #8a99aa;
-            --color-primary-dark: #0C447C;
-            --color-primary-light: #E6F1FB;
-            --color-success: #1D9E75;
-            --color-danger: #A32D2D;
-            --color-danger-bg: #FCEBEB;
-            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.04);
-        }
+    <div class="content-card">
 
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            background: #eef2f7;
-            padding: 20px 16px;
-            min-height: 100vh;
-        }
+        <!-- HEADER -->
+        <div class="section-title d-flex align-items-center mb-2">
 
-        .profile-container { max-width: 1200px; margin: 0 auto; }
+            <i class="fas fa-user-edit me-2"></i>
 
-        .chrome {
-            background: var(--color-background-primary);
-            border-radius: 16px;
-            border: 0.5px solid var(--color-border-tertiary);
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
+            <span>Edit Your Profile</span>
 
-        .profile-header {
-            background: linear-gradient(135deg, var(--color-primary-dark) 0%, #0a3a6a 100%);
-            padding: 32px 32px 28px;
-            color: white;
-        }
-
-        .profile-header h2 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .profile-header p { font-size: 14px; opacity: 0.85; }
-
-        .page-body { padding: 32px; }
-
-        .form-section {
-            margin-bottom: 32px;
-            border-bottom: 1px solid var(--color-border-tertiary);
-            padding-bottom: 24px;
-        }
-
-        .form-section:last-of-type { border-bottom: none; }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--color-text-primary);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--color-primary-light);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .form-group { margin-bottom: 0; }
-        .form-group-full { grid-column: span 2; }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .form-label.required::after { content: " *"; color: var(--color-danger); }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 0.5px solid var(--color-border-secondary);
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: inherit;
-            outline: none;
-            background: var(--color-background-primary);
-        }
-
-        .form-input:focus, .form-select:focus {
-            border-color: var(--color-primary-dark);
-            box-shadow: 0 0 0 3px rgba(12, 68, 124, 0.1);
-        }
-
-        .selection-row { display: flex; gap: 24px; flex-wrap: wrap; }
-        .selection-column { flex: 2; min-width: 250px; }
-
-        .selected-column {
-            flex: 1;
-            min-width: 200px;
-            background: var(--color-background-secondary);
-            border-radius: 16px;
-            padding: 16px;
-            border: 0.5px solid var(--color-border-tertiary);
-        }
-
-        .selected-column h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--color-border-tertiary);
-        }
-
-        .selected-items-list { min-height: 100px; max-height: 200px; overflow-y: auto; }
-
-        .selected-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--color-primary-dark);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin: 4px;
-        }
-
-        .selected-badge button {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .empty-selection {
-            color: var(--color-text-tertiary);
-            font-size: 13px;
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-        }
-
-        .multi-select-container {
-            border: 0.5px solid var(--color-border-secondary);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .search-box {
-            padding: 10px;
-            border-bottom: 0.5px solid var(--color-border-tertiary);
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 0.5px solid var(--color-border-secondary);
-            border-radius: 10px;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .options-list { max-height: 250px; overflow-y: auto; }
-
-        .option-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-        }
-
-        .option-item:hover { background: var(--color-primary-light); }
-
-        .option-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--color-primary-dark);
-        }
-
-        .option-item label {
-            font-size: 14px;
-            font-weight: 500;
-            flex: 1;
-            cursor: pointer;
-        }
-
-        .form-actions {
-            margin-top: 32px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 16px;
-        }
-
-        .btn-primary {
-            background: var(--color-primary-dark);
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-primary:hover { background: #0a3a6a; }
-
-        .btn-secondary {
-            background: transparent;
-            border: 0.5px solid var(--color-border-secondary);
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 14px;
-            color: var(--color-text-secondary);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .text-danger { color: var(--color-danger); font-size: 12px; margin-top: 5px; display: block; }
-
-        .validation-summary-errors {
-            background: var(--color-danger-bg);
-            border: 1px solid var(--color-danger);
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 24px;
-            color: var(--color-danger);
-            font-size: 13px;
-        }
-
-        .alert-success {
-            background: #EAF3DE;
-            border-left: 4px solid var(--color-success);
-            color: #27500A;
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-
-        @@media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group-full { grid-column: span 1; }
-            .selection-row { flex-direction: column; }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <div class="profile-container">
-        <div class="chrome">
-            <div class="profile-header">
-                <h2><i class="fas fa-user-edit"></i> Edit Your Profile</h2>
-                <p>Update your personal information and medical history.</p>
-            </div>
-
-            <div class="page-body">
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert-success">
-                        <i class="fas fa-check-circle"></i> @TempData["Success"]
-                    </div>
-                }
-
-                <form asp-action="EditProfile" method="post">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="All" class="validation-summary-errors"></div>
-
-                    <!-- Account -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-user-lock"></i> Account Information
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group form-group-full">
-                                <label asp-for="Email" class="form-label required">Email Address</label>
-                                <input asp-for="Email" type="email" class="form-input" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Personal -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-user-circle"></i> Personal Information
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label asp-for="Name" class="form-label required">First Name</label>
-                                <input asp-for="Name" class="form-input" />
-                                <span asp-validation-for="Name" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Surname" class="form-label required">Last Name</label>
-                                <input asp-for="Surname" class="form-input" />
-                                <span asp-validation-for="Surname" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="IDNumber" class="form-label required">ID Number</label>
-                                <input asp-for="IDNumber" class="form-input" />
-                                <span asp-validation-for="IDNumber" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="PhoneNumber" class="form-label required">Phone Number</label>
-                                <input asp-for="PhoneNumber" class="form-input" placeholder="+27XXXXXXXXX" />
-                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
-                                <input asp-for="DateOfBirth" type="date" class="form-input" />
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Gender" class="form-label required">Gender</label>
-                                <select asp-for="Gender" class="form-select">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                    <option value="Prefer not to say">Prefer not to say</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-group-full">
-                                <label asp-for="Address" class="form-label">Address</label>
-                                <input asp-for="Address" class="form-input" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Conditions -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-notes-medical"></i> Medical Conditions
-                        </div>
-                        <div class="selection-row">
-                            <div class="selection-column">
-                                <div class="multi-select-container">
-                                    <div class="search-box">
-                                        <input type="text" id="conditionSearch" placeholder="Search conditions..." onkeyup="filterOptions('condition')">
-                                    </div>
-                                    <div class="options-list" id="conditionsList">
-                                        @foreach (var c in Model.AvailableConditions)
-                                        {
-                                            var isChecked = Model.SelectedConditionIds.Contains(c.Id);
-                                            <div class="option-item" data-name="@c.Name.ToLower()">
-                                                <input type="checkbox" name="SelectedConditionIds" value="@c.Id" id="cond_@c.Id" @(isChecked ? "checked" : "") />
-                                                <label for="cond_@c.Id">@c.Name</label>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="selected-column">
-                                <h4><i class="fas fa-check-circle"></i> Selected</h4>
-                                <div class="selected-items-list" id="selectedConditionsList">
-                                    <div class="empty-selection">None selected</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Allergies -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-allergies"></i> Allergies
-                        </div>
-                        <div class="selection-row">
-                            <div class="selection-column">
-                                <div class="multi-select-container">
-                                    <div class="search-box">
-                                        <input type="text" id="allergySearch" placeholder="Search allergies..." onkeyup="filterOptions('allergy')">
-                                    </div>
-                                    <div class="options-list" id="allergiesList">
-                                        @foreach (var a in Model.AvailableAllergies)
-                                        {
-                                            var isChecked = Model.SelectedAllergyIds.Contains(a.Id);
-                                            <div class="option-item" data-name="@a.Name.ToLower()">
-                                                <input type="checkbox" name="SelectedAllergyIds" value="@a.Id" id="all_@a.Id" @(isChecked ? "checked" : "") />
-                                                <label for="all_@a.Id">@a.Name</label>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="selected-column">
-                                <h4><i class="fas fa-check-circle"></i> Selected</h4>
-                                <div class="selected-items-list" id="selectedAllergiesList">
-                                    <div class="empty-selection">None selected</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medications -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <i class="fas fa-pills"></i> Medications
-                        </div>
-                        <div class="selection-row">
-                            <div class="selection-column">
-                                <div class="multi-select-container">
-                                    <div class="search-box">
-                                        <input type="text" id="medicationSearch" placeholder="Search medications..." onkeyup="filterOptions('medication')">
-                                    </div>
-                                    <div class="options-list" id="medicationsList">
-                                        @foreach (var m in Model.AvailableMedications)
-                                        {
-                                            var isChecked = Model.SelectedMedicationIds.Contains(m.Id);
-                                            <div class="option-item" data-name="@m.Name.ToLower()">
-                                                <input type="checkbox" name="SelectedMedicationIds" value="@m.Id" id="med_@m.Id" @(isChecked ? "checked" : "") />
-                                                <label for="med_@m.Id">@m.Name</label>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="selected-column">
-                                <h4><i class="fas fa-check-circle"></i> Selected</h4>
-                                <div class="selected-items-list" id="selectedMedicationsList">
-                                    <div class="empty-selection">None selected</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <a asp-controller="Patient" asp-action="Dashboard" class="btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-save"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
         </div>
+
+        <p class="text-muted mb-4">
+            Update your personal information and medical history.
+        </p>
+
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+
+                <i class="fas fa-check-circle me-2"></i>
+
+                @TempData["Success"]
+
+            </div>
+        }
+
+
+        <form asp-action="EditProfile"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All"
+                 class="alert alert-danger">
+            </div>
+
+
+            <!-- ACCOUNT -->
+            <div class="mb-5">
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="fas fa-user-lock me-2"></i>
+
+                    Account Information
+
+                </h5>
+
+                <hr />
+
+                <div class="row">
+
+                    <div class="col-md-12">
+
+                        <label asp-for="Email"
+                               class="form-label fw-semibold">
+
+                            Email Address *
+
+                        </label>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PERSONAL -->
+            <div class="mb-5">
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="fas fa-user-circle me-2"></i>
+
+                    Personal Information
+
+                </h5>
+
+                <hr />
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+
+                        <label asp-for="Name"
+                               class="form-label fw-semibold">
+
+                            First Name *
+
+                        </label>
+
+                        <input asp-for="Name"
+                               class="form-control" />
+
+                        <span asp-validation-for="Name"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label asp-for="Surname"
+                               class="form-label fw-semibold">
+
+                            Last Name *
+
+                        </label>
+
+                        <input asp-for="Surname"
+                               class="form-control" />
+
+                        <span asp-validation-for="Surname"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label asp-for="IDNumber"
+                               class="form-label fw-semibold">
+
+                            ID Number *
+
+                        </label>
+
+                        <input asp-for="IDNumber"
+                               class="form-control" />
+
+                        <span asp-validation-for="IDNumber"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label asp-for="PhoneNumber"
+                               class="form-label fw-semibold">
+
+                            Phone Number *
+
+                        </label>
+
+                        <input asp-for="PhoneNumber"
+                               class="form-control"
+                               placeholder="+27XXXXXXXXX" />
+
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label asp-for="DateOfBirth"
+                               class="form-label fw-semibold">
+
+                            Date of Birth
+
+                        </label>
+
+                        <input asp-for="DateOfBirth"
+                               type="date"
+                               class="form-control" />
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label asp-for="Gender"
+                               class="form-label fw-semibold">
+
+                            Gender *
+
+                        </label>
+
+                        <select asp-for="Gender"
+                                class="form-select">
+
+                            <option value="">
+                                Select Gender
+                            </option>
+
+                            <option value="Male">
+                                Male
+                            </option>
+
+                            <option value="Female">
+                                Female
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                            <option value="Prefer not to say">
+                                Prefer not to say
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="col-md-12">
+
+                        <label asp-for="Address"
+                               class="form-label fw-semibold">
+
+                            Address
+
+                        </label>
+
+                        <input asp-for="Address"
+                               class="form-control" />
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CONDITIONS -->
+            <div class="mb-5">
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="fas fa-notes-medical me-2"></i>
+
+                    Medical Conditions
+
+                </h5>
+
+                <hr />
+
+                <div class="row g-4">
+
+                    <div class="col-md-7">
+
+                        <div class="border rounded p-3">
+
+                            <input type="text"
+                                   id="conditionSearch"
+                                   class="form-control mb-3"
+                                   placeholder="Search conditions..."
+                                   onkeyup="filterOptions('condition')" />
+
+                            <div id="conditionsList"
+                                 style="max-height:250px; overflow-y:auto;">
+
+                                @foreach (var c in Model.AvailableConditions)
+                                {
+                                    var isChecked =
+                                    Model.SelectedConditionIds.Contains(c.Id);
+
+                                    <div class="option-item d-flex align-items-center gap-2 p-2"
+                                         data-name="@c.Name.ToLower()">
+
+                                        <input type="checkbox"
+                                               name="SelectedConditionIds"
+                                               value="@c.Id"
+                                               id="cond_@c.Id"
+                                               class="form-check-input"
+                                        @(isChecked ? "checked" : "") />
+
+                                        <label for="cond_@c.Id"
+                                               class="form-check-label">
+
+                                            @c.Name
+
+                                        </label>
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-5">
+
+                        <div class="border rounded p-3 h-100">
+
+                            <h6 class="fw-bold">
+
+                                <i class="fas fa-check-circle me-2"></i>
+
+                                Selected Conditions
+
+                            </h6>
+
+                            <hr />
+
+                            <div id="selectedConditionsList"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ALLERGIES -->
+            <div class="mb-5">
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="fas fa-allergies me-2"></i>
+
+                    Allergies
+
+                </h5>
+
+                <hr />
+
+                <div class="row g-4">
+
+                    <div class="col-md-7">
+
+                        <div class="border rounded p-3">
+
+                            <input type="text"
+                                   id="allergySearch"
+                                   class="form-control mb-3"
+                                   placeholder="Search allergies..."
+                                   onkeyup="filterOptions('allergy')" />
+
+                            <div id="allergiesList"
+                                 style="max-height:250px; overflow-y:auto;">
+
+                                @foreach (var a in Model.AvailableAllergies)
+                                {
+                                    var isChecked =
+                                    Model.SelectedAllergyIds.Contains(a.Id);
+
+                                    <div class="option-item d-flex align-items-center gap-2 p-2"
+                                         data-name="@a.Name.ToLower()">
+
+                                        <input type="checkbox"
+                                               name="SelectedAllergyIds"
+                                               value="@a.Id"
+                                               id="all_@a.Id"
+                                               class="form-check-input"
+                                        @(isChecked ? "checked" : "") />
+
+                                        <label for="all_@a.Id"
+                                               class="form-check-label">
+
+                                            @a.Name
+
+                                        </label>
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-5">
+
+                        <div class="border rounded p-3 h-100">
+
+                            <h6 class="fw-bold">
+
+                                <i class="fas fa-check-circle me-2"></i>
+
+                                Selected Allergies
+
+                            </h6>
+
+                            <hr />
+
+                            <div id="selectedAllergiesList"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- MEDICATIONS -->
+            <div class="mb-5">
+
+                <h5 class="fw-bold mb-3">
+
+                    <i class="fas fa-pills me-2"></i>
+
+                    Medications
+
+                </h5>
+
+                <hr />
+
+                <div class="row g-4">
+
+                    <div class="col-md-7">
+
+                        <div class="border rounded p-3">
+
+                            <input type="text"
+                                   id="medicationSearch"
+                                   class="form-control mb-3"
+                                   placeholder="Search medications..."
+                                   onkeyup="filterOptions('medication')" />
+
+                            <div id="medicationsList"
+                                 style="max-height:250px; overflow-y:auto;">
+
+                                @foreach (var m in Model.AvailableMedications)
+                                {
+                                    var isChecked =
+                                    Model.SelectedMedicationIds.Contains(m.Id);
+
+                                    <div class="option-item d-flex align-items-center gap-2 p-2"
+                                         data-name="@m.Name.ToLower()">
+
+                                        <input type="checkbox"
+                                               name="SelectedMedicationIds"
+                                               value="@m.Id"
+                                               id="med_@m.Id"
+                                               class="form-check-input"
+                                        @(isChecked ? "checked" : "") />
+
+                                        <label for="med_@m.Id"
+                                               class="form-check-label">
+
+                                            @m.Name
+
+                                        </label>
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-5">
+
+                        <div class="border rounded p-3 h-100">
+
+                            <h6 class="fw-bold">
+
+                                <i class="fas fa-check-circle me-2"></i>
+
+                                Selected Medications
+
+                            </h6>
+
+                            <hr />
+
+                            <div id="selectedMedicationsList"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+            <div class="d-flex justify-content-end gap-2">
+
+                <a asp-controller="Patient"
+                   asp-action="Dashboard"
+                   class="btn btn-secondary">
+
+                    <i class="fas fa-times me-2"></i>
+
+                    Cancel
+
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary-custom">
+
+                    <i class="fas fa-save me-2"></i>
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
-    <script>
-        function filterOptions(type) {
-            const inputId = type === 'condition' ? 'conditionSearch'
-                          : type === 'allergy'   ? 'allergySearch'
-                                                 : 'medicationSearch';
-            const listId  = type === 'condition' ? 'conditionsList'
-                          : type === 'allergy'   ? 'allergiesList'
-                                                 : 'medicationsList';
-            const term = document.getElementById(inputId).value.toLowerCase();
-            document.querySelectorAll('#' + listId + ' .option-item').forEach(item => {
-                const name = item.getAttribute('data-name') || '';
-                item.style.display = name.includes(term) ? 'flex' : 'none';
-            });
-        }
+</div>
 
-        function initSelectedBadges() {
-            const mappings = [
-                { checkboxes: 'input[name="SelectedConditionIds"]', container: 'selectedConditionsList' },
-                { checkboxes: 'input[name="SelectedAllergyIds"]',   container: 'selectedAllergiesList' },
-                { checkboxes: 'input[name="SelectedMedicationIds"]', container: 'selectedMedicationsList' }
-            ];
-            mappings.forEach(map => {
-                document.querySelectorAll(map.checkboxes).forEach(cb => {
-                    cb.addEventListener('change', () => renderBadges(map));
-                });
-                renderBadges(map);
-            });
-        }
 
-        function renderBadges(map) {
-            const container = document.getElementById(map.container);
-            const checked = Array.from(document.querySelectorAll(map.checkboxes)).filter(cb => cb.checked);
-            if (checked.length === 0) {
-                container.innerHTML = '<div class="empty-selection">None selected</div>';
-                return;
+<script>
+
+    function filterOptions(type) {
+
+        const inputId =
+            type === 'condition'
+                ? 'conditionSearch'
+                : type === 'allergy'
+                    ? 'allergySearch'
+                    : 'medicationSearch';
+
+        const listId =
+            type === 'condition'
+                ? 'conditionsList'
+                : type === 'allergy'
+                    ? 'allergiesList'
+                    : 'medicationsList';
+
+        const term =
+            document.getElementById(inputId).value.toLowerCase();
+
+        document
+            .querySelectorAll('#' + listId + ' .option-item')
+            .forEach(item => {
+
+                const name =
+                    item.getAttribute('data-name') || '';
+
+                item.style.display =
+                    name.includes(term)
+                        ? 'flex'
+                        : 'none';
+
+            });
+
+    }
+
+
+    function initSelectedBadges() {
+
+        const mappings = [
+
+            {
+                checkboxes: 'input[name="SelectedConditionIds"]',
+                container: 'selectedConditionsList',
+                empty: 'No conditions selected'
+            },
+
+            {
+                checkboxes: 'input[name="SelectedAllergyIds"]',
+                container: 'selectedAllergiesList',
+                empty: 'No allergies selected'
+            },
+
+            {
+                checkboxes: 'input[name="SelectedMedicationIds"]',
+                container: 'selectedMedicationsList',
+                empty: 'No medications selected'
             }
-            container.innerHTML = checked.map(cb => {
-                const label = document.querySelector(`label[for="${cb.id}"]`).innerText;
-                return `<span class="selected-badge">${label}
-                            <button type="button" onclick="uncheckById('${cb.id}')">✕</button>
-                        </span>`;
+
+        ];
+
+
+        mappings.forEach(map => {
+
+            document
+                .querySelectorAll(map.checkboxes)
+                .forEach(cb => {
+
+                    cb.addEventListener(
+                        'change',
+                        () => renderBadges(map)
+                    );
+
+                });
+
+            renderBadges(map);
+
+        });
+
+    }
+
+
+    function renderBadges(map) {
+
+        const container =
+            document.getElementById(map.container);
+
+        const checked =
+            Array.from(
+                document.querySelectorAll(map.checkboxes)
+            ).filter(cb => cb.checked);
+
+
+        if (checked.length === 0) {
+
+            container.innerHTML =
+                `<div class="text-muted small">
+                    ${map.empty}
+                </div>`;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            checked.map(cb => {
+
+                const label =
+                    document.querySelector(
+                        `label[for="${cb.id}"]`
+                    ).innerText;
+
+
+                return `
+                    <span class="badge bg-primary me-1 mb-1">
+                        ${label}
+
+                        <button
+                            type="button"
+                            class="btn btn-sm text-white p-0 ms-1"
+                            onclick="uncheckById('${cb.id}')">
+
+                            ×
+
+                        </button>
+
+                    </span>
+                `;
+
             }).join('');
+
+    }
+
+
+    function uncheckById(id) {
+
+        const cb =
+            document.getElementById(id);
+
+        if (cb) {
+
+            cb.checked = false;
+
+            cb.dispatchEvent(
+                new Event('change')
+            );
+
         }
 
-        function uncheckById(id) {
-            const cb = document.getElementById(id);
-            if (cb) { cb.checked = false; cb.dispatchEvent(new Event('change')); }
-        }
+    }
 
-        document.addEventListener('DOMContentLoaded', initSelectedBadges);
-    </script>
-</body>
-</html>
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        initSelectedBadges
+    );
+
+</script>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}
