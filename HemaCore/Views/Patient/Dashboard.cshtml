@@ -1,0 +1,175 @@
+﻿@model HemaCore.Models.Patient
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewBag.Title = "Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | HemaCore</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --color-primary-dark: #0C447C;
+            --color-primary-light: #E6F1FB;
+            --color-border-tertiary: #e2e6ed;
+            --color-text-primary: #1a2634;
+            --color-text-secondary: #5b6c7f;
+            --color-text-tertiary: #8a99aa;
+            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', sans-serif;
+            background: #eef2f7;
+            padding: 20px 16px;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .chrome {
+            background: white;
+            border-radius: 16px;
+            border: 0.5px solid var(--color-border-tertiary);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--color-primary-dark) 0%, #0a3a6a 100%);
+            padding: 36px 32px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header p { font-size: 14px; opacity: 0.85; margin-top: 8px; }
+
+        .body { padding: 32px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #f8f9fc;
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+            border-color: var(--color-primary-dark);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            color: var(--color-primary-dark);
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .alert-info {
+            background: var(--color-primary-light);
+            border-left: 4px solid var(--color-primary-dark);
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        @@media (max-width: 768px) { .body { padding: 20px; } }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chrome">
+            <div class="header">
+                <h1><i class="fas fa-home"></i> Welcome@(Model != null && !string.IsNullOrWhiteSpace(Model.Name) ? ", " + Model.Name : "")</h1>
+                <p>Your personal health portal — manage your profile, tests, and results.</p>
+            </div>
+
+            <div class="body">
+                @if (Model == null || string.IsNullOrWhiteSpace(Model.Name))
+                {
+                    <div class="alert-info">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Your profile is not complete yet.
+                        <a asp-action="CompleteProfile" style="color: var(--color-primary-dark); font-weight: 700;">Complete it now →</a>
+                    </div>
+                }
+
+                <div class="grid">
+                    <a class="card" asp-action="CompleteProfile">
+                        <div class="card-icon"><i class="fas fa-user-plus"></i></div>
+                        <div class="card-title">Complete Profile</div>
+                        <div class="card-desc">Add your personal details, conditions, allergies, and medications.</div>
+                    </a>
+
+                    <a class="card" asp-action="PatientDetails">
+                        <div class="card-icon"><i class="fas fa-id-card"></i></div>
+                        <div class="card-title">My Details</div>
+                        <div class="card-desc">View your saved profile information.</div>
+                    </a>
+
+                    <a class="card" asp-action="EditProfile">
+                        <div class="card-icon"><i class="fas fa-user-edit"></i></div>
+                        <div class="card-title">Edit Profile</div>
+                        <div class="card-desc">Update your information and medical history.</div>
+                    </a>
+
+                    <a class="card" asp-action="ChangePassword">
+                        <div class="card-icon"><i class="fas fa-key"></i></div>
+                        <div class="card-title">Change Password</div>
+                        <div class="card-desc">Keep your account secure.</div>
+                    </a>
+
+                    <a class="card" asp-action="Tests">
+                        <div class="card-icon"><i class="fas fa-vials"></i></div>
+                        <div class="card-title">Tests</div>
+                        <div class="card-desc">View available lab tests.</div>
+                    </a>
+
+                    <a class="card" asp-action="Result">
+                        <div class="card-icon"><i class="fas fa-file-medical"></i></div>
+                        <div class="card-title">Results</div>
+                        <div class="card-desc">Check your test results.</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

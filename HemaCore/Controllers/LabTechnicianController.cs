@@ -359,13 +359,13 @@ namespace HemaCore.Controllers
             // GET PATIENT CONDITIONS
             // ==========================================
 
-            var patientUserId = test.TestRequest.Patient.UserId;
+            var patientId = test.TestRequest.Patient.PatientID;
 
 
-            var conditions = await _context.PatientConditions
-                .Include(x => x.Condition)
-                .Where(x => x.PatientID == patientUserId)
-                .ToListAsync();
+                        var conditions = await _context.PatientConditions
+                            .Include(x => x.Condition)
+                            .Where(x => x.PatientID == patientId)
+                            .ToListAsync();
 
 
             // ==========================================
@@ -374,7 +374,7 @@ namespace HemaCore.Controllers
 
             var allergies = await _context.PatientAllergies
                 .Include(x => x.Allergy)
-                .Where(x => x.PatientID == patientUserId)
+                .Where(x => x.PatientID == patientId)
                 .ToListAsync();
 
 
@@ -384,7 +384,7 @@ namespace HemaCore.Controllers
 
             var medications = await _context.PatientMedications
                 .Include(x => x.Medication)
-                .Where(x => x.PatientID == patientUserId)
+                .Where(x => x.PatientID == patientId)
                 .ToListAsync();
 
 
