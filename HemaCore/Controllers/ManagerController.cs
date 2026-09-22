@@ -27,7 +27,7 @@ namespace HemaCore.Controllers
             return View();
         }
 
-        #region Test Catagories
+        #region Test Categories
         public async Task<IActionResult> TestCategories()
         {
             var categories = await _context.TestCategories
@@ -70,7 +70,9 @@ namespace HemaCore.Controllers
             _context.TestCategories.Add(category);
             category.IsActive = true;
             await _context.SaveChangesAsync();
-            return RedirectToAction("TestCategories");
+
+            TempData["Success"] = $"{category.CategoryName} added successfully.";
+           return RedirectToAction("TestCategories");
         }
         #endregion
 
@@ -187,7 +189,8 @@ namespace HemaCore.Controllers
             // Save first so TestTypeId is generated
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("TestTypes");
+            TempData["Success"] = $"{model.TestTypeName} added successfully.";
+         return RedirectToAction("TestTypes");
         }
 
         #endregion
@@ -201,6 +204,37 @@ namespace HemaCore.Controllers
                 .OrderBy(t => t.SampleName)
                 .ToListAsync();
             return View(sampletype);
+        }
+
+        public IActionResult AddSampleType()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> AddSampleType(SampleType sampletype)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(sampletype);
+            }
+
+            var existingsampletype = await _context.SampleTypes.FirstOrDefaultAsync(x => x.SampleName == sampletype.SampleName);
+
+            if(existingsampletype != null)
+            {
+                ModelState.AddModelError("SampleName", "The sample type already exists");
+                return View(sampletype);
+            }
+
+            _context.SampleTypes.Add(sampletype);
+            sampletype.IsActive = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{sampletype.SampleName} added successfully.";
+            return RedirectToAction("SampleTypes");
         }
         #endregion
 
@@ -216,6 +250,49 @@ namespace HemaCore.Controllers
             return View(consumables);
         }
 
+        public async Task<IActionResult> AddConsumable()
+        {
+            ViewBag.Suppliers = await _context.Suppliers
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.SupplierName).ToListAsync();
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddConsumable(Consumable consumable)
+        {
+            ModelState.Remove("SupplierName");
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Suppliers = await _context.Suppliers
+                    .Where(x=> x.IsActive)
+                    .OrderBy(x => x.SupplierName)
+                    .ToListAsync();
+
+                return View(consumable);
+            }
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(x => x.SupplierId == consumable.SupplierId && x.IsActive);
+
+            if(supplier == null)
+            {
+                ModelState.AddModelError("SupplierId", "Please select a valid supplier.");
+                ViewBag.Suppliers = await _context.Suppliers
+                                   .OrderBy(x => x.SupplierName)
+                                   .ToListAsync();
+                return View(consumable);
+            }
+            consumable.IsActive = true;
+
+            _context.Consumables.Add(consumable);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{consumable.ConsumableName} added successfully.";
+
+            return RedirectToAction(nameof(Consumables));
+        }
         #endregion
 
         #region Supplier

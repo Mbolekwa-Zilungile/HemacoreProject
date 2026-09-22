@@ -4,6 +4,12 @@
     Layout = "_ManagerLayout";
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <div class="content-card">

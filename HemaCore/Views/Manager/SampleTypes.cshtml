@@ -3,7 +3,12 @@
 @{
     Layout = "_ManagerLayout";
 }
-
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <div class="content-card">
@@ -17,7 +22,7 @@
             <span>Samples Types (@Model.Count)</span>
         </div>
 
-        <a asp-action="AddTestType"
+        <a asp-action="AddSampleType"
            class="btn btn-primary-custom btn-sm">
             + Add Sample Type
         </a>
@@ -58,9 +63,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="badge bg-info text-dark">
                                         @sample.Description
-                                    </span>
                                 </td>
 
                                 <td class="text-center">
