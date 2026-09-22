@@ -1,0 +1,63 @@
+﻿@model HemaCore.Models.TestCategory
+
+@{
+    ViewData["Title"] = "Add Doctor";
+    Layout = "_ManagerLayout";
+}
+
+<br />
+
+
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm p-4">
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Add New Category
+            </h3>
+
+        </div>
+
+
+        <form asp-action="AddCategory" method="post">
+
+            <div class="mb-3">
+                <label>Category Name</label>
+                <input asp-for="CategoryName" class="form-control" />
+                <span asp-validation-for="CategoryName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label>Description</label>
+                <textarea asp-for="CategoryDescription" class="form-control"></textarea>
+                <span asp-validation-for="CategoryDescription" class="text-danger"></span>
+            </div>
+
+            <button type="submit"
+                    class="btn"
+                    style="background-color:#3b5bb5; color:white;">
+                Save Category
+            </button>
+
+            <a asp-action="TestCategories" class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
+
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

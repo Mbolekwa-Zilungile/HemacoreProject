@@ -407,19 +407,19 @@ namespace HemaCore.Controllers
                 return Forbid();
 
             var conditions = await _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.UserId)
+                .Where(pc => pc.PatientID == patient.PatientID)
                 .Include(pc => pc.Condition)
                 .Select(pc => pc.Condition.Name)
                 .ToListAsync();
 
             var allergies = await _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.UserId)
+                .Where(pa => pa.PatientID == patient.PatientID)
                 .Include(pa => pa.Allergy)
                 .Select(pa => pa.Allergy.Name)
                 .ToListAsync();
 
             var medications = await _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.UserId)
+                .Where(pm => pm.PatientID == patient.PatientID)
                 .Include(pm => pm.Medication)
                 .Select(pm => pm.Medication.Name)
                 .ToListAsync();
@@ -640,13 +640,13 @@ namespace HemaCore.Controllers
             });
 
             foreach (var conditionId in model.SelectedConditionIds)
-                _context.PatientConditions.Add(new PatientCondition { PatientID = user.Id, ConditionId = conditionId });
+                _context.PatientConditions.Add(new PatientCondition { PatientID = patient.PatientID, ConditionId = conditionId });
 
             foreach (var allergyId in model.SelectedAllergyIds)
-                _context.PatientAllergies.Add(new PatientAllergy { PatientID = user.Id, AllergyId = allergyId });
+                _context.PatientAllergies.Add(new PatientAllergy { PatientID = patient.PatientID, AllergyId = allergyId });
 
             foreach (var medicationId in model.SelectedMedicationIds)
-                _context.PatientMedications.Add(new PatientMedication { PatientID = user.Id, MedicationId = medicationId });
+                _context.PatientMedications.Add(new PatientMedication { PatientID = patient.PatientID, MedicationId = medicationId });
 
             await _context.SaveChangesAsync();
 
@@ -676,11 +676,11 @@ namespace HemaCore.Controllers
                 return Forbid();
 
             var selectedConditionIds = await _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.UserId).Select(pc => pc.ConditionId).ToListAsync();
+                .Where(pc => pc.PatientID == patient.PatientID).Select(pc => pc.ConditionId).ToListAsync();
             var selectedAllergyIds = await _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.UserId).Select(pa => pa.AllergyId).ToListAsync();
+                .Where(pa => pa.PatientID == patient.PatientID).Select(pa => pa.AllergyId).ToListAsync();
             var selectedMedicationIds = await _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.UserId).Select(pm => pm.MedicationId).ToListAsync();
+                .Where(pm => pm.PatientID == patient.PatientID).Select(pm => pm.MedicationId).ToListAsync();
 
             var model = new EditPatientHistoryViewModel
             {
@@ -707,22 +707,22 @@ namespace HemaCore.Controllers
             if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
                 return Forbid();
 
-            var existingConditions = await _context.PatientConditions.Where(pc => pc.PatientID == patient.UserId).ToListAsync();
-            var existingAllergies = await _context.PatientAllergies.Where(pa => pa.PatientID == patient.UserId).ToListAsync();
-            var existingMedications = await _context.PatientMedications.Where(pm => pm.PatientID == patient.UserId).ToListAsync();
+            var existingConditions = await _context.PatientConditions.Where(pc => pc.PatientID == patient.PatientID).ToListAsync();
+            var existingAllergies = await _context.PatientAllergies.Where(pa => pa.PatientID == patient.PatientID).ToListAsync();
+            var existingMedications = await _context.PatientMedications.Where(pm => pm.PatientID == patient.PatientID).ToListAsync();
 
             _context.PatientConditions.RemoveRange(existingConditions);
             _context.PatientAllergies.RemoveRange(existingAllergies);
             _context.PatientMedications.RemoveRange(existingMedications);
 
             foreach (var conditionId in model.SelectedConditionIds)
-                _context.PatientConditions.Add(new PatientCondition { PatientID = patient.UserId, ConditionId = conditionId });
+                _context.PatientConditions.Add(new PatientCondition { PatientID = patient.PatientID, ConditionId = conditionId });
 
             foreach (var allergyId in model.SelectedAllergyIds)
-                _context.PatientAllergies.Add(new PatientAllergy { PatientID = patient.UserId, AllergyId = allergyId });
+                _context.PatientAllergies.Add(new PatientAllergy { PatientID = patient.PatientID, AllergyId = allergyId });
 
             foreach (var medicationId in model.SelectedMedicationIds)
-                _context.PatientMedications.Add(new PatientMedication { PatientID = patient.UserId, MedicationId = medicationId });
+                _context.PatientMedications.Add(new PatientMedication { PatientID = patient.PatientID, MedicationId = medicationId });
 
             await _context.SaveChangesAsync();
 

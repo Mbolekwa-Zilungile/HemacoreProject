@@ -551,9 +551,8 @@ namespace HemaCore.Migrations
                     b.Property<int>("AllergyId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PatientID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PatientID")
+                        .HasColumnType("int");
 
                     b.Property<string>("Severity")
                         .HasMaxLength(20)
@@ -582,9 +581,8 @@ namespace HemaCore.Migrations
                     b.Property<DateOnly?>("DiagnosedDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("PatientID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PatientID")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -614,9 +612,8 @@ namespace HemaCore.Migrations
                     b.Property<int>("MedicationId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PatientID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PatientID")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1322,7 +1319,7 @@ namespace HemaCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HemaCore.Models.Users", "Patient")
+                    b.HasOne("HemaCore.Models.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -1341,7 +1338,7 @@ namespace HemaCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HemaCore.Models.Users", "Patient")
+                    b.HasOne("HemaCore.Models.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -1360,7 +1357,7 @@ namespace HemaCore.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("HemaCore.Models.Users", "Patient")
+                    b.HasOne("HemaCore.Models.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.NoAction)
