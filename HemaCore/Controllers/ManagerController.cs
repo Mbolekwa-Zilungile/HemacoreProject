@@ -45,6 +45,33 @@ namespace HemaCore.Controllers
             return View(categories);
         }
 
+        public IActionResult AddCategory()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>AddCategory(TestCategory category)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(category);
+            }
+
+            var existingCategory = await _context.TestCategories.FirstOrDefaultAsync(x => x.CategoryName == category.CategoryName);
+            
+            if(existingCategory != null)
+            {
+                ModelState.AddModelError("CategoryName", "This category already exist.");
+                return View(category);
+            }
+
+            _context.TestCategories.Add(category);
+            category.IsActive = true;
+            await _context.SaveChangesAsync();
+            return RedirectToAction("TestCategories");
+        }
         #endregion
 
         #region TestTypes
