@@ -1,0 +1,144 @@
+﻿@model HemaCore.ViewModels.ManagerVM.TestTypeViewModel
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+
+        <div class="mb-4">
+            <h3 class="fw-bold">Add Test Type</h3>
+            <p class="text-muted">Define a new laboratory test type and its requirements.</p>
+        </div>
+
+        <form asp-action="AddTestType" method="post">
+            <div asp-validation-summary="All"></div></>
+            <!-- BASIC DETAILS -->
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TestTypeName" class="form-label"></label>
+                    <input asp-for="TestTypeName" class="form-control" placeholder="Test Type Name" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="UnitOfMeasurement" class="form-label"></label>
+                    <input asp-for="UnitOfMeasurement" class="form-control" placeholder="Unit Of Measurement" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NormalRangeMin" class="form-label"></label>
+                    <input asp-for="NormalRangeMin" type="number" step="0.01" class="form-control" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NormalRangeMax" class="form-label"></label>
+                    <input asp-for="NormalRangeMax" type="number" step="0.01" class="form-control" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TurnAroundTime" class="form-label"></label>
+                    <input asp-for="TurnAroundTime" type="number" class="form-control" />
+                </div>
+
+            </div>
+
+            <!-- CATEGORY -->
+            <div class="mb-2">
+                <select asp-for="CategoryID" class="form-control">
+                    <option value="">-- Select Category --</option>
+                    @foreach (var c in ViewBag.Categories)
+                    {
+                        <option value="@c.CategoryId">@c.CategoryName</option>
+                    }
+                </select>
+            </div>
+
+            <!-- SAMPLE TYPE -->
+            <div class="mb-3">
+                <label asp-for="SampleTypeID" class="form-label">
+                    Sample Type
+                </label>
+
+                <select asp-for="SampleTypeID" class="form-control">
+                    <option value="">-- Select Sample Type --</option>
+
+                    @if (ViewBag.SampleTypes != null)
+                    {
+                        foreach (var s in ViewBag.SampleTypes)
+                        {
+                            <option value="@s.SampleTypeId">
+                                @s.SampleName
+                            </option>
+                        }
+                    }
+                </select>
+
+                <span asp-validation-for="SampleTypeID"
+                      class="text-danger"></span>
+            </div>
+
+            <hr />
+
+            <h5>Consumables</h5>
+
+            <!-- SAFE NULL CHECK -->
+            @if (Model?.Consumables != null && Model.Consumables.Any())
+            {
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th width="80">Select</th>
+                            <th>Consumable</th>
+                            <th width="200">Quantity Used</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (int i = 0; i < Model.Consumables.Count; i++)
+                        {
+                            <tr>
+                                <td class="text-center">
+
+                                    <input type="checkbox" asp-for="Consumables[i].IsSelected" />
+
+                                    <input type="hidden" asp-for="Consumables[i].ConsumableID" />
+                                    <input type="hidden" asp-for="Consumables[i].ConsumableName" />
+
+                                </td>
+
+                                <td>
+                                    @Model.Consumables[i].ConsumableName
+                                </td>
+
+                                <td>
+                                    <input asp-for="Consumables[i].QuantityUsed"
+                                           class="form-control"
+                                           type="number"
+                                           min="0"
+                                           placeholder="0" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    No consumables available.
+                </div>
+            }
+
+            <button type="submit" class="btn btn-success">
+                Save Test Type
+            </button>
+
+        </form>
+
+    </div>
+</div>

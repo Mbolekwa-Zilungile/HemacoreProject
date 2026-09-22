@@ -87,6 +87,108 @@ namespace HemaCore.Controllers
             return View(testtype);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> AddTestType()
+        {
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            ViewBag.SampleTypes = await _context.SampleTypes
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SampleName)
+                .ToListAsync();
+
+            var consumables = await _context.Consumables
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
+
+            var model = new TestTypeViewModel
+            {
+                Consumables = consumables.Select(c => new ConsumableVM
+                {
+                    ConsumableID = c.ConsumableId,
+                    ConsumableName = c.ConsumableName,
+                    IsSelected = false,
+                    QuantityUsed = 0
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTestType(TestTypeViewModel model)
+        {
+            // Reload dropdown data
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+            ViewBag.SampleTypes = await _context.SampleTypes
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SampleName)
+                .ToListAsync();
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Check that the category exists
+            var category = await _context.TestCategories
+                .FirstOrDefaultAsync(c => c.CategoryId == model.CategoryID && c.IsActive);
+
+            if (category == null)
+            {
+                ModelState.AddModelError("CategoryID", "Please select a valid category.");
+                return View(model);
+            }
+
+            // Check for duplicate test type
+            var existingTestType = await _context.TestTypes
+                .FirstOrDefaultAsync(t => t.TestTypeName == model.TestTypeName);
+
+            if (existingTestType != null)
+            {
+                ModelState.AddModelError("TestTypeName", "This test type already exists.");
+                return View(model);
+            }
+
+            // Validate range
+            if (model.NormalRangeMin > model.NormalRangeMax)
+            {
+                ModelState.AddModelError(
+                    "NormalRangeMin",
+                    "Minimum normal range cannot be greater than maximum normal range."
+                );
+
+                return View(model);
+            }
+
+            // Create TestType
+            var testType = new TestType
+            {
+                TestTypeName = model.TestTypeName,
+                UnitOfMeasurement = model.UnitOfMeasurement,
+                NormalRangeMin = model.NormalRangeMin,
+                NormalRangeMax = model.NormalRangeMax,
+                TurnAroundTime = model.TurnAroundTime,
+                CategoryId = model.CategoryID,
+                IsActive = true
+            };
+
+            _context.TestTypes.Add(testType);
+
+            // Save first so TestTypeId is generated
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("TestTypes");
+        }
 
         #endregion
 
