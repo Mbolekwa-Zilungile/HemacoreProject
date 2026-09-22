@@ -1,0 +1,185 @@
+﻿```cshtml
+@model HemaCore.Models.Consumable
+
+@{
+    ViewData["Title"] = "Add Consumable";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4 mb-5">
+
+    <div class="card shadow-sm p-4">
+
+        <!-- ========================= -->
+        <!-- HEADER -->
+        <!-- ========================= -->
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Add Consumable
+            </h3>
+
+            <p class="text-muted mb-0">
+                Fill in the details below to register a consumable
+                in the system.
+            </p>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- VALIDATION SUMMARY -->
+        <!-- ========================= -->
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger"
+             role="alert">
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- FORM -->
+        <!-- ========================= -->
+
+        <form asp-action="AddConsumable"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+
+            <!-- ========================= -->
+            <!-- CONSUMABLE DETAILS -->
+            <!-- ========================= -->
+
+            <h5 class="text-secondary mb-3">
+                Consumable Details
+            </h5>
+
+            <div class="row">
+
+                <!-- CONSUMABLE NAME -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="ConsumableName"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="ConsumableName"
+                           class="form-control"
+                           placeholder="Enter consumable name" />
+
+                    <span asp-validation-for="ConsumableName"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- QUANTITY IN HAND -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="QuantityInHand"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="QuantityInHand"
+                           type="number"
+                           min="0"
+                           class="form-control"
+                           placeholder="Enter quantity in hand" />
+
+                    <span asp-validation-for="QuantityInHand"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- REORDER LEVEL -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="ReorderLevel"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="ReorderLevel"
+                           type="number"
+                           min="0"
+                           class="form-control"
+                           placeholder="Enter reorder level" />
+
+                    <span asp-validation-for="ReorderLevel"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- SUPPLIER -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="SupplierId"
+                           class="form-label">
+                        Supplier
+                    </label>
+
+                    <select asp-for="SupplierId"
+                            class="form-control">
+
+                        <option value="">
+                            -- Select Supplier --
+                        </option>
+
+                        @if (ViewBag.Suppliers != null)
+                        {
+                            foreach (var supplier in ViewBag.Suppliers as List<HemaCore.Models.Supplier>)
+                            {
+                                <option value="@supplier.SupplierId">
+                                    @supplier.SupplierName
+                                </option>
+                            }
+                        }
+
+                    </select>
+
+                    <span asp-validation-for="SupplierId"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="Consumables"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+
+                    + Add Consumable
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

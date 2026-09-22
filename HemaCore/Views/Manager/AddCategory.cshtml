@@ -1,19 +1,17 @@
 ﻿@model HemaCore.Models.TestCategory
 
 @{
-    ViewData["Title"] = "Add Doctor";
-    Layout = "_ManagerLayout";
+    ViewData["Title"] = "Add Test Category";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
-<br />
-
-
-
 <link rel="stylesheet" href="~/css/doctor.css" />
-
-<div class="container mt-4">
-
+<div class="container mt-4 mb-5">
     <div class="card shadow-sm p-4">
+
+        <!-- ========================= -->
+        <!-- HEADER -->
+        <!-- ========================= -->
 
         <div class="mb-4">
 
@@ -21,43 +19,117 @@
                 Add New Category
             </h3>
 
+            <p class="text-muted mb-0">
+                Fill in the details below to add a new test category
+                to the system.
+            </p>
+
         </div>
 
 
-        <form asp-action="AddCategory" method="post">
+        <!-- ========================= -->
+        <!-- VALIDATION SUMMARY -->
+        <!-- ========================= -->
 
-            <div class="mb-3">
-                <label>Category Name</label>
-                <input asp-for="CategoryName" class="form-control" />
-                <span asp-validation-for="CategoryName" class="text-danger"></span>
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger"
+             role="alert">
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- FORM -->
+        <!-- ========================= -->
+
+        <form asp-action="AddCategory"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+
+            <!-- ========================= -->
+            <!-- CATEGORY DETAILS -->
+            <!-- ========================= -->
+
+            <h5 class="text-secondary mb-3">
+                Category Details
+            </h5>
+
+            <div class="row">
+
+                <!-- CATEGORY NAME -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="CategoryName"
+                           class="form-label">
+                          Name
+                    </label>
+
+                    <input asp-for="CategoryName"
+                           class="form-control"
+                           placeholder="Enter category name"
+                           autocomplete="off" />
+
+                    <span asp-validation-for="CategoryName"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="CategoryDescription"
+                           class="form-label">
+                           Description
+                    </label>
+
+                    <textarea asp-for="CategoryDescription"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Enter a description of the test category"></textarea>
+
+                    <span asp-validation-for="CategoryDescription"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
             </div>
 
-            <div class="mb-3">
-                <label>Description</label>
-                <textarea asp-for="CategoryDescription" class="form-control"></textarea>
-                <span asp-validation-for="CategoryDescription" class="text-danger"></span>
+
+            <!-- ========================= -->
+            <!-- BUTTONS -->
+            <!-- ========================= -->
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="TestCategories"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+
+                    + Add Category
+
+                </button>
+
             </div>
-
-            <button type="submit"
-                    class="btn"
-                    style="background-color:#3b5bb5; color:white;">
-                Save Category
-            </button>
-
-            <a asp-action="TestCategories" class="btn btn-secondary">
-                Cancel
-            </a>
 
         </form>
-
 
     </div>
 
 </div>
 
-
 @section Scripts {
 
     <partial name="_ValidationScriptsPartial" />
+
 
 }
