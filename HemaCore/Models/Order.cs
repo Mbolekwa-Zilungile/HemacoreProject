@@ -13,7 +13,7 @@ namespace HemaCore.Models
 
         public DateTime? DateCompleted { get; set; }
         public DateTime? DateCancelled { get; set; }
-        public string CancelReason { get; set; }
+        public string? CancelReason { get; set; }
 
         public int SupplierId { get; set; }
 

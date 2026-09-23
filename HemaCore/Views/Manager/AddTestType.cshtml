@@ -6,66 +6,299 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
+<style>
+
+    /* =========================
+           SHOW / HIDE CONSUMABLES
+        ========================= */
+
+    #toggleConsumables {
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border-width: 1px;
+    }
+
+        #toggleConsumables:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        #toggleConsumables .toggle-icon {
+            margin-right: 5px;
+        }
+
+
+    /* =========================
+           SEARCH
+        ========================= */
+
+    #consumableSearch {
+        border-radius: 8px;
+    }
+
+
+    /* =========================
+           NO CONSUMABLES MESSAGE
+        ========================= */
+
+    .no-consumables-message {
+        border: 1px dashed #ced4da;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        margin-top: 10px;
+    }
+
+        .no-consumables-message .empty-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+
+    /* =========================
+           CONSUMABLE TABLE
+        ========================= */
+
+    .consumable-row {
+        transition: background-color 0.15s ease;
+    }
+
+        .consumable-row:hover {
+            background-color: #f8f9fa;
+        }
+
+
+    /* =========================
+           CHECKBOX
+        ========================= */
+
+    .consumable-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+
+    /* =========================
+           QUANTITY INPUT
+        ========================= */
+
+    .quantity-input {
+        max-width: 180px;
+    }
+
+</style>
+
+
 <div class="container mt-4">
+
     <div class="card shadow-sm p-4">
 
+        <!-- =========================
+             HEADER
+        ========================== -->
 
         <div class="mb-4">
-            <h3 class="fw-bold">Add Test Type</h3>
-            <p class="text-muted">Define a new laboratory test type and its requirements.</p>
+
+            <h3 class="fw-bold">
+                Add Test Type
+            </h3>
+
+            <p class="text-muted">
+                Fill in the details below to add a new test type
+                to the system.
+            </p>
+
         </div>
 
-        <form asp-action="AddTestType" method="post">
-            <div asp-validation-summary="All"></div></>
-            <!-- BASIC DETAILS -->
+
+        <!-- =========================
+             FORM
+        ========================== -->
+
+        <form asp-action="AddTestType"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+
+            <!-- =========================
+                 VALIDATION
+            ========================== -->
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3">
+            </div>
+
+
+            <!-- =========================
+                 TEST TYPE DETAILS
+            ========================== -->
+
+            <h5 class="text-secondary mb-3">
+                Test Type Details
+            </h5>
+
+
             <div class="row">
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="TestTypeName" class="form-label"></label>
-                    <input asp-for="TestTypeName" class="form-control" placeholder="Test Type Name" />
-                </div>
+                <!-- TEST TYPE NAME -->
 
                 <div class="col-md-6 mb-3">
-                    <label asp-for="UnitOfMeasurement" class="form-label"></label>
-                    <input asp-for="UnitOfMeasurement" class="form-control" placeholder="Unit Of Measurement" />
+
+                    <label asp-for="TestTypeName"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="TestTypeName"
+                           class="form-control"
+                           placeholder="Test Type Name" />
+
+                    <span asp-validation-for="TestTypeName"
+                          class="text-danger">
+                    </span>
+
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="NormalRangeMin" class="form-label"></label>
-                    <input asp-for="NormalRangeMin" type="number" step="0.01" class="form-control" />
-                </div>
+
+                <!-- UNIT OF MEASUREMENT -->
 
                 <div class="col-md-6 mb-3">
-                    <label asp-for="NormalRangeMax" class="form-label"></label>
-                    <input asp-for="NormalRangeMax" type="number" step="0.01" class="form-control" />
+
+                    <label asp-for="UnitOfMeasurement"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="UnitOfMeasurement"
+                           class="form-control"
+                           placeholder="Unit Of Measurement" />
+
+                    <span asp-validation-for="UnitOfMeasurement"
+                          class="text-danger">
+                    </span>
+
                 </div>
 
+
+                <!-- NORMAL RANGE MIN -->
+
                 <div class="col-md-6 mb-3">
-                    <label asp-for="TurnAroundTime" class="form-label"></label>
-                    <input asp-for="TurnAroundTime" type="number" class="form-control" />
+
+                    <label asp-for="NormalRangeMin"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="NormalRangeMin"
+                           type="number"
+                           step="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="NormalRangeMin"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- NORMAL RANGE MAX -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="NormalRangeMax"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="NormalRangeMax"
+                           type="number"
+                           step="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="NormalRangeMax"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- TURNAROUND TIME -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="TurnAroundTime"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="TurnAroundTime"
+                           type="number"
+                           class="form-control" />
+
+                    <span asp-validation-for="TurnAroundTime"
+                          class="text-danger">
+                    </span>
+
                 </div>
 
             </div>
 
-            <!-- CATEGORY -->
-            <div class="mb-2">
-                <select asp-for="CategoryID" class="form-control">
-                    <option value="">-- Select Category --</option>
-                    @foreach (var c in ViewBag.Categories)
-                    {
-                        <option value="@c.CategoryId">@c.CategoryName</option>
-                    }
-                </select>
-            </div>
 
-            <!-- SAMPLE TYPE -->
+            <!-- =========================
+                 CATEGORY
+            ========================== -->
+
             <div class="mb-3">
-                <label asp-for="SampleTypeID" class="form-label">
+
+                <label asp-for="CategoryID"
+                       class="form-label">
+                    Category
+                </label>
+
+                <select asp-for="CategoryID"
+                        class="form-control">
+
+                    <option value="">
+                        -- Select Category --
+                    </option>
+
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var c in ViewBag.Categories)
+                        {
+                            <option value="@c.CategoryId">
+                                @c.CategoryName
+                            </option>
+                        }
+                    }
+
+                </select>
+
+                <span asp-validation-for="CategoryID"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+
+            <!-- =========================
+                 SAMPLE TYPE
+            ========================== -->
+
+            <div class="mb-3">
+
+                <label asp-for="SampleTypeID"
+                       class="form-label">
                     Sample Type
                 </label>
 
-                <select asp-for="SampleTypeID" class="form-control">
-                    <option value="">-- Select Sample Type --</option>
+                <select asp-for="SampleTypeID"
+                        class="form-control">
+
+                    <option value="">
+                        -- Select Sample Type --
+                    </option>
 
                     @if (ViewBag.SampleTypes != null)
                     {
@@ -76,69 +309,391 @@
                             </option>
                         }
                     }
+
                 </select>
 
                 <span asp-validation-for="SampleTypeID"
-                      class="text-danger"></span>
+                      class="text-danger">
+                </span>
+
             </div>
+
 
             <hr />
 
-            <h5>Consumables</h5>
 
-            <!-- SAFE NULL CHECK -->
-            @if (Model?.Consumables != null && Model.Consumables.Any())
-            {
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th width="80">Select</th>
-                            <th>Consumable</th>
-                            <th width="200">Quantity Used</th>
-                        </tr>
-                    </thead>
+            <!-- =========================
+                 CONSUMABLES HEADER
+            ========================== -->
 
-                    <tbody>
-                        @for (int i = 0; i < Model.Consumables.Count; i++)
-                        {
-                            <tr>
-                                <td class="text-center">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-                                    <input type="checkbox" asp-for="Consumables[i].IsSelected" />
+                <h5 class="mb-0 text-secondary">
+                    Consumables
+                </h5>
 
-                                    <input type="hidden" asp-for="Consumables[i].ConsumableID" />
-                                    <input type="hidden" asp-for="Consumables[i].ConsumableName" />
 
-                                </td>
+                <button type="button"
+                        id="toggleConsumables"
+                        class="btn btn-outline-primary btn-sm">
 
-                                <td>
-                                    @Model.Consumables[i].ConsumableName
-                                </td>
+                    <span class="toggle-icon">
+                        👁
+                    </span>
 
-                                <td>
-                                    <input asp-for="Consumables[i].QuantityUsed"
-                                           class="form-control"
-                                           type="number"
-                                           min="0"
-                                           placeholder="0" />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    No consumables available.
-                </div>
-            }
+                    <span class="toggle-text">
+                        Hide Consumables
+                    </span>
 
-            <button type="submit" class="btn btn-success">
-                Save Test Type
-            </button>
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 CONSUMABLES SECTION
+            ========================== -->
+
+            <div id="consumablesSection">
+
+
+                <!-- SEARCH -->
+                @if (Model?.Consumables != null &&
+                                     Model.Consumables.Any())
+                {
+
+                    <div class="mb-3">
+
+                        <input type="text"
+                               id="consumableSearch"
+                               class="form-control"
+                               placeholder="Search consumables..."
+                               autocomplete="off" />
+
+                    </div>
+
+
+                    <!-- =========================
+                         CONSUMABLE TABLE
+                    ========================== -->
+
+                    <div id="consumablesTableContainer">
+
+                        <table class="table table-bordered">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th width="80">
+                                        Select
+                                    </th>
+
+                                    <th>
+                                        Consumable
+                                    </th>
+
+                                    <th width="200">
+                                        Quantity Used
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="consumablesTableBody">
+
+                                @for (int i = 0;
+                                      i < Model.Consumables.Count;
+                                      i++)
+                                {
+
+                                    <tr class="consumable-row"
+                                        data-name="@Model.Consumables[i].ConsumableName.ToLower()">
+
+
+                                        <!-- SELECT -->
+
+                                        <td class="text-center">
+
+                                            <input type="checkbox"
+                                                   asp-for="Consumables[i].IsSelected"
+                                                   class="consumable-checkbox" />
+
+
+                                            <input type="hidden"
+                                                   asp-for="Consumables[i].ConsumableID" />
+
+
+                                            <input type="hidden"
+                                                   asp-for="Consumables[i].ConsumableName" />
+
+                                        </td>
+
+
+                                        <!-- CONSUMABLE NAME -->
+
+                                        <td>
+
+                                            @Model.Consumables[i].ConsumableName
+
+                                        </td>
+
+
+                                        <!-- QUANTITY -->
+
+                                        <td>
+
+                                            <input asp-for="Consumables[i].QuantityUsed"
+                                                   class="form-control quantity-input"
+                                                   type="number"
+                                                   min="0"
+                                                   placeholder="0" />
+
+                                            <span asp-validation-for="Consumables[i].QuantityUsed"
+                                                  class="text-danger">
+                                            </span>
+
+                                        </td>
+
+                                    </tr>
+
+                                }
+
+                            </tbody>
+
+                        </table>
+
+
+                        <!-- =========================
+                             NO SEARCH RESULTS
+                        ========================== -->
+
+                        <div id="noSearchResults"
+                             class="no-consumables-message"
+                             style="display:none;">
+
+                            <div class="empty-icon">
+                                🔍
+                            </div>
+
+                            <strong>
+                                No consumables found
+                            </strong>
+
+                            <p class="mb-0 mt-1">
+                                No consumables match your search.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                }
+                else
+                {
+
+                    <!-- =========================
+                         NO CONSUMABLES
+                    ========================== -->
+
+                    <div class="no-consumables-message">
+
+                        <div class="empty-icon">
+                            📦
+                        </div>
+
+                        <strong>
+                            No consumables available
+                        </strong>
+
+                        <p class="mb-0 mt-1">
+                            There are currently no consumables available.
+                        </p>
+
+                    </div>
+
+                }
+
+            </div>
+
+
+            <!-- =========================
+                 BUTTONS
+            ========================== -->
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="TestTypes"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Save Test Type
+
+                </button>
+
+            </div>
 
         </form>
 
     </div>
+
 </div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // =====================================================
+            // ELEMENTS
+            // =====================================================
+
+            const toggleButton =
+                document.getElementById("toggleConsumables");
+
+            const consumablesSection =
+                document.getElementById("consumablesSection");
+
+            const searchBox =
+                document.getElementById("consumableSearch");
+
+            const noSearchResults =
+                document.getElementById("noSearchResults");
+
+            const consumableRows =
+                document.querySelectorAll(".consumable-row");
+
+
+            // =====================================================
+            // SHOW / HIDE CONSUMABLES
+            // =====================================================
+
+            if (toggleButton && consumablesSection) {
+
+                toggleButton.addEventListener("click", function () {
+
+                    const isHidden =
+                        consumablesSection.style.display === "none";
+
+                    if (isHidden) {
+
+                        consumablesSection.style.display = "block";
+
+                        toggleButton
+                            .querySelector(".toggle-text")
+                            .textContent = "Hide Consumables";
+
+                        toggleButton
+                            .querySelector(".toggle-icon")
+                            .textContent = "👁";
+
+                    }
+                    else {
+
+                        consumablesSection.style.display = "none";
+
+                        toggleButton
+                            .querySelector(".toggle-text")
+                            .textContent = "Show Consumables";
+
+                        toggleButton
+                            .querySelector(".toggle-icon")
+                            .textContent = "👁‍🗨";
+
+                    }
+
+                });
+
+            }
+
+
+            // =====================================================
+            // SEARCH CONSUMABLES
+            // =====================================================
+
+            if (searchBox) {
+
+                searchBox.addEventListener("input", function () {
+
+                    const searchText =
+                        searchBox.value
+                            .toLowerCase()
+                            .trim();
+
+
+                    let visibleRows = 0;
+
+
+                    consumableRows.forEach(function (row) {
+
+                        // Get the consumable name directly
+                        // from the table row
+                        const consumableName =
+                            row
+                                .querySelector("td:nth-child(2)")
+                                ?.textContent
+                                .toLowerCase()
+                                .trim() || "";
+
+
+                        // Check if the name matches
+                        if (consumableName.includes(searchText)) {
+
+                            row.style.display = "";
+
+                            visibleRows++;
+
+                        }
+                        else {
+
+                            row.style.display = "none";
+
+                        }
+
+                    });
+
+
+                    // =================================================
+                    // SHOW / HIDE NO RESULTS MESSAGE
+                    // =================================================
+
+                    if (noSearchResults) {
+
+                        if (
+                            searchText !== "" &&
+                            visibleRows === 0
+                        ) {
+
+                            noSearchResults.style.display = "block";
+
+                        }
+                        else {
+
+                            noSearchResults.style.display = "none";
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+        });
+
+    </script>
+
+}

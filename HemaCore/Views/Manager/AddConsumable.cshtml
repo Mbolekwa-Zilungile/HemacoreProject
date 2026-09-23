@@ -1,5 +1,4 @@
-﻿```cshtml
-@model HemaCore.Models.Consumable
+﻿@model HemaCore.Models.Consumable
 
 @{
     ViewData["Title"] = "Add Consumable";
@@ -12,10 +11,6 @@
 
     <div class="card shadow-sm p-4">
 
-        <!-- ========================= -->
-        <!-- HEADER -->
-        <!-- ========================= -->
-
         <div class="mb-4">
 
             <h3 class="fw-bold">
@@ -23,16 +18,12 @@
             </h3>
 
             <p class="text-muted mb-0">
-                Fill in the details below to register a consumable
+                Fill in the details below to add a new consumable
                 in the system.
             </p>
 
         </div>
 
-
-        <!-- ========================= -->
-        <!-- VALIDATION SUMMARY -->
-        <!-- ========================= -->
 
         <div asp-validation-summary="ModelOnly"
              class="alert alert-danger"
@@ -40,19 +31,11 @@
         </div>
 
 
-        <!-- ========================= -->
-        <!-- FORM -->
-        <!-- ========================= -->
-
         <form asp-action="AddConsumable"
               method="post">
 
             @Html.AntiForgeryToken()
 
-
-            <!-- ========================= -->
-            <!-- CONSUMABLE DETAILS -->
-            <!-- ========================= -->
 
             <h5 class="text-secondary mb-3">
                 Consumable Details
@@ -60,7 +43,6 @@
 
             <div class="row">
 
-                <!-- CONSUMABLE NAME -->
                 <div class="col-md-6 mb-3">
 
                     <label asp-for="ConsumableName"
@@ -78,7 +60,6 @@
                 </div>
 
 
-                <!-- QUANTITY IN HAND -->
                 <div class="col-md-6 mb-3">
 
                     <label asp-for="QuantityInHand"
@@ -97,8 +78,6 @@
 
                 </div>
 
-
-                <!-- REORDER LEVEL -->
                 <div class="col-md-6 mb-3">
 
                     <label asp-for="ReorderLevel"
@@ -118,7 +97,6 @@
                 </div>
 
 
-                <!-- SUPPLIER -->
                 <div class="col-md-6 mb-3">
 
                     <label asp-for="SupplierId"
@@ -164,7 +142,7 @@
 
 
                 <button type="submit"
-                        class="btn btn-primary px-4">
+                        class="btn btn-primary-custom btn-sm">
 
                     + Add Consumable
 

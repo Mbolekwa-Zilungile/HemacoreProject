@@ -426,7 +426,6 @@ namespace HemaCore.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
 
                     b.Property<string>("CancelReason")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DateCancelled")
@@ -479,7 +478,6 @@ namespace HemaCore.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("RejectReason")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")

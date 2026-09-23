@@ -13,7 +13,7 @@ namespace HemaCore.Models
 
         public DateTime? DateReceived { get; set; }
         public DateTime? DateRejected { get; set; }
-        public string RejectReason { get; set; }
+        public string? RejectReason { get; set; }
 
         public int ConsumableId { get; set; }
         public Consumable Consumable { get; set; }

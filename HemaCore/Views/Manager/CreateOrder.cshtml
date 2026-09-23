@@ -1,0 +1,770 @@
+﻿@model HemaCore.ViewModels.ManagerVM.CreateOrderVM
+
+@{
+    ViewData["Title"] = "Create Order";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<style>
+
+    /* =====================================================
+           SHOW / HIDE BUTTON
+           ===================================================== */
+
+    #toggleConsumables {
+        border-radius: 20px;
+        padding: 7px 16px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border: 1px solid #0d6efd;
+        color: #0d6efd;
+        background: white;
+        transition: all 0.2s ease;
+        display: none;
+    }
+
+        #toggleConsumables:hover {
+            background: #0d6efd;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+        }
+
+        #toggleConsumables:active {
+            transform: translateY(0);
+        }
+
+        #toggleConsumables .toggle-icon {
+            margin-right: 6px;
+            font-size: 15px;
+        }
+
+
+    /* =====================================================
+           SEARCH
+           ===================================================== */
+
+    #consumableSearch {
+        border-radius: 8px;
+    }
+
+
+    /* =====================================================
+           CONSUMABLE CARD
+           ===================================================== */
+
+    .consumable-card {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+        .consumable-card:hover {
+            border-color: #b8c7dc;
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.06);
+        }
+
+
+    /* =====================================================
+           NO CONSUMABLES MESSAGE
+           ===================================================== */
+
+    .no-consumables-message {
+        border: 1px dashed #ced4da;
+        border-radius: 10px;
+        padding: 25px 20px;
+        text-align: center;
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
+
+        .no-consumables-message .empty-icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+
+    /* =====================================================
+           CONSUMABLE COUNT
+           ===================================================== */
+
+    #consumableCount {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+
+</style>
+
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm p-4">
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Create Stock Order
+            </h3>
+
+            <p class="text-muted">
+                Select a supplier and add consumables to create
+                a new stock order.
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             VALIDATION SUMMARY
+             ================================================= -->
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger mb-3">
+        </div>
+
+
+        <form asp-action="CreateOrder"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+
+            <!-- =================================================
+                 SUPPLIER
+                 ================================================= -->
+
+            <h5 class="mb-3 text-secondary">
+                Supplier Information
+            </h5>
+
+
+            <div class="mb-3">
+
+                <label asp-for="SupplierID"
+                       class="form-label">
+                    Select Supplier
+                </label>
+
+
+                <select asp-for="SupplierID"
+                        asp-items="ViewBag.Suppliers"
+                        id="supplierDropdown"
+                        class="form-control">
+
+                    <option value="">
+                        -- Select Supplier --
+                    </option>
+
+                </select>
+
+
+                <span asp-validation-for="SupplierID"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+
+            <hr />
+
+
+            <!-- =================================================
+                 CONSUMABLE HEADER
+                 ================================================= -->
+
+            <div class="d-flex justify-content-between
+                align-items-center mb-3">
+
+                <h5 class="mb-0 text-secondary">
+                    Consumables
+                </h5>
+
+
+                <button type="button"
+                        id="toggleConsumables"
+                        class="btn btn-outline-primary btn-sm">
+
+                    <span class="toggle-icon">
+                        👁
+                    </span>
+
+                    <span class="toggle-text">
+                        Hide Consumables
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+                 CONSUMABLE SECTION
+                 ================================================= -->
+
+            <div id="consumablesSection"
+                 style="display:none;">
+
+
+                <!-- SEARCH -->
+
+                <div class="mb-3">
+
+                    <input type="text"
+                           id="consumableSearch"
+                           class="form-control"
+                           placeholder="Search consumables..."
+                           autocomplete="off" />
+
+                </div>
+
+
+                <!-- COUNT -->
+
+                <div id="consumableCount">
+                </div>
+
+
+                <!-- LIST -->
+
+                <div id="consumablesContainer">
+
+                    <p class="text-muted">
+                        Please select a supplier to load consumables.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 BUTTONS
+                 ================================================= -->
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="Orders"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+
+                    + Create Order
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <script>
+
+        // =====================================================
+        // GLOBAL VARIABLES
+        // =====================================================
+
+        let allConsumables = [];
+
+        let selectedSupplierName = "";
+
+
+        // =====================================================
+        // SUPPLIER CHANGE
+        // =====================================================
+
+        $("#supplierDropdown").on("change", function () {
+
+        let supplierId = $(this).val();
+
+        selectedSupplierName =
+        $("#supplierDropdown option:selected")
+        .text()
+        .trim();
+
+
+        // Reset search
+        $("#consumableSearch").val("");
+
+
+        // Reset data
+        allConsumables = [];
+
+
+        // Hide section while loading
+        $("#consumablesSection").hide();
+
+        $("#toggleConsumables").hide();
+
+
+        $("#toggleConsumables .toggle-text")
+        .text("Show Consumables");
+
+
+        $("#toggleConsumables .toggle-icon")
+        .text("👁");
+
+
+        $("#consumablesContainer").html(`
+        <p class="text-muted">
+        Loading consumables...
+        </p>
+        `);
+
+
+        $("#consumableCount").text("");
+
+
+        // No supplier selected
+        if (supplierId === "") {
+
+        $("#consumablesContainer").html(`
+        <p class="text-muted">
+        Please select a supplier to load consumables.
+        </p>
+        `);
+
+        return;
+        }
+
+
+        // =================================================
+        // GET CONSUMABLES
+        // =================================================
+
+        $.get(
+        '@Url.Action("GetConsumablesBySupplier", "Manager")',
+        {
+        supplierId: supplierId
+        },
+
+        function (data) {
+
+        // Give every item a permanent index
+        // so searching doesn't break model binding.
+
+        allConsumables = data.map(
+        function (item, index) {
+
+        item.originalIndex = index;
+
+        return item;
+        }
+        );
+
+
+        // Display all consumables
+        displayConsumables(allConsumables);
+
+
+        // Show section
+        $("#consumablesSection").show();
+
+
+        // Show toggle button
+        $("#toggleConsumables").show();
+
+
+        // Start visible
+        $("#toggleConsumables .toggle-text")
+        .text("Hide Consumables");
+
+
+        $("#toggleConsumables .toggle-icon")
+        .text("👁");
+
+        }
+        )
+
+        .fail(function () {
+
+        $("#consumablesContainer").html(`
+        <div class="no-consumables-message">
+
+        <div class="empty-icon">
+        ⚠️
+        </div>
+
+        <strong>
+        Unable to load consumables
+        </strong>
+
+        <p class="mb-0 mt-1">
+        There was a problem loading consumables
+        for
+        <strong>
+        ${selectedSupplierName}
+        </strong>.
+        </p>
+
+        </div>
+        `);
+
+        $("#consumablesSection").show();
+
+        });
+
+        });
+
+
+        // =====================================================
+        // SHOW / HIDE CONSUMABLES
+        // =====================================================
+
+        $("#toggleConsumables").on("click", function () {
+
+        $("#consumablesSection").slideToggle(
+        200,
+        function () {
+
+        let isVisible =
+        $("#consumablesSection").is(":visible");
+
+
+        if (isVisible) {
+
+        $("#toggleConsumables .toggle-text")
+        .text("Hide Consumables");
+
+
+        $("#toggleConsumables .toggle-icon")
+        .text("👁");
+
+        }
+        else {
+
+        $("#toggleConsumables .toggle-text")
+        .text("Show Consumables");
+
+
+        $("#toggleConsumables .toggle-icon")
+        .text("👁‍🗨");
+
+        }
+
+        }
+        );
+
+        });
+
+
+        // =====================================================
+        // SEARCH
+        // =====================================================
+
+        $("#consumableSearch").on(
+        "input",
+        function () {
+
+        let searchText =
+        $(this)
+        .val()
+        .toLowerCase()
+        .trim();
+
+
+        let filteredConsumables =
+        allConsumables.filter(function (item) {
+
+        return item.consumableName
+        .toLowerCase()
+        .includes(searchText);
+
+        });
+
+
+        displayConsumables(
+        filteredConsumables
+        );
+
+        }
+        );
+
+
+        // =====================================================
+        // DISPLAY CONSUMABLES
+        // =====================================================
+
+        function displayConsumables(data) {
+
+        // =================================================
+        // NO RESULTS
+        // =================================================
+
+        if (data.length === 0) {
+
+        let searchText =
+        $("#consumableSearch")
+        .val()
+        .trim();
+
+
+        // Search returned nothing
+
+        if (searchText !== "") {
+
+        $("#consumableCount").text(
+        "0 consumables found"
+        );
+
+
+        $("#consumablesContainer").html(`
+
+        <div class="no-consumables-message">
+
+        <div class="empty-icon">
+        🔍
+        </div>
+
+        <strong>
+        No consumables found
+        </strong>
+
+        <p class="mb-0 mt-1">
+
+        No consumables matching
+
+        "<strong>
+        ${escapeHtml(searchText)}
+        </strong>"
+
+        were found for
+
+        <strong>
+        ${escapeHtml(
+        selectedSupplierName
+        )}
+        </strong>.
+
+        </p>
+
+        </div>
+
+        `);
+
+        }
+
+        // Supplier has no consumables
+
+        else {
+
+        $("#consumableCount").text(
+        "0 consumables"
+        );
+
+
+        $("#consumablesContainer").html(`
+
+        <div class="no-consumables-message">
+
+        <div class="empty-icon">
+        📦
+        </div>
+
+        <strong>
+        No consumables available
+        </strong>
+
+        <p class="mb-0 mt-1">
+
+        There are currently no consumables
+        available for
+
+        <strong>
+        ${escapeHtml(
+        selectedSupplierName
+        )}
+        </strong>.
+
+        </p>
+
+        </div>
+
+        `);
+
+        }
+
+        return;
+        }
+
+
+        // =================================================
+        // COUNT
+        // =================================================
+
+        if (data.length === allConsumables.length) {
+
+        $("#consumableCount").text(
+        `${data.length} consumable(s)`
+        );
+
+        }
+        else {
+
+        $("#consumableCount").text(
+        `${data.length} of ${allConsumables.length} consumable(s)`
+        );
+
+        }
+
+
+        // =================================================
+        // BUILD HTML
+        // =================================================
+
+        let html = "";
+
+
+        for (let i = 0; i < data.length; i++) {
+
+        let item = data[i];
+
+        let status = item.status;
+
+
+        // Status badge
+
+        let badgeColor =
+        status === "OutOfStock"
+        ? "bg-danger"
+        : status === "LowStock"
+        ? "bg-warning text-dark"
+        : "bg-success";
+
+
+        // Use ORIGINAL index.
+        // This is important for model binding
+        // after searching.
+
+        let index =
+        item.originalIndex;
+
+
+        html += `
+
+        <div class="card
+        consumable-card
+        mb-2
+        p-2">
+
+        <h6 class="mb-1">
+
+        ${escapeHtml(
+        item.consumableName
+        )}
+
+        </h6>
+
+
+        <p class="mb-1 small">
+
+        Stock:
+
+        <b>
+        ${item.quantityInHand}
+        </b>
+
+        </p>
+
+
+        <p class="mb-1 small">
+
+        Status:
+
+        <span class="badge ${badgeColor}">
+
+        ${escapeHtml(status)}
+
+        </span>
+
+        </p>
+
+
+        <!--
+        Hidden ID
+        -->
+
+        <input type="hidden"
+        name="Items[${index}].ConsumableID"
+        value="${item.consumableID}" />
+
+
+        <!--
+        Quantity
+        -->
+
+        <label class="small mb-1">
+
+        Quantity
+
+        </label>
+
+
+        <input type="number"
+        name="Items[${index}].Quantity"
+        class="form-control
+        form-control-sm"
+        min="0"
+        value="0" />
+
+        </div>
+
+        `;
+
+        }
+
+
+        $("#consumablesContainer")
+        .html(html);
+
+        }
+
+
+        // =====================================================
+        // HTML ESCAPE
+        // =====================================================
+
+        function escapeHtml(value) {
+
+        if (value === null ||
+        value === undefined) {
+
+        return "";
+
+        }
+
+
+        return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+        }
+
+    </script>
+}

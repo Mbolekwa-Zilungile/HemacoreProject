@@ -6,6 +6,7 @@ using HemaCore.ViewModels.ManagerVM;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace HemaCore.Controllers
@@ -273,6 +274,13 @@ namespace HemaCore.Controllers
 
                 return View(consumable);
             }
+            var existinGCONSUMABLE = await _context.Consumables.FirstOrDefaultAsync(x => x.ConsumableName == consumable.ConsumableName);
+
+            if(existinGCONSUMABLE != null)
+            {
+                ModelState.AddModelError("ConsumableName", "The consumable already exist.");
+                return View(consumable);
+            }
             var supplier = await _context.Suppliers
                 .FirstOrDefaultAsync(x => x.SupplierId == consumable.SupplierId && x.IsActive);
 
@@ -314,6 +322,45 @@ namespace HemaCore.Controllers
                 );
 
             return View(suppliers);
+        }
+
+        public IActionResult AddSupplier()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> AddSupplier(Supplier supplier)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(supplier);
+            }
+
+            var existingSupplier = await _context.Suppliers.FirstOrDefaultAsync(x => x.SupplierName == supplier.SupplierName);
+
+            if(existingSupplier != null)
+            {
+                ModelState.AddModelError("SupplierName", "Supplier already exist.");
+                return View(supplier);
+            }
+
+            var existingSupplierEmail = await _context.Suppliers.FirstOrDefaultAsync(x => x.Email == supplier.Email);
+
+            if (existingSupplierEmail != null)
+            {
+                ModelState.AddModelError("Email", "Email already exist.");
+                return View(supplier);
+            }
+            supplier.IsActive = true;
+            _context.Suppliers.Add(supplier);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{supplier.SupplierName} added successfully.";
+            return RedirectToAction("Suppliers");
+
         }
 
         #endregion
@@ -375,16 +422,8 @@ namespace HemaCore.Controllers
                 );
             }
 
-            // =========================
-            // UPDATE ITEM
-            // =========================
-
             item.Status = OrderItemStatus.Received;
             item.DateReceived = DateTime.Now;
-
-            // =========================
-            // UPDATE STOCK
-            // =========================
 
             var consumable = await _context.Consumables
                 .FirstOrDefaultAsync(c => c.ConsumableId == item.ConsumableId);
@@ -393,10 +432,6 @@ namespace HemaCore.Controllers
             {
                 consumable.QuantityInHand += item.Quantity;
             }
-
-            // =========================
-            // UPDATE ORDER STATUS
-            // =========================
 
             var items = order.OrderItems.ToList();
 
@@ -414,10 +449,6 @@ namespace HemaCore.Controllers
             {
                 order.Status = OrderStatus.PartiallyCompleted;
             }
-
-            // =========================
-            // SAVE CHANGES
-            // =========================
 
             await _context.SaveChangesAsync();
 
@@ -487,6 +518,235 @@ namespace HemaCore.Controllers
             return RedirectToAction(
                 "OrderDetails",
                 new { id = orderId }
+            );
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> CreateOrder()
+        {
+            await LoadSuppliers();
+
+            return View(new CreateOrderVM());
+        }
+
+
+        // =========================================================
+        // CREATE ORDER - POST
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateOrder(CreateOrderVM vm)
+        {
+            // =====================================================
+            // VALIDATE ITEMS
+            // =====================================================
+
+            if (vm.Items == null ||
+                !vm.Items.Any(x => x.Quantity > 0))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Please enter at least one item quantity."
+                );
+            }
+
+
+            // =====================================================
+            // VALIDATE SUPPLIER
+            // =====================================================
+
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s =>
+                    s.SupplierId == vm.SupplierID &&
+                    s.IsActive);
+
+            if (supplier == null)
+            {
+                ModelState.AddModelError(
+                    "SupplierID",
+                    "Please select a valid supplier."
+                );
+            }
+
+
+            // =====================================================
+            // RETURN IF BASIC VALIDATION FAILS
+            // =====================================================
+
+            if (!ModelState.IsValid)
+            {
+                await LoadSuppliers();
+
+                return View(vm);
+            }
+
+
+            // =====================================================
+            // GET SELECTED ITEMS
+            // =====================================================
+
+            var selectedItems = vm.Items
+                .Where(x => x.Quantity > 0)
+                .ToList();
+
+
+            // =====================================================
+            // GET VALID CONSUMABLES FROM DATABASE
+            // =====================================================
+
+            var consumableIds = selectedItems
+                .Select(x => x.ConsumableID)
+                .Distinct()
+                .ToList();
+
+            var consumables = await _context.Consumables
+                .Where(c =>
+                    consumableIds.Contains(c.ConsumableId) &&
+                    c.SupplierId == vm.SupplierID &&
+                    c.IsActive)
+                .ToListAsync();
+
+
+            // =====================================================
+            // VALIDATE SELECTED CONSUMABLES
+            // =====================================================
+
+            foreach (var item in selectedItems)
+            {
+                var consumable = consumables
+                    .FirstOrDefault(c =>
+                        c.ConsumableId == item.ConsumableID);
+
+                if (consumable == null)
+                {
+                    ModelState.AddModelError(
+                        "",
+                        $"Invalid consumable selected: {item.ConsumableID}"
+                    );
+                }
+            }
+
+
+            // Return if invalid consumables were selected
+            if (!ModelState.IsValid)
+            {
+                await LoadSuppliers();
+
+                return View(vm);
+            }
+
+
+            int year = DateTime.Now.Year;
+
+            var yearlyOrderNumbers = await _context.Orders
+                .Where(o => o.OrderDate.Year == year)
+                .Select(o => o.OrderNumber)
+                .ToListAsync();
+
+            int nextNumber = 1;
+
+            if (yearlyOrderNumbers.Any())
+            {
+                var numbers = yearlyOrderNumbers
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(orderNumber =>
+                    {
+                        var parts = orderNumber.Split('-');
+
+                        if (parts.Length == 3 &&
+                            int.TryParse(
+                                parts[2],
+                                out int number))
+                        {
+                            return number;
+                        }
+
+                        return 0;
+                    })
+                    .ToList();
+
+                if (numbers.Any())
+                {
+                    nextNumber = numbers.Max() + 1;
+                }
+            }
+
+            string orderNumber =
+                $"ORD-{year}-{nextNumber:D3}";
+
+            var order = new Order
+            {
+                OrderNumber = orderNumber,
+                OrderDate = DateTime.Now,
+                Status = OrderStatus.Ordered,
+                SupplierId = vm.SupplierID,
+
+                OrderItems = new List<OrderItem>()
+            };
+
+            foreach (var item in selectedItems)
+            {
+                var consumable = consumables
+                    .First(c =>
+                        c.ConsumableId == item.ConsumableID);
+
+                var orderItem = new OrderItem
+                {
+                    ConsumableId = consumable.ConsumableId,
+                    Quantity = item.Quantity,
+                    Status = OrderItemStatus.Pending
+                };
+
+                order.OrderItems.Add(orderItem);
+            }
+
+            _context.Orders.Add(order);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Order {order.OrderNumber} created successfully.";
+
+
+            return RedirectToAction(nameof(Orders));
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetConsumablesBySupplier(
+            int supplierId)
+        {
+            var consumables = await _context.Consumables
+                .Where(c =>
+                    c.SupplierId == supplierId &&
+                    c.IsActive)
+                .OrderBy(c => c.ConsumableName)
+                .Select(c => new
+                {
+                    consumableID = c.ConsumableId,
+                    consumableName = c.ConsumableName,
+                    quantityInHand = c.QuantityInHand,
+                    reorderLevel = c.ReorderLevel,
+                    status = c.Status.ToString()
+                })
+                .ToListAsync();
+
+            return Json(consumables);
+        }
+
+        private async Task LoadSuppliers()
+        {
+            var suppliers = await _context.Suppliers
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SupplierName)
+                .ToListAsync();
+
+            ViewBag.Suppliers = new SelectList(
+                suppliers,
+                "SupplierId",
+                "SupplierName"
             );
         }
 
