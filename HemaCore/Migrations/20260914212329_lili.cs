@@ -15,7 +15,7 @@ namespace HemaCore.Migrations
                 table: "Consents");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_ConsentTestAccesses_Consents_ConsentId1",
+                name: "FK_ConsentTestAccesses_Consents_ConsentId",
                 table: "ConsentTestAccesses");
 
             migrationBuilder.DropForeignKey(
@@ -30,27 +30,32 @@ namespace HemaCore.Migrations
                 name: "FK_PatientMedications_AspNetUsers_PatientId",
                 table: "PatientMedications");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_TestRequests_Patients_PatientId",
-                table: "TestRequests");
+            // Removed: FK did not exist in the database (confirmed via sys.foreign_keys - empty result)
+            //migrationBuilder.DropForeignKey(
+            //    name: "FK_TestRequests_Patients_PatientId",
+            //    table: "TestRequests");
 
             migrationBuilder.DropIndex(
-                name: "IX_ConsentTestAccesses_ConsentId1",
+                name: "IX_ConsentTestAccesses_ConsentId",
                 table: "ConsentTestAccesses");
 
-            migrationBuilder.DropColumn(
-                name: "ConsentId1",
-                table: "ConsentTestAccesses");
+            // Removed: column did not exist in the database
+            // (SQL error confirmed: "column 'ConsentId1' does not exist in table 'ConsentTestAccesses'")
+            //migrationBuilder.DropColumn(
+            //    name: "ConsentId1",
+            //    table: "ConsentTestAccesses");
 
             migrationBuilder.RenameColumn(
                 name: "PatientId",
                 table: "TestRequests",
                 newName: "PatientID");
 
-            migrationBuilder.RenameIndex(
-                name: "IX_TestRequests_PatientId",
-                table: "TestRequests",
-                newName: "IX_TestRequests_PatientID");
+            // Removed: no IX_TestRequests_PatientId index existed in the database
+            // (confirmed via sys.indexes - only PK_TestRequests and IX_TestRequests_DoctorId exist)
+            //migrationBuilder.RenameIndex(
+            //    name: "IX_TestRequests_PatientId",
+            //    table: "TestRequests",
+            //    newName: "IX_TestRequests_PatientID");
 
             migrationBuilder.RenameColumn(
                 name: "PatientId",
@@ -210,7 +215,7 @@ namespace HemaCore.Migrations
                 nullable: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConsentTestAccesses_ConsentId1",
+                name: "IX_ConsentTestAccesses_ConsentId",
                 table: "ConsentTestAccesses",
                 column: "ConsentId1");
 
@@ -223,7 +228,7 @@ namespace HemaCore.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ConsentTestAccesses_Consents_ConsentId1",
+                name: "FK_ConsentTestAccesses_Consents_ConsentId",
                 table: "ConsentTestAccesses",
                 column: "ConsentId1",
                 principalTable: "Consents",
