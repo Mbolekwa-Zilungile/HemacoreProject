@@ -634,8 +634,11 @@ namespace HemaCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("DateTimeReceived")
+                    b.Property<DateTime?>("DateTimeReceived")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("LabTechnicianId")
+                        .HasColumnType("int");
 
                     b.Property<int>("SampleTypeId")
                         .HasColumnType("int");
@@ -644,6 +647,8 @@ namespace HemaCore.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("SampleId");
+
+                    b.HasIndex("LabTechnicianId");
 
                     b.HasIndex("SampleTypeId");
 
@@ -1368,6 +1373,10 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.Sample", b =>
                 {
+                    b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
+                        .WithMany()
+                        .HasForeignKey("LabTechnicianId");
+
                     b.HasOne("HemaCore.Models.SampleType", "SampleType")
                         .WithMany("Samples")
                         .HasForeignKey("SampleTypeId")
@@ -1379,6 +1388,8 @@ namespace HemaCore.Migrations
                         .HasForeignKey("TestRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("LabTechnician");
 
                     b.Navigation("SampleType");
 

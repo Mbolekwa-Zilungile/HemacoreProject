@@ -696,64 +696,61 @@
                 <div class="table-responsive">
 
                     <table class="table sample-table">
-
                         <thead>
-
                             <tr>
                                 <th>Barcode</th>
                                 <th>Sample Type</th>
                                 <th>Received Date & Time</th>
+                                <th>Action</th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             @foreach (var sample in Model.Samples)
                             {
                                 <tr>
-
                                     <td>
-
                                         <span class="barcode">
-
                                             <i class="fas fa-barcode"></i>
-
                                             @sample.Barcode
-
                                         </span>
-
                                     </td>
-
-
                                     <td>
-
                                         <span class="sample-type">
-
                                             <i class="fas fa-vial me-1"></i>
-
                                             @sample.SampleType?.SampleName
-
                                         </span>
-
                                     </td>
-
-
                                     <td>
-
-                                        @sample.DateTimeReceived.ToString(
-                                            "dd/MM/yyyy HH:mm:ss"
-                                        )
-
+                                        @if (sample.DateTimeReceived.HasValue)
+                                        {
+                                            @sample.DateTimeReceived.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not yet received</span>
+                                        }
                                     </td>
-
+                                    <td>
+                                        @if (sample.DateTimeReceived.HasValue)
+                                        {
+                                            <span class="badge bg-success">Received</span>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="ConfirmReceiveSample"
+                                                  asp-route-sampleId="@sample.SampleId"
+                                                  method="post">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Confirm Receipt
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
                                 </tr>
                             }
-
                         </tbody>
-
                     </table>
-
                 </div>
             }
 

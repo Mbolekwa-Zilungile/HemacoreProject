@@ -442,9 +442,10 @@
                                 </td>
 
                                 <td>
-                                    @sample.DateTimeReceived.ToString("dd/MM/yyyy HH:mm")
+                                    @(sample.DateTimeReceived.HasValue
+                                        ? sample.DateTimeReceived.Value.ToString("dd/MM/yyyy HH:mm")
+                                        : "Not yet received")
                                 </td>
-
                             </tr>
                         }
 

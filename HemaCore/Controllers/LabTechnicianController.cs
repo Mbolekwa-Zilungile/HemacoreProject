@@ -211,44 +211,60 @@ namespace HemaCore.Controllers
         // ==========================================
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmReceiveSample(int id)
+        public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
         {
-            var testRequest = await _context.TestRequests
-                .Include(t => t.Samples)
-                .FirstOrDefaultAsync(t =>
-                    t.TestRequestId == id);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
 
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
-            if (testRequest == null)
+            if (technician == null)
+            {
+                return NotFound("Lab technician profile not found.");
+            }
+
+            var sample = await _context.Samples
+                .Include(s => s.TestRequest)
+                    .ThenInclude(r => r.Samples)
+                .FirstOrDefaultAsync(s => s.SampleId == sampleId);
+
+            if (sample == null)
             {
                 return NotFound();
             }
 
+            // Mark this one sample as received
+            sample.DateTimeReceived = DateTime.Now;
+            sample.LabTechnicianId = technician.LabTechnicianId;
 
-            foreach (var sample in testRequest.Samples)
+            // Check if every sample on this request has now been received
+            bool allReceived = sample.TestRequest.Samples
+                .All(s => s.DateTimeReceived.HasValue);
+
+            if (allReceived)
             {
-                sample.DateTimeReceived = DateTime.Now;
+                sample.TestRequest.Status = "SamplesReceived";
             }
-
-
-            testRequest.Status = "SamplesReceived";
-
 
             await _context.SaveChangesAsync();
 
             TempData["SampleReceivedSuccess"] =
-                $"Request #{id} has been successfully received.";
+                allReceived
+                    ? $"All samples for Request #{sample.TestRequestId} have been received."
+                    : $"Sample {sample.Barcode} received. Waiting on remaining samples.";
 
-            TempData["ReceivedRequestId"] = id;
+            TempData["ReceivedRequestId"] = sample.TestRequestId;
 
-            return RedirectToAction(nameof(ReceiveSample));
+            return RedirectToAction(nameof(ReceiveSampleDetails), new { id = sample.TestRequestId });
         }
 
 
-
-        // ==========================================
         // PROCESS TESTS
-        // ==========================================
+
 
         public async Task<IActionResult> ProcessTests()
         {
