@@ -221,6 +221,29 @@ namespace HemaCore.Migrations
                     b.ToTable("Consents");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentCondition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConditionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ConsentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConditionId");
+
+                    b.HasIndex("ConsentId");
+
+                    b.ToTable("ConsentConditions");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -1210,6 +1233,25 @@ namespace HemaCore.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentCondition", b =>
+                {
+                    b.HasOne("HemaCore.Models.Condition", "Condition")
+                        .WithMany()
+                        .HasForeignKey("ConditionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Consent", "Consent")
+                        .WithMany()
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Condition");
+
+                    b.Navigation("Consent");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.HasOne("HemaCore.Models.Consent", "Consent")
@@ -1651,8 +1693,7 @@ namespace HemaCore.Migrations
                 {
                     b.Navigation("TestRequestTestType");
 
-                    b.Navigation("TestResultVerification")
-                        .IsRequired();
+                    b.Navigation("TestResultVerification");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestType", b =>

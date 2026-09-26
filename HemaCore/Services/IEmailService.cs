@@ -8,5 +8,12 @@
            string surname,
            string temporaryPassword,
            string role);
+
+        Task SendConsentGrantedEmailAsync(
+            string doctorEmail, 
+            string doctorName,
+            string patientName,
+            string patientSurname,
+            List<string> sharedConditions);
     }
 }

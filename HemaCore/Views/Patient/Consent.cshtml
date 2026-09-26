@@ -1,0 +1,348 @@
+﻿
+@using HemaCore.Models
+
+@{
+    ViewData["Title"] = "My Consent";
+    Layout = "_PatientLayout";
+
+    var doctors = ViewBag.Doctors as IEnumerable<Doctor>
+                   ?? new List<Doctor>();
+
+    var patientConditions = ViewBag.Conditions as IEnumerable<PatientCondition>
+                            ?? new List<PatientCondition>();
+}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-shield me-2"></i>
+                My Consent
+            </h2>
+
+            <p class="text-muted mb-0">
+                Choose what medical information you want to share with your doctor.
+            </p>
+        </div>
+    </div>
+
+
+    <!-- Success Message -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["Success"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+            </button>
+        </div>
+    }
+
+
+    <!-- Error Message -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["Error"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+            </button>
+        </div>
+    }
+
+
+    <div class="row">
+
+        <!-- Consent Form -->
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-hand-holding-medical me-2"></i>
+                        Grant Doctor Access
+                    </h5>
+                </div>
+
+
+                <div class="card-body">
+
+                    <form asp-controller="Patient"
+                          asp-action="Consent"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+
+                        <!-- Doctor -->
+                        <div class="mb-4">
+
+                            <label for="doctorId"
+                                   class="form-label fw-semibold">
+
+                                Select Doctor
+
+                            </label>
+
+                            <select id="doctorId"
+                                    name="doctorId"
+                                    class="form-select"
+                                    required>
+
+                                <option value="">
+                                    -- Select a Doctor --
+                                </option>
+
+                                @foreach (var doctor in doctors)
+                                {
+                                    <option value="@doctor.DoctorId">
+                                        Dr. @doctor.Name @doctor.Surname
+                                    </option>
+                                }
+
+                            </select>
+
+                            <small class="text-muted">
+                                Select the doctor you want to give access to.
+                            </small>
+
+                        </div>
+
+
+                        <!-- Conditions -->
+                        <div class="mb-4">
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                <label class="form-label fw-semibold mb-0">
+                                    Medical Conditions
+                                </label>
+
+                                @if (patientConditions.Any())
+                                {
+                                    <span class="badge bg-secondary">
+                                        @patientConditions.Count() available
+                                    </span>
+                                }
+
+                            </div>
+
+
+                            <p class="text-muted small">
+                                Select only the conditions you are comfortable
+                                sharing with this doctor.
+                            </p>
+
+
+                            @if (patientConditions.Any())
+                            {
+                                <div class="border rounded p-3">
+
+                                    @foreach (var patientCondition in patientConditions)
+                                    {
+                                        if (patientCondition.Condition != null)
+                                        {
+                                            <div class="form-check mb-3">
+
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       name="selectedConditionIds"
+                                                       value="@patientCondition.ConditionId"
+                                                       id="condition_@patientCondition.ConditionId" />
+
+                                                <label class="form-check-label"
+                                                       for="condition_@patientCondition.ConditionId">
+
+                                                    @patientCondition.Condition.Name
+
+                                                </label>
+
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+
+                                    <i class="fas fa-info-circle me-2"></i>
+
+                                    You currently have no medical conditions
+                                    recorded in your profile.
+
+                                </div>
+                            }
+
+                        </div>
+
+
+                        <!-- Privacy Notice -->
+                        <div class="alert alert-light border">
+
+                            <div class="d-flex">
+
+                                <i class="fas fa-lock text-primary me-3 mt-1"></i>
+
+                                <div>
+
+                                    <strong>Your choice matters</strong>
+
+                                    <p class="mb-0 small text-muted">
+                                        Only the conditions you select will be
+                                        associated with this consent. You do not
+                                        have to share medical conditions that you
+                                        do not want this doctor to see.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Submit -->
+                        <div class="d-flex justify-content-end">
+
+                            <button type="submit"
+                                    class="btn btn-primary px-4"
+                                    @(doctors.Any() ? "" : "disabled")>
+
+                                <i class="fas fa-check me-2"></i>
+                                Grant Consent
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Information Card -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white py-3">
+
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        How Consent Works
+                    </h5>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <div class="mb-4">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+                                <i class="fas fa-user-md fa-lg"></i>
+                            </div>
+
+                            <div>
+                                <strong>1. Choose a doctor</strong>
+
+                                <p class="text-muted small mb-0">
+                                    Select the doctor you want to give access to.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+                                <i class="fas fa-notes-medical fa-lg"></i>
+                            </div>
+
+                            <div>
+                                <strong>2. Choose information</strong>
+
+                                <p class="text-muted small mb-0">
+                                    Select the conditions you want to share.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+                                <i class="fas fa-envelope fa-lg"></i>
+                            </div>
+
+                            <div>
+                                <strong>3. Doctor is notified</strong>
+
+                                <p class="text-muted small mb-0">
+                                    The doctor will receive an email when
+                                    consent is granted.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Privacy Card -->
+            <div class="card shadow-sm border-0 mt-4">
+
+                <div class="card-body">
+
+                    <h6>
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Privacy
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        You remain in control of the medical information
+                        you choose to share. Conditions that you do not
+                        select will not be added to this consent.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+

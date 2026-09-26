@@ -18,7 +18,7 @@
             <h1>My Test Requests</h1>
 
             <p>
-                Review laboratory test requests created for you by your doctor.
+                Track the progress of laboratory test requests created for you by your doctor.
             </p>
         </div>
 
@@ -95,7 +95,8 @@
                     statusClass = "status-submitted";
                 }
                 else if (request.Status == "In progress" ||
-                         request.Status == "Sample(s) received")
+                         request.Status == "Sample(s) received" ||
+                         request.Status == "SamplesReceived")
                 {
                     statusClass = "status-progress";
                 }
@@ -110,6 +111,36 @@
                     request.Urgency == "STAT")
                 {
                     urgencyClass = "urgency-urgent";
+                }
+
+                /*
+                 * Determine the current tracking stage.
+                 *
+                 * 1 = Submitted
+                 * 2 = Sample Received
+                 * 3 = In Progress
+                 * 4 = Completed
+                 * 5 = Released
+                 */
+
+                var currentStage = 1;
+
+                if (request.Status == "Sample(s) received" ||
+                    request.Status == "SamplesReceived")
+                {
+                    currentStage = 2;
+                }
+                else if (request.Status == "In progress")
+                {
+                    currentStage = 3;
+                }
+                else if (request.Status == "Completed")
+                {
+                    currentStage = 4;
+                }
+                else if (request.Status == "Released by doctor")
+                {
+                    currentStage = 5;
                 }
 
                 <div class="request-card">
@@ -134,10 +165,202 @@
 
                     </div>
 
+
+                    <!-- REQUEST TRACKER -->
+                    @if (request.Status != "Cancelled")
+                    {
+                        <div class="request-tracker">
+
+                            <div class="tracker-header">
+                                <div>
+                                    <span class="tracker-label">
+                                        <i class="fas fa-route"></i>
+                                        REQUEST PROGRESS
+                                    </span>
+
+                                    <strong>
+                                        @if (currentStage == 1)
+                                        {
+                                            @:Request Submitted
+                                        }
+                                        else if (currentStage == 2)
+                                        {
+                                            @:Sample Received
+                                        }
+                                        else if (currentStage == 3)
+                                        {
+                                            @:Test In Progress
+                                        }
+                                        else if (currentStage == 4)
+                                        {
+                                            @:Testing Completed
+                                        }
+                                        else
+                                        {
+                                            @:Released by Doctor
+                                        }
+                                    </strong>
+                                </div>
+
+                                <span class="tracker-count">
+                                    Step @currentStage of 5
+                                </span>
+                            </div>
+
+
+                            <div class="tracker">
+
+                                <!-- STEP 1 -->
+                                <div class="tracker-step
+                                     @(currentStage >= 1 ? "completed" : "")
+                                     @(currentStage == 1 ? "current" : "")">
+
+                                    <div class="tracker-circle">
+                                        @if (currentStage > 1)
+                                        {
+                                            <i class="fas fa-check"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-paper-plane"></i>
+                                        }
+                                    </div>
+
+                                    <span>Submitted</span>
+                                </div>
+
+
+                                <div class="tracker-line
+                                     @(currentStage >= 2 ? "active" : "")">
+                                </div>
+
+
+                                <!-- STEP 2 -->
+                                <div class="tracker-step
+                                     @(currentStage >= 2 ? "completed" : "")
+                                     @(currentStage == 2 ? "current" : "")">
+
+                                    <div class="tracker-circle">
+                                        @if (currentStage > 2)
+                                        {
+                                            <i class="fas fa-check"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-vial"></i>
+                                        }
+                                    </div>
+
+                                    <span>Sample Received</span>
+                                </div>
+
+
+                                <div class="tracker-line
+                                     @(currentStage >= 3 ? "active" : "")">
+                                </div>
+
+
+                                <!-- STEP 3 -->
+                                <div class="tracker-step
+                                     @(currentStage >= 3 ? "completed" : "")
+                                     @(currentStage == 3 ? "current" : "")">
+
+                                    <div class="tracker-circle">
+                                        @if (currentStage > 3)
+                                        {
+                                            <i class="fas fa-check"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-microscope"></i>
+                                        }
+                                    </div>
+
+                                    <span>In Progress</span>
+                                </div>
+
+
+                                <div class="tracker-line
+                                     @(currentStage >= 4 ? "active" : "")">
+                                </div>
+
+
+                                <!-- STEP 4 -->
+                                <div class="tracker-step
+                                     @(currentStage >= 4 ? "completed" : "")
+                                     @(currentStage == 4 ? "current" : "")">
+
+                                    <div class="tracker-circle">
+                                        @if (currentStage > 4)
+                                        {
+                                            <i class="fas fa-check"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-check-double"></i>
+                                        }
+                                    </div>
+
+                                    <span>Completed</span>
+                                </div>
+
+
+                                <div class="tracker-line
+                                     @(currentStage >= 5 ? "active" : "")">
+                                </div>
+
+
+                                <!-- STEP 5 -->
+                                <div class="tracker-step
+                                     @(currentStage >= 5 ? "completed" : "")
+                                     @(currentStage == 5 ? "current" : "")">
+
+                                    <div class="tracker-circle">
+                                        @if (currentStage >= 5)
+                                        {
+                                            <i class="fas fa-check"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-md"></i>
+                                        }
+                                    </div>
+
+                                    <span>Released</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+
+                    <!-- Cancelled Tracker -->
+                    @if (request.Status == "Cancelled")
+                    {
+                        <div class="cancelled-tracker">
+
+                            <div class="cancelled-tracker-icon">
+                                <i class="fas fa-times"></i>
+                            </div>
+
+                            <div>
+                                <strong>Request Cancelled</strong>
+
+                                <span>
+                                    This laboratory test request has been cancelled.
+                                </span>
+                            </div>
+
+                        </div>
+                    }
+
+
                     <!-- Request Information -->
                     <div class="request-info">
 
                         <div class="info-item">
+
                             <span class="info-label">
                                 <i class="fas fa-user-md"></i>
                                 Doctor
@@ -146,9 +369,12 @@
                             <strong>
                                 Dr. @request.Doctor?.Name @request.Doctor?.Surname
                             </strong>
+
                         </div>
 
+
                         <div class="info-item">
+
                             <span class="info-label">
                                 <i class="fas fa-calendar"></i>
                                 Request Date
@@ -157,9 +383,12 @@
                             <strong>
                                 @request.RequestDate.ToString("dd MMM yyyy HH:mm")
                             </strong>
+
                         </div>
 
+
                         <div class="info-item">
+
                             <span class="info-label">
                                 <i class="fas fa-exclamation-circle"></i>
                                 Urgency
@@ -168,14 +397,17 @@
                             <span class="urgency-badge @urgencyClass">
                                 @request.Urgency
                             </span>
+
                         </div>
 
                     </div>
+
 
                     <!-- Clinical Notes -->
                     @if (!string.IsNullOrWhiteSpace(request.ClinicalNotes))
                     {
                         <div class="clinical-notes">
+
                             <span class="info-label">
                                 <i class="fas fa-notes-medical"></i>
                                 Clinical Notes
@@ -184,8 +416,10 @@
                             <p>
                                 @request.ClinicalNotes
                             </p>
+
                         </div>
                     }
+
 
                     <!-- Requested Tests -->
                     <div class="section">
@@ -209,6 +443,7 @@
                                         </div>
 
                                         <div class="test-details">
+
                                             <strong>
                                                 @item.TestType?.TestTypeName
                                             </strong>
@@ -216,6 +451,7 @@
                                             <span>
                                                 Status: @item.Status
                                             </span>
+
                                         </div>
 
                                     </div>
@@ -231,6 +467,7 @@
                         }
 
                     </div>
+
 
                     <!-- Samples -->
                     <div class="section">
@@ -283,6 +520,7 @@
 
                     </div>
 
+
                     <!-- Cancellation Information -->
                     @if (request.Status == "Cancelled")
                     {
@@ -312,29 +550,38 @@
                         </div>
                     }
 
+
                     <!-- Released Results -->
                     @if (request.Status == "Released by doctor")
                     {
                         <div class="released-box">
 
                             <div>
+
                                 <i class="fas fa-check-circle"></i>
 
                                 <div>
-                                    <strong>Results Released</strong>
+
+                                    <strong>
+                                        Results Released
+                                    </strong>
 
                                     <span>
                                         Your doctor has released the results
                                         for this test request.
                                     </span>
+
                                 </div>
+
                             </div>
 
                             <a asp-controller="Patient"
                                asp-action="Result"
                                class="view-results-btn">
+
                                 <i class="fas fa-file-medical"></i>
                                 View Results
+
                             </a>
 
                         </div>
@@ -347,6 +594,7 @@
     }
 
 </div>
+
 
 <style>
 
@@ -376,9 +624,9 @@
         margin-bottom: 6px;
     }
 
-        .page-label i {
-            margin-right: 6px;
-        }
+    .page-label i {
+        margin-right: 6px;
+    }
 
     .page-header h1 {
         margin: 0;
@@ -407,10 +655,10 @@
         transition: 0.2s ease;
     }
 
-        .back-btn:hover {
-            background: #f5f7fb;
-            color: #2447aa;
-        }
+    .back-btn:hover {
+        background: #f5f7fb;
+        color: #2447aa;
+    }
 
     /* Alerts */
 
@@ -517,10 +765,10 @@
         font-weight: 600;
     }
 
-        .primary-btn:hover {
-            background: #2447aa;
-            color: white;
-        }
+    .primary-btn:hover {
+        background: #2447aa;
+        color: white;
+    }
 
     /* Request Card */
 
@@ -557,10 +805,10 @@
         color: #172033;
     }
 
-        .request-header h2 i {
-            color: #3157c7;
-            margin-right: 7px;
-        }
+    .request-header h2 i {
+        color: #3157c7;
+        margin-right: 7px;
+    }
 
     /* Status */
 
@@ -615,6 +863,169 @@
         color: #b53a3a;
     }
 
+
+    /* =========================
+       REQUEST TRACKER
+       ========================= */
+
+    .request-tracker {
+        margin: 22px 0 6px;
+        padding: 20px;
+        background: #f8f9fc;
+        border: 1px solid #e7ebf1;
+        border-radius: 12px;
+    }
+
+    .tracker-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .tracker-header > div {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .tracker-label {
+        color: #718096;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+    }
+
+    .tracker-label i {
+        color: #3157c7;
+        margin-right: 5px;
+    }
+
+    .tracker-header strong {
+        font-size: 15px;
+        color: #172033;
+    }
+
+    .tracker-count {
+        padding: 6px 10px;
+        border-radius: 15px;
+        background: #edf2ff;
+        color: #3157c7;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .tracker {
+        display: flex;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .tracker-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-width: 90px;
+        flex: 0 0 90px;
+        gap: 8px;
+    }
+
+    .tracker-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #e8ebf0;
+        color: #8a94a6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        border: 3px solid #e8ebf0;
+        transition: 0.2s ease;
+    }
+
+    .tracker-step span {
+        font-size: 11px;
+        line-height: 1.3;
+        color: #8a94a6;
+        font-weight: 600;
+    }
+
+    .tracker-step.completed .tracker-circle {
+        background: #3157c7;
+        border-color: #3157c7;
+        color: white;
+    }
+
+    .tracker-step.completed span {
+        color: #3157c7;
+    }
+
+    .tracker-step.current .tracker-circle {
+        box-shadow: 0 0 0 5px rgba(49, 87, 199, 0.10);
+    }
+
+    .tracker-step.current span {
+        font-weight: 700;
+    }
+
+    .tracker-line {
+        height: 3px;
+        flex: 1;
+        background: #e1e5eb;
+        margin-top: 20px;
+        min-width: 20px;
+        border-radius: 5px;
+    }
+
+    .tracker-line.active {
+        background: #3157c7;
+    }
+
+
+    /* Cancelled Tracker */
+
+    .cancelled-tracker {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 22px 0 6px;
+        padding: 16px;
+        border-radius: 10px;
+        background: #fff5f5;
+        border: 1px solid #f3cccc;
+    }
+
+    .cancelled-tracker-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fdecec;
+        color: #b53a3a;
+    }
+
+    .cancelled-tracker strong,
+    .cancelled-tracker span {
+        display: block;
+    }
+
+    .cancelled-tracker strong {
+        color: #b53a3a;
+        margin-bottom: 3px;
+    }
+
+    .cancelled-tracker span {
+        color: #7d5656;
+        font-size: 13px;
+    }
+
+
     /* Request Info */
 
     .request-info {
@@ -638,15 +1049,16 @@
         letter-spacing: 0.04em;
     }
 
-        .info-label i {
-            color: #3157c7;
-            margin-right: 5px;
-        }
+    .info-label i {
+        color: #3157c7;
+        margin-right: 5px;
+    }
 
     .info-item strong {
         color: #172033;
         font-size: 14px;
     }
+
 
     /* Clinical Notes */
 
@@ -657,12 +1069,13 @@
         margin-bottom: 22px;
     }
 
-        .clinical-notes p {
-            margin: 8px 0 0;
-            color: #4a5568;
-            line-height: 1.6;
-            font-size: 14px;
-        }
+    .clinical-notes p {
+        margin: 8px 0 0;
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
 
     /* Sections */
 
@@ -679,10 +1092,11 @@
         margin-bottom: 14px;
     }
 
-        .section-title i {
-            color: #3157c7;
-            margin-right: 7px;
-        }
+    .section-title i {
+        color: #3157c7;
+        margin-right: 7px;
+    }
+
 
     /* Tests */
 
@@ -719,15 +1133,16 @@
         gap: 3px;
     }
 
-        .test-details strong {
-            font-size: 14px;
-            color: #172033;
-        }
+    .test-details strong {
+        font-size: 14px;
+        color: #172033;
+    }
 
-        .test-details span {
-            font-size: 12px;
-            color: #718096;
-        }
+    .test-details span {
+        font-size: 12px;
+        color: #718096;
+    }
+
 
     /* Samples */
 
@@ -747,11 +1162,11 @@
         padding: 13px 15px;
     }
 
-        .sample-item > div {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+    .sample-item > div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
 
     .sample-label {
         font-size: 11px;
@@ -771,6 +1186,7 @@
         margin: 0;
     }
 
+
     /* Cancelled */
 
     .cancelled-box {
@@ -781,11 +1197,12 @@
         border: 1px solid #f3cccc;
     }
 
-        .cancelled-box p {
-            margin: 7px 0 0;
-            font-size: 14px;
-            color: #6b3a3a;
-        }
+    .cancelled-box p {
+        margin: 7px 0 0;
+        font-size: 14px;
+        color: #6b3a3a;
+    }
+
 
     /* Released */
 
@@ -801,31 +1218,31 @@
         gap: 15px;
     }
 
-        .released-box > div {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+    .released-box > div {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
 
-            .released-box > div > i {
-                color: #16766b;
-                font-size: 23px;
-            }
+    .released-box > div > i {
+        color: #16766b;
+        font-size: 23px;
+    }
 
-        .released-box strong,
-        .released-box span {
-            display: block;
-        }
+    .released-box strong,
+    .released-box span {
+        display: block;
+    }
 
-        .released-box strong {
-            color: #16766b;
-            margin-bottom: 3px;
-        }
+    .released-box strong {
+        color: #16766b;
+        margin-bottom: 3px;
+    }
 
-        .released-box span {
-            color: #5b7773;
-            font-size: 13px;
-        }
+    .released-box span {
+        color: #5b7773;
+        font-size: 13px;
+    }
 
     .view-results-btn {
         display: inline-flex;
@@ -841,12 +1258,30 @@
         white-space: nowrap;
     }
 
-        .view-results-btn:hover {
-            background: #2447aa;
-            color: white;
-        }
+    .view-results-btn:hover {
+        background: #2447aa;
+        color: white;
+    }
+
 
     /* Responsive */
+
+    @@media (max-width: 900px) {
+
+        .tracker {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tracker-step {
+            min-width: 85px;
+            flex-basis: 85px;
+        }
+
+        .tracker-line {
+            min-width: 25px;
+        }
+    }
 
     @@media (max-width: 800px) {
 
@@ -878,6 +1313,11 @@
         .released-box {
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .tracker-header {
+            align-items: flex-start;
+            flex-direction: column;
         }
     }
 

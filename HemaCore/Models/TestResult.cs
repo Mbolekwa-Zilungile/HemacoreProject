@@ -19,7 +19,7 @@ namespace HemaCore.Models
         public ICollection<TestRequestItem> TestRequestTestType { get; set; }
             = new List<TestRequestItem>(); // Test request item navigation
 
-        public TestResultVerification TestResultVerification { get; set; } // Test result verification navigation
+        public TestResultVerification? TestResultVerification { get; set; } // Test result verification navigation
     }
 }
 

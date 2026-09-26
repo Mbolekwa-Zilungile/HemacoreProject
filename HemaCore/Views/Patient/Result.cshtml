@@ -1,0 +1,769 @@
+﻿@model List<HemaCore.Models.TestRequest>
+
+@{
+    ViewData["Title"] = "My Results";
+    Layout = "_PatientLayout";
+}
+
+<div class="patient-page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+
+        <div>
+            <div class="page-label">
+                <i class="fas fa-file-medical"></i>
+                PATIENT RESULTS
+            </div>
+
+            <h1>My Results</h1>
+
+            <p>
+                View your verified laboratory results released by your doctor.
+            </p>
+        </div>
+
+        <a asp-controller="Patient"
+           asp-action="MyTestRequests"
+           class="back-btn">
+
+            <i class="fas fa-arrow-left"></i>
+            My Test Requests
+
+        </a>
+
+    </div>
+
+
+    @if (Model == null || !Model.Any())
+    {
+        <!-- NO RESULTS -->
+
+        <div class="empty-card">
+
+            <div class="empty-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+
+            <h2>No Results Available</h2>
+
+            <p>
+                You currently do not have any verified results released
+                by your doctor.
+            </p>
+
+            <a asp-controller="Patient"
+               asp-action="MyTestRequests"
+               class="primary-btn">
+
+                <i class="fas fa-list"></i>
+                View Test Requests
+
+            </a>
+
+        </div>
+    }
+    else
+    {
+        <!-- RESULTS -->
+
+        <div class="results-list">
+
+            @foreach (var request in Model)
+            {
+                var verifiedTests = request.TestRequestTestTypes
+                    .Where(i =>
+                        i.TestResult != null &&
+                        i.TestResult.TestResultVerification != null &&
+                        i.TestResult.TestResultVerification.Status == "Verified")
+                    .ToList();
+
+                if (!verifiedTests.Any())
+                {
+                    continue;
+                }
+
+                <div class="result-card">
+
+                    <!-- RESULT HEADER -->
+
+                    <div class="result-header">
+
+                        <div>
+
+                            <div class="result-request-number">
+                                Request #@request.TestRequestId
+                            </div>
+
+                            <h2>
+                                Laboratory Results
+                            </h2>
+
+                            <p class="result-date">
+
+                                <i class="fas fa-calendar"></i>
+
+                                Released:
+                                @(request.ReleasedToPatientDate.HasValue
+                                    ? request.ReleasedToPatientDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                    : "N/A")
+
+                            </p>
+
+                        </div>
+
+
+                        <div class="released-badge">
+
+                            <i class="fas fa-check-circle"></i>
+
+                            Released
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOCTOR INFORMATION -->
+
+                    <div class="doctor-section">
+
+                        <div class="doctor-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="info-label">
+                                Doctor
+                            </span>
+
+                            <strong>
+                                Dr.
+                                @request.Doctor?.Name
+                                @request.Doctor?.Surname
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RELEASE NOTE -->
+                    @if (!string.IsNullOrWhiteSpace(request.ReleaseNote))
+                    {
+                        <div class="release-note">
+
+                            <div class="release-note-icon">
+                                <i class="fas fa-comment-medical"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Doctor's Note
+                                </strong>
+
+                                <p>
+                                    @request.ReleaseNote
+                                </p>
+
+                            </div>
+
+                        </div>
+                    }
+
+
+                    <!-- RESULTS -->
+
+                    <div class="results-section">
+
+                        <div class="section-title">
+
+                            <i class="fas fa-vial"></i>
+
+                            Verified Test Results
+
+                        </div>
+
+
+                        @foreach (var item in verifiedTests)
+                        {
+                            var result = item.TestResult;
+                            var verification = result?.TestResultVerification;
+
+                            <div class="test-result-row">
+
+                                <!-- TEST NAME -->
+
+                                <div class="test-information">
+
+                                    <div class="test-icon">
+                                        <i class="fas fa-flask"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            @item.TestType?.TestTypeName
+                                        </strong>
+
+                                        <span>
+                                            Laboratory Test
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- RESULT VALUE -->
+
+                                <div class="result-value-section">
+
+                                    <span class="info-label">
+                                        Result
+                                    </span>
+
+                                    <strong class="result-value
+                                        @(result.IsAbnormal
+                                            ? "abnormal-result"
+                                            : "normal-result")">
+
+                                        @result.ResultValue
+
+                                    </strong>
+
+                                    @if (result.IsAbnormal)
+                                    {
+                                        <span class="abnormal-badge">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Abnormal
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="normal-badge">
+                                            <i class="fas fa-check"></i>
+                                            Normal
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <!-- NOTES -->
+
+                                <div class="result-notes">
+
+                                    <span class="info-label">
+                                        Notes
+                                    </span>
+
+                                    <span>
+                                        @(string.IsNullOrWhiteSpace(result.Notes)
+                                            ? "No additional notes."
+                                            : result.Notes)
+                                    </span>
+
+                                </div>
+
+
+                                <!-- VERIFICATION -->
+
+                                <div class="verification-section">
+
+                                    <span class="info-label">
+                                        Verification
+                                    </span>
+
+                                    <span class="verified-text">
+
+                                        <i class="fas fa-shield-alt"></i>
+
+                                        Verified
+
+                                    </span>
+
+                                    @if (verification != null)
+                                    {
+                                        <small>
+                                            @verification.VerificationDateTime
+                                            .ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+
+                    <!-- DOWNLOAD -->
+
+                    <div class="result-footer">
+
+                        <div class="secure-message">
+
+                            <i class="fas fa-lock"></i>
+
+                            These results have been verified and released
+                            by your doctor.
+
+                        </div>
+
+                        <a asp-controller="Patient"
+                           asp-action="DownloadResult"
+                           asp-route-id="@request.TestRequestId"
+                           class="download-btn">
+
+                            <i class="fas fa-download"></i>
+
+                            Download Results
+
+                        </a>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+<style>
+
+    .patient-page {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        color: #172033;
+    }
+
+    /* HEADER */
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .page-label {
+        color: #3157c7;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+    }
+
+    .page-label i {
+        margin-right: 6px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        color: #172033;
+    }
+
+    .page-header p {
+        margin: 8px 0 0;
+        color: #718096;
+        font-size: 15px;
+    }
+
+    /* BACK BUTTON */
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border: 1px solid #dce2ea;
+        border-radius: 8px;
+        background: #fff;
+        color: #3157c7;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.2s ease;
+    }
+
+    .back-btn:hover {
+        background: #f5f7fb;
+        color: #2447aa;
+    }
+
+    /* EMPTY */
+
+    .empty-card {
+        background: #fff;
+        border: 1px solid #e7ebf1;
+        border-radius: 12px;
+        padding: 55px 30px;
+        text-align: center;
+        box-shadow: 0 3px 12px rgba(23, 32, 51, 0.05);
+    }
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        background: #f1f4fb;
+        color: #3157c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .empty-card h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+    }
+
+    .empty-card p {
+        color: #718096;
+        margin-bottom: 22px;
+    }
+
+    .primary-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 18px;
+        background: #3157c7;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .primary-btn:hover {
+        color: #fff;
+        background: #2447aa;
+    }
+
+    /* RESULT CARD */
+
+    .result-card {
+        background: #fff;
+        border: 1px solid #e7ebf1;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(23, 32, 51, 0.05);
+    }
+
+    /* RESULT HEADER */
+
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 24px;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .result-request-number {
+        color: #3157c7;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .result-header h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .result-date {
+        margin: 7px 0 0;
+        color: #718096;
+        font-size: 14px;
+    }
+
+    .result-date i {
+        margin-right: 5px;
+    }
+
+    .released-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 13px;
+        border-radius: 20px;
+        background: #eef9f2;
+        color: #267346;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    /* DOCTOR */
+
+    .doctor-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 24px;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .doctor-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #f1f4fb;
+        color: #3157c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .doctor-section strong {
+        display: block;
+        margin-top: 3px;
+    }
+
+    /* LABEL */
+
+    .info-label {
+        display: block;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    /* RELEASE NOTE */
+
+    .release-note {
+        display: flex;
+        gap: 12px;
+        margin: 20px 24px;
+        padding: 16px;
+        background: #f8faff;
+        border: 1px solid #dfe7fa;
+        border-radius: 8px;
+    }
+
+    .release-note-icon {
+        color: #3157c7;
+        font-size: 20px;
+        padding-top: 2px;
+    }
+
+    .release-note strong {
+        font-size: 14px;
+    }
+
+    .release-note p {
+        margin: 5px 0 0;
+        color: #4a5568;
+    }
+
+    /* RESULTS SECTION */
+
+    .results-section {
+        padding: 22px 24px 0;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .section-title i {
+        color: #3157c7;
+        margin-right: 7px;
+    }
+
+    /* RESULT ROW */
+
+    .test-result-row {
+        display: grid;
+        grid-template-columns: 1.4fr 1.2fr 1.6fr 1fr;
+        gap: 20px;
+        align-items: center;
+        padding: 20px 0;
+        border-top: 1px solid #edf0f4;
+    }
+
+    .test-information {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .test-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 9px;
+        background: #f1f4fb;
+        color: #3157c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .test-information strong {
+        display: block;
+        font-size: 15px;
+    }
+
+    .test-information span {
+        display: block;
+        margin-top: 4px;
+        color: #718096;
+        font-size: 12px;
+    }
+
+    /* RESULT VALUE */
+
+    .result-value {
+        display: block;
+        font-size: 18px;
+        margin-bottom: 6px;
+    }
+
+    .normal-result {
+        color: #267346;
+    }
+
+    .abnormal-result {
+        color: #c0392b;
+    }
+
+    .normal-badge,
+    .abnormal-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .normal-badge {
+        color: #267346;
+    }
+
+    .abnormal-badge {
+        color: #c0392b;
+    }
+
+    /* NOTES */
+
+    .result-notes > span:last-child {
+        color: #4a5568;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* VERIFICATION */
+
+    .verified-text {
+        display: block;
+        color: #267346;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .verified-text i {
+        margin-right: 4px;
+    }
+
+    .verification-section small {
+        display: block;
+        color: #718096;
+        margin-top: 4px;
+        font-size: 11px;
+    }
+
+    /* FOOTER */
+
+    .result-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-top: 5px;
+        padding: 18px 24px;
+        background: #fafbfc;
+        border-top: 1px solid #edf0f4;
+    }
+
+    .secure-message {
+        color: #718096;
+        font-size: 13px;
+    }
+
+    .secure-message i {
+        color: #3157c7;
+        margin-right: 5px;
+    }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        background: #3157c7;
+        color: #fff;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .download-btn:hover {
+        background: #2447aa;
+        color: #fff;
+    }
+
+    /* MOBILE */
+
+    @@media (max-width: 1000px) {
+
+        .test-result-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+    }
+
+    @@media (max-width: 700px) {
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .result-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .test-result-row {
+            grid-template-columns: 1fr;
+        }
+
+        .result-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+    }
+
+</style>

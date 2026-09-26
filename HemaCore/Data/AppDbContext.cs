@@ -1,15 +1,16 @@
 ﻿using HemaCore.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace HemaCore.Data
 {
     public class AppDbContext : IdentityDbContext<Users>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
         {
         }
+
         public DbSet<Alert> Alerts => Set<Alert>();
         public DbSet<Sample> Samples { get; set; }
         public DbSet<TestRequest> TestRequests { get; set; }
@@ -27,52 +28,105 @@ namespace HemaCore.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<Patient> Patients { get; set; }
 
+        public DbSet<Patient> Patients { get; set; }
         public DbSet<Doctor> Doctors => Set<Doctor>();
+
         public DbSet<ConditionCategory> ConditionCategories => Set<ConditionCategory>();
         public DbSet<Condition> Conditions => Set<Condition>();
+
         public DbSet<AllergyCategory> AllergyCategories => Set<AllergyCategory>();
         public DbSet<Allergy> Allergies => Set<Allergy>();
+
         public DbSet<MedicationCategory> MedicationCategories => Set<MedicationCategory>();
         public DbSet<Medication> Medications => Set<Medication>();
+
         public DbSet<PatientCondition> PatientConditions => Set<PatientCondition>();
         public DbSet<PatientAllergy> PatientAllergies => Set<PatientAllergy>();
         public DbSet<PatientMedication> PatientMedications => Set<PatientMedication>();
+
         public DbSet<Consent> Consents => Set<Consent>();
         public DbSet<ConsentTestRequest> ConsentTestAccesses => Set<ConsentTestRequest>();
+        public DbSet<ConsentCondition> ConsentConditions { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
             base.OnModelCreating(modelbuilder);
 
-            //One-to-one: TestResult - TestResultVerification
+
+            // ==========================================
+            // TestResult - TestResultVerification
+            // One-to-one relationship
+            // ==========================================
+
             modelbuilder.Entity<TestResult>()
                 .HasOne(r => r.TestResultVerification)
                 .WithOne(v => v.TestResult)
                 .HasForeignKey<TestResultVerification>(v => v.TestResultId);
 
-            //Composite Primary key for technicianTestType
+
+            // ==========================================
+            // TechnicianTestType
+            // Composite Primary Key
+            // ==========================================
+
             modelbuilder.Entity<TechnicianTestType>()
                 .HasKey(t => new
-                { t.LabTechnicianId, t.TestTypeId });
-            //Composite Primary key for TestRequestTestType
+                {
+                    t.LabTechnicianId,
+                    t.TestTypeId
+                });
+
+
+            // ==========================================
+            // TestRequestItem
+            // ==========================================
+
             modelbuilder.Entity<TestRequestItem>()
-    .HasKey(t => t.TestRequestTestTypeId);
-            //Composite Primary key for TestTypeSample
+                .HasKey(t => t.TestRequestTestTypeId);
+
+
+            // ==========================================
+            // TestTypeSample
+            // Composite Primary Key
+            // ==========================================
+
             modelbuilder.Entity<TestTypeSample>()
                 .HasKey(t => new
-                { t.TestTypeId, t.SampleTypeId });
-            //Composite Primary key for TestTypeConsumable
+                {
+                    t.TestTypeId,
+                    t.SampleTypeId
+                });
+
+
+            // ==========================================
+            // TestTypeConsumable
+            // Composite Primary Key
+            // ==========================================
+
             modelbuilder.Entity<TestTypeConsumable>()
                 .HasKey(t => new
-                { t.TestTypeId, t.ConsumableId });
+                {
+                    t.TestTypeId,
+                    t.ConsumableId
+                });
+
+
+            // ==========================================
+            // OrderItem - Order
+            // ==========================================
 
             modelbuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+
+            // ==========================================
+            // PatientMedication
+            // ==========================================
 
             modelbuilder.Entity<PatientMedication>()
                 .HasKey(pm => pm.Id);
@@ -90,9 +144,18 @@ namespace HemaCore.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
 
+            // ==========================================
+            // Supplier
+            // ==========================================
+
             modelbuilder.Entity<Supplier>()
                 .Ignore(s => s.Suppliers);
+
+
+            // ==========================================
             // Alert decimal precision
+            // ==========================================
+
             modelbuilder.Entity<Alert>()
                 .Property(a => a.NormalRangeMax)
                 .HasPrecision(18, 2);
@@ -104,6 +167,12 @@ namespace HemaCore.Data
             modelbuilder.Entity<Alert>()
                 .Property(a => a.ResultValue)
                 .HasPrecision(18, 2);
+
+
+            // ==========================================
+            // ConsentTestRequest
+            // ==========================================
+
             modelbuilder.Entity<ConsentTestRequest>()
                 .HasOne(x => x.TestRequest)
                 .WithMany()
@@ -117,30 +186,54 @@ namespace HemaCore.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
+            // ==========================================
+            // ConsentCondition
+            // ==========================================
+
+            modelbuilder.Entity<ConsentCondition>()
+                .HasOne(cc => cc.Consent)
+                .WithMany()
+                .HasForeignKey(cc => cc.ConsentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelbuilder.Entity<ConsentCondition>()
+                .HasOne(cc => cc.Condition)
+                .WithMany()
+                .HasForeignKey(cc => cc.ConditionId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+
+            // ==========================================
+            // Doctor - User
+            // ==========================================
 
             modelbuilder.Entity<Doctor>()
-                 .HasOne(d => d.User)
-                 .WithMany()
-                 .HasForeignKey(d => d.UserId)
-                 .OnDelete(DeleteBehavior.NoAction);
+                .HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
-                        modelbuilder.Entity<PatientCondition>()
+
+            // ==========================================
+            // PatientCondition
+            // ==========================================
+
+            modelbuilder.Entity<PatientCondition>()
                 .HasOne(pc => pc.Patient)
                 .WithMany()
                 .HasForeignKey(pc => pc.PatientID)
                 .OnDelete(DeleteBehavior.NoAction);
+
+
+            // ==========================================
+            // PatientAllergy
+            // ==========================================
 
             modelbuilder.Entity<PatientAllergy>()
                 .HasOne(pa => pa.Patient)
                 .WithMany()
                 .HasForeignKey(pa => pa.PatientID)
                 .OnDelete(DeleteBehavior.NoAction);
-
-
-
         }
-
-
     }
-     
 }

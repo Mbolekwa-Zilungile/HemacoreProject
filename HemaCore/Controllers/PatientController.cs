@@ -5,6 +5,7 @@ using HemaCore.ViewModels.Patient;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HemaCore.Services;
 
 namespace HemaCore.Controllers
 {
@@ -13,12 +14,18 @@ namespace HemaCore.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<Users> _userManager;
 
-        public PatientController(AppDbContext context, UserManager<Users> userManager)
+        private readonly IEmailService _emailService;
+
+        public PatientController(
+            AppDbContext context,
+            UserManager<Users> userManager,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
-
+        #region Get Current Patient
         // ---------------------------------------------------------------------
         // Helper: get the Patient record for the currently logged-in user
         // ---------------------------------------------------------------------
@@ -31,7 +38,9 @@ namespace HemaCore.Controllers
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
         }
+        #endregion
 
+        #region Dashboard
         // ---------------------------------------------------------------------
         // Dashboard
         // ---------------------------------------------------------------------
@@ -40,7 +49,9 @@ namespace HemaCore.Controllers
             var patient = await GetCurrentPatientAsync();
             return View(patient);
         }
+        #endregion
 
+        #region Complete Profile
         // ---------------------------------------------------------------------
         // Complete Profile (GET)
         // ---------------------------------------------------------------------
@@ -90,6 +101,7 @@ namespace HemaCore.Controllers
             return View(vm);
         }
 
+        
         // ---------------------------------------------------------------------
         // Complete Profile (POST)
         // ---------------------------------------------------------------------
@@ -178,7 +190,9 @@ namespace HemaCore.Controllers
             TempData["Success"] = "Profile saved successfully!";
             return RedirectToAction(nameof(Dashboard));
         }
+#endregion
 
+        #region Patient Details
         // ---------------------------------------------------------------------
         // Patient Details
         // ---------------------------------------------------------------------
@@ -209,7 +223,9 @@ namespace HemaCore.Controllers
 
             return View(patient);
         }
+#endregion
 
+        #region Edit Profile
         // ---------------------------------------------------------------------
         // Edit Profile (GET)
         // ---------------------------------------------------------------------
@@ -257,7 +273,9 @@ namespace HemaCore.Controllers
 
             return View(vm);
         }
+#endregion
 
+        #region Edit Profile
         // ---------------------------------------------------------------------
         // Edit Profile (POST)
         // ---------------------------------------------------------------------
@@ -334,7 +352,9 @@ namespace HemaCore.Controllers
             TempData["Success"] = "Profile updated successfully.";
             return RedirectToAction(nameof(EditProfile));
         }
+        #endregion
 
+        #region Change Password
         // ---------------------------------------------------------------------
         // Change Password
         // ---------------------------------------------------------------------
@@ -366,17 +386,22 @@ namespace HemaCore.Controllers
             TempData["Success"] = "Password changed successfully. Please log in again.";
             return RedirectToAction("Login", "Account");
         }
+        #endregion
+
         #region Test Request 
-        // ---------------------------------------------------------------------
-        // My Test Requests
-        // ---------------------------------------------------------------------
+        // ============================================================
+        // PATIENT TEST REQUESTS
+        // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> MyTestRequests()
         {
             var patient = await GetCurrentPatientAsync();
 
             if (patient == null)
+            {
                 return RedirectToAction(nameof(CompleteProfile));
+            }
 
             var requests = await _context.TestRequests
                 .Include(r => r.Doctor)
@@ -391,13 +416,394 @@ namespace HemaCore.Controllers
             return View(requests);
         }
         #endregion
+
+        #region Results
+        [HttpGet]
+        public async Task<IActionResult> Result()
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+            {
+                return RedirectToAction(nameof(CompleteProfile));
+            }
+
+            var requests = await _context.TestRequests
+                .Include(r => r.Doctor)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestType)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestResult)
+                        .ThenInclude(tr => tr.TestResultVerification)
+                .Where(r =>
+                    r.PatientID == patient.PatientID &&
+                    r.ReleasedToPatientDate != null)
+                .OrderByDescending(r => r.ReleasedToPatientDate)
+                .ToListAsync();
+
+            // Only show requests that contain at least
+            // one verified result.
+            requests = requests
+                .Where(r => r.TestRequestTestTypes.Any(i =>
+                    i.TestResult != null &&
+                    i.TestResult.TestResultVerification != null &&
+                    i.TestResult.TestResultVerification.Status == "Verified"))
+                .ToList();
+
+            return View(requests);
+        }
+        #endregion
+
+
+        #region Health
+        [HttpGet]
+        public async Task<IActionResult> Health(string period = "all")
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+            {
+                return RedirectToAction(nameof(CompleteProfile));
+            }
+
+            // ---------------------------------------------------------
+            // DETERMINE DATE RANGE
+            // ---------------------------------------------------------
+
+            DateTime? fromDate = null;
+            DateTime today = DateTime.Now.Date;
+
+            switch (period?.ToLower())
+            {
+                case "7":
+                    fromDate = today.AddDays(-7);
+                    break;
+
+                case "30":
+                    fromDate = today.AddDays(-30);
+                    break;
+
+                case "90":
+                    fromDate = today.AddDays(-90);
+                    break;
+
+                case "180":
+                    fromDate = today.AddDays(-180);
+                    break;
+
+                case "365":
+                    fromDate = today.AddDays(-365);
+                    break;
+
+                case "all":
+                default:
+                    fromDate = null;
+                    period = "all";
+                    break;
+            }
+
+
+            // ---------------------------------------------------------
+            // GET PATIENT TEST REQUESTS
+            // ---------------------------------------------------------
+
+            var requestsQuery = _context.TestRequests
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestType)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestResult)
+                .Where(r => r.PatientID == patient.PatientID)
+                .AsQueryable();
+
+
+            if (fromDate.HasValue)
+            {
+                requestsQuery = requestsQuery.Where(r =>
+                    r.RequestDate.Date >= fromDate.Value.Date &&
+                    r.RequestDate.Date <= today);
+            }
+
+
+            var requests = await requestsQuery
+                .OrderBy(r => r.RequestDate)
+                .ToListAsync();
+
+
+            // ---------------------------------------------------------
+            // GRAPH DATA
+            // ---------------------------------------------------------
+
+            var graphData = requests
+                .GroupBy(r => new
+                {
+                    Year = r.RequestDate.Year,
+                    Month = r.RequestDate.Month
+                })
+                .OrderBy(g => g.Key.Year)
+                .ThenBy(g => g.Key.Month)
+                .Select(g => new
+                {
+                    Label = new DateTime(
+                        g.Key.Year,
+                        g.Key.Month,
+                        1
+                    ).ToString("MMM yyyy"),
+
+                    Count = g.Sum(r =>
+                        r.TestRequestTestTypes?.Count ?? 0)
+                })
+                .ToList();
+
+
+            // ---------------------------------------------------------
+            // SUMMARY
+            // ---------------------------------------------------------
+
+            var totalTests = requests
+                .Sum(r => r.TestRequestTestTypes?.Count ?? 0);
+
+            var completedTests = requests
+                .SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>())
+                .Count(t => t.Status == "Completed");
+
+            var abnormalResults = requests
+                .SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>())
+                .Count(t =>
+                    t.TestResult != null &&
+                    t.TestResult.IsAbnormal);
+
+
+            // ---------------------------------------------------------
+            // CURRENT CONDITIONS
+            // ---------------------------------------------------------
+
+            var conditions = await _context.PatientConditions
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .Include(pc => pc.Condition)
+                .OrderBy(pc => pc.Condition.Name)
+                .ToListAsync();
+
+
+            // ---------------------------------------------------------
+            // SEND DATA TO VIEW
+            // ---------------------------------------------------------
+
+            ViewBag.Period = period;
+
+            ViewBag.GraphLabels = graphData
+                .Select(x => x.Label)
+                .ToList();
+
+            ViewBag.GraphCounts = graphData
+                .Select(x => x.Count)
+                .ToList();
+
+            ViewBag.TotalTests = totalTests;
+            ViewBag.CompletedTests = completedTests;
+            ViewBag.AbnormalResults = abnormalResults;
+
+            ViewBag.Conditions = conditions;
+
+            return View(requests);
+        }
+        #endregion
+       
+        #region Consent
+
+// ---------------------------------------------------------------------
+// Patient Consent (GET)
+// ---------------------------------------------------------------------
+[HttpGet]
+public async Task<IActionResult> Consent()
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+            {
+                return RedirectToAction(nameof(CompleteProfile));
+            }
+
+            // Get active doctors
+            var doctors = await _context.Doctors
+                .Include(d => d.User)
+                .Where(d => d.IsActive)
+                .OrderBy(d => d.Surname)
+                .ThenBy(d => d.Name)
+                .ToListAsync();
+
+            // Get the conditions belonging to this patient
+            var conditions = await _context.PatientConditions
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .Include(pc => pc.Condition)
+                .Where(pc => pc.Condition != null && pc.Condition.IsActive)
+                .OrderBy(pc => pc.Condition.Name)
+                .ToListAsync();
+
+            // Send data to the view
+            ViewBag.Doctors = doctors;
+            ViewBag.Conditions = conditions;
+
+            return View();
+        }
+
+
+        // ---------------------------------------------------------------------
+        // Patient Consent (POST)
+        // ---------------------------------------------------------------------
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Consent(
+            int doctorId,
+            List<int> selectedConditionIds)
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+            {
+                return RedirectToAction(nameof(CompleteProfile));
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // -------------------------------------------------------------
+            // Validate doctor
+            // -------------------------------------------------------------
+
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d =>
+                    d.DoctorId == doctorId &&
+                    d.IsActive);
+
+            if (doctor == null)
+            {
+                TempData["Error"] = "The selected doctor could not be found.";
+
+                return RedirectToAction(nameof(Consent));
+            }
+
+
+            // -------------------------------------------------------------
+            // Check whether an active consent already exists
+            // -------------------------------------------------------------
+
+            var existingConsent = await _context.Consents
+                .FirstOrDefaultAsync(c =>
+                    c.PatientID == user.Id &&
+                    c.DoctorId == doctorId &&
+                    c.IsActive);
+
+            if (existingConsent != null)
+            {
+                TempData["Error"] =
+                    "You already have active consent with this doctor.";
+
+                return RedirectToAction(nameof(Consent));
+            }
+
+
+            // -------------------------------------------------------------
+            // Create consent
+            // -------------------------------------------------------------
+
+            var consent = new Consent
+            {
+                PatientID = user.Id,
+                DoctorId = doctorId,
+                IsActive = true,
+                GrantedAt = DateTime.UtcNow,
+                RevokedAt = null
+            };
+
+            _context.Consents.Add(consent);
+
+            await _context.SaveChangesAsync();
+
+
+            // -------------------------------------------------------------
+            // Only save conditions that the patient selected
+            // -------------------------------------------------------------
+
+            if (selectedConditionIds != null &&
+                selectedConditionIds.Any())
+            {
+                // Get only conditions that actually belong to this patient
+                var patientConditionIds = await _context.PatientConditions
+                    .Where(pc =>
+                        pc.PatientID == patient.PatientID &&
+                        selectedConditionIds.Contains(pc.ConditionId))
+                    .Select(pc => pc.ConditionId)
+                    .Distinct()
+                    .ToListAsync();
+
+                foreach (var conditionId in patientConditionIds)
+                {
+                    _context.ConsentConditions.Add(
+                        new ConsentCondition
+                        {
+                            ConsentId = consent.Id,
+                            ConditionId = conditionId
+                        });
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+
+            // -------------------------------------------------------------
+            // Get names of conditions shared with doctor
+            // -------------------------------------------------------------
+
+            var sharedConditions = await _context.ConsentConditions
+                .Where(cc => cc.ConsentId == consent.Id)
+                .Include(cc => cc.Condition)
+                .Select(cc => cc.Condition.Name)
+                .OrderBy(name => name)
+                .ToListAsync();
+
+
+            // -------------------------------------------------------------
+            // Get doctor's email
+            // -------------------------------------------------------------
+
+            var doctorEmail = doctor.User?.Email;
+
+            if (!string.IsNullOrWhiteSpace(doctorEmail))
+            {
+                await _emailService.SendConsentGrantedEmailAsync(
+                    doctorEmail,
+                    doctor.Name,
+                    patient.Name,
+                    patient.Surname,
+                    sharedConditions);
+            }
+
+
+            // -------------------------------------------------------------
+            // Success
+            // -------------------------------------------------------------
+
+            TempData["Success"] =
+                $"Consent granted to Dr. {doctor.Name} {doctor.Surname}.";
+
+            return RedirectToAction(nameof(Consent));
+        }
+
+#endregion
+
+
         // ---------------------------------------------------------------------
         // Stub pages
         // ---------------------------------------------------------------------
         public IActionResult Tests() => View();
-        public IActionResult Result() => View();
-        public IActionResult Health() => View();
-        public IActionResult Consent() => View();
+       // public IActionResult Result() => View();
+       // public IActionResult Health() => View();
+        //public IActionResult Consent() => View();
         public IActionResult Report() => View();
         public IActionResult Index() => View();
     }
