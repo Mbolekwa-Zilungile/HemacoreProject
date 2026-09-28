@@ -3,13 +3,24 @@
 @{
     Layout = "_ManagerLayout";
 }
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">
         @TempData["Success"]
     </div>
 }
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 <link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="" />
+
 
 <div class="content-card">
 
@@ -19,7 +30,9 @@
         <div class="d-flex align-items-center">
             <i class="fas fa-vial"></i>
 
-            <span>Samples Types (@Model.Count)</span>
+            <span>
+                Sample Types (@Model.Count)
+            </span>
         </div>
 
         <a asp-action="AddSampleType"
@@ -29,11 +42,13 @@
 
     </div>
 
+
     <!-- SEARCH -->
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
            placeholder="Type to search sample type..." />
+
 
     <!-- TABLE -->
     <div class="card shadow-sm">
@@ -50,6 +65,7 @@
                     </tr>
                 </thead>
 
+
                 <tbody id="TestTypeTable">
 
                     @if (Model != null && Model.Any())
@@ -63,22 +79,28 @@
                                 </td>
 
                                 <td>
-                                        @sample.Description
+                                    @sample.Description
                                 </td>
 
                                 <td class="text-center">
 
-                                    <a asp-action="EditTestType"
+                                    <!-- EDIT -->
+                                    <a asp-action="EditSampleType"
                                        asp-route-id="@sample.SampleTypeId"
                                        class="btn btn-sm btn-outline-primary me-1">
                                         Edit
                                     </a>
 
-                                    <a asp-action="DeleteTestType"
-                                       asp-route-id="@sample.SampleTypeId"
-                                       class="btn btn-sm btn-outline-danger">
+
+                                    <!-- DELETE -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete(
+                                        '@sample.SampleTypeId',
+                                        '@sample.SampleName'
+                                        )">
                                         Delete
-                                    </a>
+                                    </button>
 
                                 </td>
 
@@ -88,9 +110,14 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
+
+                            <td colspan="3"
+                                class="text-center text-muted py-3">
+
                                 No sample types available.
+
                             </td>
+
                         </tr>
                     }
 
@@ -104,95 +131,268 @@
 
 </div>
 
-<!-- LIVE SEARCH SCRIPT -->
+
+
+<!-- ========================================================= -->
+<!-- DELETE CONFIRMATION MODAL -->
+<!-- ========================================================= -->
+
+<div id="deleteModal"
+     class="delete-overlay">
+
+    <div class="delete-box">
+
+
+        <!-- ICON -->
+        <div class="delete-icon">
+
+            <i class="fas fa-exclamation-triangle"></i>
+
+        </div>
+
+
+        <!-- TITLE -->
+        <h3>
+            Are you sure?
+        </h3>
+
+
+        <!-- MESSAGE -->
+        <p>
+
+            Are you sure you want to delete
+
+            <strong id="deleteSampleName"></strong>?
+
+        </p>
+
+
+        <!-- WARNING -->
+        <span class="delete-warning">
+
+            <i class="fas fa-info-circle"></i>
+
+            This action cannot be undone.
+
+        </span>
+
+
+        <!-- BUTTONS -->
+        <div class="delete-buttons">
+
+
+            <!-- CANCEL -->
+            <button type="button"
+                    class="cancel-btn"
+                    onclick="closeDeleteModal()">
+
+                Cancel
+
+            </button>
+
+
+            <!-- DELETE FORM -->
+            <form asp-action="DeleteSampleType"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="deleteSampleTypeId" />
+
+                <button type="submit"
+                        class="confirm-delete-btn">
+
+                    <i class="fas fa-trash-alt"></i>
+
+                    Yes, Delete
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    $(document).ready(function () {
+
+    /*
+    * OPEN DELETE MODAL
+    */
+    function confirmDelete(id, sampleName) {
+
+    document.getElementById("deleteSampleTypeId").value = id;
+
+    document.getElementById("deleteSampleName").textContent =
+    sampleName;
+
+    document.getElementById("deleteModal").style.display = "flex";
+    }
+
+
+    /*
+    * CLOSE DELETE MODAL
+    */
+    function closeDeleteModal() {
+
+    document.getElementById("deleteModal").style.display = "none";
+    }
+
+
+    /*
+    * CLOSE WHEN CLICKING OUTSIDE
+    */
+    document.getElementById("deleteModal").addEventListener(
+    "click",
+    function (event) {
+
+    if (event.target === this) {
+    closeDeleteModal();
+    }
+
+    }
+    );
+
+
+    /*
+    * CLOSE WITH ESCAPE
+    */
+    document.addEventListener("keydown", function (event) {
+
+    if (event.key === "Escape") {
+    closeDeleteModal();
+    }
+
+    });
+
+
+
+    /* =========================================================
+    LIVE SEARCH
+    ========================================================= */
 
     $("#searchBox").on("input", function () {
 
     var term = $(this).val();
 
     $.ajax({
-    url: '@Url.Action("SearchTestTypesLive", "Manager")',
+
+    url: '@Url.Action("SearchSampleTypesLive", "Manager")',
+
     type: 'GET',
-    data: { term: term },
+
+    data: {
+    term: term
+    },
 
     success: function (data) {
 
     var tableBody = $("#TestTypeTable");
+
     tableBody.empty();
+
 
     if (!data || data.length === 0) {
 
     tableBody.append(`
+
     <tr>
-    <td colspan="6" class="text-center text-muted py-3">
-    No test types found
+
+    <td colspan="3"
+    class="text-center text-muted py-3">
+
+    No sample types found
+
     </td>
+
     </tr>
+
     `);
 
     return;
     }
 
-    $.each(data, function (index, test) {
+
+    $.each(data, function (index, sample) {
+
+    var sampleName =
+    sample.sampleName ?? "";
+
+    var description =
+    sample.description ?? "";
+
 
     var row = `
+
     <tr>
 
     <td class="fw-semibold">
-    ${test.name ?? ''}
+    ${sampleName}
     </td>
 
     <td>
-    <span class="badge bg-info text-dark">
-    ${test.category ?? ''}
-    </span>
-    </td>
-
-    <td>
-    ${test.unit ?? ''}
-    </td>
-
-    <td>
-    ${test.min ?? ''} - ${test.max ?? ''}
-    </td>
-
-    <td>
-    <span class="badge bg-secondary">
-    ${test.turnaround ?? ''} min
-    </span>
+    ${description}
     </td>
 
     <td class="text-center">
 
-    <a href="/Manager/EditTestType/${test.testTypeID}"
+    <a href="/Manager/EditSampleType/${sample.sampleTypeId}"
     class="btn btn-sm btn-outline-primary me-1">
+
     Edit
+
     </a>
 
-    <a href="/Manager/DeleteTestType/${test.testTypeID}"
-    class="btn btn-sm btn-outline-danger">
+
+    <button type="button"
+    class="btn btn-sm btn-outline-danger"
+    onclick="confirmDelete(
+    '${sample.sampleTypeId}',
+    '${sampleName.replace(/'/g, "\\'")}'
+    )">
+
     Delete
-    </a>
+
+    </button>
 
     </td>
 
     </tr>
+
     `;
 
     tableBody.append(row);
+
     });
+
     },
 
+
     error: function () {
-    alert("Search failed. Please try again.");
+
+    alert(
+    "Search failed. Please try again."
+    );
+
     }
-    });
 
     });
 
     });
+
 </script>
+
+
+

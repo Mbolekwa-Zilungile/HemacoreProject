@@ -10,7 +10,7 @@ namespace HemaCore.Models
         public string Description { get; set; }
         public bool IsActive { get; set; }
 
-        public ICollection<TestTypeSample> TestTypeSample { get; set; } = new List<TestTypeSample>();//Juction table(TestTypeSample) navigation
+        public ICollection<TestType> TestTypes { get; set; } = new List<TestType>();
         public ICollection<Sample> Samples{ get; set; } =  new List<Sample>(); // Sample navigation
     }
 }

@@ -15,7 +15,10 @@ namespace HemaCore.Models
 
         public int CategoryId { get; set; }
         public TestCategory Category { get; set; } = null!;  //test category navigation property
-        public ICollection<TestTypeSample> TestTypeSample { get; set; } =new List<TestTypeSample>();
+        public int SampleTypeId { get; set; }
+
+        public SampleType SampleType { get; set; } = null!;
+
         public ICollection<TechnicianTestType> TechnicianTestType { get; set; } = new List<TechnicianTestType>();
         public ICollection<TestTypeConsumable> TestTypeConsumables { get; set; }= new List<TestTypeConsumable>();
 

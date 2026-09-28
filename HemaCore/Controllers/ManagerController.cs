@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Twilio.Rest.Trunking.V1;
 
 namespace HemaCore.Controllers
 {
@@ -75,6 +76,79 @@ namespace HemaCore.Controllers
             TempData["Success"] = $"{category.CategoryName} added successfully.";
            return RedirectToAction("TestCategories");
         }
+
+        public IActionResult EditCategory(int id)
+        {
+            var category = _context.TestCategories
+                .FirstOrDefault(c => c.CategoryId == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            return View(category);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> EditCategory(TestCategory updatedCategory)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(updatedCategory);
+            }
+
+            var category = await _context.TestCategories.FirstOrDefaultAsync(c => c.CategoryId == updatedCategory.CategoryId);
+            if(category == null)
+            {
+                return NotFound();
+            }
+
+            category.CategoryName = updatedCategory.CategoryName;
+            category.CategoryDescription = updatedCategory.CategoryDescription;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Category updated successfully.";
+
+            return RedirectToAction("TestCategories");
+        }
+
+       
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteCategory(int id)
+        {
+            var category = _context.TestCategories
+                .FirstOrDefault(c => c.CategoryId == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            bool hasTestTypes = _context.TestTypes
+                .Any(t => t.CategoryId== id);
+
+            if (hasTestTypes)
+            {
+                TempData["Error"] =
+                    "Cannot delete this category because it has test types assigned to it.";
+
+                return RedirectToAction("TestCategories");
+            }
+
+            category.IsActive = false;
+            _context.SaveChanges();
+
+            TempData["Success"] = "Category deleted successfully.";
+
+            return RedirectToAction("TestCategories");
+        }
+
+
         #endregion
 
         #region TestTypes
@@ -90,19 +164,23 @@ namespace HemaCore.Controllers
             return View(testtype);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> AddTestType()
+        
+[HttpGet]
+public async Task<IActionResult> AddTestType()
         {
+            // Load active categories
             ViewBag.Categories = await _context.TestCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
+            // Load active sample types
             ViewBag.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.SampleName)
                 .ToListAsync();
 
+            // Load active consumables
             var consumables = await _context.Consumables
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.ConsumableName)
@@ -122,11 +200,15 @@ namespace HemaCore.Controllers
             return View(model);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddTestType(TestTypeViewModel model)
         {
-            // Reload dropdown data
+            // =====================================================
+            // LOAD DROPDOWN DATA
+            // =====================================================
+
             ViewBag.Categories = await _context.TestCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
@@ -137,32 +219,84 @@ namespace HemaCore.Controllers
                 .OrderBy(s => s.SampleName)
                 .ToListAsync();
 
+
+            // =====================================================
+            // VALIDATE MODEL
+            // =====================================================
+
             if (!ModelState.IsValid)
             {
+                await ReloadConsumables(model);
                 return View(model);
             }
 
-            // Check that the category exists
+
+            // =====================================================
+            // CHECK CATEGORY
+            // =====================================================
+
             var category = await _context.TestCategories
-                .FirstOrDefaultAsync(c => c.CategoryId == model.CategoryID && c.IsActive);
+                .FirstOrDefaultAsync(c =>
+                    c.CategoryId == model.CategoryID &&
+                    c.IsActive);
 
             if (category == null)
             {
-                ModelState.AddModelError("CategoryID", "Please select a valid category.");
+                ModelState.AddModelError(
+                    "CategoryID",
+                    "Please select a valid category."
+                );
+
+                await ReloadConsumables(model);
                 return View(model);
             }
 
-            // Check for duplicate test type
+
+            // =====================================================
+            // CHECK SAMPLE TYPE
+            // =====================================================
+
+            var sampleType = await _context.SampleTypes
+                .FirstOrDefaultAsync(s =>
+                    s.SampleTypeId == model.SampleTypeID &&
+                    s.IsActive);
+
+            if (sampleType == null)
+            {
+                ModelState.AddModelError(
+                    "SampleTypeID",
+                    "Please select a valid sample type."
+                );
+
+                await ReloadConsumables(model);
+                return View(model);
+            }
+
+
+            // =====================================================
+            // CHECK DUPLICATE TEST TYPE
+            // =====================================================
+
             var existingTestType = await _context.TestTypes
-                .FirstOrDefaultAsync(t => t.TestTypeName == model.TestTypeName);
+                .FirstOrDefaultAsync(t =>
+                    t.TestTypeName == model.TestTypeName);
 
             if (existingTestType != null)
             {
-                ModelState.AddModelError("TestTypeName", "This test type already exists.");
+                ModelState.AddModelError(
+                    "TestTypeName",
+                    "This test type already exists."
+                );
+
+                await ReloadConsumables(model);
                 return View(model);
             }
 
-            // Validate range
+
+            // =====================================================
+            // VALIDATE NORMAL RANGE
+            // =====================================================
+
             if (model.NormalRangeMin > model.NormalRangeMax)
             {
                 ModelState.AddModelError(
@@ -170,10 +304,15 @@ namespace HemaCore.Controllers
                     "Minimum normal range cannot be greater than maximum normal range."
                 );
 
+                await ReloadConsumables(model);
                 return View(model);
             }
 
-            // Create TestType
+
+            // =====================================================
+            // CREATE TEST TYPE
+            // =====================================================
+
             var testType = new TestType
             {
                 TestTypeName = model.TestTypeName,
@@ -181,19 +320,64 @@ namespace HemaCore.Controllers
                 NormalRangeMin = model.NormalRangeMin,
                 NormalRangeMax = model.NormalRangeMax,
                 TurnAroundTime = model.TurnAroundTime,
+
+                // CATEGORY
                 CategoryId = model.CategoryID,
+
+                // SAMPLE TYPE
+                SampleTypeId = model.SampleTypeID,
+
                 IsActive = true
             };
 
+
             _context.TestTypes.Add(testType);
 
-            // Save first so TestTypeId is generated
+
+            // =====================================================
+            // SAVE
+            // =====================================================
+
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"{model.TestTypeName} added successfully.";
-         return RedirectToAction("TestTypes");
+
+            TempData["Success"] =
+                $"{model.TestTypeName} added successfully.";
+
+
+            return RedirectToAction("TestTypes");
         }
 
+
+        // =========================================================
+        // RELOAD CONSUMABLES WHEN VALIDATION FAILS
+        // =========================================================
+
+        private async Task ReloadConsumables(TestTypeViewModel model)
+        {
+            var consumables = await _context.Consumables
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
+
+            model.Consumables = consumables.Select(c =>
+            {
+                var existing = model.Consumables?
+                    .FirstOrDefault(x => x.ConsumableID == c.ConsumableId);
+
+                return new ConsumableVM
+                {
+                    ConsumableID = c.ConsumableId,
+                    ConsumableName = c.ConsumableName,
+                    IsSelected = existing?.IsSelected ?? false,
+                    QuantityUsed = existing?.QuantityUsed ?? 0
+                };
+            }).ToList();
+        }
+
+
+        
+      
         #endregion
 
         #region Sample Type
@@ -237,6 +421,91 @@ namespace HemaCore.Controllers
             TempData["Success"] = $"{sampletype.SampleName} added successfully.";
             return RedirectToAction("SampleTypes");
         }
+
+
+        public async Task<IActionResult> EditSampleType(int id)
+        {
+            var sampleType = await _context.SampleTypes
+                .FirstOrDefaultAsync(s => s.SampleTypeId == id);
+
+            if (sampleType == null)
+            {
+                return NotFound();
+            }
+
+            return View(sampleType);
+        }
+
+
+        // POST: Edit Sample Type
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditSampleType(SampleType updateSample)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(updateSample);
+            }
+
+            var sampleType = await _context.SampleTypes
+                .FirstOrDefaultAsync(s =>
+                    s.SampleTypeId == updateSample.SampleTypeId);
+
+            if (sampleType == null)
+            {
+                return NotFound();
+            }
+
+            // Update fields
+            sampleType.SampleName = updateSample.SampleName;
+            sampleType.Description = updateSample.Description;
+
+            // Save changes to SQL Server
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Sample type updated successfully.";
+
+            return RedirectToAction("SampleTypes");
+        }
+
+
+       
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSampletype(int id)
+        {
+            var sample = await _context.SampleTypes
+                .FirstOrDefaultAsync(s => s.SampleTypeId == id);
+
+            if (sample == null)
+            {
+                return NotFound();
+            }
+
+            // Check if this SampleType is being used by any TestType
+            bool isUsed = await _context.TestTypes
+                .AnyAsync(t => t.SampleTypeId == id);
+
+            if (isUsed)
+            {
+                TempData["Error"] =
+                    "Cannot delete this sample type because it is being used by a test type.";
+
+                return RedirectToAction("SampleTypes");
+            }
+
+            // Soft delete
+            sample.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                "Sample type deleted successfully.";
+
+            return RedirectToAction("SampleTypes");
+        }
+
+
         #endregion
 
         #region Consumable

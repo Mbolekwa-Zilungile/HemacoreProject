@@ -944,6 +944,9 @@ namespace HemaCore.Migrations
                     b.Property<double>("NormalRangeMin")
                         .HasColumnType("float");
 
+                    b.Property<int>("SampleTypeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TestTypeName")
                         .HasColumnType("nvarchar(max)");
 
@@ -956,6 +959,8 @@ namespace HemaCore.Migrations
                     b.HasKey("TestTypeId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("SampleTypeId");
 
                     b.ToTable("TestTypes");
                 });
@@ -973,21 +978,6 @@ namespace HemaCore.Migrations
                     b.HasIndex("ConsumableId");
 
                     b.ToTable("testTypeConsumables");
-                });
-
-            modelBuilder.Entity("HemaCore.Models.TestTypeSample", b =>
-                {
-                    b.Property<int>("TestTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SampleTypeId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TestTypeId", "SampleTypeId");
-
-                    b.HasIndex("SampleTypeId");
-
-                    b.ToTable("TestTypeSamples");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Users", b =>
@@ -1523,10 +1513,18 @@ namespace HemaCore.Migrations
                     b.HasOne("HemaCore.Models.TestCategory", "Category")
                         .WithMany("TestTypes")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.SampleType", "SampleType")
+                        .WithMany("TestTypes")
+                        .HasForeignKey("SampleTypeId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("SampleType");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestTypeConsumable", b =>
@@ -1544,25 +1542,6 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("Consumable");
-
-                    b.Navigation("TestType");
-                });
-
-            modelBuilder.Entity("HemaCore.Models.TestTypeSample", b =>
-                {
-                    b.HasOne("HemaCore.Models.SampleType", "SampleType")
-                        .WithMany("TestTypeSample")
-                        .HasForeignKey("SampleTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("HemaCore.Models.TestType", "TestType")
-                        .WithMany("TestTypeSample")
-                        .HasForeignKey("TestTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SampleType");
 
                     b.Navigation("TestType");
                 });
@@ -1674,7 +1653,7 @@ namespace HemaCore.Migrations
                 {
                     b.Navigation("Samples");
 
-                    b.Navigation("TestTypeSample");
+                    b.Navigation("TestTypes");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestCategory", b =>
@@ -1701,8 +1680,6 @@ namespace HemaCore.Migrations
                     b.Navigation("TechnicianTestType");
 
                     b.Navigation("TestTypeConsumables");
-
-                    b.Navigation("TestTypeSample");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,146 @@
+﻿
+@model HemaCore.Models.SampleType
+
+@{
+    ViewData["Title"] = "Edit Sample Type";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4 mb-5">
+
+    <div class="card shadow-sm p-4">
+
+        <!-- ========================= -->
+        <!-- HEADER -->
+        <!-- ========================= -->
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Edit Sample Type
+            </h3>
+
+            <p class="text-muted mb-0">
+                Update the details below to modify this sample type.
+            </p>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- VALIDATION SUMMARY -->
+        <!-- ========================= -->
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger"
+             role="alert">
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- FORM -->
+        <!-- ========================= -->
+
+        <form asp-action="EditSampleType"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+
+            <!-- ========================= -->
+            <!-- HIDDEN ID -->
+            <!-- ========================= -->
+
+            <input type="hidden"
+                   asp-for="SampleTypeId" />
+
+
+            <!-- ========================= -->
+            <!-- SAMPLE TYPE DETAILS -->
+            <!-- ========================= -->
+
+            <h5 class="text-secondary mb-3">
+                Sample Type Details
+            </h5>
+
+            <div class="row">
+
+                <!-- SAMPLE NAME -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="SampleName"
+                           class="form-label">
+                        Name
+                    </label>
+
+                    <input asp-for="SampleName"
+                           class="form-control"
+                           placeholder="Enter sample type name"
+                           autocomplete="off" />
+
+                    <span asp-validation-for="SampleName"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="Description"
+                           class="form-label">
+                        Description
+                    </label>
+
+                    <textarea asp-for="Description"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Enter a description of the sample type"></textarea>
+
+                    <span asp-validation-for="Description"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================= -->
+            <!-- BUTTONS -->
+            <!-- ========================= -->
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="SampleTypes"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}
