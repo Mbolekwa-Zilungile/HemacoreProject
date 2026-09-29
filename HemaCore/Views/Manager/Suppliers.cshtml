@@ -1,7 +1,16 @@
 ﻿@model List<HemaCore.Models.Supplier>
+
 @{
     Layout = "_ManagerLayout";
 }
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+
+<!-- =========================================================
+     ALERT MESSAGES
+     ========================================================= -->
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">
@@ -13,146 +22,722 @@
 {
     <div class="alert alert-danger alert-dismissible fade show">
         @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
+
+<!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
+
 <div class="content-card">
 
-    <!-- HEADER -->
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-industry"></i>
 
-            <span>Suppliers (@Model.Count)</span>
+            <i class="fas fa-industry me-2"></i>
+
+            <span>
+                Suppliers (@(Model?.Count ?? 0))
+            </span>
 
         </div>
 
+
+        <!-- ADD SUPPLIER -->
+
         <a asp-action="AddSupplier"
            class="btn btn-primary-custom btn-sm">
+
             + Add Supplier
+
         </a>
 
     </div>
-    <!-- LIVE SEARCH INPUT -->
+
+
+
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
-           placeholder="Type to search suppliers..." />
+           placeholder="Type to search suppliers..."
+           autocomplete="off" />
+
+
+
+    <!-- =====================================================
+         TABLE
+         ===================================================== -->
+
     <div class="card shadow-sm">
+
         <div class="card-body p-0">
 
             <table class="modern-table">
+
                 <thead>
+
                     <tr>
-                        <th>Name</th>
-                        <th>Contact Person</th>
-                        <th>Email</th>
-                        <th>Consumables</th>
-                        <th>Actions</th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Contact Person
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Consumables
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
                     </tr>
+
                 </thead>
+
 
                 <tbody id="supplierTable">
 
-                    @if (!Model.Any())
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
-                                No supplier available.
+
+                            <td colspan="5"
+                                class="text-center text-muted py-3">
+
+                                No suppliers available.
+
                             </td>
+
                         </tr>
                     }
                     else
                     {
-
-                        @foreach (var supplier in Model)
+                        foreach (var supplier in Model)
                         {
-
                             int total = 0;
-                            if (ViewBag.SupplierConsumableCount.ContainsKey(supplier.SupplierId))
+
+                            if (ViewBag.SupplierConsumableCount != null &&
+                                ViewBag.SupplierConsumableCount.ContainsKey(
+                                    supplier.SupplierId))
                             {
-                                total = ViewBag.SupplierConsumableCount[supplier.SupplierId];
+                                total =
+                                    ViewBag.SupplierConsumableCount[
+                                        supplier.SupplierId];
                             }
+
+
                             <tr>
-                                <td>@supplier.SupplierName</td>
-                                <td>@supplier.ContactPerson</td>
-                                <td>@supplier.Email</td>
-                                <td>@total</td>
-                                <td>
-                                    <a asp-action="EditSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-primary">Edit</a>
-                                    <a asp-action="DeleteSupplier" asp-route-id="@supplier.SupplierId" class="btn btn-sm btn-danger">Deactivate</a>
+
+                                <!-- NAME -->
+
+                                <td class="fw-semibold blue-text">
+
+                                    @supplier.SupplierName
+
                                 </td>
+
+
+                                <!-- CONTACT -->
+
+                                <td>
+
+                                    @supplier.ContactPerson
+
+                                </td>
+
+
+                                <!-- EMAIL -->
+
+                                <td>
+
+                                    @supplier.Email
+
+                                </td>
+
+
+                                <!-- CONSUMABLE COUNT -->
+
+                                <td>
+
+                                    @total
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+                                    <a asp-action="EditSupplier"
+                                       asp-route-id="@supplier.SupplierId"
+                               class="btn btn-sm btn-outline-primary me-1">
+
+                                <i class="fas fa-edit me-1"></i>
+
+                            </a>
+
+
+                                    <!-- DEACTIVATE -->
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-supplier-btn"
+                                            data-id="@supplier.SupplierId"
+                                            data-name="@supplier.SupplierName">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
+
+                                </td>
+
                             </tr>
                         }
                     }
+
                 </tbody>
+
             </table>
 
         </div>
+
     </div>
+
 </div>
+
+
+
+<!-- =========================================================
+     DEACTIVATE MODAL
+     ========================================================= -->
+
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle">
+
+    <div class="delete-box">
+
+
+        <!-- ICON -->
+
+        <div class="delete-icon">
+
+            <i class="fas fa-exclamation-triangle"></i>
+
+        </div>
+
+
+        <!-- TITLE -->
+
+        <h3 id="deleteModalTitle">
+
+            Are you sure?
+
+        </h3>
+
+
+        <!-- MESSAGE -->
+
+        <p>
+
+            Are you sure you want to deactivate
+
+            <strong id="deleteSupplierName"></strong>?
+
+        </p>
+
+
+        <!-- WARNING -->
+
+        <span class="delete-warning">
+
+            <i class="fas fa-info-circle"></i>
+
+            This supplier will no longer be active.
+
+        </span>
+
+
+        <!-- BUTTONS -->
+
+        <div class="delete-buttons">
+
+
+            <!-- CANCEL -->
+
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+
+                Cancel
+
+            </button>
+
+
+            <!-- DELETE FORM -->
+
+            <form asp-action="DeleteSupplier"
+                  method="post"
+                  id="deleteForm">
+
+                @Html.AntiForgeryToken()
+
+
+                <input type="hidden"
+                       name="id"
+                       id="deleteSupplierId" />
+
+
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="confirm-delete-btn">
+
+                    <i class="fas fa-ban me-1"></i>
+
+                    Yes, Deactivate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
-    document.getElementById("searchBox").addEventListener("keyup", function () {
 
-        let term = this.value;
+    document.addEventListener("DOMContentLoaded", function () {
 
-        fetch('/Manager/SearchSupplierLive?term=' + encodeURIComponent(term))
-            .then(res => res.json())
-            .then(data => {
 
-                let rows = "";
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
 
-                if (!data || data.length === 0) {
-                    rows = `
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                No suppliers found.
-                            </td>
-                        </tr>
-                    `;
+        const modal =
+            document.getElementById("deleteModal");
+
+        const supplierIdInput =
+            document.getElementById("deleteSupplierId");
+
+        const supplierName =
+            document.getElementById("deleteSupplierName");
+
+        const cancelButton =
+            document.getElementById("cancelDeleteBtn");
+
+        const deleteForm =
+            document.getElementById("deleteForm");
+
+        const searchBox =
+            document.getElementById("searchBox");
+
+        const supplierTable =
+            document.getElementById("supplierTable");
+
+
+
+        // =====================================================
+        // OPEN DEACTIVATE MODAL
+        // =====================================================
+
+        document.addEventListener("click", function (event) {
+
+            const button =
+                event.target.closest(
+                    ".deactivate-supplier-btn"
+                );
+
+
+            if (!button) {
+                return;
+            }
+
+
+            const id =
+                button.getAttribute("data-id");
+
+            const name =
+                button.getAttribute("data-name");
+
+
+            supplierIdInput.value = id;
+
+            supplierName.textContent = name;
+
+
+            modal.classList.add("show");
+
+            document.body.classList.add("modal-open");
+
+        });
+
+
+
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+
+            document.body.classList.remove("modal-open");
+
+            supplierIdInput.value = "";
+
+            supplierName.textContent = "";
+
+        }
+
+
+
+        // =====================================================
+        // CANCEL
+        // =====================================================
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+
+                closeModal();
+
+            }
+        );
+
+
+
+        // =====================================================
+        // CLICK OUTSIDE MODAL
+        // =====================================================
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === modal) {
+
+                    closeModal();
+
                 }
-                else {
-                    data.forEach(item => {
+
+            }
+        );
+
+
+
+        // =====================================================
+        // ESCAPE KEY
+        // =====================================================
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains("show")
+                ) {
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+
+
+        // =====================================================
+        // PREVENT DOUBLE SUBMIT
+        // =====================================================
+
+        deleteForm.addEventListener(
+            "submit",
+            function () {
+
+                const button =
+                    document.getElementById(
+                        "confirmDeleteBtn"
+                    );
+
+
+                button.disabled = true;
+
+
+                button.innerHTML = `
+
+                    <i class="fas fa-spinner fa-spin me-1"></i>
+
+                    Deactivating...
+
+                `;
+
+            }
+        );
+
+
+
+        // =====================================================
+        // LIVE SEARCH
+        // =====================================================
+
+        searchBox.addEventListener(
+            "input",
+            function () {
+
+                const term =
+                    this.value.trim();
+
+
+                fetch(
+                    '@Url.Action("SearchSupplierLive", "Manager")'
+                    + '?term='
+                    + encodeURIComponent(term)
+                )
+
+                .then(response => {
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "Search request failed."
+                        );
+
+                    }
+
+                    return response.json();
+
+                })
+
+                .then(data => {
+
+
+                    // =========================================
+                    // NO RESULTS
+                    // =========================================
+
+                    if (
+                        !data ||
+                        data.length === 0
+                    ) {
+
+                        supplierTable.innerHTML = `
+
+                            <tr>
+
+                                <td colspan="5"
+                                    class="text-center text-muted py-3">
+
+                                    No suppliers found.
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                        return;
+
+                    }
+
+
+                    let rows = "";
+
+
+                    // =========================================
+                    // RESULTS
+                    // =========================================
+
+                    data.forEach(function (item) {
+
+
+                        const id =
+                            item.supplierid;
+
+
+                        const name =
+                            escapeHtml(
+                                item.name ?? ""
+                            );
+
+
+                        const contactPerson =
+                            escapeHtml(
+                                item.contactperson ?? ""
+                            );
+
+
+                        const email =
+                            escapeHtml(
+                                item.email ?? ""
+                            );
+
+
+                        const totalConsumables =
+                            item.totalConsumables ?? 0;
+
 
                         rows += `
+
                             <tr>
+
+
+                                <!-- NAME -->
+
                                 <td class="fw-semibold blue-text">
-                                    ${item.name || ""}
+
+                                    ${name}
+
                                 </td>
 
+
+                                <!-- CONTACT -->
+
                                 <td>
-                                    ${item.contactperson || ""}
+
+                                    ${contactPerson}
+
                                 </td>
 
+
+                                <!-- EMAIL -->
+
                                 <td>
-                                    ${item.email || ""}
+
+                                    ${email}
+
                                 </td>
 
-                              <td>${item.totalConsumables}</td>
+
+                                <!-- CONSUMABLES -->
 
                                 <td>
-                                    <a href="/Manager/EditSupplier/${item.supplierid}"
-                                       class="btn btn-sm btn-primary me-1">
+
+                                    ${totalConsumables}
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+
+                                    <!-- EDIT -->
+
+                                    <a href="/Manager/EditSupplier/${id}"
+                                       class="btn btn-sm btn-outline-primary me-1">
+
+                                        <i class="fas fa-edit me-1"></i>
+
                                         Edit
+
                                     </a>
 
-                                    <a href="/Manager/DeleteSupplier/${item.supplierid}"
-                                       class="btn btn-sm btn-danger">
-                                        Deactivate
-                                    </a>
+
+                                    <!-- DEACTIVATE -->
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-supplier-btn"
+                                            data-id="${id}"
+                                            data-name="${name}">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
+
+
                                 </td>
-                            </tr>
-                        `;
-                    });
-                }
 
-                document.getElementById("supplierTable").innerHTML = rows;
-            })
-            .catch(err => {
-                console.error("Search error:", err);
-            });
+                            </tr>
+
+                        `;
+
+                    });
+
+
+                    supplierTable.innerHTML = rows;
+
+                })
+
+                .catch(function (error) {
+
+                    console.error(
+                        "Supplier search failed:",
+                        error
+                    );
+
+
+                    supplierTable.innerHTML = `
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="text-center text-danger py-3">
+
+                                Search failed. Please try again.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                });
+
+            }
+        );
+
+
+
+        // =====================================================
+        // ESCAPE HTML
+        // =====================================================
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent = value;
+
+            return div.innerHTML;
+
+        }
+
     });
+
 </script>

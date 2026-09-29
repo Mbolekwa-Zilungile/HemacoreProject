@@ -4,6 +4,12 @@
     Layout = "_ManagerLayout";
 }
 
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+<!-- =========================================================
+     ALERT MESSAGES
+     ========================================================= -->
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">
@@ -11,143 +17,726 @@
     </div>
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+
+<!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
 
 <div class="content-card">
 
-    <!-- HEADER -->
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
+
             <i class="fas fa-user-md me-2"></i>
 
-            <span>Doctors (@Model.Count)</span>
+            <span>
+                Doctors (@(Model?.Count ?? 0))
+            </span>
 
         </div>
 
+
+        <!-- ADD DOCTOR -->
+
         <a asp-action="AddDoctor"
            class="btn btn-primary-custom btn-sm">
+
             + Add Doctor
+
         </a>
 
     </div>
 
-    <!-- SEARCH -->
+
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
-           placeholder="Search doctors by name, surname, HPCSA, email or phone..." />
+           placeholder="Type to search doctors..."
+           autocomplete="off" />
+
+
+    <!-- =====================================================
+         TABLE
+         ===================================================== -->
 
     <div class="card shadow-sm">
+
         <div class="card-body p-0">
 
             <table class="modern-table">
 
                 <thead>
+
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>HPCSA Number</th>
-                        <th>Phone</th>
-                        <th class="text-center">Actions</th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            HPCSA Number
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
                     </tr>
+
                 </thead>
 
+
                 <tbody id="doctorTable">
-                      @if (!Model.Any())
+
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
-                                No doctor available.
+
+                            <td colspan="5"
+                                class="text-center text-muted py-3">
+
+                                No doctors available.
+
                             </td>
+
                         </tr>
                     }
                     else
                     {
-                        @foreach (var doctor in Model)
+                        foreach (var doctor in Model)
                         {
                             <tr>
-                                <td>Dr @doctor.Surname.ToUpper() @doctor.Name.ToUpper()</td>
+
+                                <!-- NAME -->
+
+                                <td class="fw-semibold blue-text">
+
+                                    Dr @doctor.Surname.ToUpper()
+                                    @doctor.Name.ToUpper()
+
+                                </td>
+
+
+                                <!-- EMAIL -->
+
                                 <td>
-                                    <a href="mailto:@doctor.User.Email">@doctor.User.Email</a>
-                                </td>
-                                <td>@doctor.HPCSANumber</td>
-                                <td>@doctor.PhoneNumber</td>
 
-                                <td class="text-center">
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        doctor.User?.Email))
+                                    {
+                                        <a href="mailto:@doctor.User.Email">
+                                            @doctor.User.Email
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            No email
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- HPCSA -->
+
+                                <td>
+
+                                    @doctor.HPCSANumber
+
+                                </td>
+
+
+                                <!-- PHONE -->
+
+                                <td>
+
+                                    @doctor.PhoneNumber
+
+                                </td>
+
+
+
+                                <td>
+
                                     <a asp-action="EditDoctor"
-                                    asp-route-id="@doctor.DoctorId"
-                                    class="btn btn-sm btn-outline-primary me-1">
-                                        Edit
+                                       asp-route-id="@doctor.DoctorId"
+                                       class="btn btn-sm btn-outline-primary me-1">
+
+                                        <i class="fas fa-edit me-1"></i>
+
                                     </a>
 
-                                    <a asp-action="DeleteDoctor"
-                                    asp-route-id="@doctor.DoctorId"
-                                    class="btn btn-sm btn-outline-danger">
-                                        Deactivate
-                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-doctor-btn"
+                                            data-id="@doctor.DoctorId"
+                                            data-name="Dr @doctor.Name @doctor.Surname">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
+
                                 </td>
+
                             </tr>
                         }
                     }
+
                 </tbody>
 
             </table>
 
         </div>
+
     </div>
+
 </div>
 
-<!-- LIVE SEARCH SCRIPT -->
+
+
+<!-- =========================================================
+     DEACTIVATE MODAL
+     ========================================================= -->
+
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle">
+
+    <div class="delete-box">
+
+
+        <!-- ICON -->
+
+        <div class="delete-icon">
+
+            <i class="fas fa-exclamation-triangle"></i>
+
+        </div>
+
+
+        <!-- TITLE -->
+
+        <h3 id="deleteModalTitle">
+
+            Are you sure?
+
+        </h3>
+
+
+        <!-- MESSAGE -->
+
+        <p>
+
+            Are you sure you want to deactivate
+
+            <strong id="deleteDoctorName"></strong>?
+
+        </p>
+
+
+        <!-- WARNING -->
+
+        <span class="delete-warning">
+
+            <i class="fas fa-info-circle"></i>
+
+            This doctor will no longer be active.
+
+        </span>
+
+
+        <!-- BUTTONS -->
+
+        <div class="delete-buttons">
+
+
+            <!-- CANCEL -->
+
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+
+                Cancel
+
+            </button>
+
+
+            <!-- DELETE FORM -->
+
+            <form asp-action="DeleteDoctor"
+                  method="post"
+                  id="deleteForm">
+
+                @Html.AntiForgeryToken()
+
+
+                <input type="hidden"
+                       name="id"
+                       id="deleteDoctorId" />
+
+
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="confirm-delete-btn">
+
+                    <i class="fas fa-ban me-1"></i>
+
+                    Yes, Deactivate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
-    document.getElementById("searchBox").addEventListener("keyup", function () {
 
-        let term = this.value;
+    document.addEventListener("DOMContentLoaded", function () {
 
-        fetch('/Manager/SearchDoctorsLive?term=' + encodeURIComponent(term))
-            .then(res => res.json())
-            .then(data => {
 
-                let rows = "";
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
 
-                if (data.length === 0) {
+        const modal =
+            document.getElementById("deleteModal");
 
-                    rows = `
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                No doctors found.
-                            </td>
-                        </tr>
-                    `;
+        const doctorIdInput =
+            document.getElementById("deleteDoctorId");
+
+        const doctorName =
+            document.getElementById("deleteDoctorName");
+
+        const cancelButton =
+            document.getElementById("cancelDeleteBtn");
+
+        const deleteForm =
+            document.getElementById("deleteForm");
+
+        const searchBox =
+            document.getElementById("searchBox");
+
+        const doctorTable =
+            document.getElementById("doctorTable");
+
+
+        // =====================================================
+        // OPEN DEACTIVATE MODAL
+        // =====================================================
+
+        document.addEventListener("click", function (event) {
+
+            const button =
+                event.target.closest(
+                    ".deactivate-doctor-btn"
+                );
+
+            if (!button) {
+                return;
+            }
+
+
+            const id =
+                button.getAttribute("data-id");
+
+            const name =
+                button.getAttribute("data-name");
+
+
+            doctorIdInput.value = id;
+
+            doctorName.textContent = name;
+
+
+            modal.classList.add("show");
+
+            document.body.classList.add("modal-open");
+
+        });
+
+
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+
+            document.body.classList.remove("modal-open");
+
+            doctorIdInput.value = "";
+
+            doctorName.textContent = "";
+
+        }
+
+
+        // =====================================================
+        // CANCEL
+        // =====================================================
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+
+                closeModal();
+
+            }
+        );
+
+
+        // =====================================================
+        // CLICK OUTSIDE MODAL
+        // =====================================================
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === modal) {
+
+                    closeModal();
+
                 }
-                else {
 
-                    data.forEach(item => {
+            }
+        );
+
+
+        // =====================================================
+        // ESCAPE KEY
+        // =====================================================
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    modal.classList.contains("show")
+                ) {
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+
+        // =====================================================
+        // PREVENT DOUBLE SUBMIT
+        // =====================================================
+
+        deleteForm.addEventListener(
+            "submit",
+            function () {
+
+                const button =
+                    document.getElementById(
+                        "confirmDeleteBtn"
+                    );
+
+
+                button.disabled = true;
+
+
+                button.innerHTML = `
+
+                    <i class="fas fa-spinner fa-spin me-1"></i>
+
+                    Deactivating...
+
+                `;
+
+            }
+        );
+
+
+        // =====================================================
+        // LIVE SEARCH
+        // =====================================================
+
+        searchBox.addEventListener(
+            "input",
+            function () {
+
+                const term =
+                    this.value.trim();
+
+
+                fetch(
+                    '@Url.Action("SearchDoctorsLive", "Manager")'
+                    + '?term='
+                    + encodeURIComponent(term)
+                )
+
+                .then(response => {
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            "Search request failed."
+                        );
+
+                    }
+
+                    return response.json();
+
+                })
+
+                .then(data => {
+
+
+                    // =========================================
+                    // NO RESULTS
+                    // =========================================
+
+                    if (
+                        !data ||
+                        data.length === 0
+                    ) {
+
+                        doctorTable.innerHTML = `
+
+                            <tr>
+
+                                <td colspan="5"
+                                    class="text-center text-muted py-3">
+
+                                    No doctors found.
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                        return;
+
+                    }
+
+
+                    let rows = "";
+
+
+                    // =========================================
+                    // RESULTS
+                    // =========================================
+
+                    data.forEach(function (item) {
+
+                        const id =
+                            item.doctorID ??
+                            item.doctorId;
+
+                        const name =
+                            escapeHtml(
+                                item.name ?? ""
+                            );
+
+                        const surname =
+                            escapeHtml(
+                                item.surname ?? ""
+                            );
+
+                        const email =
+                            escapeHtml(
+                                item.email ?? ""
+                            );
+
+                        const hpcsa =
+                            escapeHtml(
+                                item.hpcsanumber ??
+                                item.hpcsaNumber ??
+                                ""
+                            );
+
+                        const phone =
+                            escapeHtml(
+                                item.phoneNumber ??
+                                ""
+                            );
+
 
                         rows += `
+
                             <tr>
-                                <td>Dr ${item.surname ?? ""} ${item.name ?? ""}</td>
-                                <td>${item.email ?? ""}</td>
-                                <td>${item.hpcsanumber ?? ""}</td>
-                                <td>${item.phoneNumber ?? ""}</td>
 
-                                <td class="text-center">
-                                    <a href="/Manager/EditDoctor/${item.doctorID}"
-                                       class="btn btn-sm btn-primary me-1">
-                                        Edit
-                                    </a>
 
-                                    <a href="/Manager/DeleteDoctor/${item.doctorID}"
-                                       class="btn btn-sm btn-danger">
-                                        Deactivate
-                                    </a>
+                                <!-- NAME -->
+
+                                <td class="fw-semibold blue-text">
+
+                                    Dr ${surname.toUpperCase()}
+                                    ${name.toUpperCase()}
+
                                 </td>
-                            </tr>
-                        `;
-                    });
-                }
 
-                document.getElementById("doctorTable").innerHTML = rows;
-            });
+
+                                <!-- EMAIL -->
+
+                                <td>
+
+                                    ${
+                                        email
+                                            ? `<a href="mailto:${email}">
+                                                ${email}
+                                               </a>`
+                                            : `<span class="text-muted">
+                                                No email
+                                               </span>`
+                                    }
+
+                                </td>
+
+
+                                <!-- HPCSA -->
+
+                                <td>
+
+                                    ${hpcsa}
+
+                                </td>
+
+
+                                <!-- PHONE -->
+
+                                <td>
+
+                                    ${phone}
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+
+                                    <!-- EDIT -->
+
+                                    <a href="/Manager/EditDoctor/${id}"
+                                       class="btn btn-sm btn-outline-primary me-1">
+
+                                        <i class="fas fa-edit me-1"></i>
+
+                                    </a>
+
+
+                                    <!-- DEACTIVATE -->
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-doctor-btn"
+                                            data-id="${id}"
+                                            data-name="Dr ${name} ${surname}">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
+
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    });
+
+
+                    doctorTable.innerHTML = rows;
+
+                })
+
+                .catch(function (error) {
+
+                    console.error(
+                        "Doctor search failed:",
+                        error
+                    );
+
+
+                    doctorTable.innerHTML = `
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="text-center text-danger py-3">
+
+                                Search failed. Please try again.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                });
+
+            }
+        );
+
+
+        // =====================================================
+        // ESCAPE HTML
+        // =====================================================
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent = value;
+
+            return div.innerHTML;
+
+        }
+
     });
+
 </script>

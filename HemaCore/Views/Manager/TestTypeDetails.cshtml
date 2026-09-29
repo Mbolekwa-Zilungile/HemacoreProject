@@ -1,0 +1,539 @@
+﻿@model HemaCore.Models.TestType
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<div class="content-card">
+
+
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-microscope me-2"></i>
+
+            <span>
+                Test Type Details
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <h5 class="mb-0">
+
+                <i class="fas fa-info-circle me-2"></i>
+
+                Test Type Information
+
+            </h5>
+
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="row">
+
+
+                <!-- TEST TYPE NAME -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Test Type Name
+                    </label>
+
+                    <div class="fw-semibold">
+
+                        @Model.TestTypeName
+
+                    </div>
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Category
+                    </label>
+
+                    <div>
+
+                        @if (Model.Category != null)
+                        {
+                            <span class="fw-semibold">
+                             
+                                @Model.Category.CategoryName
+
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">
+                                Not assigned
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <!-- SAMPLE TYPE -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Sample Type
+                    </label>
+
+                    <div class="fw-semibold">
+
+                        @if (Model.SampleType != null)
+                        {
+                            @Model.SampleType.SampleName
+                        }
+                        else
+                        {
+                            <span class="text-muted">
+                                Not assigned
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <!-- UNIT -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Unit of Measurement
+                    </label>
+
+                    <div class="fw-semibold">
+
+                        @if (!string.IsNullOrWhiteSpace(Model.UnitOfMeasurement))
+                        {
+                            @Model.UnitOfMeasurement
+                        }
+                        else
+                        {
+                            <span class="text-muted">
+                                Not specified
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <!-- NORMAL RANGE -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Normal Range
+                    </label>
+
+                    <div class="fw-semibold">
+
+                        @Model.NormalRangeMin
+                        -
+                        @Model.NormalRangeMax
+
+                        @if (!string.IsNullOrWhiteSpace(Model.UnitOfMeasurement))
+                        {
+                            <span class="text-muted">
+
+                                @Model.UnitOfMeasurement
+
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <!-- TURNAROUND TIME -->
+
+                <div class="col-md-6 mb-4">
+
+                    <label class="text-muted">
+                        Turnaround Time
+                    </label>
+
+                    <div>
+
+                        <span class ="badge bg-info text-dark">
+                            @Model.TurnAroundTime min
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="col-md-6 mb-2">
+
+                    <label class="text-muted">
+                        Status
+                    </label>
+
+                    <div>
+
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">
+
+                                Active
+
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">
+
+                                Inactive
+
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+     ASSIGNED LAB TECHNICIANS
+     ===================================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-user-cog me-2"></i>
+
+                    Assigned Lab Technicians
+
+                </h5>
+
+
+                <span class="badge bg-primary">
+
+                    @(Model.TechnicianTestType?.Count ?? 0)
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body">
+
+            @if (Model.TechnicianTestType != null &&
+                 Model.TechnicianTestType.Any())
+            {
+
+                <div class="table-responsive">
+
+                    <table class="modern-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Technician
+                                </th>
+
+                                <th>
+                                    Employee Number
+                                </th>
+
+                                <th>
+                                    Phone Number
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var technicianTest
+                                in Model.TechnicianTestType)
+                            {
+
+                                var technician =
+                                    technicianTest.LabTechnician;
+
+                                <tr>
+
+                                    <td class="fw-semibold">
+
+                                        <i class="fas fa-user me-2 text-primary"></i>
+
+                                        @technician?.Name
+                                        @technician?.Surname
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @if (technician != null &&
+                                             !string.IsNullOrWhiteSpace(
+                                                 technician.EmployeeNumber))
+                                        {
+                                            @technician.EmployeeNumber
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Not available
+                                            </span>
+                                        }
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @if (technician != null &&
+                                             !string.IsNullOrWhiteSpace(
+                                                 technician.PhoneNumber))
+                                        {
+                                            @technician.PhoneNumber
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Not available
+                                            </span>
+                                        }
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @if (technician?.IsActive == true)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                Inactive
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                </tr>
+
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            }
+            else
+            {
+
+                <div class="alert alert-warning mb-0">
+
+                    <i class="fas fa-exclamation-circle me-2"></i>
+
+                    No lab technicians have been assigned
+                    to this test type.
+
+                </div>
+
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+     REQUIRED CONSUMABLES
+     ===================================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0">
+
+                    <i class="fas fa-boxes me-2"></i>
+
+                    Required Consumables
+
+                </h5>
+
+
+                <span class="badge bg-primary">
+
+                    @(Model.TestTypeConsumables?.Count ?? 0)
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body">
+
+            @if (Model.TestTypeConsumables != null &&
+                 Model.TestTypeConsumables.Any())
+            {
+
+                <div class="table-responsive">
+
+                    <table class="modern-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Consumable
+                                </th>
+
+                                <th>
+                                    Quantity Used
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var item
+                                in Model.TestTypeConsumables)
+                            {
+
+                                <tr>
+
+                                    <td class="fw-semibold">
+
+                                        <i class="fas fa-box me-2 text-primary"></i>
+
+                                        @item.Consumable?.ConsumableName
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="badge bg-secondary">
+
+                                            @item.QuantityNeeded
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            }
+            else
+            {
+
+                <div class="alert alert-info mb-0">
+
+                    <i class="fas fa-info-circle me-2"></i>
+
+                    No consumables have been assigned
+                    to this test type.
+
+                </div>
+
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+     BOTTOM BUTTONS
+     ===================================================== -->
+
+    <div class="d-flex justify-content-between mt-4">
+
+        <a asp-action="TestTypes"
+           class="btn btn-outline-secondary">
+
+            ← Back to Test Types
+
+        </a>
+
+
+        <a asp-action="EditTestType"
+           asp-route-id="@Model.TestTypeId"
+           class="btn btn-primary-custom">
+
+            <i class="fas fa-edit me-1"></i>
+
+            Edit Test Type
+
+        </a>
+
+    </div>
+
+</div>

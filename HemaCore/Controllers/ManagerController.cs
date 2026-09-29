@@ -226,14 +226,13 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> AddTestType(TestTypeViewModel model)
         {
             // =====================================================
-            // LOAD DROPDOWN DATA
+            // LOAD DROPDOWNS
             // =====================================================
 
             ViewBag.Categories = await _context.TestCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
-
 
             ViewBag.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
@@ -356,10 +355,70 @@ namespace HemaCore.Controllers
                 IsActive = true
             };
 
-
             _context.TestTypes.Add(testType);
 
             await _context.SaveChangesAsync();
+
+
+          
+            var selectedConsumables = model.Consumables?
+                .Where(c => c.IsSelected)
+                .ToList()
+                ?? new List<ConsumableVM>();
+
+
+            if (selectedConsumables.Any())
+            {
+                // Get valid consumable IDs from database
+                var selectedConsumableIds = selectedConsumables
+                    .Select(c => c.ConsumableID)
+                    .ToList();
+
+                var validConsumableIds = await _context.Consumables
+                    .Where(c =>
+                        selectedConsumableIds.Contains(c.ConsumableId)
+                    // If your Consumable model has IsActive,
+                    // you can also add:
+                    // && c.IsActive
+                    )
+                    .Select(c => c.ConsumableId)
+                    .ToListAsync();
+
+
+                foreach (var consumable in selectedConsumables)
+                {
+                    // Only save consumables that actually exist
+                    if (!validConsumableIds.Contains(consumable.ConsumableID))
+                    {
+                        continue;
+                    }
+
+
+                    // If selected but quantity is 0/null,
+                    // automatically use 1
+                    var quantity = consumable.QuantityUsed <= 0
+                        ? 1
+                        : consumable.QuantityUsed;
+
+
+                    var testTypeConsumable = new TestTypeConsumable
+                    {
+                        TestTypeId = testType.TestTypeId,
+
+                        ConsumableId = consumable.ConsumableID,
+
+                        QuantityNeeded = quantity
+                    };
+
+
+                    _context.TestTypeConsumables.Add(
+                        testTypeConsumable
+                    );
+                }
+
+
+                await _context.SaveChangesAsync();
+            }
 
 
             // =====================================================
@@ -370,7 +429,8 @@ namespace HemaCore.Controllers
                 .Where(t => t.IsSelected)
                 .Select(t => t.TechnicianID)
                 .ToList()
-                     ?? new List<int>();
+                ?? new List<int>();
+
 
             if (selectedTechnicianIds.Any())
             {
@@ -381,6 +441,7 @@ namespace HemaCore.Controllers
                     .Select(t => t.LabTechnicianId)
                     .ToListAsync();
 
+
                 foreach (var technicianId in activeTechnicianIds)
                 {
                     var technicianTestType = new TechnicianTestType
@@ -389,17 +450,17 @@ namespace HemaCore.Controllers
                         TestTypeId = testType.TestTypeId
                     };
 
-                    _context.TechnicianTestTypes.Add(technicianTestType);
+
+                    _context.TechnicianTestTypes.Add(
+                        technicianTestType
+                    );
                 }
+
 
                 await _context.SaveChangesAsync();
             }
 
 
-
-            // =====================================================
-            // SUCCESS
-            // =====================================================
 
             TempData["Success"] =
                 $"{model.TestTypeName} added successfully.";
@@ -461,13 +522,20 @@ namespace HemaCore.Controllers
             }).ToList();
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> EditTestType(int id)
+        public async Task<IActionResult> TestTypeDetails(int id)
         {
             var testType = await _context.TestTypes
+                .Include(t => t.Category)
+                .Include(t => t.SampleType)
+
+                // Assigned technicians
+                .Include(t => t.TechnicianTestType)
+                    .ThenInclude(tt => tt.LabTechnician)
+
+                // Assigned consumables
                 .Include(t => t.TestTypeConsumables)
                     .ThenInclude(tc => tc.Consumable)
+
                 .FirstOrDefaultAsync(t => t.TestTypeId == id);
 
             if (testType == null)
@@ -475,102 +543,354 @@ namespace HemaCore.Controllers
                 return NotFound();
             }
 
-            ViewBag.Categories = await _context.TestCategories
-                .Where(c => c.IsActive)
-                .ToListAsync();
-
-            ViewBag.SampleTypes = await _context.SampleTypes
-                .Where(s => s.IsActive)
-                .ToListAsync();
-
-            ViewBag.Consumables = await _context.Consumables
-                .Where(c => c.IsActive)
-                .ToListAsync();
-
             return View(testType);
         }
 
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditTestType(
-            TestType model,
-            int[] selectedConsumableIds,
-            int[] quantities)
+        [HttpGet]
+        public async Task<IActionResult> EditTestType(int id)
         {
             var testType = await _context.TestTypes
                 .Include(t => t.TestTypeConsumables)
-                .FirstOrDefaultAsync(t => t.TestTypeId == model.TestTypeId);
+                    .ThenInclude(tc => tc.Consumable)
+
+                .Include(t => t.TechnicianTestType)
+                    .ThenInclude(tt => tt.LabTechnician)
+
+                .FirstOrDefaultAsync(t => t.TestTypeId == id);
+
 
             if (testType == null)
             {
                 return NotFound();
             }
 
+
+            // =====================================================
+            // CATEGORIES
+            // =====================================================
+
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+
+            // =====================================================
+            // SAMPLE TYPES
+            // =====================================================
+
+            ViewBag.SampleTypes = await _context.SampleTypes
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SampleName)
+                .ToListAsync();
+
+
+            // =====================================================
+            // ACTIVE CONSUMABLES
+            // =====================================================
+
+            var consumables = await _context.Consumables
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
+
+
+            // =====================================================
+            // ACTIVE TECHNICIANS
+            // =====================================================
+
+            var technicians = await _context.LabTechnicians
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .ThenBy(t => t.Surname)
+                .ToListAsync();
+
+
+            // =====================================================
+            // CREATE VIEW MODEL
+            // =====================================================
+
+            var model = new TestTypeViewModel
+            {
+                TestTypeId = testType.TestTypeId,
+
+                TestTypeName = testType.TestTypeName,
+
+                UnitOfMeasurement = testType.UnitOfMeasurement,
+
+                NormalRangeMin = testType.NormalRangeMin,
+
+                NormalRangeMax = testType.NormalRangeMax,
+
+                TurnAroundTime = testType.TurnAroundTime,
+
+                IsActive = testType.IsActive,
+
+                CategoryID = testType.CategoryId,
+
+                SampleTypeID = testType.SampleTypeId
+            };
+
+
+            // =====================================================
+            // LOAD CONSUMABLES
+            // =====================================================
+
+            foreach (var consumable in consumables)
+            {
+                var existingConsumable =
+                    testType.TestTypeConsumables
+                        .FirstOrDefault(tc =>
+                            tc.ConsumableId == consumable.ConsumableId);
+
+
+                model.Consumables.Add(
+                    new ConsumableVM
+                    {
+                        ConsumableID = consumable.ConsumableId,
+
+                        ConsumableName = consumable.ConsumableName,
+
+                        IsSelected = existingConsumable != null,
+
+                        QuantityUsed = existingConsumable?.QuantityNeeded ?? 0
+                    }
+                );
+            }
+
+
+            // =====================================================
+            // LOAD TECHNICIANS
+            // =====================================================
+
+            foreach (var technician in technicians)
+            {
+                var existingTechnician =
+                    testType.TechnicianTestType
+                        .Any(tt =>
+                            tt.LabTechnicianId ==
+                            technician.LabTechnicianId);
+
+
+                model.Technicians.Add(
+                    new TechnicianVM
+                    {
+                        TechnicianID = technician.LabTechnicianId,
+
+                        TechnicianName =
+                            $"{technician.Name} {technician.Surname}",
+
+                        IsSelected = existingTechnician
+                    }
+                );
+            }
+
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditTestType(TestTypeViewModel model)
+        {
+            // =====================================================
+            // LOAD DROPDOWNS
+            // =====================================================
+
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
+
+            ViewBag.SampleTypes = await _context.SampleTypes
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SampleName)
+                .ToListAsync();
+
+
+            // =====================================================
+            // VALIDATION
+            // =====================================================
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = await _context.TestCategories
-                    .Where(c => c.IsActive)
-                    .ToListAsync();
-
-                ViewBag.SampleTypes = await _context.SampleTypes
-                    .Where(s => s.IsActive)
-                    .ToListAsync();
-
-                ViewBag.Consumables = await _context.Consumables
-                    .Where(c => c.IsActive)
-                    .ToListAsync();
+                await ReloadConsumables(model);
+                await ReloadTechnicians(model);
 
                 return View(model);
             }
 
-            testType.TestTypeName = model.TestTypeName;
-            testType.UnitOfMeasurement = model.UnitOfMeasurement;
-            testType.NormalRangeMin = model.NormalRangeMin;
-            testType.NormalRangeMax = model.NormalRangeMax;
-            testType.TurnAroundTime = model.TurnAroundTime;
-            testType.CategoryId = model.CategoryId;
-            testType.SampleTypeId = model.SampleTypeId;
-            testType.IsActive = model.IsActive;
 
-            // Remove old consumables
-            _context.TestTypeConsumables.RemoveRange(
-                testType.TestTypeConsumables
-            );
+            // =====================================================
+            // CHECK NORMAL RANGE
+            // =====================================================
 
-            // Add selected consumables with quantity
-            if (selectedConsumableIds != null)
+            if (model.NormalRangeMin > model.NormalRangeMax)
             {
-                for (int i = 0; i < selectedConsumableIds.Length; i++)
+                ModelState.AddModelError(
+                    "NormalRangeMin",
+                    "Minimum normal range cannot be greater than maximum normal range."
+                );
+
+                await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
+                return View(model);
+            }
+
+
+            // =====================================================
+            // FIND TEST TYPE
+            // =====================================================
+
+            var testType = await _context.TestTypes
+                .Include(t => t.TestTypeConsumables)
+                .Include(t => t.TechnicianTestType)
+                .FirstOrDefaultAsync(t =>
+                    t.TestTypeId == model.TestTypeId);
+
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+
+
+            // =====================================================
+            // UPDATE TEST TYPE DETAILS
+            // =====================================================
+
+            testType.TestTypeName =
+                model.TestTypeName;
+
+            testType.UnitOfMeasurement =
+                model.UnitOfMeasurement;
+
+            testType.NormalRangeMin =
+                model.NormalRangeMin;
+
+            testType.NormalRangeMax =
+                model.NormalRangeMax;
+
+            testType.TurnAroundTime =
+                model.TurnAroundTime;
+
+            testType.CategoryId =
+                model.CategoryID;
+
+            testType.SampleTypeId =
+                model.SampleTypeID;
+
+            testType.IsActive =
+                model.IsActive;
+
+
+            // =====================================================
+            // REMOVE OLD CONSUMABLES
+            // =====================================================
+
+            if (testType.TestTypeConsumables != null &&
+                testType.TestTypeConsumables.Any())
+            {
+                _context.TestTypeConsumables.RemoveRange(
+                    testType.TestTypeConsumables
+                );
+            }
+
+
+            // =====================================================
+            // ADD SELECTED CONSUMABLES
+            // =====================================================
+
+            var selectedConsumables =
+                model.Consumables?
+                    .Where(c => c.IsSelected)
+                    .ToList()
+                ?? new List<ConsumableVM>();
+
+
+            foreach (var consumable in selectedConsumables)
+            {
+                // Automatically use quantity 1
+                // if the selected consumable has no quantity.
+                var quantity =
+                    consumable.QuantityUsed <= 0
+                        ? 1
+                        : consumable.QuantityUsed;
+
+
+                // Make sure the consumable exists
+                var exists =
+                    await _context.Consumables
+                        .AnyAsync(c =>
+                            c.ConsumableId ==
+                            consumable.ConsumableID &&
+                            c.IsActive);
+
+
+                if (!exists)
                 {
-                    int consumableId = selectedConsumableIds[i];
+                    continue;
+                }
 
-                    int quantity = 0;
 
-                    if (quantities != null && i < quantities.Length)
+                _context.TestTypeConsumables.Add(
+                    new TestTypeConsumable
                     {
-                        quantity = quantities[i];
+                        TestTypeId =
+                            testType.TestTypeId,
+
+                        ConsumableId =
+                            consumable.ConsumableID,
+
+                        QuantityNeeded =
+                            quantity
                     }
+                );
+            }
 
-                    if (quantity <= 0)
-                    {
-                        continue;
-                    }
 
-                    var consumableExists = await _context.Consumables
-                        .AnyAsync(c => c.ConsumableId == consumableId);
+            if (testType.TechnicianTestType != null &&
+                testType.TechnicianTestType.Any())
+            {
+                _context.TechnicianTestTypes.RemoveRange(
+                    testType.TechnicianTestType
+                );
+            }
 
-                    if (!consumableExists)
-                    {
-                        continue;
-                    }
 
-                    _context.TestTypeConsumables.Add(
-                        new TestTypeConsumable
+            var selectedTechnicians =
+                model.Technicians?
+                    .Where(t => t.IsSelected)
+                    .Select(t => t.TechnicianID)
+                    .ToList()
+                ?? new List<int>();
+
+
+            if (selectedTechnicians.Any())
+            {
+                var activeTechnicians =
+                    await _context.LabTechnicians
+                        .Where(t =>
+                            t.IsActive &&
+                            selectedTechnicians.Contains(
+                                t.LabTechnicianId))
+                        .Select(t =>
+                            t.LabTechnicianId)
+                        .ToListAsync();
+
+
+                foreach (var technicianId in activeTechnicians)
+                {
+                    _context.TechnicianTestTypes.Add(
+                        new TechnicianTestType
                         {
-                            TestTypeId = testType.TestTypeId,
-                            ConsumableId = consumableId,
-                            QuantityNeeded = quantity
+                            TestTypeId =
+                                testType.TestTypeId,
+
+                            LabTechnicianId =
+                                technicianId
                         }
                     );
                 }
@@ -578,10 +898,14 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Test Type updated successfully.";
+
+            TempData["Success"] =
+                $"{model.TestTypeName} updated successfully.";
+
 
             return RedirectToAction("TestTypes");
         }
+
 
         public async Task<IActionResult> DeleteTestType(int id)
         {
@@ -869,6 +1193,131 @@ namespace HemaCore.Controllers
             return RedirectToAction("Suppliers");
 
         }
+
+     
+
+        [HttpGet]
+        public async Task<IActionResult> EditSupplier(int id)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            return View(supplier);
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditSupplier(Supplier model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Find the supplier being edited
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            // Clean input
+            var supplierName = model.SupplierName.Trim();
+            var email = model.Email.Trim();
+
+            // =====================================================
+            // CHECK SUPPLIER NAME
+            // ONLY ACTIVE SUPPLIERS
+            // EXCLUDE CURRENT SUPPLIER
+            // =====================================================
+
+            bool nameExists = await _context.Suppliers
+                .AnyAsync(s =>
+                    s.IsActive &&
+                    s.SupplierId != supplier.SupplierId &&
+                    s.SupplierName == supplierName);
+
+            if (nameExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.SupplierName),
+                    "Another active supplier with this name already exists.");
+
+                return View(model);
+            }
+
+            // =====================================================
+            // CHECK EMAIL
+            // ONLY ACTIVE SUPPLIERS
+            // EXCLUDE CURRENT SUPPLIER
+            // =====================================================
+
+            bool emailExists = await _context.Suppliers
+                .AnyAsync(s =>
+                    s.IsActive &&
+                    s.SupplierId != supplier.SupplierId &&
+                    s.Email == email);
+
+            if (emailExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "Another active supplier with this email already exists.");
+
+                return View(model);
+            }
+
+            // =====================================================
+            // UPDATE SUPPLIER
+            // =====================================================
+
+            supplier.SupplierName = supplierName;
+            supplier.ContactPerson = model.ContactPerson?.Trim();
+            supplier.Email = email;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"{supplier.SupplierName} updated successfully.";
+
+            return RedirectToAction(nameof(Suppliers));
+        }
+
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSupplier(int id)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+          
+            supplier.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"{supplier.SupplierName} has been deactivated successfully.";
+
+            return RedirectToAction("Suppliers");
+        }
+
 
         #endregion
 
@@ -1431,6 +1880,167 @@ namespace HemaCore.Controllers
                        .Substring(0, 8);
         }
 
+        // =========================================================
+        // EDIT DOCTOR - GET
+        // =========================================================
+        [HttpGet]
+        public async Task<IActionResult> EditDoctor(int id)
+        {
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
+
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditDoctorViewModel
+            {
+                DoctorId = doctor.DoctorId,
+                Name = doctor.Name,
+                Surname = doctor.Surname,
+                Email = doctor.User.Email,
+                PhoneNumber = doctor.PhoneNumber,
+                HPCSANumber = doctor.HPCSANumber,
+                IsActive = doctor.IsActive
+            };
+
+            return View(model);
+        }
+
+
+
+
+        // =========================================================
+        // EDIT DOCTOR - POST
+        // =========================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditDoctor(EditDoctorViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.DoctorId == model.DoctorId);
+
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            // ============================
+            // CHECK HPCSA NUMBER
+            // ============================
+
+            bool hpcsaExists = await _context.Doctors
+                .AnyAsync(d =>
+                    d.DoctorId != model.DoctorId &&
+                    d.HPCSANumber == model.HPCSANumber);
+
+            if (hpcsaExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.HPCSANumber),
+                    "This HPCSA number is already registered."
+                );
+
+                return View(model);
+            }
+
+            // ============================
+            // CHECK EMAIL
+            // ============================
+
+            var existingUser = await _userManager
+                .FindByEmailAsync(model.Email);
+
+            if (existingUser != null &&
+                existingUser.Id != doctor.UserId)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "This email is already registered."
+                );
+
+                return View(model);
+            }
+
+            // ============================
+            // UPDATE DOCTOR
+            // ============================
+
+            doctor.Name = model.Name;
+            doctor.Surname = model.Surname;
+            doctor.PhoneNumber = model.PhoneNumber;
+            doctor.HPCSANumber = model.HPCSANumber;
+            doctor.IsActive = model.IsActive;
+
+            // ============================
+            // UPDATE IDENTITY USER
+            // ============================
+
+            if (doctor.User != null)
+            {
+                doctor.User.FullName =
+                    $"{model.Name} {model.Surname}";
+
+                doctor.User.Email = model.Email;
+                doctor.User.UserName = model.Email;
+                doctor.User.PhoneNumber = model.PhoneNumber;
+
+                var updateUserResult =
+                    await _userManager.UpdateAsync(doctor.User);
+
+                if (!updateUserResult.Succeeded)
+                {
+                    foreach (var error in updateUserResult.Errors)
+                    {
+                        ModelState.AddModelError(
+                            string.Empty,
+                            error.Description
+                        );
+                    }
+
+                    return View(model);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Doctor {model.Name} {model.Surname} updated successfully.";
+
+            return RedirectToAction(nameof(Doctors));
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDoctor(int id)
+        {
+            var doctor = await _context.Doctors
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
+
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            // Soft delete
+            doctor.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Dr. {doctor.Name} {doctor.Surname} has been deactivated successfully.";
+
+            return RedirectToAction(nameof(Doctors));
+        }
+
 
         #endregion
 
@@ -1703,6 +2313,245 @@ namespace HemaCore.Controllers
                     TestTypeName = t.TestTypeName
                 })
                 .ToListAsync();
+        }
+
+        // GET: Manager/EditTechnician/5
+        [HttpGet]
+        public async Task<IActionResult> EditTechnician(int id)
+        {
+            var technician = await _context.LabTechnicians
+                .Include(t => t.User)
+                .Include(t => t.TechnicianTests)
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == id);
+
+            if (technician == null)
+            {
+                return NotFound();
+            }
+
+            var model = new TechnicianViewModel
+            {
+                LabTechnicianId = technician.LabTechnicianId,
+                Name = technician.Name,
+                Surname = technician.Surname,
+                IDNumber = technician.IDNumber,
+                EmployeeNumber = technician.EmployeeNumber,
+                Email = technician.User?.Email ?? string.Empty,
+                PhoneNumber = technician.PhoneNumber,
+
+                SelectedTestTypeIds = technician.TechnicianTests
+                    .Select(tt => tt.TestTypeId)
+                    .ToList()
+            };
+
+            await LoadTechnicianTestTypes(model);
+
+            return View(model);
+        }
+
+
+        // POST: Manager/EditTechnician/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditTechnician(
+     int id,
+     TechnicianViewModel model)
+        {
+            if (id != model.LabTechnicianId)
+            {
+                return BadRequest();
+            }
+
+            // ==========================================
+            // LOAD TECHNICIAN
+            // ==========================================
+
+            var technician = await _context.LabTechnicians
+                .Include(t => t.User)
+                .Include(t => t.TechnicianTests)
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == id);
+
+            if (technician == null)
+            {
+                return NotFound();
+            }
+
+            // ==========================================
+            // CLEAN INPUT
+            // ==========================================
+
+            string name = model.Name?.Trim() ?? "";
+            string surname = model.Surname?.Trim() ?? "";
+            string idNumber = model.IDNumber?.Trim() ?? "";
+            string email = model.Email?.Trim() ?? "";
+            string phoneNumber = model.PhoneNumber?.Trim() ?? "";
+
+            // ==========================================
+            // CHECK MODEL VALIDATION
+            // ==========================================
+
+            if (!ModelState.IsValid)
+            {
+                await LoadTechnicianTestTypes(model);
+                return View(model);
+            }
+
+            // ==========================================
+            // CHECK ID NUMBER
+            // ==========================================
+
+            bool idExists = await _context.LabTechnicians
+                .AnyAsync(t =>
+                    t.IDNumber == idNumber &&
+                    t.LabTechnicianId != technician.LabTechnicianId);
+
+            if (idExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.IDNumber),
+                    "This ID number is already registered.");
+
+                await LoadTechnicianTestTypes(model);
+                return View(model);
+            }
+
+            // ==========================================
+            // CHECK EMAIL
+            // ==========================================
+
+            if (technician.User != null)
+            {
+                // Search by normalized email
+                string normalizedEmail =
+                    _userManager.NormalizeEmail(email);
+
+                var existingUser = await _userManager.Users
+                    .FirstOrDefaultAsync(u =>
+                        u.NormalizedEmail == normalizedEmail &&
+                        u.Id != technician.User.Id);
+
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.Email),
+                        "This email is already registered.");
+
+                    await LoadTechnicianTestTypes(model);
+                    return View(model);
+                }
+            }
+
+            // ==========================================
+            // UPDATE TECHNICIAN
+            // ==========================================
+
+            technician.Name = name;
+            technician.Surname = surname;
+            technician.IDNumber = idNumber;
+            technician.PhoneNumber = phoneNumber;
+
+            // EmployeeNumber remains unchanged
+            // IsActive remains unchanged
+
+            // ==========================================
+            // UPDATE IDENTITY USER
+            // ==========================================
+
+            if (technician.User != null)
+            {
+                technician.User.FullName =
+                    $"{name} {surname}";
+
+                technician.User.Email = email;
+                technician.User.UserName = email;
+                technician.User.PhoneNumber = phoneNumber;
+
+                var userUpdateResult =
+                    await _userManager.UpdateAsync(technician.User);
+
+                if (!userUpdateResult.Succeeded)
+                {
+                    foreach (var error in userUpdateResult.Errors)
+                    {
+                        ModelState.AddModelError(
+                            string.Empty,
+                            error.Description);
+                    }
+
+                    await LoadTechnicianTestTypes(model);
+                    return View(model);
+                }
+            }
+
+            // ==========================================
+            // UPDATE TEST TYPE ASSIGNMENTS
+            // ==========================================
+
+            var selectedTestTypeIds =
+                model.SelectedTestTypeIds?
+                    .Distinct()
+                    .ToList()
+                ?? new List<int>();
+
+            // Only allow active test types
+            var validTestTypeIds =
+                await _context.TestTypes
+                    .Where(t =>
+                        t.IsActive &&
+                        selectedTestTypeIds.Contains(t.TestTypeId))
+                    .Select(t => t.TestTypeId)
+                    .ToListAsync();
+
+            // Remove existing assignments
+            _context.TechnicianTestTypes.RemoveRange(
+                technician.TechnicianTests);
+
+            // Add new assignments
+            foreach (var testTypeId in validTestTypeIds)
+            {
+                _context.TechnicianTestTypes.Add(
+                    new TechnicianTestType
+                    {
+                        LabTechnicianId =
+                            technician.LabTechnicianId,
+
+                        TestTypeId = testTypeId
+                    });
+            }
+
+            // ==========================================
+            // SAVE EVERYTHING
+            // ==========================================
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Technician {name} {surname} was updated successfully.";
+
+            return RedirectToAction(nameof(LabTechnician));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTechnician(int id)
+        {
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == id);
+
+            if (technician == null)
+            {
+                return NotFound();
+            }
+
+           
+            technician.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Technician {technician.Name} {technician.Surname} has been deactivated successfully.";
+
+            return RedirectToAction(nameof(LabTechnician));
         }
 
 

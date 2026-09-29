@@ -1,0 +1,171 @@
+﻿@model HemaCore.ViewModels.ManagerVM.EditDoctorViewModel
+
+@{
+    ViewData["Title"] = "Edit Doctor";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm p-4">
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Edit Doctor
+            </h3>
+
+            <p class="text-muted">
+                Update the doctor's details below.
+            </p>
+
+        </div>
+
+
+        <form asp-action="EditDoctor" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input asp-for="DoctorId" type="hidden" />
+
+
+            <div class="row">
+
+                <!-- NAME -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Name"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Name"
+                           class="form-control"
+                           placeholder="First name" />
+
+                    <span asp-validation-for="Name"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- SURNAME -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Surname"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Surname"
+                           class="form-control"
+                           placeholder="Last name" />
+
+                    <span asp-validation-for="Surname"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <!-- EMAIL -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Email"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Email"
+                           class="form-control"
+                           placeholder="Enter email address" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- PHONE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="PhoneNumber"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           placeholder="Enter phone number" />
+
+                    <span asp-validation-for="PhoneNumber"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <!-- HPCSA -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="HPCSANumber"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="HPCSANumber"
+                           class="form-control"
+                           placeholder="Enter HPCSA number" />
+
+                    <span asp-validation-for="HPCSANumber"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="Doctors"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

@@ -6,101 +6,15 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-<style>
-
-    /* =========================
-           SHOW / HIDE CONSUMABLES
-        ========================= */
-
-    #toggleConsumables {
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        border-width: 1px;
-    }
-
-        #toggleConsumables:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-        }
-
-        #toggleConsumables .toggle-icon {
-            margin-right: 5px;
-        }
-
-
-    /* =========================
-           SEARCH
-        ========================= */
-
-    #consumableSearch {
-        border-radius: 8px;
-    }
-
-
-    /* =========================
-           NO CONSUMABLES MESSAGE
-        ========================= */
-
-    .no-consumables-message {
-        border: 1px dashed #ced4da;
-        border-radius: 10px;
-        padding: 20px;
-        text-align: center;
-        color: #6c757d;
-        background-color: #f8f9fa;
-        margin-top: 10px;
-    }
-
-        .no-consumables-message .empty-icon {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-
-    /* =========================
-           CONSUMABLE TABLE
-        ========================= */
-
-    .consumable-row {
-        transition: background-color 0.15s ease;
-    }
-
-        .consumable-row:hover {
-            background-color: #f8f9fa;
-        }
-
-
-    /* =========================
-           CHECKBOX
-        ========================= */
-
-    .consumable-checkbox {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-    }
-
-
-    /* =========================
-           QUANTITY INPUT
-        ========================= */
-
-    .quantity-input {
-        max-width: 180px;
-    }
-
-</style>
-
 
 <div class="container mt-4">
 
     <div class="card shadow-sm p-4">
 
-        <!-- =========================
-             HEADER
-        ========================== -->
+
+        <!-- =====================================================
+             PAGE HEADER
+             ===================================================== -->
 
         <div class="mb-4">
 
@@ -116,9 +30,9 @@
         </div>
 
 
-        <!-- =========================
+        <!-- =====================================================
              FORM
-        ========================== -->
+             ===================================================== -->
 
         <form asp-action="AddTestType"
               method="post">
@@ -126,18 +40,18 @@
             @Html.AntiForgeryToken()
 
 
-            <!-- =========================
+            <!-- =================================================
                  VALIDATION
-            ========================== -->
+                 ================================================= -->
 
             <div asp-validation-summary="All"
                  class="text-danger mb-3">
             </div>
 
 
-            <!-- =========================
+            <!-- =================================================
                  TEST TYPE DETAILS
-            ========================== -->
+                 ================================================= -->
 
             <h5 class="text-secondary mb-3">
                 Test Type Details
@@ -146,12 +60,14 @@
 
             <div class="row">
 
+
                 <!-- TEST TYPE NAME -->
 
                 <div class="col-md-6 mb-3">
 
                     <label asp-for="TestTypeName"
                            class="form-label">
+                        Test Type Name
                     </label>
 
                     <input asp-for="TestTypeName"
@@ -171,6 +87,7 @@
 
                     <label asp-for="UnitOfMeasurement"
                            class="form-label">
+                        Unit of Measurement
                     </label>
 
                     <input asp-for="UnitOfMeasurement"
@@ -190,6 +107,7 @@
 
                     <label asp-for="NormalRangeMin"
                            class="form-label">
+                        Normal Range Minimum
                     </label>
 
                     <input asp-for="NormalRangeMin"
@@ -210,6 +128,7 @@
 
                     <label asp-for="NormalRangeMax"
                            class="form-label">
+                        Normal Range Maximum
                     </label>
 
                     <input asp-for="NormalRangeMax"
@@ -230,6 +149,7 @@
 
                     <label asp-for="TurnAroundTime"
                            class="form-label">
+                        Turnaround Time (min)
                     </label>
 
                     <input asp-for="TurnAroundTime"
@@ -245,283 +165,534 @@
             </div>
 
 
-            <!-- =========================
-                 CATEGORY
-            ========================== -->
+            <!-- =================================================
+                 CATEGORY + SAMPLE TYPE
+                 ================================================= -->
 
-            <div class="mb-3">
+            <div class="row">
 
-                <label asp-for="CategoryID"
-                       class="form-label">
-                    Category
-                </label>
+                <!-- CATEGORY -->
 
-                <select asp-for="CategoryID"
-                        class="form-control">
+                <div class="col-md-6 mb-3">
 
-                    <option value="">
-                        -- Select Category --
-                    </option>
+                    <label asp-for="CategoryID"
+                           class="form-label">
 
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var c in ViewBag.Categories)
+                        Category
+
+                    </label>
+
+                    <select asp-for="CategoryID"
+                            class="form-control">
+
+                        <option value="">
+                            -- Select Category --
+                        </option>
+
+                        @if (ViewBag.Categories != null)
                         {
-                            <option value="@c.CategoryId">
-                                @c.CategoryName
-                            </option>
+                            foreach (var category in ViewBag.Categories)
+                            {
+                                <option value="@category.CategoryId">
+                                    @category.CategoryName
+                                </option>
+                            }
                         }
-                    }
 
-                </select>
+                    </select>
 
-                <span asp-validation-for="CategoryID"
-                      class="text-danger">
-                </span>
-
-            </div>
-
-
-            <!-- =========================
-                 SAMPLE TYPE
-            ========================== -->
-
-            <div class="mb-3">
-
-                <label asp-for="SampleTypeID"
-                       class="form-label">
-                    Sample Type
-                </label>
-
-                <select asp-for="SampleTypeID"
-                        class="form-control">
-
-                    <option value="">
-                        -- Select Sample Type --
-                    </option>
-
-                    @if (ViewBag.SampleTypes != null)
-                    {
-                        foreach (var s in ViewBag.SampleTypes)
-                        {
-                            <option value="@s.SampleTypeId">
-                                @s.SampleName
-                            </option>
-                        }
-                    }
-
-                </select>
-
-                <span asp-validation-for="SampleTypeID"
-                      class="text-danger">
-                </span>
-
-            </div>
-
-
-            <hr />
-
-
-            <!-- =========================
-                 CONSUMABLES HEADER
-            ========================== -->
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-
-                <h5 class="mb-0 text-secondary">
-                    Consumables
-                </h5>
-
-
-                <button type="button"
-                        id="toggleConsumables"
-                        class="btn btn-outline-primary btn-sm">
-
-                    <span class="toggle-icon">
-                        👁
+                    <span asp-validation-for="CategoryID"
+                          class="text-danger">
                     </span>
 
-                    <span class="toggle-text">
-                        Hide Consumables
+                </div>
+
+
+                <!-- SAMPLE TYPE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="SampleTypeID"
+                           class="form-label">
+
+                        Sample Type
+
+                    </label>
+
+                    <select asp-for="SampleTypeID"
+                            class="form-control">
+
+                        <option value="">
+                            -- Select Sample Type --
+                        </option>
+
+                        @if (ViewBag.SampleTypes != null)
+                        {
+                            foreach (var sampleType in ViewBag.SampleTypes)
+                            {
+                                <option value="@sampleType.SampleTypeId">
+                                    @sampleType.SampleName
+                                </option>
+                            }
+                        }
+
+                    </select>
+
+                    <span asp-validation-for="SampleTypeID"
+                          class="text-danger">
                     </span>
 
-                </button>
+                </div>
 
             </div>
 
 
-            <!-- =========================
-                 CONSUMABLES SECTION
-            ========================== -->
-
-            <div id="consumablesSection">
+            <hr class="my-4" />
 
 
-                <!-- SEARCH -->
-                @if (Model?.Consumables != null &&
-                                     Model.Consumables.Any())
-                {
+            <!-- =====================================================
+                 CONSUMABLES + LAB TECHNICIANS
+                 ===================================================== -->
 
-                    <div class="mb-3">
+            <div class="row g-4">
 
-                        <input type="text"
-                               id="consumableSearch"
-                               class="form-control"
-                               placeholder="Search consumables..."
-                               autocomplete="off" />
+
+                <!-- =================================================
+                     CONSUMABLES
+                     ================================================= -->
+
+                <div class="col-md-6">
+
+
+                    <!-- CONSUMABLE HEADER -->
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div>
+
+                            <h5 class="mb-0 text-secondary">
+                                Consumables
+                            </h5>
+
+                            <small class="text-muted">
+                                Select the consumables required to perform this test type.
+                            </small>
+
+                        </div>
+
+
+                        <button type="button"
+                                id="toggleConsumables"
+                                class="btn btn-outline-primary btn-sm">
+
+                            <span class="toggle-icon">
+                                👁
+                            </span>
+
+                            <span class="toggle-text">
+                                Hide Consumables
+                            </span>
+
+                        </button>
 
                     </div>
 
 
-                    <!-- =========================
-                         CONSUMABLE TABLE
-                    ========================== -->
+                    <!-- =================================================
+                         CONSUMABLE SECTION
+                         ================================================= -->
 
-                    <div id="consumablesTableContainer">
+                    <div id="consumablesSection">
 
-                        <table class="table table-bordered">
+                        @if (Model?.Consumables != null &&
+                             Model.Consumables.Any())
+                        {
 
-                            <thead>
+                            <!-- SEARCH -->
 
-                                <tr>
+                            <div class="mb-3">
 
-                                    <th width="80">
-                                        Select
-                                    </th>
+                                <input type="text"
+                                       id="consumableSearch"
+                                       class="form-control"
+                                       placeholder="Search consumables..."
+                                       autocomplete="off" />
 
-                                    <th>
-                                        Consumable
-                                    </th>
-
-                                    <th width="200">
-                                        Quantity Used
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody id="consumablesTableBody">
-
-                                @for (int i = 0;
-                                      i < Model.Consumables.Count;
-                                      i++)
-                                {
-
-                                    <tr class="consumable-row"
-                                        data-name="@Model.Consumables[i].ConsumableName.ToLower()">
-
-
-                                        <!-- SELECT -->
-
-                                        <td class="text-center">
-
-                                            <input type="checkbox"
-                                                   asp-for="Consumables[i].IsSelected"
-                                                   class="consumable-checkbox" />
-
-
-                                            <input type="hidden"
-                                                   asp-for="Consumables[i].ConsumableID" />
-
-
-                                            <input type="hidden"
-                                                   asp-for="Consumables[i].ConsumableName" />
-
-                                        </td>
-
-
-                                        <!-- CONSUMABLE NAME -->
-
-                                        <td>
-
-                                            @Model.Consumables[i].ConsumableName
-
-                                        </td>
-
-
-                                        <!-- QUANTITY -->
-
-                                        <td>
-
-                                            <input asp-for="Consumables[i].QuantityUsed"
-                                                   class="form-control quantity-input"
-                                                   type="number"
-                                                   min="0"
-                                                   placeholder="0" />
-
-                                            <span asp-validation-for="Consumables[i].QuantityUsed"
-                                                  class="text-danger">
-                                            </span>
-
-                                        </td>
-
-                                    </tr>
-
-                                }
-
-                            </tbody>
-
-                        </table>
-
-
-                        <!-- =========================
-                             NO SEARCH RESULTS
-                        ========================== -->
-
-                        <div id="noSearchResults"
-                             class="no-consumables-message"
-                             style="display:none;">
-
-                            <div class="empty-icon">
-                                🔍
                             </div>
 
-                            <strong>
-                                No consumables found
-                            </strong>
 
-                            <p class="mb-0 mt-1">
-                                No consumables match your search.
-                            </p>
+                            <!-- TABLE -->
+
+                            <div id="consumablesTableContainer">
+
+                                <div class="table-responsive">
+
+                                    <table class="table table-bordered">
+
+                                        <thead>
+
+                                            <tr>
+
+                                                <th width="70">
+                                                    Select
+                                                </th>
+
+                                                <th>
+                                                    Consumable
+                                                </th>
+
+                                                <th width="150">
+                                                    Quantity Used
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+
+                                        <tbody id="consumablesTableBody">
+
+                                            @for (int i = 0;
+                                                  i < Model.Consumables.Count;
+                                                  i++)
+                                            {
+
+                                                <tr class="consumable-row">
+
+                                                    <!-- SELECT -->
+
+                                                    <td class="text-center">
+
+                                                        <input type="checkbox"
+                                                               asp-for="Consumables[i].IsSelected"
+                                                               class="consumable-checkbox" />
+
+                                                        <input type="hidden"
+                                                               asp-for="Consumables[i].ConsumableID" />
+
+                                                        <input type="hidden"
+                                                               asp-for="Consumables[i].ConsumableName" />
+
+                                                    </td>
+
+
+                                                    <!-- NAME -->
+
+                                                    <td>
+
+                                                        @Model.Consumables[i].ConsumableName
+
+                                                    </td>
+
+
+                                                    <!-- QUANTITY -->
+
+                                                    <td>
+
+                                                        <input asp-for="Consumables[i].QuantityUsed"
+                                                               class="form-control quantity-input consumable-quantity"
+                                                               type="number"
+                                                               min="0"
+                                                               placeholder="0" />
+
+                                                        <span asp-validation-for="Consumables[i].QuantityUsed"
+                                                              class="text-danger">
+                                                        </span>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            }
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+
+                                <!-- NO SEARCH RESULTS -->
+
+                                <div id="noSearchResults"
+                                     class="no-consumables-message"
+                                     style="display:none;">
+
+                                    <div class="empty-icon">
+                                        🔍
+                                    </div>
+
+                                    <strong>
+                                        No consumables found
+                                    </strong>
+
+                                    <p class="mb-0 mt-1">
+                                        No consumables match your search.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        }
+                        else
+                        {
+
+                            <!-- NO CONSUMABLES -->
+
+                            <div class="no-consumables-message">
+
+                                <div class="empty-icon">
+                                    📦
+                                </div>
+
+                                <strong>
+                                    No consumables available
+                                </strong>
+
+                                <p class="mb-0 mt-1">
+                                    There are currently no consumables available.
+                                </p>
+
+                            </div>
+
+                        }
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SELECTED CONSUMABLE COUNT
+
+                         OUTSIDE HIDDEN SECTION
+                         ================================================= -->
+
+                    <div class="mt-2">
+
+                        <span id="selectedConsumableCount"
+                              class="selected-consumable-count">
+
+                            0 selected
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     LAB TECHNICIANS
+                     ================================================= -->
+
+                <div class="col-md-6">
+
+                    <div class="technician-section">
+
+
+                        <!-- TECHNICIAN HEADER -->
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+
+                            <div>
+
+                                <h5 class="mb-0 text-secondary">
+                                    Assign Lab Technicians
+                                </h5>
+
+                                <small class="text-muted">
+                                    Select one or more technicians who can perform this test type.
+                                </small>
+
+                            </div>
+
+
+                            <button type="button"
+                                    id="toggleTechnicians"
+                                    class="btn btn-outline-primary btn-sm">
+
+                                <span class="toggle-icon">
+                                    👁
+                                </span>
+
+                                <span class="toggle-text">
+                                    Hide Technicians
+                                </span>
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             TECHNICIAN SECTION
+                             ================================================= -->
+
+                        <div id="techniciansSection">
+
+                            @if (Model?.Technicians != null &&
+                                 Model.Technicians.Any())
+                            {
+
+                                <!-- SEARCH -->
+
+                                <div class="mb-3">
+
+                                    <input type="text"
+                                           id="technicianSearch"
+                                           class="form-control"
+                                           placeholder="Search lab technicians..."
+                                           autocomplete="off" />
+
+                                </div>
+
+
+                                <!-- TABLE -->
+
+                                <div class="table-responsive technician-table">
+
+                                    <table class="table table-bordered align-middle">
+
+                                        <thead>
+
+                                            <tr>
+
+                                                <th width="70"
+                                                    class="text-center">
+
+                                                    Select
+
+                                                </th>
+
+                                                <th>
+                                                    Lab Technician
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+
+                                        <tbody id="technicianTableBody">
+
+                                            @for (int i = 0;
+                                                  i < Model.Technicians.Count;
+                                                  i++)
+                                            {
+
+                                                <tr class="technician-row">
+
+                                                    <!-- SELECT -->
+
+                                                    <td class="text-center">
+
+                                                        <input type="checkbox"
+                                                               asp-for="Technicians[i].IsSelected"
+                                                               class="technician-checkbox" />
+
+                                                        <input type="hidden"
+                                                               asp-for="Technicians[i].TechnicianID" />
+
+                                                        <input type="hidden"
+                                                               asp-for="Technicians[i].TechnicianName" />
+
+                                                    </td>
+
+
+                                                    <!-- NAME -->
+
+                                                    <td>
+
+                                                        <label class="form-check-label">
+
+                                                            @Model.Technicians[i].TechnicianName
+
+                                                        </label>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            }
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+
+                                <!-- NO SEARCH RESULTS -->
+
+                                <div id="noTechnicianSearchResults"
+                                     class="no-consumables-message"
+                                     style="display:none;">
+
+                                    <div class="empty-icon">
+                                        🔍
+                                    </div>
+
+                                    <strong>
+                                        No technicians found
+                                    </strong>
+
+                                    <p class="mb-0 mt-1">
+                                        No lab technicians match your search.
+                                    </p>
+
+                                </div>
+
+                            }
+                            else
+                            {
+
+                                <!-- NO TECHNICIANS -->
+
+                                <div class="alert alert-warning">
+
+                                    <strong>
+                                        No active lab technicians available.
+                                    </strong>
+
+                                    <p class="mb-0 mt-1">
+                                        Please add or activate a lab technician
+                                        before assigning technicians to this test type.
+                                    </p>
+
+                                </div>
+
+                            }
+
+                        </div>
+
+
+                        <!-- =================================================
+                             SELECTED TECHNICIAN COUNT
+
+                             OUTSIDE HIDDEN SECTION
+                             ================================================= -->
+
+                        <div class="mt-2">
+
+                            <span id="selectedTechnicianCount"
+                                  class="selected-technician-count">
+
+                                0 selected
+
+                            </span>
 
                         </div>
 
                     </div>
 
-                }
-                else
-                {
-
-                    <!-- =========================
-                         NO CONSUMABLES
-                    ========================== -->
-
-                    <div class="no-consumables-message">
-
-                        <div class="empty-icon">
-                            📦
-                        </div>
-
-                        <strong>
-                            No consumables available
-                        </strong>
-
-                        <p class="mb-0 mt-1">
-                            There are currently no consumables available.
-                        </p>
-
-                    </div>
-
-                }
+                </div>
 
             </div>
 
 
-            <!-- =========================
+            <!-- =================================================
                  BUTTONS
-            ========================== -->
+                 ================================================= -->
 
             <div class="d-flex justify-content-between mt-4">
 
@@ -542,6 +713,7 @@
 
             </div>
 
+
         </form>
 
     </div>
@@ -553,21 +725,23 @@
 
     <partial name="_ValidationScriptsPartial" />
 
+
     <script>
 
         document.addEventListener("DOMContentLoaded", function () {
 
+
             // =====================================================
-            // ELEMENTS
+            // CONSUMABLE ELEMENTS
             // =====================================================
 
-            const toggleButton =
+            const toggleConsumables =
                 document.getElementById("toggleConsumables");
 
             const consumablesSection =
                 document.getElementById("consumablesSection");
 
-            const searchBox =
+            const consumableSearch =
                 document.getElementById("consumableSearch");
 
             const noSearchResults =
@@ -576,46 +750,61 @@
             const consumableRows =
                 document.querySelectorAll(".consumable-row");
 
+            const consumableCheckboxes =
+                document.querySelectorAll(".consumable-checkbox");
+
+            const consumableQuantityInputs =
+                document.querySelectorAll(".consumable-quantity");
+
+            const selectedConsumableCount =
+                document.getElementById(
+                    "selectedConsumableCount"
+                );
+
 
             // =====================================================
             // SHOW / HIDE CONSUMABLES
             // =====================================================
 
-            if (toggleButton && consumablesSection) {
+            if (toggleConsumables && consumablesSection) {
 
-                toggleButton.addEventListener("click", function () {
+                toggleConsumables.addEventListener(
+                    "click",
+                    function () {
 
-                    const isHidden =
-                        consumablesSection.style.display === "none";
+                        const isHidden =
+                            consumablesSection.style.display === "none";
 
-                    if (isHidden) {
 
-                        consumablesSection.style.display = "block";
+                        if (isHidden) {
 
-                        toggleButton
-                            .querySelector(".toggle-text")
-                            .textContent = "Hide Consumables";
+                            consumablesSection.style.display = "block";
 
-                        toggleButton
-                            .querySelector(".toggle-icon")
-                            .textContent = "👁";
+                            toggleConsumables
+                                .querySelector(".toggle-text")
+                                .textContent = "Hide Consumables";
+
+                            toggleConsumables
+                                .querySelector(".toggle-icon")
+                                .textContent = "👁";
+
+                        }
+                        else {
+
+                            consumablesSection.style.display = "none";
+
+                            toggleConsumables
+                                .querySelector(".toggle-text")
+                                .textContent = "Show Consumables";
+
+                            toggleConsumables
+                                .querySelector(".toggle-icon")
+                                .textContent = "👁‍🗨";
+
+                        }
 
                     }
-                    else {
-
-                        consumablesSection.style.display = "none";
-
-                        toggleButton
-                            .querySelector(".toggle-text")
-                            .textContent = "Show Consumables";
-
-                        toggleButton
-                            .querySelector(".toggle-icon")
-                            .textContent = "👁‍🗨";
-
-                    }
-
-                });
+                );
 
             }
 
@@ -624,71 +813,454 @@
             // SEARCH CONSUMABLES
             // =====================================================
 
-            if (searchBox) {
+            if (consumableSearch) {
 
-                searchBox.addEventListener("input", function () {
+                consumableSearch.addEventListener(
+                    "input",
+                    function () {
 
-                    const searchText =
-                        searchBox.value
-                            .toLowerCase()
-                            .trim();
-
-
-                    let visibleRows = 0;
-
-
-                    consumableRows.forEach(function (row) {
-
-                        // Get the consumable name directly
-                        // from the table row
-                        const consumableName =
-                            row
-                                .querySelector("td:nth-child(2)")
-                                ?.textContent
+                        const searchText =
+                            consumableSearch.value
                                 .toLowerCase()
-                                .trim() || "";
+                                .trim();
 
 
-                        // Check if the name matches
-                        if (consumableName.includes(searchText)) {
-
-                            row.style.display = "";
-
-                            visibleRows++;
-
-                        }
-                        else {
-
-                            row.style.display = "none";
-
-                        }
-
-                    });
+                        let visibleRows = 0;
 
 
-                    // =================================================
-                    // SHOW / HIDE NO RESULTS MESSAGE
-                    // =================================================
+                        consumableRows.forEach(function (row) {
 
-                    if (noSearchResults) {
+                            const consumableName =
+                                row
+                                    .querySelector("td:nth-child(2)")
+                                    ?.textContent
+                                    .toLowerCase()
+                                    .trim() || "";
 
-                        if (
-                            searchText !== "" &&
-                            visibleRows === 0
-                        ) {
 
-                            noSearchResults.style.display = "block";
+                            if (
+                                consumableName.includes(searchText)
+                            ) {
 
-                        }
-                        else {
+                                row.style.display = "";
 
-                            noSearchResults.style.display = "none";
+                                visibleRows++;
+
+                            }
+                            else {
+
+                                row.style.display = "none";
+
+                            }
+
+                        });
+
+
+                        if (noSearchResults) {
+
+                            if (
+                                searchText !== "" &&
+                                visibleRows === 0
+                            ) {
+
+                                noSearchResults.style.display = "block";
+
+                            }
+                            else {
+
+                                noSearchResults.style.display = "none";
+
+                            }
 
                         }
 
                     }
+                );
 
-                });
+            }
+
+
+            // =====================================================
+            // CONSUMABLE COUNT
+            // =====================================================
+
+            function updateConsumableCount() {
+
+                if (!selectedConsumableCount) {
+                    return;
+                }
+
+
+                const selectedCount =
+                    document.querySelectorAll(
+                        ".consumable-checkbox:checked"
+                    ).length;
+
+
+                selectedConsumableCount.textContent =
+                    selectedCount + " selected";
+
+            }
+
+
+            // =====================================================
+            // CONSUMABLE CHECKBOX EVENTS
+            // =====================================================
+
+            if (consumableCheckboxes.length > 0) {
+
+                consumableCheckboxes.forEach(
+                    function (checkbox) {
+
+                        checkbox.addEventListener(
+                            "change",
+                            function () {
+
+                                const row =
+                                    checkbox.closest(
+                                        ".consumable-row"
+                                    );
+
+
+                                if (!row) {
+                                    return;
+                                }
+
+
+                                const quantityInput =
+                                    row.querySelector(
+                                        ".consumable-quantity"
+                                    );
+
+
+                                // =================================
+                                // CHECKED
+                                // =================================
+
+                                if (checkbox.checked) {
+
+                                    // Automatically set quantity
+                                    // to 1 when selected.
+
+                                    if (
+                                        !quantityInput.value ||
+                                        parseFloat(
+                                            quantityInput.value
+                                        ) <= 0
+                                    ) {
+
+                                        quantityInput.value = 1;
+
+                                    }
+
+                                }
+
+
+                                // =================================
+                                // UNCHECKED
+                                // =================================
+
+                                else {
+
+                                    // Clear quantity when the
+                                    // consumable is unselected.
+
+                                    if (quantityInput) {
+
+                                        quantityInput.value = "";
+
+                                    }
+
+                                }
+
+
+                                updateConsumableCount();
+
+                            }
+                        );
+
+                    }
+                );
+
+            }
+
+
+            // =====================================================
+            // QUANTITY AUTOMATICALLY SELECTS CONSUMABLE
+            // =====================================================
+
+            if (consumableQuantityInputs.length > 0) {
+
+                consumableQuantityInputs.forEach(
+                    function (quantityInput) {
+
+                        quantityInput.addEventListener(
+                            "input",
+                            function () {
+
+                                const row =
+                                    quantityInput.closest(
+                                        ".consumable-row"
+                                    );
+
+
+                                if (!row) {
+                                    return;
+                                }
+
+
+                                const checkbox =
+                                    row.querySelector(
+                                        ".consumable-checkbox"
+                                    );
+
+
+                                if (!checkbox) {
+                                    return;
+                                }
+
+
+                                const quantity =
+                                    parseFloat(
+                                        quantityInput.value
+                                    );
+
+
+                                // =================================
+                                // QUANTITY > 0
+                                // =================================
+
+                                if (
+                                    !isNaN(quantity) &&
+                                    quantity > 0
+                                ) {
+
+                                    checkbox.checked = true;
+
+                                }
+
+
+                                // =================================
+                                // QUANTITY = 0 / EMPTY
+                                // =================================
+
+                                else {
+
+                                    checkbox.checked = false;
+
+                                }
+
+
+                                updateConsumableCount();
+
+                            }
+                        );
+
+                    }
+                );
+
+            }
+
+
+            // Initial count
+
+            updateConsumableCount();
+
+
+            // =====================================================
+            // TECHNICIAN ELEMENTS
+            // =====================================================
+
+            const toggleTechnicians =
+                document.getElementById("toggleTechnicians");
+
+            const techniciansSection =
+                document.getElementById("techniciansSection");
+
+            const technicianSearch =
+                document.getElementById("technicianSearch");
+
+            const technicianRows =
+                document.querySelectorAll(".technician-row");
+
+            const noTechnicianSearchResults =
+                document.getElementById(
+                    "noTechnicianSearchResults"
+                );
+
+            const technicianCheckboxes =
+                document.querySelectorAll(
+                    ".technician-checkbox"
+                );
+
+            const selectedTechnicianCount =
+                document.getElementById(
+                    "selectedTechnicianCount"
+                );
+
+
+            // =====================================================
+            // SHOW / HIDE TECHNICIANS
+            // =====================================================
+
+            if (toggleTechnicians && techniciansSection) {
+
+                toggleTechnicians.addEventListener(
+                    "click",
+                    function () {
+
+                        const isHidden =
+                            techniciansSection.style.display === "none";
+
+
+                        if (isHidden) {
+
+                            techniciansSection.style.display = "block";
+
+                            toggleTechnicians
+                                .querySelector(".toggle-text")
+                                .textContent = "Hide Technicians";
+
+                            toggleTechnicians
+                                .querySelector(".toggle-icon")
+                                .textContent = "👁";
+
+                        }
+                        else {
+
+                            techniciansSection.style.display = "none";
+
+                            toggleTechnicians
+                                .querySelector(".toggle-text")
+                                .textContent = "Show Technicians";
+
+                            toggleTechnicians
+                                .querySelector(".toggle-icon")
+                                .textContent = "👁‍🗨";
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            // =====================================================
+            // SEARCH TECHNICIANS
+            // =====================================================
+
+            if (technicianSearch) {
+
+                technicianSearch.addEventListener(
+                    "input",
+                    function () {
+
+                        const searchText =
+                            technicianSearch.value
+                                .toLowerCase()
+                                .trim();
+
+
+                        let visibleRows = 0;
+
+
+                        technicianRows.forEach(function (row) {
+
+                            const technicianName =
+                                row
+                                    .querySelector("td:nth-child(2)")
+                                    ?.textContent
+                                    .toLowerCase()
+                                    .trim() || "";
+
+
+                            if (
+                                technicianName.includes(searchText)
+                            ) {
+
+                                row.style.display = "";
+
+                                visibleRows++;
+
+                            }
+                            else {
+
+                                row.style.display = "none";
+
+                            }
+
+                        });
+
+
+                        if (noTechnicianSearchResults) {
+
+                            if (
+                                searchText !== "" &&
+                                visibleRows === 0
+                            ) {
+
+                                noTechnicianSearchResults
+                                    .style.display = "block";
+
+                            }
+                            else {
+
+                                noTechnicianSearchResults
+                                    .style.display = "none";
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            // =====================================================
+            // TECHNICIAN COUNT
+            // =====================================================
+
+            function updateTechnicianCount() {
+
+                if (!selectedTechnicianCount) {
+                    return;
+                }
+
+
+                const selectedCount =
+                    document.querySelectorAll(
+                        ".technician-checkbox:checked"
+                    ).length;
+
+
+                selectedTechnicianCount.textContent =
+                    selectedCount + " selected";
+
+            }
+
+
+            // =====================================================
+            // TECHNICIAN CHECKBOX EVENTS
+            // =====================================================
+
+            if (technicianCheckboxes.length > 0) {
+
+                technicianCheckboxes.forEach(
+                    function (checkbox) {
+
+                        checkbox.addEventListener(
+                            "change",
+                            updateTechnicianCount
+                        );
+
+                    }
+                );
+
+
+                updateTechnicianCount();
 
             }
 

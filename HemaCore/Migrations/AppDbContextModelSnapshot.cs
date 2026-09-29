@@ -740,6 +740,9 @@ namespace HemaCore.Migrations
                     b.Property<int>("TestTypeId")
                         .HasColumnType("int");
 
+                    b.Property<int>("TechnicianTestTypeId")
+                        .HasColumnType("int");
+
                     b.HasKey("LabTechnicianId", "TestTypeId");
 
                     b.HasIndex("TestTypeId");

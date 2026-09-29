@@ -104,21 +104,23 @@
                                         </span>
                                     }
                                 </td>
+                                       <td>
 
+                                  <a asp-action="EditTechnician"
+                                   asp-route-id="@technician.LabTechnicianId"
+                                   class="btn btn-sm btn-outline-primary me-1">
 
-                                <!-- ACTIONS -->
-                                <td>
-                                    <a asp-action="EditTechnician"
-                                    asp-route-id="@technician.LabTechnicianId"
-                                    class="btn btn-sm btn-outline-primary me-1">
-                                        Edit
-                                    </a>
+                                    <i class="fas fa-edit me-1"></i>
 
-                                    <a asp-action="DeleteTechnician"
-                                    asp-route-id="@technician.LabTechnicianId"
-                                    class="btn btn-sm btn-outline-danger">
-                                        Deactivate
-                                    </a>
+                                   </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-doctor-btn"
+                                            data-id="@technician.LabTechnicianId"
+                                            data-name="Dr @technician.Name @technician.Surname">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
                                 </td>
 
                             </tr>

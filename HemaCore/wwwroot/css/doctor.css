@@ -1167,3 +1167,157 @@ body {
         padding: 0.35rem 0.75rem;
     }
 }
+
+/* =========================
+   LAB TECHNICIANS
+========================= */
+.technician-section {
+    margin-top: 25px;
+}
+
+.technician-table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.technician-row {
+    transition: background-color 0.15s ease;
+}
+
+    .technician-row:hover {
+        background-color: #f8f9fa;
+    }
+
+.technician-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.selected-technician-count {
+    font-size: 14px;
+    color: #6c757d;
+}
+#toggleConsumables,
+#toggleTechnicians {
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-width: 1px;
+    white-space: nowrap;
+}
+
+    #toggleConsumables:hover,
+    #toggleTechnicians:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    #toggleConsumables .toggle-icon,
+    #toggleTechnicians .toggle-icon {
+        margin-right: 5px;
+    }
+
+
+/* =========================
+           SEARCH
+           ========================= */
+
+#consumableSearch,
+#technicianSearch {
+    border-radius: 8px;
+}
+
+
+/* =========================
+           NO RESULTS MESSAGE
+           ========================= */
+
+.no-consumables-message {
+    border: 1px dashed #ced4da;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    margin-top: 10px;
+}
+
+    .no-consumables-message .empty-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+
+
+/* =========================
+           CONSUMABLE TABLE
+           ========================= */
+
+.consumable-row {
+    transition: background-color 0.15s ease;
+}
+
+    .consumable-row:hover {
+        background-color: #f8f9fa;
+    }
+
+
+/* =========================
+           CONSUMABLE CHECKBOX
+           ========================= */
+
+.consumable-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+
+/* =========================
+           QUANTITY INPUT
+           ========================= */
+
+.quantity-input {
+    max-width: 180px;
+}
+
+
+/* =========================
+           LAB TECHNICIANS
+           ========================= */
+
+.technician-section {
+    margin-top: 0;
+}
+
+.technician-table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.technician-row {
+    transition: background-color 0.15s ease;
+}
+
+    .technician-row:hover {
+        background-color: #f8f9fa;
+    }
+
+.technician-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+
+/* =========================
+           SELECTED COUNTS
+           ========================= */
+
+.selected-technician-count,
+.selected-consumable-count {
+    font-size: 14px;
+    color: #6c757d;
+    white-space: nowrap;
+}

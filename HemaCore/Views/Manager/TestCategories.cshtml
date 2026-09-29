@@ -151,27 +151,28 @@
 
                         </td>
 
-
-                        <!-- ACTIONS -->
+                        
+                       
+                      
                         <td>
 
                             <!-- EDIT -->
                             <a asp-action="EditCategory"
                                asp-route-id="@category.CategoryId"
-                               class="btn btn-sm btn-primary me-1">
+                               class="btn btn-sm btn-outline-primary me-1">
 
-                                Edit
+                                <i class="fas fa-edit me-1"></i>
 
                             </a>
 
 
                             <!-- DEACTIVATE -->
                             <button type="button"
-                                    class="btn btn-sm btn-danger deactivate-category-btn"
+                                    class="btn btn-sm btn-outline-danger deactivate-category-btn"
                                     data-id="@category.CategoryId"
                                     data-name="@category.CategoryName">
 
-                                Deactivate
+                                <i class="fas fa-trash-alt me-1"></i>
 
                             </button>
 
@@ -238,11 +239,9 @@
         </span>
 
 
-        <!-- BUTTONS -->
         <div class="delete-buttons">
 
 
-            <!-- CANCEL -->
             <button type="button"
                     id="cancelDeleteBtn"
                     class="cancel-btn">

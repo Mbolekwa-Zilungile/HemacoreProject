@@ -25,7 +25,10 @@
 
 <div class="content-card">
 
-    <!-- HEADER -->
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
@@ -38,6 +41,7 @@
 
         </div>
 
+
         <a asp-action="AddTestType"
            class="btn btn-primary-custom btn-sm">
 
@@ -48,7 +52,10 @@
     </div>
 
 
-    <!-- SEARCH -->
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
@@ -56,125 +63,139 @@
            autocomplete="off" />
 
 
-    <!-- TABLE -->
+    <!-- =====================================================
+         TABLE
+         ===================================================== -->
+
     <div class="card shadow-sm">
 
         <div class="card-body p-0">
 
-            <table class="modern-table">
+            <div class="table-responsive">
 
-                <thead>
-                    <tr>
+                <table class="modern-table">
 
-                        <th>
-                            Test Name
-                        </th>
+                    <thead>
 
-                        <th>
-                            Category
-                        </th>
+                        <tr>
 
-                        <th>
-                            Unit
-                        </th>
+                            <th>
+                                Test Name
+                            </th>
 
-                        <th>
-                            Normal Range
-                        </th>
+                            <th>
+                                Category
+                            </th>
 
-                        <th>
-                            Turnaround Time
-                        </th>
+                            <th>
+                                Turnaround Time
+                            </th>
 
-                        <th>
-                            Actions
-                        </th>
+                            <th class="text-center">
+                                Actions
+                            </th>
 
-                    </tr>
-                </thead>
+                        </tr>
+
+                    </thead>
 
 
-                <tbody id="TestTypeTable">
+                    <tbody id="TestTypeTable">
 
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var test in Model)
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var test in Model)
+                            {
+                                <tr>
+
+                                    <!-- TEST NAME -->
+
+                                    <td class="fw-semibold">
+
+                                        @test.TestTypeName.ToUpper()
+
+                                    </td>
+
+
+                                    <!-- CATEGORY -->
+
+                                    <td>
+
+                                        <span class="fw-semibold">
+
+                                            @test.Category?.CategoryName.ToUpper()
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="badge bg-info text-dark">
+
+                                            @test.TurnAroundTime min
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td class="text-center">
+
+                                        <!-- DETAILS -->
+
+                                        <a asp-action="TestTypeDetails"
+                                           asp-route-id="@test.TestTypeId"
+                                           class="btn btn-sm btn-outline-info me-1">
+
+                                            <i class="fas fa-eye me-1"></i>
+                                        </a>
+
+
+                                        <!-- EDIT -->
+
+                                        <a asp-action="EditTestType"
+                                           asp-route-id="@test.TestTypeId"
+                                           class="btn btn-sm btn-outline-primary me-1">
+
+                                            <i class="fas fa-edit me-1"></i>
+                                        </a>
+
+
+                                        <!-- DELETE -->
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger delete-test-btn"
+                                                data-id="@test.TestTypeId"
+                                                data-name="@test.TestTypeName">
+
+                                            <i class="fas fa-trash-alt me-1"></i>
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
 
-                                <td class="fw-semibold">
-                                    @test.TestTypeName
-                                </td>
+                                <td colspan="4"
+                                    class="text-center text-muted py-3">
 
-
-                                <td>
-                                    <span class="badge bg-info text-dark">
-                                        @test.Category?.CategoryName
-                                    </span>
-                                </td>
-
-
-                                <td>
-                                    @test.UnitOfMeasurement
-                                </td>
-
-
-                                <td>
-                                    @test.NormalRangeMin - @test.NormalRangeMax
-                                </td>
-
-
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        @test.TurnAroundTime min
-                                    </span>
-                                </td>
-
-
-                                <td class="text-center">
-
-                                    <!-- EDIT -->
-                                    <a asp-action="EditTestType"
-                                       asp-route-id="@test.TestTypeId"
-                                       class="btn btn-sm btn-outline-primary me-1">
-
-                                        Edit
-
-                                    </a>
-
-
-                                    <!-- DELETE -->
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger delete-test-btn"
-                                            data-id="@test.TestTypeId"
-                                            data-name="@test.TestTypeName">
-
-                                        Delete
-
-                                    </button>
+                                    No test types available.
 
                                 </td>
 
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
 
-                            <td colspan="6"
-                                class="text-center text-muted py-3">
+                    </tbody>
 
-                                No test types available.
+                </table>
 
-                            </td>
-
-                        </tr>
-                    }
-
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
@@ -194,9 +215,12 @@
      aria-modal="true"
      aria-labelledby="deleteModalTitle">
 
+
     <div class="delete-box">
 
+
         <!-- ICON -->
+
         <div class="delete-icon">
 
             <i class="fas fa-exclamation-triangle"></i>
@@ -205,12 +229,16 @@
 
 
         <!-- TITLE -->
+
         <h3 id="deleteModalTitle">
+
             Are you sure?
+
         </h3>
 
 
         <!-- MESSAGE -->
+
         <p>
 
             Are you sure you want to delete
@@ -221,6 +249,7 @@
 
 
         <!-- WARNING -->
+
         <span class="delete-warning">
 
             <i class="fas fa-info-circle"></i>
@@ -231,9 +260,12 @@
 
 
         <!-- BUTTONS -->
+
         <div class="delete-buttons">
 
+
             <!-- CANCEL -->
+
             <button type="button"
                     id="cancelDeleteBtn"
                     class="cancel-btn">
@@ -244,15 +276,18 @@
 
 
             <!-- DELETE FORM -->
+
             <form asp-action="DeleteTestType"
                   method="post"
                   id="deleteForm">
 
                 @Html.AntiForgeryToken()
 
+
                 <input type="hidden"
                        name="id"
                        id="deleteTestTypeId" />
+
 
                 <button type="submit"
                         class="confirm-delete-btn">
@@ -273,7 +308,10 @@
 
 
 
-<!-- JQUERY -->
+<!-- =========================================================
+     JQUERY
+     ========================================================= -->
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
@@ -286,20 +324,35 @@
     OPEN DELETE MODAL
     ===================================================== */
 
-    $(document).on("click", ".delete-test-btn", function () {
+    $(document).on(
+    "click",
+    ".delete-test-btn",
+    function () {
 
-    var id = $(this).attr("data-id");
-    var testName = $(this).attr("data-name");
+    var id =
+    $(this).attr("data-id");
 
-    $("#deleteTestTypeId").val(id);
+    var testName =
+    $(this).attr("data-name");
 
-    $("#deleteTestName").text(testName);
 
-    $("#deleteModal").addClass("show");
+    $("#deleteTestTypeId")
+    .val(id);
 
-    $("body").addClass("modal-open");
 
-    });
+    $("#deleteTestName")
+    .text(testName);
+
+
+    $("#deleteModal")
+    .addClass("show");
+
+
+    $("body")
+    .addClass("modal-open");
+
+    }
+    );
 
 
     /* =====================================================
@@ -308,13 +361,20 @@
 
     function closeDeleteModal() {
 
-    $("#deleteModal").removeClass("show");
+    $("#deleteModal")
+    .removeClass("show");
 
-    $("body").removeClass("modal-open");
 
-    $("#deleteTestTypeId").val("");
+    $("body")
+    .removeClass("modal-open");
 
-    $("#deleteTestName").text("");
+
+    $("#deleteTestTypeId")
+    .val("");
+
+
+    $("#deleteTestName")
+    .text("");
 
     }
 
@@ -323,18 +383,25 @@
     CANCEL
     ===================================================== */
 
-    $("#cancelDeleteBtn").on("click", function () {
+    $("#cancelDeleteBtn")
+    .on(
+    "click",
+    function () {
 
     closeDeleteModal();
 
-    });
+    }
+    );
 
 
     /* =====================================================
     CLICK OUTSIDE MODAL
     ===================================================== */
 
-    $("#deleteModal").on("click", function (event) {
+    $("#deleteModal")
+    .on(
+    "click",
+    function (event) {
 
     if (event.target === this) {
 
@@ -342,18 +409,25 @@
 
     }
 
-    });
+    }
+    );
 
 
     /* =====================================================
     ESCAPE KEY
     ===================================================== */
 
-    $(document).on("keydown", function (event) {
+    $(document)
+    .on(
+    "keydown",
+    function (event) {
 
     if (event.key === "Escape") {
 
-    if ($("#deleteModal").hasClass("show")) {
+    if (
+    $("#deleteModal")
+    .hasClass("show")
+    ) {
 
     closeDeleteModal();
 
@@ -361,20 +435,29 @@
 
     }
 
-    });
+    }
+    );
 
 
     /* =====================================================
     LIVE SEARCH
     ===================================================== */
 
-    $("#searchBox").on("input", function () {
+    $("#searchBox")
+    .on(
+    "input",
+    function () {
 
-    var term = $(this).val().trim();
+    var term =
+    $(this)
+    .val()
+    .trim();
+
 
     $.ajax({
 
-    url: '@Url.Action("SearchTestTypesLive", "Manager")',
+    url:
+    '@Url.Action("SearchTestTypesLive", "Manager")',
 
     type: "GET",
 
@@ -382,20 +465,31 @@
     term: term
     },
 
+
     success: function (data) {
 
-    var tableBody = $("#TestTypeTable");
+
+    var tableBody =
+    $("#TestTypeTable");
+
 
     tableBody.empty();
 
 
-    if (!data || data.length === 0) {
+    /* =========================
+    NO RESULTS
+    ========================= */
+
+    if (
+    !data ||
+    data.length === 0
+    ) {
 
     tableBody.append(`
 
     <tr>
 
-    <td colspan="6"
+    <td colspan="4"
     class="text-center text-muted py-3">
 
     No test types found
@@ -411,25 +505,26 @@
     }
 
 
-    $.each(data, function (index, test) {
+    /* =========================
+    RESULTS
+    ========================= */
+
+    $.each(
+    data,
+    function (index, test) {
+
 
     var testName =
     test.name ?? "";
 
+
     var category =
     test.category ?? "";
 
-    var unit =
-    test.unit ?? "";
-
-    var min =
-    test.min ?? "";
-
-    var max =
-    test.max ?? "";
 
     var turnaround =
     test.turnaround ?? "";
+
 
     var testTypeId =
     test.testTypeID;
@@ -440,61 +535,102 @@
     */
 
     var safeTestName =
-    $("<div>").text(testName).html();
+    $("<div>")
+    .text(testName)
+    .html();
+
 
     var safeCategory =
-    $("<div>").text(category).html();
+    $("<div>")
+    .text(category)
+    .html();
 
-    var safeUnit =
-    $("<div>").text(unit).html();
 
+    /*
+    * CREATE ROW
+    */
 
     var row = `
 
     <tr>
 
+    <!-- TEST NAME -->
+
     <td class="fw-semibold">
+
     ${safeTestName}
+
     </td>
 
+
+    <!-- CATEGORY -->
+
     <td>
+
     <span class="badge bg-info text-dark">
+
     ${safeCategory}
+
     </span>
+
     </td>
 
-    <td>
-    ${safeUnit}
-    </td>
+
+    <!-- TURNAROUND -->
 
     <td>
-    ${min} - ${max}
-    </td>
 
-    <td>
     <span class="badge bg-secondary">
+
     ${turnaround} min
+
     </span>
+
     </td>
+
+
+    <!-- ACTIONS -->
 
     <td class="text-center">
 
+
+    <!-- DETAILS -->
+
+    <a href="/Manager/TestTypeDetails/${testTypeId}"
+    class="btn btn-sm btn-outline-info me-1">
+
+    <i class="fas fa-eye me-1"></i>
+
+    Details
+
+    </a>
+
+
+    <!-- EDIT -->
+
     <a href="/Manager/EditTestType/${testTypeId}"
     class="btn btn-sm btn-outline-primary me-1">
+
+    <i class="fas fa-edit me-1"></i>
 
     Edit
 
     </a>
 
 
+    <!-- DELETE -->
+
     <button type="button"
     class="btn btn-sm btn-outline-danger delete-test-btn"
     data-id="${testTypeId}"
     data-name="${safeTestName}">
 
+    <i class="fas fa-trash-alt me-1"></i>
+
     Delete
 
     </button>
+
 
     </td>
 
@@ -502,20 +638,27 @@
 
     `;
 
+
     tableBody.append(row);
 
-    });
+    }
+    );
 
     },
 
 
+    /* =================================================
+    SEARCH ERROR
+    ================================================= */
+
     error: function () {
 
-    $("#TestTypeTable").html(`
+    $("#TestTypeTable")
+    .html(`
 
     <tr>
 
-    <td colspan="6"
+    <td colspan="4"
     class="text-center text-danger py-3">
 
     Search failed. Please try again.
@@ -530,23 +673,31 @@
 
     });
 
-    });
+    }
+    );
 
 
     /* =====================================================
     PREVENT DOUBLE DELETE
     ===================================================== */
 
-    $("#deleteForm").on("submit", function () {
+    $("#deleteForm")
+    .on(
+    "submit",
+    function () {
 
     $(".confirm-delete-btn")
     .prop("disabled", true)
     .html(`
+
     <i class="fas fa-spinner fa-spin me-1"></i>
+
     Deleting...
+
     `);
 
-    });
+    }
+    );
 
     });
 

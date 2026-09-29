@@ -1,39 +1,121 @@
 ﻿@model HemaCore.Models.TestCategory
 
 @{
-    Layout = "_ManagerLayout";
+    ViewData["Title"] = "Edit Test Category";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
-<br />
+<link rel="stylesheet" href="~/css/doctor.css" />
 
-<h3 class="text-primary">Edit Category</h3>
-<hr />
+<div class="container mt-4 mb-5">
 
-<form asp-action="EditCategory" method="post">
+    <div class="card shadow-sm p-4">
 
-    <!-- Hidden ID -->
-    <input type="hidden" asp-for="CategoryId" />
+        <!-- ========================= -->
+        <!-- HEADER -->
+        <!-- ========================= -->
 
-    <div class="mb-3">
-        <label>Category Name</label>
-        <input asp-for="CategoryName" class="form-control" />
-        <span asp-validation-for="CategoryName" class="text-danger"></span>
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Edit Test Category
+            </h3>
+
+            <p class="text-muted mb-0">
+                Update the details below to modify this test category.
+            </p>
+
+        </div>
+
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger"
+             role="alert">
+        </div>
+
+
+        <form asp-action="EditCategory"
+              method="post">
+
+
+            <input type="hidden"
+                   asp-for="CategoryId" />
+
+            <h5 class="text-secondary mb-3">
+                Sample Type Details
+            </h5>
+
+            <div class="row">
+
+                <!-- SAMPLE NAME -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="CategoryName"
+                           class="form-label">
+                        Name
+                    </label>
+
+                    <input asp-for="CategoryName"
+                           class="form-control"
+                           placeholder="Enter sample type name"
+                           autocomplete="off" />
+
+                    <span asp-validation-for="CategoryName"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+                <div class="col-md-12 mb-3">
+
+                    <label asp-for="CategoryDescription"
+                           class="form-label">
+                        Description
+                    </label>
+
+                    <textarea asp-for="CategoryDescription"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Enter a description of the sample type"></textarea>
+
+                    <span asp-validation-for="CategoryDescription"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="TestCategories"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
-    <div class="mb-3">
-        <label>Description</label>
-        <textarea asp-for="CategoryDescription" class="form-control"></textarea>
-        <span asp-validation-for="CategoryDescription" class="text-danger"></span>
-    </div>
+</div>
 
-    <button type="submit"
-            class="btn"
-            style="background-color:#3b5bb5; color:white;">
-        Save Changes
-    </button>
 
-    <a asp-action="TestCategories" class="btn btn-secondary">
-        Cancel
-    </a>
+@section Scripts {
 
-</form>
+    <partial name="_ValidationScriptsPartial" />
+
+}
