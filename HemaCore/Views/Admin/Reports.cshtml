@@ -1,0 +1,403 @@
+﻿```cshtml
+@{
+    ViewData["Title"] = "Reports";
+    Layout = "_AdminLayout";
+}
+
+<div class="content-header">
+
+    <div>
+        <h1>
+            <i class="fas fa-chart-bar"></i>
+            Reports
+        </h1>
+
+        <p class="text-muted">
+            Visual overview of clinical records and categories
+        </p>
+    </div>
+
+</div>
+
+
+<!-- MAIN REPORT -->
+
+<div class="row">
+
+    <!-- CLINICAL RECORDS CHART -->
+
+    <div class="col-md-8 mb-4">
+
+        <div class="content-card">
+
+            <h4>
+                <i class="fas fa-chart-column"></i>
+                Clinical Records
+            </h4>
+
+            <p class="text-muted">
+                Total number of conditions, allergies and medications
+            </p>
+
+            <div style="height: 350px;">
+                <canvas id="clinicalRecordsChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+
+    <div class="col-md-4 mb-4">
+
+        <div class="content-card">
+
+            <h4>
+                <i class="fas fa-chart-pie"></i>
+                Quick Summary
+            </h4>
+
+            <hr />
+
+            <div class="mb-3">
+
+                <strong>
+                    <i class="fas fa-notes-medical"></i>
+                    Conditions
+                </strong>
+
+                <h3>
+                    @ViewBag.TotalConditions
+                </h3>
+
+                <small class="text-success">
+                    @ViewBag.ActiveConditions active
+                </small>
+
+                <br />
+
+                <small class="text-danger">
+                    @ViewBag.InactiveConditions inactive
+                </small>
+
+            </div>
+
+            <hr />
+
+            <div class="mb-3">
+
+                <strong>
+                    <i class="fas fa-allergies"></i>
+                    Allergies
+                </strong>
+
+                <h3>
+                    @ViewBag.TotalAllergies
+                </h3>
+
+                <small class="text-success">
+                    @ViewBag.ActiveAllergies active
+                </small>
+
+                <br />
+
+                <small class="text-danger">
+                    @ViewBag.InactiveAllergies inactive
+                </small>
+
+            </div>
+
+            <hr />
+
+            <div>
+
+                <strong>
+                    <i class="fas fa-pills"></i>
+                    Medications
+                </strong>
+
+                <h3>
+                    @ViewBag.TotalMedications
+                </h3>
+
+                <small class="text-success">
+                    @ViewBag.ActiveMedications active
+                </small>
+
+                <br />
+
+                <small class="text-danger">
+                    @ViewBag.InactiveMedications inactive
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ACTIVE / INACTIVE CHART -->
+
+<div class="row">
+
+    <div class="col-md-7 mb-4">
+
+        <div class="content-card">
+
+            <h4>
+                <i class="fas fa-chart-bar"></i>
+                Active vs Inactive Records
+            </h4>
+
+            <p class="text-muted">
+                Current status of clinical records
+            </p>
+
+            <div style="height: 350px;">
+                <canvas id="statusChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CATEGORY CHART -->
+
+    <div class="col-md-5 mb-4">
+
+        <div class="content-card">
+
+            <h4>
+                <i class="fas fa-folder-open"></i>
+                Categories
+            </h4>
+
+            <p class="text-muted">
+                Number of categories available
+            </p>
+
+            <div style="height: 350px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- CHART.JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+    // ==========================================
+    // CLINICAL RECORDS CHART
+    // ==========================================
+
+    const clinicalRecordsChart =
+    document.getElementById('clinicalRecordsChart');
+
+    new Chart(clinicalRecordsChart, {
+
+    type: 'bar',
+
+    data: {
+
+    labels: [
+    'Conditions',
+    'Allergies',
+    'Medications'
+    ],
+
+    datasets: [{
+
+    label: 'Total Records',
+
+    data: [
+    @ViewBag.TotalConditions,
+    @ViewBag.TotalAllergies,
+    @ViewBag.TotalMedications
+    ]
+
+    }]
+
+    },
+
+    options: {
+
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    plugins: {
+
+    legend: {
+    display: false
+    }
+
+    },
+
+    scales: {
+
+    y: {
+
+    beginAtZero: true,
+
+    ticks: {
+    precision: 0
+    }
+
+    }
+
+    }
+
+    }
+
+    });
+
+
+    // ==========================================
+    // ACTIVE / INACTIVE CHART
+    // ==========================================
+
+    const statusChart =
+    document.getElementById('statusChart');
+
+    new Chart(statusChart, {
+
+    type: 'bar',
+
+    data: {
+
+    labels: [
+    'Conditions',
+    'Allergies',
+    'Medications'
+    ],
+
+    datasets: [
+
+    {
+
+    label: 'Active',
+
+    data: [
+
+    @ViewBag.ActiveConditions,
+    @ViewBag.ActiveAllergies,
+    @ViewBag.ActiveMedications
+
+    ]
+
+    },
+
+    {
+
+    label: 'Inactive',
+
+    data: [
+
+    @ViewBag.InactiveConditions,
+    @ViewBag.InactiveAllergies,
+    @ViewBag.InactiveMedications
+
+    ]
+
+    }
+
+    ]
+
+    },
+
+    options: {
+
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    scales: {
+
+    y: {
+
+    beginAtZero: true,
+
+    ticks: {
+    precision: 0
+    }
+
+    }
+
+    }
+
+    }
+
+    });
+
+
+    // ==========================================
+    // CATEGORY CHART
+    // ==========================================
+
+    const categoryChart =
+    document.getElementById('categoryChart');
+
+    new Chart(categoryChart, {
+
+    type: 'doughnut',
+
+    data: {
+
+    labels: [
+
+    'Condition Categories',
+    'Allergy Categories',
+    'Medication Categories'
+
+    ],
+
+    datasets: [{
+
+    data: [
+
+    @ViewBag.TotalConditionCategories,
+    @ViewBag.TotalAllergyCategories,
+    @ViewBag.TotalMedicationCategories
+
+    ]
+
+    }]
+
+    },
+
+    options: {
+
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    plugins: {
+
+    legend: {
+
+    position: 'bottom'
+
+    }
+
+    }
+
+    }
+
+    });
+
+</script>
+

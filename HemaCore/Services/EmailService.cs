@@ -202,6 +202,91 @@ public async Task SendConsentGrantedEmailAsync(
 
             await smtp.DisconnectAsync(true);
         }
+       
+public async Task SendConsentRevokedEmailAsync(
+    string doctorEmail,
+    string doctorName,
+    string patientName,
+    string patientSurname)
+        {
+            var smtpHost = _configuration["EmailSettings:SmtpHost"];
+
+            var smtpPort = int.Parse(
+                _configuration["EmailSettings:SmtpPort"]!
+            );
+
+            var username = _configuration["EmailSettings:Username"];
+            var password = _configuration["EmailSettings:Password"];
+            var senderEmail = _configuration["EmailSettings:SenderEmail"];
+            var senderName = _configuration["EmailSettings:SenderName"];
+
+            var message = new MimeMessage();
+
+            message.From.Add(
+                new MailboxAddress(senderName, senderEmail)
+            );
+
+            message.To.Add(
+                new MailboxAddress(doctorName, doctorEmail)
+            );
+
+            message.Subject = "Patient Consent Revoked - HemaCore";
+
+            message.Body = new TextPart("html")
+            {
+                Text = $@"
+            <html>
+            <body>
+
+                <h2>Patient Consent Revoked</h2>
+
+                <p>Hello <strong>{doctorName}</strong>,</p>
+
+                <p>
+                    <strong>{patientName} {patientSurname}</strong>
+                    has revoked the consent previously granted to you
+                    through HemaCore.
+                </p>
+
+                <p>
+                    You no longer have consent to access the medical
+                    information that was shared through this consent.
+                </p>
+
+                <p>
+                    Please log in to HemaCore to view the current
+                    status of your access.
+                </p>
+
+                <br />
+
+                <p>
+                    Regards,<br />
+                    <strong>HemaCore</strong>
+                </p>
+
+            </body>
+            </html>
+        "
+            };
+
+            using var smtp = new SmtpClient();
+
+            await smtp.ConnectAsync(
+                smtpHost,
+                smtpPort,
+                SecureSocketOptions.StartTls
+            );
+
+            await smtp.AuthenticateAsync(
+                username,
+                password
+            );
+
+            await smtp.SendAsync(message);
+
+            await smtp.DisconnectAsync(true);
+        }
 
 
     }

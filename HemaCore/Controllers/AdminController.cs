@@ -2738,5 +2738,86 @@ namespace HemaCore.Controllers
         }
 
         #endregion
+
+        #region Report
+       
+// =========================
+// REPORTS
+// =========================
+
+public async Task<IActionResult> Reports()
+        {
+            // Conditions
+            var totalConditions = await _context.Conditions.CountAsync();
+            var activeConditions = await _context.Conditions
+                .CountAsync(c => c.IsActive);
+            var inactiveConditions = totalConditions - activeConditions;
+
+            // Condition Categories
+            var totalConditionCategories = await _context.ConditionCategories.CountAsync();
+            var activeConditionCategories = await _context.ConditionCategories
+                .CountAsync(c => c.IsActive);
+            var inactiveConditionCategories =
+                totalConditionCategories - activeConditionCategories;
+
+            // Allergies
+            var totalAllergies = await _context.Allergies.CountAsync();
+            var activeAllergies = await _context.Allergies
+                .CountAsync(a => a.IsActive);
+            var inactiveAllergies = totalAllergies - activeAllergies;
+
+            // Allergy Categories
+            var totalAllergyCategories = await _context.AllergyCategories.CountAsync();
+            var activeAllergyCategories = await _context.AllergyCategories
+                .CountAsync(c => c.IsActive);
+            var inactiveAllergyCategories =
+                totalAllergyCategories - activeAllergyCategories;
+
+            // Medications
+            var totalMedications = await _context.Medications.CountAsync();
+            var activeMedications = await _context.Medications
+                .CountAsync(m => m.IsActive);
+            var inactiveMedications = totalMedications - activeMedications;
+
+            // Medication Categories
+            var totalMedicationCategories =
+                await _context.MedicationCategories.CountAsync();
+
+            var activeMedicationCategories =
+                await _context.MedicationCategories
+                    .CountAsync(c => c.IsActive);
+
+            var inactiveMedicationCategories =
+                totalMedicationCategories - activeMedicationCategories;
+
+            // Send data to the view
+            ViewBag.TotalConditions = totalConditions;
+            ViewBag.ActiveConditions = activeConditions;
+            ViewBag.InactiveConditions = inactiveConditions;
+
+            ViewBag.TotalConditionCategories = totalConditionCategories;
+            ViewBag.ActiveConditionCategories = activeConditionCategories;
+            ViewBag.InactiveConditionCategories = inactiveConditionCategories;
+
+            ViewBag.TotalAllergies = totalAllergies;
+            ViewBag.ActiveAllergies = activeAllergies;
+            ViewBag.InactiveAllergies = inactiveAllergies;
+
+            ViewBag.TotalAllergyCategories = totalAllergyCategories;
+            ViewBag.ActiveAllergyCategories = activeAllergyCategories;
+            ViewBag.InactiveAllergyCategories = inactiveAllergyCategories;
+
+            ViewBag.TotalMedications = totalMedications;
+            ViewBag.ActiveMedications = activeMedications;
+            ViewBag.InactiveMedications = inactiveMedications;
+
+            ViewBag.TotalMedicationCategories = totalMedicationCategories;
+            ViewBag.ActiveMedicationCategories = activeMedicationCategories;
+            ViewBag.InactiveMedicationCategories = inactiveMedicationCategories;
+
+            return View();
+        }
+
+        #endregion
     }
 }

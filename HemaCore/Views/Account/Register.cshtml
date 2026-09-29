@@ -1,4 +1,6 @@
-﻿@model HemaCore.ViewModels.RegisterViewModel
+﻿
+@model HemaCore.ViewModels.RegisterViewModel
+
 @{
     Layout = null;
     ViewData["Title"] = "Register";
@@ -6,23 +8,39 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>HemaCore - Register</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="~/css/login-style.css" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet"
+          href="~/css/login-style.css" />
+
     <style>
-        .register-container {
-            max-width: 550px;
-            margin: 50px auto;
-        }
-        body {
-            overflow-y: auto;
-            padding: 20px;
-        }
-            /* Gender select - match existing input UI */
+
+            .register-container {
+                max-width: 550px;
+                margin: 50px auto;
+            }
+
+            body {
+                overflow-y: auto;
+                padding: 20px;
+            }
+
+            /* Gender select */
+
             .input-wrapper select {
                 width: 100%;
                 height: 100%;
@@ -66,143 +84,612 @@
                 font-size: 13px;
             }
 
+            /* Date of birth automatically generated */
+
+            #DateOfBirth {
+                background-color: #f5f5f5;
+                cursor: not-allowed;
+            }
+
+            .dob-help {
+                display: block;
+                margin-top: 5px;
+                margin-left: 5px;
+                font-size: 11px;
+                color: #777;
+            }
+
+            .id-error {
+                display: none;
+                margin-top: 5px;
+                margin-left: 5px;
+                font-size: 12px;
+                color: #dc3545;
+            }
+
     </style>
+
 </head>
+
 <body>
 
     <div class="circle circle-1"></div>
     <div class="circle circle-2"></div>
     <div class="circle circle-3"></div>
 
+
     <div class="login-container register-container">
+
         <div class="login-card">
+
             <div class="card-header">
+
                 <div class="logo-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
+
                 <h2>Create Account</h2>
+
                 <p>Join HemaCore today</p>
+
             </div>
+
 
             <div class="card-body">
-                <form asp-controller="Account" asp-action="Register" method="post">
+
+                <form asp-controller="Account"
+                      asp-action="Register"
+                      method="post">
+
                     @Html.AntiForgeryToken()
-                    
-                    <div asp-validation-summary="All" class="alert alert-error" style="display: block;"></div>
 
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Full Name</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user input-icon"></i>
-                            <input asp-for="Name" placeholder="Enter your first name" />
-                        </div>
+
+                    <div asp-validation-summary="All"
+                         class="alert alert-error"
+                         style="display: block;">
                     </div>
 
+
+                    <!-- NAME -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-user"></i> Surname</label>
+
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Full Name
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-user input-icon"></i>
-                            <input asp-for="Surname" placeholder="Enter your surname" />
+
+                            <input asp-for="Name"
+                                   placeholder="Enter your first name" />
+
                         </div>
+
                     </div>
+
+
+                    <!-- SURNAME -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-venus-mars"></i> Gender</label>
+
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Surname
+                        </label>
+
                         <div class="input-wrapper">
+
+                            <i class="fas fa-user input-icon"></i>
+
+                            <input asp-for="Surname"
+                                   placeholder="Enter your surname" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- GENDER -->
+
+                    <div class="form-group">
+
+                        <label>
+                            <i class="fas fa-venus-mars"></i>
+                            Gender
+                        </label>
+
+                        <div class="input-wrapper">
+
                             <i class="fas fa-venus-mars input-icon"></i>
+
                             <select asp-for="Gender">
-                                <option value="">Select your gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
+
+                                <option value="">
+                                    Select your gender
+                                </option>
+
+                                <option value="Male">
+                                    Male
+                                </option>
+
+                                <option value="Female">
+                                    Female
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
                             </select>
+
                         </div>
+
                     </div>
 
+
+                    <!-- ID NUMBER -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-id-card"></i> ID Number</label>
+
+                        <label>
+                            <i class="fas fa-id-card"></i>
+                            ID Number
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-id-card input-icon"></i>
-                            <input asp-for="IDNumber" placeholder="13-digit ID number" />
+
+                            <input asp-for="IDNumber"
+                                   id="IDNumber"
+                                   placeholder="13-digit ID number"
+                                   maxlength="13"
+                                   inputmode="numeric"
+                                   autocomplete="off" />
+
                         </div>
+
+                        <small class="dob-help">
+                            Your date of birth will automatically be filled in from your ID number.
+                        </small>
+
+                        <small id="idError"
+                               class="id-error">
+                            Please enter a valid 13-digit South African ID number.
+                        </small>
+
                     </div>
 
+
+                    <!-- DATE OF BIRTH -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Date of Birth</label>
+
+                        <label>
+                            <i class="fas fa-calendar"></i>
+                            Date of Birth
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-calendar input-icon"></i>
-                            <input asp-for="DateOfBirth" type="date" />
+
+                            <input asp-for="DateOfBirth"
+                                   id="DateOfBirth"
+                                   type="date"
+                                   readonly />
+
                         </div>
+
                     </div>
 
+
+                    <!-- PHONE -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-phone"></i> Phone Number</label>
+
+                        <label>
+                            <i class="fas fa-phone"></i>
+                            Phone Number
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-phone input-icon"></i>
-                            <input asp-for="PhoneNumber" placeholder="+27721234567" />
+
+                            <input asp-for="PhoneNumber"
+                                   placeholder="+27721234567" />
+
                         </div>
+
                     </div>
 
+
+                    <!-- ADDRESS -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-home"></i> Address</label>
+
+                        <label>
+                            <i class="fas fa-home"></i>
+                            Address
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-home input-icon"></i>
-                            <input asp-for="Address" placeholder="Your home address" />
+
+                            <input asp-for="Address"
+                                   placeholder="Your home address" />
+
                         </div>
+
                     </div>
 
+
+                    <!-- EMAIL -->
+
                     <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email Address</label>
+
+                        <label>
+                            <i class="fas fa-envelope"></i>
+                            Email Address
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-envelope input-icon"></i>
-                            <input asp-for="Email" type="email" placeholder="you@example.com" />
+
+                            <input asp-for="Email"
+                                   type="email"
+                                   placeholder="you@example.com" />
+
                         </div>
+
                     </div>
+
+
+                    <!-- PASSWORD -->
 
                     <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
+
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-lock input-icon"></i>
-                            <input asp-for="Password" type="password" id="password" placeholder="Create a password" />
-                            <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+
+                            <input asp-for="Password"
+                                   type="password"
+                                   id="password"
+                                   placeholder="Create a password" />
+
+                            <i class="fas fa-eye toggle-password"
+                               onclick="togglePassword()">
+                            </i>
+
                         </div>
+
                     </div>
+
+
+                    <!-- CONFIRM PASSWORD -->
 
                     <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Confirm Password</label>
+
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Confirm Password
+                        </label>
+
                         <div class="input-wrapper">
+
                             <i class="fas fa-lock input-icon"></i>
-                            <input asp-for="ConfirmPassword" type="password" id="confirmPassword" placeholder="Confirm your password" />
+
+                            <input asp-for="ConfirmPassword"
+                                   type="password"
+                                   id="confirmPassword"
+                                   placeholder="Confirm your password" />
+
                         </div>
+
                     </div>
 
-                    <button type="submit" class="login-btn">
-                        <i class="fas fa-user-plus"></i> Register
+
+                    <!-- REGISTER -->
+
+                    <button type="submit"
+                            class="login-btn">
+
+                        <i class="fas fa-user-plus"></i>
+
+                        Register
+
                     </button>
+
                 </form>
 
+
                 <div class="register-link">
-                    <p>Already have an account? <a href="/Account/Login">Sign In</a></p>
+
+                    <p>
+                        Already have an account?
+
+                        <a href="/Account/Login">
+                            Sign In
+                        </a>
+                    </p>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
+
     <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.querySelector('.toggle-password');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+
+            // ==========================================
+            // PASSWORD VISIBILITY
+            // ==========================================
+
+            function togglePassword() {
+
+                const passwordInput =
+                    document.getElementById('password');
+
+                const toggleIcon =
+                    document.querySelector('.toggle-password');
+
+                if (passwordInput.type === 'password') {
+
+                    passwordInput.type = 'text';
+
+                    toggleIcon.classList.remove('fa-eye');
+
+                    toggleIcon.classList.add('fa-eye-slash');
+
+                }
+                else {
+
+                    passwordInput.type = 'password';
+
+                    toggleIcon.classList.remove('fa-eye-slash');
+
+                    toggleIcon.classList.add('fa-eye');
+
+                }
+
             }
-        }
+
+
+            // ==========================================
+            // ID NUMBER -> DATE OF BIRTH
+            // ==========================================
+
+            const idNumberInput =
+                document.getElementById('IDNumber');
+
+            const dateOfBirthInput =
+                document.getElementById('DateOfBirth');
+
+            const idError =
+                document.getElementById('idError');
+
+
+            idNumberInput.addEventListener('input', function () {
+
+                // Only allow numbers
+
+                this.value = this.value.replace(/\D/g, '');
+
+
+                const idNumber = this.value;
+
+
+                // Clear DOB while ID is incomplete
+
+                if (idNumber.length < 6) {
+
+                    dateOfBirthInput.value = '';
+
+                    idError.style.display = 'none';
+
+                    return;
+
+                }
+
+
+                // We need at least the first 6 digits:
+                // YYMMDD
+
+                const yearPart =
+                    idNumber.substring(0, 2);
+
+                const monthPart =
+                    idNumber.substring(2, 4);
+
+                const dayPart =
+                    idNumber.substring(4, 6);
+
+
+                const yearNumber =
+                    parseInt(yearPart);
+
+                const monthNumber =
+                    parseInt(monthPart);
+
+                const dayNumber =
+                    parseInt(dayPart);
+
+
+                // Validate month
+
+                if (monthNumber < 1 || monthNumber > 12) {
+
+                    dateOfBirthInput.value = '';
+
+                    idError.textContent =
+                        'Invalid month in ID number.';
+
+                    idError.style.display = 'block';
+
+                    return;
+
+                }
+
+
+                // Validate day
+
+                if (dayNumber < 1 || dayNumber > 31) {
+
+                    dateOfBirthInput.value = '';
+
+                    idError.textContent =
+                        'Invalid day in ID number.';
+
+                    idError.style.display = 'block';
+
+                    return;
+
+                }
+
+
+                // Determine the century.
+                //
+                // If the YY is greater than the current
+                // year's last two digits, it is treated
+                // as 19YY.
+                //
+                // Otherwise it is treated as 20YY.
+
+                const currentYear =
+                    new Date().getFullYear();
+
+                const currentYearShort =
+                    currentYear % 100;
+
+
+                let fullYear;
+
+
+                if (yearNumber > currentYearShort) {
+
+                    fullYear = 1900 + yearNumber;
+
+                }
+                else {
+
+                    fullYear = 2000 + yearNumber;
+
+                }
+
+
+                // Create the date
+
+                const date =
+                    new Date(
+                        fullYear,
+                        monthNumber - 1,
+                        dayNumber
+                    );
+
+
+                // Make sure JavaScript didn't roll
+                // an invalid date into another date.
+
+                if (
+                    date.getFullYear() !== fullYear ||
+                    date.getMonth() !== monthNumber - 1 ||
+                    date.getDate() !== dayNumber
+                ) {
+
+                    dateOfBirthInput.value = '';
+
+                    idError.textContent =
+                        'The date in the ID number is invalid.';
+
+                    idError.style.display = 'block';
+
+                    return;
+
+                }
+
+
+                // Format as YYYY-MM-DD
+
+                const formattedDate =
+                    fullYear +
+                    '-' +
+                    String(monthNumber).padStart(2, '0') +
+                    '-' +
+                    String(dayNumber).padStart(2, '0');
+
+
+                dateOfBirthInput.value =
+                    formattedDate;
+
+
+                idError.style.display =
+                    'none';
+
+            });
+
+
+            // ==========================================
+            // FINAL VALIDATION
+            // ==========================================
+
+            document.querySelector('form')
+                .addEventListener('submit', function (event) {
+
+                    const idNumber =
+                        idNumberInput.value;
+
+
+                    if (idNumber.length !== 13) {
+
+                        event.preventDefault();
+
+                        idError.textContent =
+                            'Please enter a valid 13-digit South African ID number.';
+
+                        idError.style.display =
+                            'block';
+
+                        idNumberInput.focus();
+
+                        return;
+
+                    }
+
+
+                    if (!dateOfBirthInput.value) {
+
+                        event.preventDefault();
+
+                        idError.textContent =
+                            'Please enter a valid South African ID number containing a valid date of birth.';
+
+                        idError.style.display =
+                            'block';
+
+                        idNumberInput.focus();
+
+                    }
+
+                });
+
     </script>
 
 </body>
+
 </html>
+

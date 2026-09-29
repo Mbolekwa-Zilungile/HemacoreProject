@@ -1,5 +1,700 @@
-﻿@{
-    Layout = "_PatientLayout";
+﻿@model HemaCore.Models.Patient
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewBag.Title = "Dashboard";
 }
 
-<h2>Patient</h2>
+<div class="patient-dashboard">
+
+    <!-- =========================================================
+         HEADER
+    ========================================================= -->
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <div class="dashboard-label">
+                <i class="fas fa-shield-alt"></i>
+                Patient Portal
+            </div>
+
+            <h1>
+                Welcome
+                @(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
+                    ? ", " + Model.Name
+                    : "")
+            </h1>
+
+            <p>
+                Manage your healthcare information from one place.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         PROFILE STATUS
+    ========================================================= -->
+    @if (Model == null || string.IsNullOrWhiteSpace(Model.Name))
+    {
+        <div class="profile-alert">
+
+            <div class="profile-alert-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+
+            <div class="profile-alert-content">
+
+                <strong>Complete your profile</strong>
+
+                <span>
+                    Your profile is not complete yet. Add your personal
+                    details, conditions, allergies and medications.
+                </span>
+
+            </div>
+
+            <a asp-action="CompleteProfile"
+               class="profile-alert-action">
+
+                Complete Profile
+                <i class="fas fa-arrow-right"></i>
+
+            </a>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         QUICK ACCESS
+    ========================================================= -->
+
+    <div class="section-title">
+
+        <div>
+
+            <h3>
+                <i class="fas fa-th-large"></i>
+                Quick Access
+            </h3>
+
+            <p>
+                Access your healthcare information and account settings.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-3 mb-5">
+
+
+        <!-- COMPLETE PROFILE -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="CompleteProfile"
+               class="patient-card">
+
+                <div class="patient-card-icon profile-bg">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        Complete Profile
+                    </h4>
+
+                    <p>
+                        Add your personal details, conditions, allergies,
+                        and medications.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- MY DETAILS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="PatientDetails"
+               class="patient-card">
+
+                <div class="patient-card-icon details-bg">
+                    <i class="fas fa-id-card"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        My Details
+                    </h4>
+
+                    <p>
+                        View your saved personal and medical information.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- EDIT PROFILE -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="EditProfile"
+               class="patient-card">
+
+                <div class="patient-card-icon edit-bg">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        Edit Profile
+                    </h4>
+
+                    <p>
+                        Update your personal information and medical history.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- CHANGE PASSWORD -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="ChangePassword"
+               class="patient-card">
+
+                <div class="patient-card-icon password-bg">
+                    <i class="fas fa-key"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        Change Password
+                    </h4>
+
+                    <p>
+                        Keep your account secure by updating your password.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- TESTS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="Tests"
+               class="patient-card">
+
+                <div class="patient-card-icon tests-bg">
+                    <i class="fas fa-vials"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        Tests
+                    </h4>
+
+                    <p>
+                        View available laboratory tests.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- RESULTS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <a asp-action="Result"
+               class="patient-card">
+
+                <div class="patient-card-icon results-bg">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+
+                <div class="patient-card-content">
+
+                    <h4>
+                        Results
+                    </h4>
+
+                    <p>
+                        Check your laboratory test results.
+                    </p>
+
+                </div>
+
+                <i class="fas fa-arrow-right patient-card-arrow"></i>
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         ACCOUNT SECTION
+    ========================================================= -->
+
+    <div class="section-title">
+
+        <div>
+
+            <h3>
+                <i class="fas fa-user-circle"></i>
+                Your Account
+            </h3>
+
+            <p>
+                Manage your profile and account information.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="account-banner">
+
+        <div class="account-icon">
+            <i class="fas fa-user"></i>
+        </div>
+
+        <div class="account-content">
+
+            <span>
+                Current Account
+            </span>
+
+            <strong>
+                @(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
+                    ? Model.Name
+                    : "Profile not completed")
+            </strong>
+
+            <small>
+                Keep your information up to date for accurate healthcare records.
+            </small>
+
+        </div>
+
+        <a asp-action="EditProfile"
+           class="account-action">
+
+            Manage
+            <i class="fas fa-arrow-right"></i>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PATIENT DASHBOARD STYLES
+========================================================= -->
+
+<style>
+
+    /* =========================================================
+               GENERAL
+            ========================================================= */
+
+    .patient-dashboard {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+
+    /* =========================================================
+               HEADER
+            ========================================================= */
+
+    .dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #3157c7;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .dashboard-header h1 {
+        margin: 0;
+        color: #172033;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .dashboard-header p {
+        margin: 6px 0 0;
+        color: #718096;
+        font-size: 14px;
+    }
+
+
+    /* =========================================================
+               PROFILE ALERT
+            ========================================================= */
+
+    .profile-alert {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 20px;
+        margin-bottom: 40px;
+        background: white;
+        border: 1px solid #e7ebf1;
+        border-left: 4px solid #3157c7;
+        border-radius: 15px;
+        box-shadow: 0 4px 16px rgba(15,23,42,.04);
+    }
+
+    .profile-alert-icon {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #3157c7;
+        font-size: 20px;
+    }
+
+    .profile-alert-content {
+        flex: 1;
+    }
+
+        .profile-alert-content strong {
+            display: block;
+            color: #172033;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .profile-alert-content span {
+            display: block;
+            color: #718096;
+            font-size: 12px;
+        }
+
+    .profile-alert-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 14px;
+        background: #3157c7;
+        color: white !important;
+        border-radius: 9px;
+        text-decoration: none !important;
+        font-size: 12px;
+        font-weight: 700;
+        transition: .2s;
+    }
+
+        .profile-alert-action:hover {
+            background: #2647a7;
+            transform: translateY(-1px);
+        }
+
+
+    /* =========================================================
+               SECTION TITLE
+            ========================================================= */
+
+    .section-title {
+        margin-bottom: 18px;
+    }
+
+        .section-title h3 {
+            margin: 0;
+            color: #172033;
+            font-size: 19px;
+            font-weight: 750;
+        }
+
+            .section-title h3 i {
+                color: #3157c7;
+                margin-right: 7px;
+            }
+
+        .section-title p {
+            margin: 5px 0 0 27px;
+            color: #718096;
+            font-size: 13px;
+        }
+
+
+    /* =========================================================
+               PATIENT CARDS
+            ========================================================= */
+
+    .patient-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 115px;
+        padding: 18px;
+        background: white;
+        border: 1px solid #e7ebf1;
+        border-radius: 15px;
+        text-decoration: none !important;
+        color: inherit !important;
+        box-shadow: 0 4px 16px rgba(15,23,42,.04);
+        transition: .25s ease;
+    }
+
+        .patient-card:hover {
+            transform: translateY(-4px);
+            border-color: #3157c7;
+            box-shadow: 0 10px 25px rgba(49,87,199,.10);
+        }
+
+
+    .patient-card-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        font-size: 21px;
+    }
+
+
+    .patient-card-content {
+        flex: 1;
+    }
+
+        .patient-card-content h4 {
+            margin: 0 0 4px;
+            color: #172033;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .patient-card-content p {
+            margin: 0;
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+
+    .patient-card-arrow {
+        color: #a5afbd;
+        transition: .2s;
+    }
+
+    .patient-card:hover .patient-card-arrow {
+        color: #3157c7;
+        transform: translateX(4px);
+    }
+
+
+    /* =========================================================
+               ACCOUNT BANNER
+            ========================================================= */
+
+    .account-banner {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 20px 23px;
+        margin-bottom: 20px;
+        background: white;
+        border: 1px solid #e7ebf1;
+        border-radius: 17px;
+        box-shadow: 0 4px 16px rgba(15,23,42,.04);
+    }
+
+
+    .account-icon {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: #eef2ff;
+        color: #4f46e5;
+        font-size: 22px;
+    }
+
+
+    .account-content {
+        flex: 1;
+    }
+
+        .account-content span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .account-content strong {
+            display: block;
+            color: #172033;
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .account-content small {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+
+    .account-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #3157c7 !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+    }
+
+        .account-action:hover {
+            color: #2647a7 !important;
+        }
+
+
+    /* =========================================================
+               CARD COLORS
+            ========================================================= */
+
+    .profile-bg {
+        background: #eaf1ff;
+        color: #2563eb;
+    }
+
+    .details-bg {
+        background: #efedff;
+        color: #6366f1;
+    }
+
+    .edit-bg {
+        background: #e6f8f7;
+        color: #0f766e;
+    }
+
+    .password-bg {
+        background: #fff8dc;
+        color: #ca8a04;
+    }
+
+    .tests-bg {
+        background: #e7f8ef;
+        color: #16a34a;
+    }
+
+    .results-bg {
+        background: #fff0e8;
+        color: #ea580c;
+    }
+
+
+    /* =========================================================
+               MOBILE
+            ========================================================= */
+
+    @@media (max-width: 768px) {
+
+        .patient-dashboard {
+            padding: 20px 15px;
+        }
+
+        .dashboard-header {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+            .dashboard-header h1 {
+                font-size: 25px;
+            }
+
+        .profile-alert {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .profile-alert-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .account-banner {
+            align-items: flex-start;
+        }
+
+        .account-action {
+            display: none;
+        }
+    }
+
+</style>

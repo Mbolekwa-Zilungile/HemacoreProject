@@ -16,6 +16,9 @@ namespace HemaCore.Data
         // ==========================================
 
         public DbSet<Alert> Alerts => Set<Alert>();
+        public DbSet<ConsentAllergy> ConsentAllergies { get; set; }
+
+        public DbSet<ConsentMedication> ConsentMedications { get; set; }
 
         public DbSet<Sample> Samples { get; set; }
 
