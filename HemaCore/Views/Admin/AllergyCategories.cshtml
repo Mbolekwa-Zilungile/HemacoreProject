@@ -7,269 +7,189 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="alert">
-        </button>
-    </div>
-}
-
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="alert">
-        </button>
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["Success"] <button type="button"
+                                     class="btn-close"
+                                     data-bs-dismiss="alert"> </button>
     </div>
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        @TempData["Error"] <button type="button"
+                                   class="btn-close"
+                                   data-bs-dismiss="alert"> </button>
+    </div>
+}
 
 <div class="content-card">
 
-    <!-- HEADER -->
-    <div class="section-title d-flex align-items-center justify-content-between">
-
-        <div class="d-flex align-items-center">
-
-            <i class="fas fa-folder-open me-2"></i>
-
-            <span>
-                Allergy Categories
-            </span>
-
-            <span class="badge blue-badge ms-2">
-                @ViewBag.CategoryCount
-            </span>
-
-        </div>
-
-
+    ```
+    <div class="section-title d-flex justify-content-between align-items-center">
         <div>
-
-            <a asp-controller="Admin"
-               asp-action="AddAllergyCategory"
-               class="btn btn-success btn-sm">
-
-                <i class="fas fa-plus me-1"></i>
-
-                Add Category
-
-            </a>
-
+            <i class="fas fa-folder me-2"></i>
+            <span>Allergy Categories</span>
         </div>
 
+        <a asp-controller="Admin"
+           asp-action="AddAllergyCategory"
+           class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i>
+            Add Category
+        </a>
     </div>
 
+    <div class="table-responsive mt-3">
 
-    <!-- SEARCH -->
-    <div class="row mb-3">
+        <table class="table table-hover align-middle">
 
-        <div class="col-md-8">
-
-            <div class="input-group">
-
-                <span class="input-group-text bg-transparent border-end-0">
-
-                    <i class="fas fa-search text-muted"></i>
-
-                </span>
-
-                <input type="text"
-                       id="searchBox"
-                       class="form-control border-start-0 ps-0"
-                       placeholder="Search allergy categories..." />
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- TABLE -->
-    <table class="modern-table">
-
-        <thead>
-
-            <tr>
-
-                <th>
-                    Category Name
-                </th>
-
-                <th>
-                    Allergies
-                </th>
-
-                <th>
-                    Status
-                </th>
-
-                <th>
-                    Actions
-                </th>
-
-            </tr>
-
-        </thead>
-
-
-        <tbody id="categoryTable">
-
-            @if (!Model.Any())
-            {
+            <thead>
                 <tr>
-
-                    <td colspan="4"
-                        class="text-center text-muted">
-
-                        No allergy categories available.
-
-                    </td>
-
+                    <th>#</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Allergies</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
                 </tr>
-            }
-            else
-            {
+            </thead>
 
-                @foreach (var category in Model)
+            <tbody>
+
+                @if (Model != null && Model.Any())
                 {
+                    var number = 1;
 
-                    var allergyCount = 0;
-
-                    if (ViewBag.AllergyCountByCategory != null &&
-                        ViewBag.AllergyCountByCategory.ContainsKey(category.Id))
+                    foreach (var category in Model.OrderBy(c => c.Name))
                     {
-                        allergyCount =
-                            ViewBag.AllergyCountByCategory[category.Id];
+                        var allergyCount = 0;
+
+                        if (ViewBag.AllergyCountByCategory != null &&
+                            ViewBag.AllergyCountByCategory.ContainsKey(category.Id))
+                        {
+                            allergyCount =
+                                ViewBag.AllergyCountByCategory[category.Id];
+                        }
+
+                        <tr class="@(category.IsActive ? "" : "table-secondary")">
+
+                            <td>
+                                @number
+                            </td>
+
+                            <td>
+                                <strong>@category.Name</strong>
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(category.Description))
+                                {
+                                    <span>
+                                        @category.Description
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        No description provided
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="badge bg-primary">
+                                    @allergyCount
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (category.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-ban me-1"></i>
+                                        Inactive
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+
+                                <div class="d-flex justify-content-end gap-2">
+
+                                    <a asp-controller="Admin"
+                                       asp-action="EditAllergyCategory"
+                                       asp-route-id="@category.Id"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit Category">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <form asp-controller="Admin"
+                                          asp-action="ToggleAllergyCategoryStatus"
+                                          asp-route-id="@category.Id"
+                                          method="post"
+                                          class="d-inline">
+
+                                        @Html.AntiForgeryToken()
+
+                                        @if (category.IsActive)
+                                        {
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-warning"
+                                                    title="Deactivate"
+                                                    onclick="return confirm('Are you sure you want to deactivate this category?');">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    title="Activate">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        }
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        number++;
                     }
-
-
+                }
+                else
+                {
                     <tr>
-
-                        <td class="fw-semibold blue-text">
-
-                            @category.Name
-
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">
+                                No allergy categories found.
+                            </p>
                         </td>
-
-
-                        <td>
-
-                            <span class="badge bg-info">
-
-                                @allergyCount
-
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            <span class="badge @(category.IsActive ? "bg-success" : "bg-secondary")">
-
-                                @(category.IsActive ? "Active" : "Inactive")
-
-                            </span>
-
-                        </td>
-
-
-                        <td>
-
-                            <a asp-controller="Admin"
-                               asp-action="EditAllergyCategory"
-                               asp-route-id="@category.Id"
-                               class="btn btn-sm btn-primary me-1">
-
-                                <i class="fas fa-edit me-1"></i>
-
-                                Edit
-
-                            </a>
-
-
-                            <form asp-controller="Admin"
-                                  asp-action="ToggleAllergyCategoryStatus"
-                                  method="post"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Are you sure you want to change the status of this category?');">
-
-                                @Html.AntiForgeryToken()
-
-                                <input type="hidden"
-                                       name="id"
-                                       value="@category.Id" />
-
-                                <button type="submit"
-                                        class="btn btn-sm @(category.IsActive ? "btn-danger" : "btn-success")">
-
-                                    <i class="fas @(category.IsActive ? "fa-ban" : "fa-check") me-1"></i>
-
-                                    @(category.IsActive ? "Deactivate" : "Activate")
-
-                                </button>
-
-                            </form>
-
-                        </td>
-
                     </tr>
                 }
 
-            }
+            </tbody>
 
-        </tbody>
+        </table>
 
-    </table>
+    </div>
+    ```
 
 </div>
-
-
-<script>
-
-    document.getElementById("searchBox")
-        .addEventListener("keyup", function () {
-
-            let searchTerm =
-                this.value.toLowerCase();
-
-            let rows =
-                document.querySelectorAll("#categoryTable tr");
-
-            rows.forEach(function (row) {
-
-                if (row.querySelector("td[colspan]")) {
-                    return;
-                }
-
-                let categoryName =
-                    row.querySelector("td:first-child")
-                       ?.textContent
-                       ?.toLowerCase() || "";
-
-                if (categoryName.includes(searchTerm)) {
-
-                    row.style.display = "";
-
-                }
-                else {
-
-                    row.style.display = "none";
-
-                }
-
-            });
-
-        });
-
-</script>
