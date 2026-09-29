@@ -7,5 +7,7 @@
 
         public int ConsumableId { get; set; }
         public Consumable Consumable { get; set; } 
+
+        public int QuantityNeeded { get; set; }
     }
 }

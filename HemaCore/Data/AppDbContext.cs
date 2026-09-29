@@ -37,7 +37,7 @@ namespace HemaCore.Data
 
         public DbSet<SampleType> SampleTypes { get; set; }
 
-        public DbSet<TestTypeConsumable> testTypeConsumables { get; set; }
+        public DbSet<TestTypeConsumable> TestTypeConsumables { get; set; }
 
         public DbSet<Consumable> Consumables { get; set; }
 

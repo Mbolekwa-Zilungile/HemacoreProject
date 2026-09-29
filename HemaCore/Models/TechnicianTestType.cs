@@ -2,6 +2,7 @@
 {
     public class TechnicianTestType
     {
+        public int TechnicianTestTypeId { get; set; }
         public int TestTypeId { get; set; }
         public TestType TestType { get; set; } //Test type navigation
 

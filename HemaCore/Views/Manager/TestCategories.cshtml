@@ -4,10 +4,14 @@
     Layout = "_ManagerLayout";
 }
 
-
+<!-- CSS -->
 <link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
 
 
+<!-- =========================================================
+     ALERT MESSAGES
+     ========================================================= -->
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">
@@ -22,87 +26,157 @@
     </div>
 }
 
+
+
+<!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
+
 <div class="content-card">
+
 
     <!-- HEADER -->
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-folder"></i>
 
-            <span>Test Categories (@Model.Count)</span>
+            <i class="fas fa-folder me-2"></i>
 
-   
+            <span>
+                Test Categories (@(Model?.Count ?? 0))
+            </span>
+
         </div>
 
+
+        <!-- ADD CATEGORY -->
         <a asp-action="AddCategory"
            class="btn btn-primary-custom btn-sm">
+
             + Add Category
+
         </a>
 
     </div>
 
-    <!-- SEARCH -->
+
+
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
-           placeholder="Search test categories..." />
+           placeholder="Search test categories..."
+           autocomplete="off" />
 
-    <!-- TABLE -->
+
+
+    <!-- =====================================================
+         TABLE
+         ===================================================== -->
+
     <table class="modern-table">
 
         <thead>
+
             <tr>
-                <th>Category Name</th>
-                <th>Description</th>
-                <th>Test Types</th>
-                <th>Actions</th>
+
+                <th>
+                    Category Name
+                </th>
+
+                <th>
+                    Description
+                </th>
+
+                <th>
+                    Test Types
+                </th>
+
+                <th>
+                    Actions
+                </th>
+
             </tr>
+
         </thead>
+
 
         <tbody id="categoryTable">
 
-            @if (!Model.Any())
+            @if (Model == null || !Model.Any())
             {
                 <tr>
-                    <td colspan="4" class="text-center text-muted">
+
+                    <td colspan="4"
+                        class="text-center text-muted">
+
                         No test categories available.
+
                     </td>
+
                 </tr>
             }
             else
             {
-                @foreach (var category in Model)
+                foreach (var category in Model)
                 {
                     <tr>
+
+                        <!-- CATEGORY NAME -->
                         <td class="fw-semibold blue-text">
+
                             @category.CategoryName
+
                         </td>
 
+
+                        <!-- DESCRIPTION -->
                         <td>
+
                             @category.CategoryDescription
+
                         </td>
 
+
+                        <!-- TEST TYPES -->
                         <td>
+
                             @(ViewBag.TestTypeCountByCategory != null &&
-                                                ViewBag.TestTypeCountByCategory.ContainsKey(category.CategoryId)
-                                                ? ViewBag.TestTypeCountByCategory[category.CategoryId]
-                                                : 0)
+                                                    ViewBag.TestTypeCountByCategory.ContainsKey(category.CategoryId)
+                                                    ? ViewBag.TestTypeCountByCategory[category.CategoryId]
+                                                    : 0)
+
                         </td>
 
+
+                        <!-- ACTIONS -->
                         <td>
+
+                            <!-- EDIT -->
                             <a asp-action="EditCategory"
                                asp-route-id="@category.CategoryId"
                                class="btn btn-sm btn-primary me-1">
+
                                 Edit
+
                             </a>
 
-                            <a href="#"
-                               class="btn btn-sm btn-danger"
-                               onclick="confirmDelete(@category.CategoryId)">
+
+                            <!-- DEACTIVATE -->
+                            <button type="button"
+                                    class="btn btn-sm btn-danger deactivate-category-btn"
+                                    data-id="@category.CategoryId"
+                                    data-name="@category.CategoryName">
+
                                 Deactivate
-                            </a>
+
+                            </button>
+
                         </td>
+
                     </tr>
                 }
             }
@@ -113,64 +187,440 @@
 
 </div>
 
-<!-- SCRIPT -->
+
+
+<!-- =========================================================
+     DEACTIVATE MODAL
+     ========================================================= -->
+
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle">
+
+    <div class="delete-box">
+
+
+        <!-- ICON -->
+        <div class="delete-icon">
+
+            <i class="fas fa-exclamation-triangle"></i>
+
+        </div>
+
+
+        <!-- TITLE -->
+        <h3 id="deleteModalTitle">
+
+            Are you sure?
+
+        </h3>
+
+
+        <!-- MESSAGE -->
+        <p>
+
+            Are you sure you want to deactivate
+
+            <strong id="deleteSampleName"></strong>?
+
+        </p>
+
+
+        <!-- WARNING -->
+        <span class="delete-warning">
+
+            <i class="fas fa-info-circle"></i>
+
+            This category will no longer be active.
+
+        </span>
+
+
+        <!-- BUTTONS -->
+        <div class="delete-buttons">
+
+
+            <!-- CANCEL -->
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+
+                Cancel
+
+            </button>
+
+
+            <!-- DEACTIVATE FORM -->
+            <form asp-action="DeleteCategory"
+                  method="post"
+                  id="deleteForm">
+
+                @Html.AntiForgeryToken()
+
+
+                <!-- CATEGORY ID -->
+                <input type="hidden"
+                       name="id"
+                       id="deleteSampleTypeId" />
+
+
+                <!-- CONFIRM -->
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="confirm-delete-btn">
+
+                    <i class="fas fa-ban me-1"></i>
+
+                    Yes, Deactivate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
 <script>
-    document.getElementById("searchBox").addEventListener("keyup", function () {
 
-        let term = this.value;
+    document.addEventListener("DOMContentLoaded", function () {
 
-        fetch('/Manager/SearchCategoriesLive?term=' + term)
-            .then(res => res.json())
-            .then(data => {
 
-                let rows = "";
+        /* =====================================================
+           ELEMENTS
+           ===================================================== */
 
-                if (data.length === 0) {
-                    rows = `
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">
-                                No results found.
-                            </td>
-                        </tr>
-                    `;
+        const modal =
+            document.getElementById("deleteModal");
+
+        const categoryIdInput =
+            document.getElementById("deleteSampleTypeId");
+
+        const categoryName =
+            document.getElementById("deleteSampleName");
+
+        const cancelButton =
+            document.getElementById("cancelDeleteBtn");
+
+        const deleteForm =
+            document.getElementById("deleteForm");
+
+
+
+        /* =====================================================
+           OPEN MODAL
+           ===================================================== */
+
+        document.addEventListener("click", function (event) {
+
+            const button =
+                event.target.closest(".deactivate-category-btn");
+
+
+            if (!button) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            const id =
+                button.getAttribute("data-id");
+
+
+            const name =
+                button.getAttribute("data-name");
+
+
+            /*
+             * Set category ID
+             */
+
+            categoryIdInput.value = id;
+
+
+            /*
+             * Set category name
+             */
+
+            categoryName.textContent = name;
+
+
+            /*
+             * Show modal
+             */
+
+            modal.classList.add("show");
+
+
+            /*
+             * Prevent background scrolling
+             */
+
+            document.body.classList.add("modal-open");
+
+        });
+
+
+
+        /* =====================================================
+           CLOSE MODAL
+           ===================================================== */
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+
+            document.body.classList.remove("modal-open");
+
+            categoryIdInput.value = "";
+
+            categoryName.textContent = "";
+
+        }
+
+
+
+        /* =====================================================
+           CANCEL
+           ===================================================== */
+
+        cancelButton.addEventListener("click", function () {
+
+            closeModal();
+
+        });
+
+
+
+        /* =====================================================
+           CLICK OUTSIDE MODAL
+           ===================================================== */
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+
+                closeModal();
+
+            }
+
+        });
+
+
+
+        /* =====================================================
+           ESCAPE
+           ===================================================== */
+
+        document.addEventListener("keydown", function (event) {
+
+            if (event.key === "Escape") {
+
+                if (modal.classList.contains("show")) {
+
+                    closeModal();
+
                 }
-                else {
-                    data.forEach(item => {
-                        rows += `
+
+            }
+
+        });
+
+
+
+        /* =====================================================
+           PREVENT DOUBLE SUBMIT
+           ===================================================== */
+
+        deleteForm.addEventListener("submit", function () {
+
+            const button =
+                document.getElementById("confirmDeleteBtn");
+
+
+            button.disabled = true;
+
+
+            button.innerHTML = `
+
+                <i class="fas fa-spinner fa-spin me-1"></i>
+
+                Deactivating...
+
+            `;
+
+        });
+
+
+
+        /* =====================================================
+           LIVE SEARCH
+           ===================================================== */
+
+        document
+            .getElementById("searchBox")
+            .addEventListener("keyup", function () {
+
+                let term = this.value;
+
+
+                fetch(
+                    '/Manager/SearchCategoriesLive?term='
+                    + encodeURIComponent(term)
+                )
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    let rows = "";
+
+
+                    /* -----------------------------------------
+                       NO RESULTS
+                       ----------------------------------------- */
+
+                    if (!data || data.length === 0) {
+
+                        rows = `
+
                             <tr>
-                                <td class="fw-semibold blue-text">
-                                    ${item.categoryName}
+
+                                <td colspan="4"
+                                    class="text-center text-muted">
+
+                                    No results found.
+
                                 </td>
 
-                                <td>
-                                    ${item.categoryDescription ?? ""}
-                                </td>
-
-                                <td>0</td>
-
-                                <td>
-                                    <a href="/Manager/EditCategory/${item.categoryID}"
-                                       class="btn btn-sm btn-primary me-1">
-                                        Edit
-                                    </a>
-
-                                    <a href="/Manager/DeleteCategory/${item.categoryID}"
-                                       class="btn btn-sm btn-danger">
-                                        Delete
-                                    </a>
-                                </td>
                             </tr>
-                        `;
-                    });
-                }
 
-                document.getElementById("categoryTable").innerHTML = rows;
+                        `;
+
+                    }
+
+
+                    /* -----------------------------------------
+                       RESULTS
+                       ----------------------------------------- */
+
+                    else {
+
+                        data.forEach(item => {
+
+                            const categoryName =
+                                escapeHtml(
+                                    item.categoryName ?? ""
+                                );
+
+
+                            const categoryDescription =
+                                escapeHtml(
+                                    item.categoryDescription ?? ""
+                                );
+
+
+                            rows += `
+
+                                <tr>
+
+                                    <td class="fw-semibold blue-text">
+
+                                        ${categoryName}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        ${categoryDescription}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        0
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <a href="/Manager/EditCategory/${item.categoryID}"
+                                           class="btn btn-sm btn-primary me-1">
+
+                                            Edit
+
+                                        </a>
+
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger deactivate-category-btn"
+                                                data-id="${item.categoryID}"
+                                                data-name="${categoryName}">
+
+                                            Deactivate
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        });
+
+                    }
+
+
+                    document
+                        .getElementById("categoryTable")
+                        .innerHTML = rows;
+
+                })
+
+                .catch(error => {
+
+                    console.error(
+                        "Search failed:",
+                        error
+                    );
+
+                });
+
             });
+
+
+
+        /* =====================================================
+           ESCAPE HTML
+           ===================================================== */
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent = value;
+
+            return div.innerHTML;
+
+        }
+
     });
 
-    function confirmDelete(id) {
-        if (confirm("Are you sure you want to delete this category?")) {
-            window.location.href = '/Manager/DeleteCategory/' + id;
-        }
-    }
 </script>

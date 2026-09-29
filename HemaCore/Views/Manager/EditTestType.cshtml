@@ -1,0 +1,540 @@
+﻿@model HemaCore.Models.TestType
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm p-4">
+
+        <!-- =========================
+             HEADER
+        ========================== -->
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Edit Test Type
+            </h3>
+
+            <p class="text-muted">
+                Update the details below to edit this test type.
+            </p>
+
+        </div>
+
+
+        <!-- =========================
+             FORM
+        ========================== -->
+
+        <form asp-action="EditTestType"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   asp-for="TestTypeId" />
+
+
+            <!-- VALIDATION -->
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3">
+            </div>
+
+
+            <!-- =========================
+                 TEST TYPE DETAILS
+            ========================== -->
+
+            <h5 class="text-secondary mb-3">
+                Test Type Details
+            </h5>
+
+
+            <div class="row">
+
+                <!-- TEST TYPE NAME -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="TestTypeName"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="TestTypeName"
+                           class="form-control"
+                           placeholder="Test Type Name" />
+
+                    <span asp-validation-for="TestTypeName"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- UNIT -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="UnitOfMeasurement"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="UnitOfMeasurement"
+                           class="form-control"
+                           placeholder="Unit Of Measurement" />
+
+                    <span asp-validation-for="UnitOfMeasurement"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- NORMAL RANGE MIN -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="NormalRangeMin"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="NormalRangeMin"
+                           type="number"
+                           step="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="NormalRangeMin"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- NORMAL RANGE MAX -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="NormalRangeMax"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="NormalRangeMax"
+                           type="number"
+                           step="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="NormalRangeMax"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- TURNAROUND -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="TurnAroundTime"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="TurnAroundTime"
+                           type="number"
+                           class="form-control" />
+
+                    <span asp-validation-for="TurnAroundTime"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- ACTIVE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <div class="form-check mt-4">
+
+                        <input asp-for="IsActive"
+                               class="form-check-input" />
+
+                        <label asp-for="IsActive"
+                               class="form-check-label">
+
+                            Active
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 CATEGORY
+            ========================== -->
+
+            <div class="mb-3">
+
+                <label asp-for="CategoryId"
+                       class="form-label">
+
+                    Category
+
+                </label>
+
+                <select asp-for="CategoryId"
+                        class="form-control">
+
+                    <option value="">
+                        -- Select Category --
+                    </option>
+
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var c in ViewBag.Categories)
+                        {
+                            <option value="@c.CategoryId">
+                                @c.CategoryName
+                            </option>
+                        }
+                    }
+
+                </select>
+
+                <span asp-validation-for="CategoryId"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+
+            <!-- =========================
+                 SAMPLE TYPE
+            ========================== -->
+
+            <div class="mb-3">
+
+                <label asp-for="SampleTypeId"
+                       class="form-label">
+
+                    Sample Type
+
+                </label>
+
+                <select asp-for="SampleTypeId"
+                        class="form-control">
+
+                    <option value="">
+                        -- Select Sample Type --
+                    </option>
+
+                    @if (ViewBag.SampleTypes != null)
+                    {
+                        foreach (var s in ViewBag.SampleTypes)
+                        {
+                            <option value="@s.SampleTypeId">
+                                @s.SampleName
+                            </option>
+                        }
+                    }
+
+                </select>
+
+                <span asp-validation-for="SampleTypeId"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+
+            <hr />
+
+
+            <!-- =========================
+                 CONSUMABLES HEADER
+            ========================== -->
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0 text-secondary">
+                    Consumables
+                </h5>
+
+                <button type="button"
+                        id="toggleConsumables"
+                        class="btn btn-outline-primary btn-sm">
+
+                    <span class="toggle-icon">
+                        👁
+                    </span>
+
+                    <span class="toggle-text">
+                        Hide Consumables
+                    </span>
+
+                </button>
+
+            </div>
+
+
+
+            <div id="consumablesSection">
+
+                @{
+                    var consumables =
+                        ViewBag.Consumables as List<HemaCore.Models.Consumable>;
+
+                    var selectedConsumables =
+                        Model.TestTypeConsumables?.ToList()
+                        ?? new List<HemaCore.Models.TestTypeConsumable>();
+                }
+
+                @if (consumables != null && consumables.Any())
+                {
+                    <div class="mb-3">
+                        <input type="text"
+                               id="consumableSearch"
+                               class="form-control"
+                               placeholder="Search consumables..."
+                               autocomplete="off" />
+                    </div>
+
+                    <table class="table table-bordered">
+
+                        <thead>
+                            <tr>
+                                <th width="80">Select</th>
+                                <th>Consumable</th>
+                                <th width="200">Quantity Needed</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="consumablesTableBody">
+
+                            @foreach (var c in consumables)
+                            {
+                                var existing = selectedConsumables
+                                    .FirstOrDefault(x => x.ConsumableId == c.ConsumableId);
+
+                                var isChecked = existing != null;
+
+                                var quantityNeeded = existing?.QuantityNeeded ?? 0;
+
+                                <tr class="consumable-row"
+                                    data-name="@c.ConsumableName.ToLower()">
+
+                                    <td class="text-center">
+
+                                        <input type="checkbox"
+                                               name="selectedConsumableIds"
+                                               value="@c.ConsumableId"
+                                               class="form-check-input consumable-checkbox"
+                                        @(isChecked ? "checked" : "") />
+
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            @c.ConsumableName
+                                        </strong>
+
+                                        <small class="text-muted d-block">
+                                            Stock: @c.QuantityInHand
+                                        </small>
+                                    </td>
+
+                                    <td>
+
+                                        <input type="number"
+                                               name="quantities"
+                                               value="@quantityNeeded"
+                                               min="1"
+                                               class="form-control quantity-input" />
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+                }
+                </div>
+
+
+            <!-- =========================
+                 BUTTONS
+            ========================== -->
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="TestTypes"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const toggleButton =
+                document.getElementById("toggleConsumables");
+
+            const consumablesSection =
+                document.getElementById("consumablesSection");
+
+            const searchBox =
+                document.getElementById("consumableSearch");
+
+            const noSearchResults =
+                document.getElementById("noSearchResults");
+
+            const consumableRows =
+                document.querySelectorAll(".consumable-row");
+
+
+            // =====================================================
+            // SHOW / HIDE CONSUMABLES
+            // =====================================================
+
+            if (toggleButton && consumablesSection) {
+
+                toggleButton.addEventListener("click", function () {
+
+                    const isHidden =
+                        consumablesSection.style.display === "none";
+
+
+                    if (isHidden) {
+
+                        consumablesSection.style.display = "block";
+
+                        toggleButton
+                            .querySelector(".toggle-text")
+                            .textContent = "Hide Consumables";
+
+                        toggleButton
+                            .querySelector(".toggle-icon")
+                            .textContent = "👁";
+
+                    }
+                    else {
+
+                        consumablesSection.style.display = "none";
+
+                        toggleButton
+                            .querySelector(".toggle-text")
+                            .textContent = "Show Consumables";
+
+                        toggleButton
+                            .querySelector(".toggle-icon")
+                            .textContent = "👁‍🗨";
+
+                    }
+
+                });
+
+            }
+
+
+            // =====================================================
+            // SEARCH
+            // =====================================================
+
+            if (searchBox) {
+
+                searchBox.addEventListener("input", function () {
+
+                    const searchText =
+                        searchBox.value
+                            .toLowerCase()
+                            .trim();
+
+                    let visibleRows = 0;
+
+
+                    consumableRows.forEach(function (row) {
+
+                        const name =
+                            row
+                                .querySelector("td:nth-child(2)")
+                                ?.textContent
+                                .toLowerCase()
+                                .trim() || "";
+
+
+                        if (name.includes(searchText)) {
+
+                            row.style.display = "";
+
+                            visibleRows++;
+
+                        }
+                        else {
+
+                            row.style.display = "none";
+
+                        }
+
+                    });
+
+
+                    if (noSearchResults) {
+
+                        if (
+                            searchText !== "" &&
+                            visibleRows === 0
+                        ) {
+
+                            noSearchResults.style.display = "block";
+
+                        }
+                        else {
+
+                            noSearchResults.style.display = "none";
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+        });
+
+    </script>
+}

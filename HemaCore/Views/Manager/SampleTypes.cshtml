@@ -4,6 +4,10 @@
     Layout = "_ManagerLayout";
 }
 
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">
@@ -18,9 +22,6 @@
     </div>
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
-<link rel="stylesheet" href="" />
-
 
 <div class="content-card">
 
@@ -28,16 +29,20 @@
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-vial"></i>
+
+            <i class="fas fa-vial me-2"></i>
 
             <span>
-                Sample Types (@Model.Count)
+                Sample Types (@(Model?.Count ?? 0))
             </span>
+
         </div>
 
         <a asp-action="AddSampleType"
            class="btn btn-primary-custom btn-sm">
+
             + Add Sample Type
+
         </a>
 
     </div>
@@ -47,7 +52,8 @@
     <input type="text"
            id="searchBox"
            class="form-control mb-3"
-           placeholder="Type to search sample type..." />
+           placeholder="Type to search sample type..."
+           autocomplete="off" />
 
 
     <!-- TABLE -->
@@ -59,9 +65,19 @@
 
                 <thead>
                     <tr>
-                        <th>Sample Type Name</th>
-                        <th>Description</th>
-                        <th>Actions</th>
+
+                        <th>
+                            Sample Type Name
+                        </th>
+
+                        <th>
+                            Description
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
                     </tr>
                 </thead>
 
@@ -88,18 +104,20 @@
                                     <a asp-action="EditSampleType"
                                        asp-route-id="@sample.SampleTypeId"
                                        class="btn btn-sm btn-outline-primary me-1">
+
                                         Edit
+
                                     </a>
 
 
                                     <!-- DELETE -->
                                     <button type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDelete(
-                                        '@sample.SampleTypeId',
-                                        '@sample.SampleName'
-                                        )">
+                                            class="btn btn-sm btn-outline-danger delete-sample-btn"
+                                            data-id="@sample.SampleTypeId"
+                                            data-name="@sample.SampleName">
+
                                         Delete
+
                                     </button>
 
                                 </td>
@@ -133,15 +151,17 @@
 
 
 
-<!-- ========================================================= -->
-<!-- DELETE CONFIRMATION MODAL -->
-<!-- ========================================================= -->
+<!-- =========================================================
+     DELETE CONFIRMATION MODAL
+     ========================================================= -->
 
 <div id="deleteModal"
-     class="delete-overlay">
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle">
 
     <div class="delete-box">
-
 
         <!-- ICON -->
         <div class="delete-icon">
@@ -152,7 +172,7 @@
 
 
         <!-- TITLE -->
-        <h3>
+        <h3 id="deleteModalTitle">
             Are you sure?
         </h3>
 
@@ -180,11 +200,10 @@
         <!-- BUTTONS -->
         <div class="delete-buttons">
 
-
             <!-- CANCEL -->
             <button type="button"
-                    class="cancel-btn"
-                    onclick="closeDeleteModal()">
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
 
                 Cancel
 
@@ -193,7 +212,8 @@
 
             <!-- DELETE FORM -->
             <form asp-action="DeleteSampleType"
-                  method="post">
+                  method="post"
+                  id="deleteForm">
 
                 @Html.AntiForgeryToken()
 
@@ -204,7 +224,7 @@
                 <button type="submit"
                         class="confirm-delete-btn">
 
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash-alt me-1"></i>
 
                     Yes, Delete
 
@@ -220,78 +240,110 @@
 
 
 
-<!-- ========================================================= -->
-<!-- JAVASCRIPT -->
-<!-- ========================================================= -->
-
+<!-- JQUERY -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 
 <script>
 
-    /*
-    * OPEN DELETE MODAL
-    */
-    function confirmDelete(id, sampleName) {
-
-    document.getElementById("deleteSampleTypeId").value = id;
-
-    document.getElementById("deleteSampleName").textContent =
-    sampleName;
-
-    document.getElementById("deleteModal").style.display = "flex";
-    }
+    $(document).ready(function () {
 
 
-    /*
-    * CLOSE DELETE MODAL
-    */
+    /* =====================================================
+    OPEN DELETE MODAL
+    ===================================================== */
+
+    $(document).on("click", ".delete-sample-btn", function () {
+
+    var id = $(this).attr("data-id");
+    var sampleName = $(this).attr("data-name");
+
+    $("#deleteSampleTypeId").val(id);
+
+    $("#deleteSampleName").text(sampleName);
+
+    $("#deleteModal").addClass("show");
+
+    $("body").addClass("modal-open");
+
+    });
+
+
+    /* =====================================================
+    CLOSE DELETE MODAL
+    ===================================================== */
+
     function closeDeleteModal() {
 
-    document.getElementById("deleteModal").style.display = "none";
+    $("#deleteModal").removeClass("show");
+
+    $("body").removeClass("modal-open");
+
+    $("#deleteSampleTypeId").val("");
+
+    $("#deleteSampleName").text("");
+
     }
 
 
-    /*
-    * CLOSE WHEN CLICKING OUTSIDE
-    */
-    document.getElementById("deleteModal").addEventListener(
-    "click",
-    function (event) {
+    /* =====================================================
+    CANCEL
+    ===================================================== */
+
+    $("#cancelDeleteBtn").on("click", function () {
+
+    closeDeleteModal();
+
+    });
+
+
+    /* =====================================================
+    CLICK OUTSIDE MODAL
+    ===================================================== */
+
+    $("#deleteModal").on("click", function (event) {
 
     if (event.target === this) {
+
     closeDeleteModal();
-    }
 
-    }
-    );
-
-
-    /*
-    * CLOSE WITH ESCAPE
-    */
-    document.addEventListener("keydown", function (event) {
-
-    if (event.key === "Escape") {
-    closeDeleteModal();
     }
 
     });
 
 
+    /* =====================================================
+    ESCAPE KEY
+    ===================================================== */
 
-    /* =========================================================
+    $(document).on("keydown", function (event) {
+
+    if (event.key === "Escape") {
+
+    if ($("#deleteModal").hasClass("show")) {
+
+    closeDeleteModal();
+
+    }
+
+    }
+
+    });
+
+
+    /* =====================================================
     LIVE SEARCH
-    ========================================================= */
+    ===================================================== */
 
     $("#searchBox").on("input", function () {
 
-    var term = $(this).val();
+    var term = $(this).val().trim();
 
     $.ajax({
 
     url: '@Url.Action("SearchSampleTypesLive", "Manager")',
 
-    type: 'GET',
+    type: "GET",
 
     data: {
     term: term
@@ -333,22 +385,36 @@
     var description =
     sample.description ?? "";
 
+    var sampleTypeId =
+    sample.sampleTypeId;
+
+
+    /*
+    * Escape HTML
+    */
+
+    var safeSampleName =
+    $("<div>").text(sampleName).html();
+
+    var safeDescription =
+    $("<div>").text(description).html();
+
 
     var row = `
 
     <tr>
 
     <td class="fw-semibold">
-    ${sampleName}
+    ${safeSampleName}
     </td>
 
     <td>
-    ${description}
+    ${safeDescription}
     </td>
 
     <td class="text-center">
 
-    <a href="/Manager/EditSampleType/${sample.sampleTypeId}"
+    <a href="/Manager/EditSampleType/${sampleTypeId}"
     class="btn btn-sm btn-outline-primary me-1">
 
     Edit
@@ -357,11 +423,9 @@
 
 
     <button type="button"
-    class="btn btn-sm btn-outline-danger"
-    onclick="confirmDelete(
-    '${sample.sampleTypeId}',
-    '${sampleName.replace(/'/g, "\\'")}'
-    )">
+    class="btn btn-sm btn-outline-danger delete-sample-btn"
+    data-id="${sampleTypeId}"
+    data-name="${safeSampleName}">
 
     Delete
 
@@ -382,9 +446,20 @@
 
     error: function () {
 
-    alert(
-    "Search failed. Please try again."
-    );
+    $("#TestTypeTable").html(`
+
+    <tr>
+
+    <td colspan="3"
+    class="text-center text-danger py-3">
+
+    Search failed. Please try again.
+
+    </td>
+
+    </tr>
+
+    `);
 
     }
 
@@ -392,7 +467,22 @@
 
     });
 
+
+    /* =====================================================
+    PREVENT DOUBLE DELETE
+    ===================================================== */
+
+    $("#deleteForm").on("submit", function () {
+
+    $(".confirm-delete-btn")
+    .prop("disabled", true)
+    .html(`
+    <i class="fas fa-spinner fa-spin me-1"></i>
+    Deleting...
+    `);
+
+    });
+
+    });
+
 </script>
-
-
-

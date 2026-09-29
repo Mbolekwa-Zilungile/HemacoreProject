@@ -1,22 +1,35 @@
-﻿
+﻿/* =========================================================
+   DELETE MODAL
+   ========================================================= */
+
 .delete-overlay {
-    display: none;
+    display: none !important;
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.55);
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 99999;
 }
 
+
+    /* Modal is ONLY visible when .show is added */
+
+    .delete-overlay.show {
+        display: flex !important;
+    }
+
+
+/* =========================================================
+   MODAL BOX
+   ========================================================= */
 
 .delete-box {
     width: 420px;
     max-width: 90%;
-    background: white;
+    background: #ffffff;
     padding: 35px;
     border-radius: 18px;
     text-align: center;
@@ -24,6 +37,10 @@
     animation: deletePopup 0.2s ease-out;
 }
 
+
+/* =========================================================
+   ICON
+   ========================================================= */
 
 .delete-icon {
     width: 65px;
@@ -39,13 +56,21 @@
 }
 
 
+/* =========================================================
+   TITLE
+   ========================================================= */
+
 .delete-box h3 {
-    margin-bottom: 10px;
+    margin: 0 0 10px 0;
     font-size: 24px;
     font-weight: 700;
     color: #212529;
 }
 
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
 
 .delete-box p {
     color: #6c757d;
@@ -53,11 +78,17 @@
 }
 
 
+/* Sample name */
+
 #deleteSampleName {
     color: #212529;
     font-weight: 700;
 }
 
+
+/* =========================================================
+   WARNING
+   ========================================================= */
 
 .delete-warning {
     display: block;
@@ -67,6 +98,10 @@
 }
 
 
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
 .delete-buttons {
     display: flex;
     justify-content: center;
@@ -75,6 +110,10 @@
 }
 
 
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
 .cancel-btn {
     padding: 10px 22px;
     border: none;
@@ -82,6 +121,7 @@
     background: #6c757d;
     color: white;
     cursor: pointer;
+    font-weight: 600;
 }
 
 
@@ -90,6 +130,10 @@
     }
 
 
+/* =========================================================
+   CONFIRM DELETE
+   ========================================================= */
+
 .confirm-delete-btn {
     padding: 10px 22px;
     border: none;
@@ -97,6 +141,7 @@
     background: #dc3545;
     color: white;
     cursor: pointer;
+    font-weight: 600;
 }
 
 
@@ -105,7 +150,11 @@
     }
 
 
-@@keyframes deletePopup {
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes deletePopup {
 
     from {
         opacity: 0;
@@ -118,3 +167,11 @@
     }
 }
 
+
+/* =========================================================
+   PREVENT BACKGROUND SCROLL
+   ========================================================= */
+
+body.modal-open {
+    overflow: hidden;
+}

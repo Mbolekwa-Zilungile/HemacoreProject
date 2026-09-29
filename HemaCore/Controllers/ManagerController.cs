@@ -135,7 +135,7 @@ namespace HemaCore.Controllers
             if (hasTestTypes)
             {
                 TempData["Error"] =
-                    "Cannot delete this category because it has test types assigned to it.";
+                    $"Cannot delete {category.CategoryName} because it has test types assigned to it.";
 
                 return RedirectToAction("TestCategories");
             }
@@ -143,7 +143,7 @@ namespace HemaCore.Controllers
             category.IsActive = false;
             _context.SaveChanges();
 
-            TempData["Success"] = "Category deleted successfully.";
+            TempData["Success"] = $"{category.CategoryName} deleted successfully.";
 
             return RedirectToAction("TestCategories");
         }
@@ -164,9 +164,9 @@ namespace HemaCore.Controllers
             return View(testtype);
         }
 
-        
-[HttpGet]
-public async Task<IActionResult> AddTestType()
+
+        [HttpGet]
+        public async Task<IActionResult> AddTestType()
         {
             // Load active categories
             ViewBag.Categories = await _context.TestCategories
@@ -174,17 +174,28 @@ public async Task<IActionResult> AddTestType()
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
+
             // Load active sample types
             ViewBag.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.SampleName)
                 .ToListAsync();
 
+
             // Load active consumables
             var consumables = await _context.Consumables
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.ConsumableName)
                 .ToListAsync();
+
+
+            // Load active technicians
+            var technicians = await _context.LabTechnicians
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .ThenBy(t => t.Surname)
+                .ToListAsync();
+
 
             var model = new TestTypeViewModel
             {
@@ -194,11 +205,20 @@ public async Task<IActionResult> AddTestType()
                     ConsumableName = c.ConsumableName,
                     IsSelected = false,
                     QuantityUsed = 0
+                }).ToList(),
+
+                Technicians = technicians.Select(t => new TechnicianVM
+                {
+                    TechnicianID = t.LabTechnicianId,
+                    TechnicianName = $"{t.Name} {t.Surname}",
+                    IsSelected = false
                 }).ToList()
             };
 
+
             return View(model);
         }
+
 
 
         [HttpPost]
@@ -214,6 +234,7 @@ public async Task<IActionResult> AddTestType()
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
+
             ViewBag.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.SampleName)
@@ -227,6 +248,8 @@ public async Task<IActionResult> AddTestType()
             if (!ModelState.IsValid)
             {
                 await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
                 return View(model);
             }
 
@@ -248,6 +271,8 @@ public async Task<IActionResult> AddTestType()
                 );
 
                 await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
                 return View(model);
             }
 
@@ -269,6 +294,8 @@ public async Task<IActionResult> AddTestType()
                 );
 
                 await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
                 return View(model);
             }
 
@@ -289,12 +316,14 @@ public async Task<IActionResult> AddTestType()
                 );
 
                 await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
                 return View(model);
             }
 
 
             // =====================================================
-            // VALIDATE NORMAL RANGE
+            // CHECK NORMAL RANGE
             // =====================================================
 
             if (model.NormalRangeMin > model.NormalRangeMax)
@@ -305,6 +334,8 @@ public async Task<IActionResult> AddTestType()
                 );
 
                 await ReloadConsumables(model);
+                await ReloadTechnicians(model);
+
                 return View(model);
             }
 
@@ -320,26 +351,55 @@ public async Task<IActionResult> AddTestType()
                 NormalRangeMin = model.NormalRangeMin,
                 NormalRangeMax = model.NormalRangeMax,
                 TurnAroundTime = model.TurnAroundTime,
-
-                // CATEGORY
                 CategoryId = model.CategoryID,
-
-                // SAMPLE TYPE
                 SampleTypeId = model.SampleTypeID,
-
                 IsActive = true
             };
 
 
             _context.TestTypes.Add(testType);
 
-
-            // =====================================================
-            // SAVE
-            // =====================================================
-
             await _context.SaveChangesAsync();
 
+
+            // =====================================================
+            // ASSIGN TECHNICIANS
+            // =====================================================
+
+            var selectedTechnicianIds = model.Technicians?
+                .Where(t => t.IsSelected)
+                .Select(t => t.TechnicianID)
+                .ToList()
+                     ?? new List<int>();
+
+            if (selectedTechnicianIds.Any())
+            {
+                var activeTechnicianIds = await _context.LabTechnicians
+                    .Where(t =>
+                        t.IsActive &&
+                        selectedTechnicianIds.Contains(t.LabTechnicianId))
+                    .Select(t => t.LabTechnicianId)
+                    .ToListAsync();
+
+                foreach (var technicianId in activeTechnicianIds)
+                {
+                    var technicianTestType = new TechnicianTestType
+                    {
+                        LabTechnicianId = technicianId,
+                        TestTypeId = testType.TestTypeId
+                    };
+
+                    _context.TechnicianTestTypes.Add(technicianTestType);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+
+
+            // =====================================================
+            // SUCCESS
+            // =====================================================
 
             TempData["Success"] =
                 $"{model.TestTypeName} added successfully.";
@@ -348,10 +408,6 @@ public async Task<IActionResult> AddTestType()
             return RedirectToAction("TestTypes");
         }
 
-
-        // =========================================================
-        // RELOAD CONSUMABLES WHEN VALIDATION FAILS
-        // =========================================================
 
         private async Task ReloadConsumables(TestTypeViewModel model)
         {
@@ -375,9 +431,192 @@ public async Task<IActionResult> AddTestType()
             }).ToList();
         }
 
+        private async Task ReloadTechnicians(TestTypeViewModel model)
+        {
+            var technicians = await _context.LabTechnicians
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .ThenBy(t => t.Surname)
+                .ToListAsync();
 
-        
-      
+
+            model.Technicians = technicians.Select(t =>
+            {
+                var existing = model.Technicians?
+                    .FirstOrDefault(x =>
+                        x.TechnicianID == t.LabTechnicianId);
+
+
+                return new TechnicianVM
+                {
+                    TechnicianID = t.LabTechnicianId,
+
+                    TechnicianName =
+                        $"{t.Name} {t.Surname}",
+
+                    IsSelected =
+                        existing?.IsSelected ?? false
+                };
+
+            }).ToList();
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> EditTestType(int id)
+        {
+            var testType = await _context.TestTypes
+                .Include(t => t.TestTypeConsumables)
+                    .ThenInclude(tc => tc.Consumable)
+                .FirstOrDefaultAsync(t => t.TestTypeId == id);
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .ToListAsync();
+
+            ViewBag.SampleTypes = await _context.SampleTypes
+                .Where(s => s.IsActive)
+                .ToListAsync();
+
+            ViewBag.Consumables = await _context.Consumables
+                .Where(c => c.IsActive)
+                .ToListAsync();
+
+            return View(testType);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditTestType(
+            TestType model,
+            int[] selectedConsumableIds,
+            int[] quantities)
+        {
+            var testType = await _context.TestTypes
+                .Include(t => t.TestTypeConsumables)
+                .FirstOrDefaultAsync(t => t.TestTypeId == model.TestTypeId);
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Categories = await _context.TestCategories
+                    .Where(c => c.IsActive)
+                    .ToListAsync();
+
+                ViewBag.SampleTypes = await _context.SampleTypes
+                    .Where(s => s.IsActive)
+                    .ToListAsync();
+
+                ViewBag.Consumables = await _context.Consumables
+                    .Where(c => c.IsActive)
+                    .ToListAsync();
+
+                return View(model);
+            }
+
+            testType.TestTypeName = model.TestTypeName;
+            testType.UnitOfMeasurement = model.UnitOfMeasurement;
+            testType.NormalRangeMin = model.NormalRangeMin;
+            testType.NormalRangeMax = model.NormalRangeMax;
+            testType.TurnAroundTime = model.TurnAroundTime;
+            testType.CategoryId = model.CategoryId;
+            testType.SampleTypeId = model.SampleTypeId;
+            testType.IsActive = model.IsActive;
+
+            // Remove old consumables
+            _context.TestTypeConsumables.RemoveRange(
+                testType.TestTypeConsumables
+            );
+
+            // Add selected consumables with quantity
+            if (selectedConsumableIds != null)
+            {
+                for (int i = 0; i < selectedConsumableIds.Length; i++)
+                {
+                    int consumableId = selectedConsumableIds[i];
+
+                    int quantity = 0;
+
+                    if (quantities != null && i < quantities.Length)
+                    {
+                        quantity = quantities[i];
+                    }
+
+                    if (quantity <= 0)
+                    {
+                        continue;
+                    }
+
+                    var consumableExists = await _context.Consumables
+                        .AnyAsync(c => c.ConsumableId == consumableId);
+
+                    if (!consumableExists)
+                    {
+                        continue;
+                    }
+
+                    _context.TestTypeConsumables.Add(
+                        new TestTypeConsumable
+                        {
+                            TestTypeId = testType.TestTypeId,
+                            ConsumableId = consumableId,
+                            QuantityNeeded = quantity
+                        }
+                    );
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Test Type updated successfully.";
+
+            return RedirectToAction("TestTypes");
+        }
+
+        public async Task<IActionResult> DeleteTestType(int id)
+        {
+            var testType = await _context.TestTypes
+                .Include(t => t.TechnicianTestType)
+                .Include(t => t.TestTypeConsumables)
+                .FirstOrDefaultAsync(t => t.TestTypeId == id);
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+            bool hasTechnicians = testType.TechnicianTestType.Any();
+
+            bool hasConsumables = testType.TestTypeConsumables.Any();
+
+            if (hasTechnicians || hasConsumables)
+            {
+                TempData["Error"] =
+                    "Cannot delete this Test Type because it is linked to technicians or consumables.";
+
+                return RedirectToAction("TestTypes");
+            }
+
+
+            testType.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Test Type deleted successfully.";
+
+            return RedirectToAction("TestTypes");
+        }
+
+
         #endregion
 
         #region Sample Type
@@ -489,7 +728,7 @@ public async Task<IActionResult> AddTestType()
             if (isUsed)
             {
                 TempData["Error"] =
-                    "Cannot delete this sample type because it is being used by a test type.";
+                    $"Cannot delete {sample.SampleName} because it is being used by a test type.";
 
                 return RedirectToAction("SampleTypes");
             }
@@ -499,8 +738,7 @@ public async Task<IActionResult> AddTestType()
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                "Sample type deleted successfully.";
+            TempData["Success"] =$"{sample.SampleName} deleted successfully.";
 
             return RedirectToAction("SampleTypes");
         }

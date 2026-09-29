@@ -973,11 +973,14 @@ namespace HemaCore.Migrations
                     b.Property<int>("ConsumableId")
                         .HasColumnType("int");
 
+                    b.Property<int>("QuantityNeeded")
+                        .HasColumnType("int");
+
                     b.HasKey("TestTypeId", "ConsumableId");
 
                     b.HasIndex("ConsumableId");
 
-                    b.ToTable("testTypeConsumables");
+                    b.ToTable("TestTypeConsumables");
                 });
 
             modelBuilder.Entity("HemaCore.Models.Users", b =>
