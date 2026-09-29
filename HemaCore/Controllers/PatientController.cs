@@ -623,7 +623,9 @@ public async Task<IActionResult> Consent()
                 return RedirectToAction(nameof(CompleteProfile));
             }
 
-            // Get active doctors
+            // -------------------------------------------------------------
+            // Active doctors
+            // -------------------------------------------------------------
             var doctors = await _context.Doctors
                 .Include(d => d.User)
                 .Where(d => d.IsActive)
@@ -631,17 +633,85 @@ public async Task<IActionResult> Consent()
                 .ThenBy(d => d.Name)
                 .ToListAsync();
 
-            // Get the conditions belonging to this patient
+
+            // -------------------------------------------------------------
+            // Patient conditions
+            // -------------------------------------------------------------
             var conditions = await _context.PatientConditions
                 .Where(pc => pc.PatientID == patient.PatientID)
                 .Include(pc => pc.Condition)
-                .Where(pc => pc.Condition != null && pc.Condition.IsActive)
+                .Where(pc => pc.Condition != null &&
+                             pc.Condition.IsActive)
                 .OrderBy(pc => pc.Condition.Name)
                 .ToListAsync();
 
-            // Send data to the view
+
+            // -------------------------------------------------------------
+            // Patient allergies
+            // -------------------------------------------------------------
+            var allergies = await _context.PatientAllergies
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .Include(pa => pa.Allergy)
+                .Where(pa => pa.Allergy != null &&
+                             pa.Allergy.IsActive)
+                .OrderBy(pa => pa.Allergy.Name)
+                .ToListAsync();
+
+
+            // -------------------------------------------------------------
+            // Patient medications
+            // -------------------------------------------------------------
+            var medications = await _context.PatientMedications
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .Include(pm => pm.Medication)
+                .Where(pm => pm.Medication != null &&
+                             pm.Medication.IsActive)
+                .OrderBy(pm => pm.Medication.Name)
+                .ToListAsync();
+
+
+            // -------------------------------------------------------------
+            // Existing consents
+            // -------------------------------------------------------------
+            var consents = await _context.Consents
+                .Where(c => c.PatientID == patient.UserId)
+                .Include(c => c.Doctor)
+                .Include(c => c.Conditions)
+                    .ThenInclude(cc => cc.Condition)
+                .Include(c => c.Allergies)
+                    .ThenInclude(ca => ca.Allergy)
+                .Include(c => c.Medications)
+                    .ThenInclude(cm => cm.Medication)
+                .OrderByDescending(c => c.GrantedAt)
+                .ToListAsync();
+
+
+            // Automatically mark expired consents as inactive
+            var now = DateTime.UtcNow;
+
+            var expiredConsents = consents
+                .Where(c =>
+                    c.IsActive &&
+                    c.ExpiresAt.HasValue &&
+                    c.ExpiresAt.Value <= now)
+                .ToList();
+
+            foreach (var consent in expiredConsents)
+            {
+                consent.IsActive = false;
+            }
+
+            if (expiredConsents.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+
+
             ViewBag.Doctors = doctors;
             ViewBag.Conditions = conditions;
+            ViewBag.Allergies = allergies;
+            ViewBag.Medications = medications;
+            ViewBag.Consents = consents;
 
             return View();
         }
@@ -654,7 +724,11 @@ public async Task<IActionResult> Consent()
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Consent(
             int doctorId,
-            List<int> selectedConditionIds)
+            List<int>? selectedConditionIds,
+            List<int>? selectedAllergyIds,
+            List<int>? selectedMedicationIds,
+            string consentDuration,
+            DateTime? customExpiry)
         {
             var patient = await GetCurrentPatientAsync();
 
@@ -670,10 +744,10 @@ public async Task<IActionResult> Consent()
                 return RedirectToAction("Login", "Account");
             }
 
+
             // -------------------------------------------------------------
             // Validate doctor
             // -------------------------------------------------------------
-
             var doctor = await _context.Doctors
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(d =>
@@ -682,15 +756,17 @@ public async Task<IActionResult> Consent()
 
             if (doctor == null)
             {
-                TempData["Error"] = "The selected doctor could not be found.";
+                TempData["Error"] =
+                    "The selected doctor could not be found.";
 
                 return RedirectToAction(nameof(Consent));
             }
 
 
             // -------------------------------------------------------------
-            // Check whether an active consent already exists
+            // Remove expired active consent before checking
             // -------------------------------------------------------------
+            var now = DateTime.UtcNow;
 
             var existingConsent = await _context.Consents
                 .FirstOrDefaultAsync(c =>
@@ -698,25 +774,134 @@ public async Task<IActionResult> Consent()
                     c.DoctorId == doctorId &&
                     c.IsActive);
 
+            if (existingConsent != null &&
+                existingConsent.ExpiresAt.HasValue &&
+                existingConsent.ExpiresAt.Value <= now)
+            {
+                existingConsent.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                existingConsent = null;
+            }
+
+
+            // -------------------------------------------------------------
+            // Prevent duplicate active consent
+            // -------------------------------------------------------------
             if (existingConsent != null)
             {
                 TempData["Error"] =
-                    "You already have active consent with this doctor.";
+                    "You already have active consent with this doctor. " +
+                    "Please revoke the existing consent before creating a new one.";
 
                 return RedirectToAction(nameof(Consent));
             }
 
 
             // -------------------------------------------------------------
-            // Create consent
+            // Determine expiry date
+            // -------------------------------------------------------------
+            DateTime expiresAt;
+
+            switch (consentDuration)
+            {
+                case "1Hour":
+                    expiresAt = now.AddHours(1);
+                    break;
+
+                case "1Day":
+                    expiresAt = now.AddDays(1);
+                    break;
+
+                case "7Days":
+                    expiresAt = now.AddDays(7);
+                    break;
+
+                case "30Days":
+                    expiresAt = now.AddDays(30);
+                    break;
+
+                case "Custom":
+
+                    if (!customExpiry.HasValue)
+                    {
+                        TempData["Error"] =
+                            "Please select a custom expiry date.";
+
+                        return RedirectToAction(nameof(Consent));
+                    }
+
+                    // Convert local browser-submitted date to UTC
+                    expiresAt = customExpiry.Value;
+
+                    if (expiresAt <= now)
+                    {
+                        TempData["Error"] =
+                            "The expiry date must be in the future.";
+
+                        return RedirectToAction(nameof(Consent));
+                    }
+
+                    break;
+
+                default:
+
+                    TempData["Error"] =
+                        "Please select a valid consent duration.";
+
+                    return RedirectToAction(nameof(Consent));
+            }
+
+
+            // -------------------------------------------------------------
+            // Validate selected medical information belongs to patient
             // -------------------------------------------------------------
 
+            selectedConditionIds ??= new List<int>();
+            selectedAllergyIds ??= new List<int>();
+            selectedMedicationIds ??= new List<int>();
+
+
+            var validConditionIds = await _context.PatientConditions
+                .Where(pc =>
+                    pc.PatientID == patient.PatientID &&
+                    selectedConditionIds.Contains(pc.ConditionId) &&
+                    pc.Condition.IsActive)
+                .Select(pc => pc.ConditionId)
+                .Distinct()
+                .ToListAsync();
+
+
+            var validAllergyIds = await _context.PatientAllergies
+                .Where(pa =>
+                    pa.PatientID == patient.PatientID &&
+                    selectedAllergyIds.Contains(pa.AllergyId) &&
+                    pa.Allergy.IsActive)
+                .Select(pa => pa.AllergyId)
+                .Distinct()
+                .ToListAsync();
+
+
+            var validMedicationIds = await _context.PatientMedications
+                .Where(pm =>
+                    pm.PatientID == patient.PatientID &&
+                    selectedMedicationIds.Contains(pm.MedicationId) &&
+                    pm.Medication.IsActive)
+                .Select(pm => pm.MedicationId)
+                .Distinct()
+                .ToListAsync();
+
+
+            // -------------------------------------------------------------
+            // Create consent
+            // -------------------------------------------------------------
             var consent = new Consent
             {
                 PatientID = user.Id,
                 DoctorId = doctorId,
                 IsActive = true,
-                GrantedAt = DateTime.UtcNow,
+                GrantedAt = now,
+                ExpiresAt = expiresAt,
                 RevokedAt = null
             };
 
@@ -726,39 +911,53 @@ public async Task<IActionResult> Consent()
 
 
             // -------------------------------------------------------------
-            // Only save conditions that the patient selected
+            // Save selected conditions
             // -------------------------------------------------------------
-
-            if (selectedConditionIds != null &&
-                selectedConditionIds.Any())
+            foreach (var conditionId in validConditionIds)
             {
-                // Get only conditions that actually belong to this patient
-                var patientConditionIds = await _context.PatientConditions
-                    .Where(pc =>
-                        pc.PatientID == patient.PatientID &&
-                        selectedConditionIds.Contains(pc.ConditionId))
-                    .Select(pc => pc.ConditionId)
-                    .Distinct()
-                    .ToListAsync();
-
-                foreach (var conditionId in patientConditionIds)
-                {
-                    _context.ConsentConditions.Add(
-                        new ConsentCondition
-                        {
-                            ConsentId = consent.Id,
-                            ConditionId = conditionId
-                        });
-                }
-
-                await _context.SaveChangesAsync();
+                _context.ConsentConditions.Add(
+                    new ConsentCondition
+                    {
+                        ConsentId = consent.Id,
+                        ConditionId = conditionId
+                    });
             }
 
 
             // -------------------------------------------------------------
-            // Get names of conditions shared with doctor
+            // Save selected allergies
             // -------------------------------------------------------------
+            foreach (var allergyId in validAllergyIds)
+            {
+                _context.ConsentAllergies.Add(
+                    new ConsentAllergy
+                    {
+                        ConsentId = consent.Id,
+                        AllergyId = allergyId
+                    });
+            }
 
+
+            // -------------------------------------------------------------
+            // Save selected medications
+            // -------------------------------------------------------------
+            foreach (var medicationId in validMedicationIds)
+            {
+                _context.ConsentMedications.Add(
+                    new ConsentMedication
+                    {
+                        ConsentId = consent.Id,
+                        MedicationId = medicationId
+                    });
+            }
+
+
+            await _context.SaveChangesAsync();
+
+
+            // -------------------------------------------------------------
+            // Get shared condition names
+            // -------------------------------------------------------------
             var sharedConditions = await _context.ConsentConditions
                 .Where(cc => cc.ConsentId == consent.Id)
                 .Include(cc => cc.Condition)
@@ -768,9 +967,30 @@ public async Task<IActionResult> Consent()
 
 
             // -------------------------------------------------------------
-            // Get doctor's email
+            // Get shared allergy names
             // -------------------------------------------------------------
+            var sharedAllergies = await _context.ConsentAllergies
+                .Where(ca => ca.ConsentId == consent.Id)
+                .Include(ca => ca.Allergy)
+                .Select(ca => ca.Allergy.Name)
+                .OrderBy(name => name)
+                .ToListAsync();
 
+
+            // -------------------------------------------------------------
+            // Get shared medication names
+            // -------------------------------------------------------------
+            var sharedMedications = await _context.ConsentMedications
+                .Where(cm => cm.ConsentId == consent.Id)
+                .Include(cm => cm.Medication)
+                .Select(cm => cm.Medication.Name)
+                .OrderBy(name => name)
+                .ToListAsync();
+
+
+            // -------------------------------------------------------------
+            // Email doctor
+            // -------------------------------------------------------------
             var doctorEmail = doctor.User?.Email;
 
             if (!string.IsNullOrWhiteSpace(doctorEmail))
@@ -784,17 +1004,80 @@ public async Task<IActionResult> Consent()
             }
 
 
-            // -------------------------------------------------------------
-            // Success
-            // -------------------------------------------------------------
-
             TempData["Success"] =
-                $"Consent granted to Dr. {doctor.Name} {doctor.Surname}.";
+                $"Consent granted to Dr. {doctor.Name} {doctor.Surname} " +
+                $"until {expiresAt.ToLocalTime():dd MMM yyyy HH:mm}.";
 
             return RedirectToAction(nameof(Consent));
         }
 
+
+        // ---------------------------------------------------------------------
+        // Revoke Consent
+        // ---------------------------------------------------------------------
+       
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> RevokeConsent(int consentId)
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+                return RedirectToAction(nameof(CompleteProfile));
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var consent = await _context.Consents
+                .Include(c => c.Doctor)
+                .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(c =>
+                    c.Id == consentId &&
+                    c.PatientID == user.Id &&
+                    c.IsActive);
+
+            if (consent == null)
+            {
+                TempData["Error"] =
+                    "The consent could not be found or has already been revoked.";
+
+                return RedirectToAction(nameof(Consent));
+            }
+
+            // Revoke consent
+            consent.IsActive = false;
+            consent.RevokedAt = DateTime.UtcNow;
+
+            // Save the revoke first
+            await _context.SaveChangesAsync();
+
+            // Get doctor's email
+            var doctorEmail = consent.Doctor.User?.Email;
+
+            // Send revoke notification
+            if (!string.IsNullOrWhiteSpace(doctorEmail))
+            {
+                await _emailService.SendConsentRevokedEmailAsync(
+                    doctorEmail,
+                    consent.Doctor.Name,
+                    patient.Name,
+                    patient.Surname
+                );
+            }
+
+            TempData["Success"] =
+                $"Consent with Dr. {consent.Doctor.Name} {consent.Doctor.Surname} has been revoked.";
+
+            return RedirectToAction(nameof(Consent));
+        }
+
+
 #endregion
+
+
+
 
 
         // ---------------------------------------------------------------------

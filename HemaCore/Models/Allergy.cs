@@ -11,5 +11,6 @@ namespace HemaCore.Models
         public bool IsActive { get; set; } = true;
         public AllergyCategory Category { get; set; } = null!;
         public ICollection<PatientAllergy> PatientAllergies { get; set; } = [];
+        public ICollection<ConsentAllergy> ConsentAllergies { get; set; } = [];
     }
 }

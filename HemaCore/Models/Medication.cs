@@ -11,5 +11,6 @@ namespace HemaCore.Models
         public bool IsActive { get; set; } = true;
         public MedicationCategory Category { get; set; } = null!;
         public ICollection<PatientMedication> PatientMedications { get; set; } = [];
+        public ICollection<ConsentMedication> ConsentMedications { get; set; } = [];
     }
 }

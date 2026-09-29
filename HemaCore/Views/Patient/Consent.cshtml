@@ -10,12 +10,22 @@
 
     var patientConditions = ViewBag.Conditions as IEnumerable<PatientCondition>
                             ?? new List<PatientCondition>();
+
+    var patientAllergies = ViewBag.Allergies as IEnumerable<PatientAllergy>
+                           ?? new List<PatientAllergy>();
+
+    var patientMedications = ViewBag.Medications as IEnumerable<PatientMedication>
+                             ?? new List<PatientMedication>();
+
+    var consents = ViewBag.Consents as IEnumerable<Consent>
+                   ?? new List<Consent>();
 }
 
 <div class="container-fluid">
 
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
+
         <div>
             <h2 class="mb-1">
                 <i class="fas fa-user-shield me-2"></i>
@@ -23,23 +33,29 @@
             </h2>
 
             <p class="text-muted mb-0">
-                Choose what medical information you want to share with your doctor.
+                Control which medical information your doctors can access
+                and for how long.
             </p>
         </div>
+
     </div>
 
 
     <!-- Success Message -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+
             <i class="fas fa-check-circle me-2"></i>
+
             @TempData["Success"]
 
             <button type="button"
                     class="btn-close"
                     data-bs-dismiss="alert">
             </button>
+
         </div>
     }
 
@@ -47,30 +63,42 @@
     <!-- Error Message -->
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show"
+             role="alert">
+
             <i class="fas fa-exclamation-circle me-2"></i>
+
             @TempData["Error"]
 
             <button type="button"
                     class="btn-close"
                     data-bs-dismiss="alert">
             </button>
+
         </div>
     }
 
 
     <div class="row">
 
-        <!-- Consent Form -->
+        <!-- =========================================================
+             GRANT CONSENT
+             ========================================================= -->
+
         <div class="col-lg-8">
 
             <div class="card shadow-sm border-0">
 
                 <div class="card-header bg-white py-3">
+
                     <h5 class="mb-0">
+
                         <i class="fas fa-hand-holding-medical me-2"></i>
+
                         Grant Doctor Access
+
                     </h5>
+
                 </div>
 
 
@@ -118,13 +146,94 @@
                         </div>
 
 
-                        <!-- Conditions -->
+                        <!-- =================================================
+                             CONSENT DURATION
+                             ================================================= -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-clock me-1"></i>
+                                How long should access be available?
+                            </label>
+
+                            <select id="consentDuration"
+                                    name="consentDuration"
+                                    class="form-select"
+                                    required>
+
+                                <option value="">
+                                    -- Select Duration --
+                                </option>
+
+                                <option value="1Hour">
+                                    1 Hour
+                                </option>
+
+                                <option value="1Day">
+                                    1 Day
+                                </option>
+
+                                <option value="7Days">
+                                    7 Days
+                                </option>
+
+                                <option value="30Days">
+                                    30 Days
+                                </option>
+
+                                <option value="Custom">
+                                    Custom Date & Time
+                                </option>
+
+                            </select>
+
+                            <small class="text-muted">
+                                The doctor will automatically lose access
+                                when this period expires.
+                            </small>
+
+                        </div>
+
+
+                        <!-- Custom Expiry -->
+                        <div class="mb-4"
+                             id="customExpiryContainer"
+                             style="display:none;">
+
+                            <label for="customExpiry"
+                                   class="form-label fw-semibold">
+
+                                Custom Expiry
+
+                            </label>
+
+                            <input type="datetime-local"
+                                   id="customExpiry"
+                                   name="customExpiry"
+                                   class="form-control" />
+
+                            <small class="text-muted">
+                                Choose when the doctor's access should end.
+                            </small>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             CONDITIONS
+                             ================================================= -->
+
                         <div class="mb-4">
 
                             <div class="d-flex justify-content-between align-items-center mb-2">
 
                                 <label class="form-label fw-semibold mb-0">
+
+                                    <i class="fas fa-notes-medical me-1"></i>
+
                                     Medical Conditions
+
                                 </label>
 
                                 @if (patientConditions.Any())
@@ -137,32 +246,26 @@
                             </div>
 
 
-                            <p class="text-muted small">
-                                Select only the conditions you are comfortable
-                                sharing with this doctor.
-                            </p>
-
-
                             @if (patientConditions.Any())
                             {
                                 <div class="border rounded p-3">
 
-                                    @foreach (var patientCondition in patientConditions)
+                                    @foreach (var item in patientConditions)
                                     {
-                                        if (patientCondition.Condition != null)
+                                        if (item.Condition != null)
                                         {
                                             <div class="form-check mb-3">
 
                                                 <input class="form-check-input"
                                                        type="checkbox"
                                                        name="selectedConditionIds"
-                                                       value="@patientCondition.ConditionId"
-                                                       id="condition_@patientCondition.ConditionId" />
+                                                       value="@item.ConditionId"
+                                                       id="condition_@item.ConditionId" />
 
                                                 <label class="form-check-label"
-                                                       for="condition_@patientCondition.ConditionId">
+                                                       for="condition_@item.ConditionId">
 
-                                                    @patientCondition.Condition.Name
+                                                    @item.Condition.Name
 
                                                 </label>
 
@@ -187,6 +290,160 @@
                         </div>
 
 
+                        <!-- =================================================
+                             ALLERGIES
+                             ================================================= -->
+
+                        <div class="mb-4">
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                <label class="form-label fw-semibold mb-0">
+
+                                    <i class="fas fa-allergies me-1"></i>
+
+                                    Allergies
+
+                                </label>
+
+                                @if (patientAllergies.Any())
+                                {
+                                    <span class="badge bg-secondary">
+                                        @patientAllergies.Count() available
+                                    </span>
+                                }
+
+                            </div>
+
+
+                            @if (patientAllergies.Any())
+                            {
+                                <div class="border rounded p-3">
+
+                                    @foreach (var item in patientAllergies)
+                                    {
+                                        if (item.Allergy != null)
+                                        {
+                                            <div class="form-check mb-3">
+
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       name="selectedAllergyIds"
+                                                       value="@item.AllergyId"
+                                                       id="allergy_@item.AllergyId" />
+
+                                                <label class="form-check-label"
+                                                       for="allergy_@item.AllergyId">
+
+                                                    @item.Allergy.Name
+
+                                                    @if (!string.IsNullOrWhiteSpace(item.Severity))
+                                                    {
+                                                        <span class="text-muted small">
+                                                            (@item.Severity)
+                                                        </span>
+                                                    }
+
+                                                </label>
+
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+
+                                    <i class="fas fa-info-circle me-2"></i>
+
+                                    You currently have no allergies
+                                    recorded in your profile.
+
+                                </div>
+                            }
+
+                        </div>
+
+
+                        <!-- =================================================
+                             MEDICATIONS
+                             ================================================= -->
+
+                        <div class="mb-4">
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                <label class="form-label fw-semibold mb-0">
+
+                                    <i class="fas fa-pills me-1"></i>
+
+                                    Medications
+
+                                </label>
+
+                                @if (patientMedications.Any())
+                                {
+                                    <span class="badge bg-secondary">
+                                        @patientMedications.Count() available
+                                    </span>
+                                }
+
+                            </div>
+
+
+                            @if (patientMedications.Any())
+                            {
+                                <div class="border rounded p-3">
+
+                                    @foreach (var item in patientMedications)
+                                    {
+                                        if (item.Medication != null)
+                                        {
+                                            <div class="form-check mb-3">
+
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       name="selectedMedicationIds"
+                                                       value="@item.MedicationId"
+                                                       id="medication_@item.MedicationId" />
+
+                                                <label class="form-check-label"
+                                                       for="medication_@item.MedicationId">
+
+                                                    @item.Medication.Name
+
+                                                    @if (!string.IsNullOrWhiteSpace(item.Dosage))
+                                                    {
+                                                        <span class="text-muted small">
+                                                            - @item.Dosage
+                                                        </span>
+                                                    }
+
+                                                </label>
+
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+
+                                    <i class="fas fa-info-circle me-2"></i>
+
+                                    You currently have no medications
+                                    recorded in your profile.
+
+                                </div>
+                            }
+
+                        </div>
+
+
                         <!-- Privacy Notice -->
                         <div class="alert alert-light border">
 
@@ -199,10 +456,13 @@
                                     <strong>Your choice matters</strong>
 
                                     <p class="mb-0 small text-muted">
-                                        Only the conditions you select will be
-                                        associated with this consent. You do not
-                                        have to share medical conditions that you
-                                        do not want this doctor to see.
+
+                                        Only the conditions, allergies and
+                                        medications you select will be shared
+                                        with this doctor. Access will
+                                        automatically expire at the selected
+                                        time.
+
                                     </p>
 
                                 </div>
@@ -217,9 +477,10 @@
 
                             <button type="submit"
                                     class="btn btn-primary px-4"
-                                    @(doctors.Any() ? "" : "disabled")>
+                                @(doctors.Any() ? "" : "disabled")>
 
                                 <i class="fas fa-check me-2"></i>
+
                                 Grant Consent
 
                             </button>
@@ -232,10 +493,263 @@
 
             </div>
 
+
+            <!-- =========================================================
+                 EXISTING CONSENTS
+                 ========================================================= -->
+
+            <div class="card shadow-sm border-0 mt-4">
+
+                <div class="card-header bg-white py-3">
+
+                    <h5 class="mb-0">
+
+                        <i class="fas fa-history me-2"></i>
+
+                        My Doctor Consents
+
+                    </h5>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    @if (consents.Any())
+                    {
+                        @foreach (var consent in consents)
+                        {
+                            var expired =
+                                consent.ExpiresAt.HasValue &&
+                                consent.ExpiresAt.Value <= DateTime.UtcNow;
+
+                            var active =
+                                consent.IsActive &&
+                                !expired;
+
+                            <div class="border rounded p-3 mb-3">
+
+                                <div class="d-flex justify-content-between align-items-start">
+
+                                    <div>
+
+                                        <h6 class="mb-1">
+
+                                            <i class="fas fa-user-md me-2"></i>
+
+                                            Dr. @consent.Doctor.Name
+                                            @consent.Doctor.Surname
+
+                                        </h6>
+
+                                        <small class="text-muted">
+
+                                            Granted:
+                                            @consent.GrantedAt.ToLocalTime()
+                                            .ToString("dd MMM yyyy HH:mm")
+
+                                        </small>
+
+                                    </div>
+
+
+                                    @if (active)
+                                    {
+                                        <span class="badge bg-success">
+                                            Active
+                                        </span>
+                                    }
+                                    else if (consent.RevokedAt.HasValue)
+                                    {
+                                        <span class="badge bg-danger">
+                                            Revoked
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            Expired
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <hr />
+
+
+                                <div class="row">
+
+                                    <div class="col-md-4">
+
+                                        <strong>
+                                            <i class="fas fa-notes-medical me-1"></i>
+                                            Conditions
+                                        </strong>
+
+                                        <div class="mt-2">
+
+                                            @if (consent.Conditions.Any())
+                                            {
+                                                @foreach (var item in consent.Conditions)
+                                                {
+                                                    <span class="badge bg-light text-dark me-1 mb-1">
+                                                        @item.Condition.Name
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">
+                                                    None shared
+                                                </small>
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <strong>
+                                            <i class="fas fa-allergies me-1"></i>
+                                            Allergies
+                                        </strong>
+
+                                        <div class="mt-2">
+
+                                            @if (consent.Allergies.Any())
+                                            {
+                                                @foreach (var item in consent.Allergies)
+                                                {
+                                                    <span class="badge bg-light text-dark me-1 mb-1">
+                                                        @item.Allergy.Name
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">
+                                                    None shared
+                                                </small>
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <strong>
+                                            <i class="fas fa-pills me-1"></i>
+                                            Medications
+                                        </strong>
+
+                                        <div class="mt-2">
+
+                                            @if (consent.Medications.Any())
+                                            {
+                                                @foreach (var item in consent.Medications)
+                                                {
+                                                    <span class="badge bg-light text-dark me-1 mb-1">
+                                                        @item.Medication.Name
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">
+                                                    None shared
+                                                </small>
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <hr />
+
+
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <div>
+
+                                        @if (consent.ExpiresAt.HasValue)
+                                        {
+                                            <small class="text-muted">
+
+                                                <i class="fas fa-clock me-1"></i>
+
+                                                Expires:
+                                                @consent.ExpiresAt.Value
+                                                .ToLocalTime()
+                                                .ToString("dd MMM yyyy HH:mm")
+
+                                            </small>
+                                        }
+
+                                    </div>
+
+
+                                    @if (active)
+                                    {
+                                        <form asp-controller="Patient"
+                                              asp-action="RevokeConsent"
+                                              method="post"
+                                              onsubmit="return confirm('Are you sure you want to revoke this consent? The doctor will no longer have access to the selected medical information.');">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="consentId"
+                                                   value="@consent.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger btn-sm">
+
+                                                <i class="fas fa-ban me-1"></i>
+
+                                                Revoke Consent
+
+                                            </button>
+
+                                        </form>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+
+                            <i class="fas fa-user-shield fa-2x mb-3"></i>
+
+                            <p class="mb-0">
+                                You have not granted consent to any doctors yet.
+                            </p>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
         </div>
 
 
-        <!-- Information Card -->
+        <!-- =========================================================
+             INFORMATION CARD
+             ========================================================= -->
+
         <div class="col-lg-4">
 
             <div class="card shadow-sm border-0">
@@ -243,8 +757,11 @@
                 <div class="card-header bg-white py-3">
 
                     <h5 class="mb-0">
+
                         <i class="fas fa-info-circle me-2"></i>
+
                         How Consent Works
+
                     </h5>
 
                 </div>
@@ -261,11 +778,13 @@
                             </div>
 
                             <div>
+
                                 <strong>1. Choose a doctor</strong>
 
                                 <p class="text-muted small mb-0">
                                     Select the doctor you want to give access to.
                                 </p>
+
                             </div>
 
                         </div>
@@ -278,15 +797,42 @@
                         <div class="d-flex">
 
                             <div class="me-3">
-                                <i class="fas fa-notes-medical fa-lg"></i>
+                                <i class="fas fa-list-check fa-lg"></i>
                             </div>
 
                             <div>
+
                                 <strong>2. Choose information</strong>
 
                                 <p class="text-muted small mb-0">
-                                    Select the conditions you want to share.
+                                    Select the conditions, allergies and
+                                    medications you want to share.
                                 </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+                                <i class="fas fa-clock fa-lg"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>3. Choose duration</strong>
+
+                                <p class="text-muted small mb-0">
+                                    Decide how long the doctor can access
+                                    the selected information.
+                                </p>
+
                             </div>
 
                         </div>
@@ -299,16 +845,18 @@
                         <div class="d-flex">
 
                             <div class="me-3">
-                                <i class="fas fa-envelope fa-lg"></i>
+                                <i class="fas fa-ban fa-lg"></i>
                             </div>
 
                             <div>
-                                <strong>3. Doctor is notified</strong>
+
+                                <strong>4. Revoke anytime</strong>
 
                                 <p class="text-muted small mb-0">
-                                    The doctor will receive an email when
-                                    consent is granted.
+                                    You can revoke the doctor's access
+                                    whenever you choose.
                                 </p>
+
                             </div>
 
                         </div>
@@ -326,14 +874,19 @@
                 <div class="card-body">
 
                     <h6>
+
                         <i class="fas fa-shield-alt me-2"></i>
+
                         Privacy
+
                     </h6>
 
                     <p class="text-muted small mb-0">
-                        You remain in control of the medical information
-                        you choose to share. Conditions that you do not
-                        select will not be added to this consent.
+
+                        You remain in control of your medical information.
+                        Only information that you specifically select is
+                        included in the consent.
+
                     </p>
 
                 </div>
@@ -345,4 +898,41 @@
     </div>
 
 </div>
+
+
+<script>
+
+    // -------------------------------------------------------------
+    // Show / hide custom expiry
+    // -------------------------------------------------------------
+
+    document.getElementById("consentDuration")
+        .addEventListener("change", function () {
+
+            const container =
+                document.getElementById("customExpiryContainer");
+
+            const input =
+                document.getElementById("customExpiry");
+
+            if (this.value === "Custom") {
+
+                container.style.display = "block";
+
+                input.required = true;
+
+            }
+            else {
+
+                container.style.display = "none";
+
+                input.required = false;
+
+                input.value = "";
+
+            }
+
+        });
+
+</script>
 
