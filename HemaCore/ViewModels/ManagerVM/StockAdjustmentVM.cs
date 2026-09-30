@@ -8,10 +8,8 @@
 
         public int QuantityOnHand { get; set; }
 
-        public int AdjustmentQuantity { get; set; }
-
         public string AdjustmentType { get; set; }
 
-        public string Reason { get; set; }
+        public int Amount { get; set; }
     }
 }

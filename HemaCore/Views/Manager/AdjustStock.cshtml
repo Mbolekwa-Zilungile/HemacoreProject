@@ -1,0 +1,156 @@
+﻿@model HemaCore.ViewModels.ManagerVM.StockAdjustmentVM
+
+@{
+    ViewData["Title"] = "Adjust Stock";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <div class="mb-4">
+
+            <h3 class="fw-bold">
+                Adjust Stock
+            </h3>
+
+            <p class="text-muted">
+                Update the stock quantity for <strong>@Model.ConsumableName</strong>.
+            </p>
+
+        </div>
+
+
+        <form asp-action="AdjustStock" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="ConsumableID" />
+
+
+            <div class="row">
+
+                <!-- CONSUMABLE NAME -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Consumable
+                    </label>
+
+                    <input asp-for="ConsumableName"
+                           class="form-control"
+                           readonly />
+
+                </div>
+
+
+                <!-- CURRENT STOCK -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="QuantityOnHand"
+                           class="form-label">
+                        Quantity on Hand
+                    </label>
+
+                    <input asp-for="QuantityOnHand"
+                           class="form-control"
+                           readonly />
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <!-- ADJUSTMENT TYPE -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="AdjustmentType"
+                           class="form-label">
+                        Adjustment Type
+                    </label>
+
+                    <select asp-for="AdjustmentType"
+                            class="form-select">
+
+                        <option value="Set">
+                            Set Value
+                        </option>
+
+                        <option value="Increase">
+                            Increase By Amount
+                        </option>
+
+                        <option value="Decrease">
+                            Decrease By Amount
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="AdjustmentType"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- AMOUNT -->
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Amount"
+                           class="form-label">
+                        Amount
+                    </label>
+
+                    <input asp-for="Amount"
+                           type="number"
+                           min="0"
+                           class="form-control"
+                           placeholder="Enter amount" />
+
+                    <span asp-validation-for="Amount"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="Consumables"
+                   class="btn btn-outline-secondary">
+
+                    ← Back
+
+                </a>
+
+
+                <button type="submit"
+                        class="btn btn-primary-custom btn-sm">
+
+                    Update Stock
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

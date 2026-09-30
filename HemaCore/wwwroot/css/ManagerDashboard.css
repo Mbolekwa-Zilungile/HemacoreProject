@@ -1,0 +1,688 @@
+﻿/* =========================================================
+MANAGER DASHBOARD
+========================================================= */
+
+.dashboard-wrapper {
+    padding: 25px;
+    background: #f6f9fc;
+    min-height: calc(100vh - 70px);
+}
+
+    /* =========================================================
+REMOVE LINK UNDERLINES / LINES
+========================================================= */
+
+    /* Remove underline from all dashboard links */
+    .dashboard-wrapper a,
+    .dashboard-wrapper a:link,
+    .dashboard-wrapper a:visited,
+    .dashboard-wrapper a:hover,
+    .dashboard-wrapper a:active,
+    .dashboard-wrapper a:focus {
+        text-decoration: none !important;
+        border-bottom: none !important;
+        box-shadow: none;
+    }
+
+    /* Remove Bootstrap link styling */
+    .dashboard-wrapper .stat-card {
+        text-decoration: none !important;
+    }
+
+/* =========================================================
+HEADER
+========================================================= */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+    .dashboard-header h2 {
+        margin: 0;
+        color: #173b67;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+        .dashboard-header h2 i {
+            color: #2775d8;
+        }
+
+    .dashboard-header p {
+        margin: 7px 0 0;
+        color: #7d8997;
+        font-size: 14px;
+    }
+
+/* =========================================================
+STAT CARDS
+========================================================= */
+
+.stat-card {
+    position: relative;
+    display: block;
+    min-height: 160px;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(31, 55, 79, 0.06);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    cursor: pointer;
+    user-select: none;
+    /* IMPORTANT */
+    text-decoration: none !important;
+    border-bottom: none !important;
+}
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(31, 55, 79, 0.12);
+        text-decoration: none !important;
+    }
+
+    .stat-card:active {
+        transform: translateY(-2px);
+        text-decoration: none !important;
+    }
+
+    .stat-card:focus {
+        outline: none;
+        text-decoration: none !important;
+    }
+
+    .stat-card:focus-visible {
+        outline: 3px solid rgba(39, 117, 216, 0.20);
+        outline-offset: 3px;
+    }
+
+    /* Decorative circle */
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        right: -35px;
+        top: -35px;
+        background: currentColor;
+        opacity: 0.06;
+        pointer-events: none;
+    }
+
+/* =========================================================
+STAT ICON
+========================================================= */
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.25s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.05);
+}
+
+/* =========================================================
+STAT TEXT
+========================================================= */
+
+.stat-title {
+    position: relative;
+    z-index: 1;
+    color: #84909e;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    /* Prevent link color inheritance */
+    text-decoration: none !important;
+}
+
+.stat-number {
+    position: relative;
+    z-index: 1;
+    margin-top: 4px;
+    color: #173b67;
+    font-size: 29px;
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none !important;
+}
+
+/* =========================================================
+CARD COLORS
+========================================================= */
+
+.blue-card {
+    color: #2775d8;
+}
+
+    .blue-card .stat-icon {
+        color: #2775d8;
+        background: #eaf3ff;
+    }
+
+.purple-card {
+    color: #7656d6;
+}
+
+    .purple-card .stat-icon {
+        color: #7656d6;
+        background: #f0ebff;
+    }
+
+.green-card {
+    color: #20a36a;
+}
+
+    .green-card .stat-icon {
+        color: #20a36a;
+        background: #e9f9f1;
+    }
+
+.teal-card {
+    color: #139a9a;
+}
+
+    .teal-card .stat-icon {
+        color: #139a9a;
+        background: #e6fafa;
+    }
+
+.orange-card {
+    color: #e49420;
+}
+
+    .orange-card .stat-icon {
+        color: #e49420;
+        background: #fff3df;
+    }
+
+.red-card {
+    color: #dc4b55;
+}
+
+    .red-card .stat-icon {
+        color: #dc4b55;
+        background: #fff0f1;
+    }
+
+/* =========================================================
+MAIN DASHBOARD CARDS
+========================================================= */
+
+.dashboard-card {
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(31, 55, 79, 0.06);
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #edf1f5;
+}
+
+    .dashboard-card-header h5 {
+        margin: 0;
+        color: #173b67;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+        .dashboard-card-header h5 i {
+            margin-right: 7px;
+        }
+
+.dashboard-card-body {
+    padding: 22px;
+}
+
+/* =========================================================
+STOCK SUMMARY
+========================================================= */
+
+.alert-summary {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.alert-summary-box {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+    .alert-summary-box strong {
+        display: block;
+        font-size: 24px;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .alert-summary-box span {
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+.alert-summary-low {
+    color: #9a6500;
+    background: #fff5df;
+}
+
+.alert-summary-out {
+    color: #c72d3b;
+    background: #fff0f1;
+}
+
+/* =========================================================
+STOCK ITEMS
+========================================================= */
+
+.stock-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #eef1f4;
+    gap: 15px;
+}
+
+    .stock-item:last-child {
+        border-bottom: none;
+    }
+
+.stock-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.stock-icon {
+    width: 43px;
+    height: 43px;
+    min-width: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    border-radius: 11px;
+}
+
+    .stock-icon.danger {
+        color: #dc3545;
+        background: #fff0f1;
+    }
+
+    .stock-icon.warning {
+        color: #d98d13;
+        background: #fff4df;
+    }
+
+/* =========================================================
+STOCK TEXT
+========================================================= */
+
+.stock-name {
+    color: #263b52;
+    font-size: 14px;
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+    text-decoration: none !important;
+}
+
+.stock-supplier {
+    margin-top: 3px;
+    color: #8a96a4;
+    font-size: 11px;
+}
+
+/* =========================================================
+QUANTITY BADGES
+========================================================= */
+
+.quantity-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.quantity-danger {
+    color: #c62e3a;
+    background: #fff0f1;
+}
+
+.quantity-warning {
+    color: #996400;
+    background: #fff4d8;
+}
+
+/* =========================================================
+ORDERS TABLE
+========================================================= */
+
+.modern-dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .modern-dashboard-table thead th {
+        padding: 14px 18px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e9edf2;
+        color: #7d8997;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+    }
+
+    .modern-dashboard-table tbody td {
+        padding: 15px 18px;
+        border-bottom: 1px solid #f0f2f5;
+        color: #42566c;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .modern-dashboard-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+        .modern-dashboard-table tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .modern-dashboard-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+/* =========================================================
+ORDER INFORMATION
+========================================================= */
+
+.order-id {
+    color: #2775d8 !important;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.order-date {
+    color: #8793a1 !important;
+}
+
+/* =========================================================
+STATUS BADGES
+========================================================= */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-ordered {
+    color: #a56800;
+    background: #fff3df;
+}
+
+.status-other {
+    color: #2569ad;
+    background: #eaf3ff;
+}
+
+/* =========================================================
+EMPTY STATE
+========================================================= */
+
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #9ba6b2;
+}
+
+    .empty-state i {
+        display: block;
+        margin-bottom: 12px;
+        color: #c9d0d8;
+        font-size: 38px;
+    }
+
+    .empty-state div {
+        font-size: 13px;
+    }
+
+/* =========================================================
+INVENTORY OVERVIEW
+========================================================= */
+
+.inventory-overview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+    .inventory-overview h5 {
+        margin: 0;
+        color: #173b67;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .inventory-overview p {
+        margin: 7px 0 0;
+        color: #7d8997;
+        font-size: 13px;
+    }
+
+/* =========================================================
+BOOTSTRAP BADGE OVERRIDE
+========================================================= */
+
+.dashboard-card-header .badge {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+}
+
+/* =========================================================
+CLICKABLE CARD
+========================================================= */
+
+.stat-card[role="button"] {
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+/* =========================================================
+IMPORTANT:
+REMOVE UNDERLINE FROM NESTED CONTENT
+========================================================= */
+
+.stat-card *,
+.stat-card:hover *,
+.stat-card:focus *,
+.stat-card:active *,
+.stat-card:visited * {
+    text-decoration: none !important;
+}
+
+/* =========================================================
+RESPONSIVE - LARGE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+    .stat-card {
+        min-height: 145px;
+    }
+
+    .stat-number {
+        font-size: 26px;
+    }
+}
+
+/* =========================================================
+RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .dashboard-wrapper {
+        padding: 15px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 22px;
+    }
+
+        .dashboard-header h2 {
+            font-size: 23px;
+        }
+
+    .stat-card {
+        min-height: 135px;
+        padding: 18px;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+
+    .dashboard-card-header {
+        padding: 16px;
+    }
+
+    .dashboard-card-body {
+        padding: 16px;
+    }
+
+    .inventory-overview {
+        display: block;
+    }
+
+        .inventory-overview .d-flex {
+            margin-top: 15px;
+        }
+}
+
+/* =========================================================
+RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 576px) {
+
+    .dashboard-wrapper {
+        padding: 10px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 20px;
+    }
+
+        .dashboard-header h2 {
+            font-size: 21px;
+        }
+
+        .dashboard-header p {
+            font-size: 12px;
+        }
+
+    .alert-summary {
+        flex-direction: column;
+    }
+
+    .stock-name {
+        max-width: 150px;
+    }
+
+    .modern-dashboard-table {
+        min-width: 650px;
+    }
+
+    .stock-item {
+        gap: 8px;
+    }
+
+    .quantity-badge {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+}
+
+/* =========================================================
+VERY SMALL DEVICES
+========================================================= */
+
+@media (max-width: 400px) {
+
+    .dashboard-wrapper {
+        padding: 8px;
+    }
+
+    .stat-card {
+        min-height: 125px;
+        padding: 15px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .stat-title {
+        font-size: 10px;
+    }
+
+    .stat-number {
+        font-size: 22px;
+    }
+
+    .stock-name {
+        max-width: 120px;
+    }
+}

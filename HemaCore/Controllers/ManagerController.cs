@@ -24,10 +24,95 @@ namespace HemaCore.Controllers
             _userManager = userManager;
             _emailService = emailService;
         }
-        public IActionResult Index()
+
+        #region Index
+        public async Task<IActionResult> Index()
         {
-            return View();
+            // =====================================================
+            // STOCK ALERTS
+            // =====================================================
+
+            var outOfStockConsumables = await _context.Consumables
+                .Include(c => c.Supplier)
+                .Where(c =>
+                    c.IsActive &&
+                    c.QuantityInHand == 0)
+                .ToListAsync();
+
+
+            var lowStockConsumables = await _context.Consumables
+                .Include(c => c.Supplier)
+                .Where(c =>
+                    c.IsActive &&
+                    c.QuantityInHand > 0 &&
+                    c.QuantityInHand <= c.ReorderLevel)
+                .ToListAsync();
+
+
+            var recentOrders = await _context.Orders
+                .Include(o => o.Supplier)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(10)
+                .ToListAsync();
+
+
+
+
+            var pendingOrdersCount = await _context.Orders
+                .CountAsync(o =>
+                    o.Status == HemaCore.Models.Enums.OrderStatus.Ordered);
+
+
+            var testCategoryCount = await _context.TestCategories
+                .CountAsync(c => c.IsActive);
+
+
+            var testTypeCount = await _context.TestTypes
+                .CountAsync(c => c.IsActive);
+
+
+            var doctorCount = await _context.Doctors.CountAsync(d => d.IsActive);
+
+
+
+            var technicianCount = await _context.LabTechnicians
+                .CountAsync(t => t.IsActive);
+
+
+            var vm = new ManagerDashboardVM
+            {
+                LowStockConsumables = lowStockConsumables,
+
+                OutOfStockConsumables = outOfStockConsumables,
+
+                RecentOrders = recentOrders,
+
+                PendingOrdersCount = pendingOrdersCount,
+
+                TestCategoryCount = testCategoryCount,
+
+                TestTypeCount = testTypeCount,
+
+                DoctorCount = doctorCount,
+
+                TechnicianCount = technicianCount,
+
+                LowStockCount = lowStockConsumables.Count,
+
+                OutOfStockCount = outOfStockConsumables.Count,
+
+                TotalStockAlerts =
+                    lowStockConsumables.Count +
+                    outOfStockConsumables.Count
+            };
+
+
+            return View(vm);
+
+
         }
+
+        #endregion
 
         #region Test Categories
         public async Task<IActionResult> TestCategories()
@@ -89,10 +174,8 @@ namespace HemaCore.Controllers
 
             return View(category);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-
         public async Task<IActionResult> EditCategory(TestCategory updatedCategory)
         {
             if (!ModelState.IsValid)
@@ -100,23 +183,52 @@ namespace HemaCore.Controllers
                 return View(updatedCategory);
             }
 
-            var category = await _context.TestCategories.FirstOrDefaultAsync(c => c.CategoryId == updatedCategory.CategoryId);
-            if(category == null)
+            // Find the category being updated
+            var category = await _context.TestCategories
+                .FirstOrDefaultAsync(c =>
+                    c.CategoryId == updatedCategory.CategoryId);
+
+            if (category == null)
             {
                 return NotFound();
             }
 
-            category.CategoryName = updatedCategory.CategoryName;
-            category.CategoryDescription = updatedCategory.CategoryDescription;
+            // Check for another category with the same name
+            // Only happens when the Update button is submitted.
+            bool duplicateExists = await _context.TestCategories
+                .AnyAsync(c =>
+                    c.CategoryId != updatedCategory.CategoryId &&
+                    c.IsActive &&
+                    c.CategoryName.Trim().ToLower() ==
+                    updatedCategory.CategoryName.Trim().ToLower());
+
+            if (duplicateExists)
+            {
+                ModelState.AddModelError(
+                    "CategoryName",
+                    "A category with this name already exists."
+                );
+
+                return View(updatedCategory);
+            }
+
+            // Update the existing category
+            category.CategoryName =
+                updatedCategory.CategoryName.Trim();
+
+            category.CategoryDescription =
+                updatedCategory.CategoryDescription;
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Category updated successfully.";
+            TempData["Success"] =
+                $"{category.CategoryName} updated successfully.";
 
             return RedirectToAction("TestCategories");
+
+
         }
 
-       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteCategory(int id)
@@ -225,9 +337,6 @@ namespace HemaCore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddTestType(TestTypeViewModel model)
         {
-            // =====================================================
-            // LOAD DROPDOWNS
-            // =====================================================
 
             ViewBag.Categories = await _context.TestCategories
                 .Where(c => c.IsActive)
@@ -922,10 +1031,10 @@ namespace HemaCore.Controllers
 
             bool hasConsumables = testType.TestTypeConsumables.Any();
 
-            if (hasTechnicians || hasConsumables)
+            if (hasTechnicians)
             {
                 TempData["Error"] =
-                    "Cannot delete this Test Type because it is linked to technicians or consumables.";
+                    $"Cannot delete {testType.TestTypeName} because it is linked to technicians.";
 
                 return RedirectToAction("TestTypes");
             }
@@ -935,7 +1044,7 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Test Type deleted successfully.";
+            TempData["Success"] = $"{testType.TestTypeName} deleted successfully.";
 
             return RedirectToAction("TestTypes");
         }
@@ -1026,7 +1135,7 @@ namespace HemaCore.Controllers
             // Save changes to SQL Server
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Sample type updated successfully.";
+            TempData["Success"] = $"{sampleType.SampleName} updated successfully.";
 
             return RedirectToAction("SampleTypes");
         }
@@ -1206,16 +1315,13 @@ namespace HemaCore.Controllers
         }
 
         // ADJUST STOCK (GET)
-        [HttpGet]
         public IActionResult AdjustStock(int id)
         {
             var consumable = _context.Consumables
                 .FirstOrDefault(c => c.ConsumableId == id);
 
             if (consumable == null)
-            {
                 return NotFound();
-            }
 
             var vm = new StockAdjustmentVM
             {
@@ -1226,6 +1332,80 @@ namespace HemaCore.Controllers
 
             return View(vm);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AdjustStock(StockAdjustmentVM vm)
+        {
+            var consumable = _context.Consumables
+                .FirstOrDefault(c => c.ConsumableId == vm.ConsumableID);
+
+            if (consumable == null)
+                return NotFound();
+
+            switch (vm.AdjustmentType)
+            {
+                case "Set":
+                    consumable.QuantityInHand = vm.Amount;
+                    break;
+
+                case "Increase":
+                    consumable.QuantityInHand += vm.Amount;
+                    break;
+
+                case "Decrease":
+                    consumable.QuantityInHand -= vm.Amount;
+
+                    if (consumable.QuantityInHand < 0)
+                        consumable.QuantityInHand = 0;
+
+                    break;
+            }
+
+            _context.SaveChanges();
+
+            TempData["Success"] = $"Stock for {consumable.ConsumableName} updated successfully.";
+
+            return RedirectToAction("Consumables");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConsumable(int id)
+        {
+            // Find the consumable in the database
+            var consumable = _context.Consumables
+            .FirstOrDefault(c => c.ConsumableId == id);
+
+            if (consumable == null)
+            {
+                return NotFound();
+            }
+
+            // Check if the consumable is linked to any test type
+            bool isLinkedToTest = _context.TestTypeConsumables
+                .Any(tc => tc.ConsumableId == id);
+
+            if (isLinkedToTest)
+            {
+                TempData["Error"] =
+                    $"Cannot delete this {consumable.ConsumableName} because it is linked to one or more test types.";
+
+                return RedirectToAction("Consumables");
+            }
+
+            // Soft delete
+            consumable.IsActive = false;
+
+            // Save the change to the database
+            _context.SaveChanges();
+
+            TempData["Success"] = $"{consumable.ConsumableName} deleted successfully.";
+
+            return RedirectToAction("Consumables");
+
+        }
+
         #endregion
 
         #region Supplier
@@ -1348,12 +1528,6 @@ namespace HemaCore.Controllers
 
                 return View(model);
             }
-
-            // =====================================================
-            // CHECK EMAIL
-            // ONLY ACTIVE SUPPLIERS
-            // EXCLUDE CURRENT SUPPLIER
-            // =====================================================
 
             bool emailExists = await _context.Suppliers
                 .AnyAsync(s =>
@@ -2646,10 +2820,10 @@ namespace HemaCore.Controllers
                 $"Technician {technician.Name} {technician.Surname} has been deactivated successfully.";
 
             return RedirectToAction(nameof(LabTechnician));
-        }
+        }    
 
 
         #endregion
-    }
+}
 }
 

@@ -100,26 +100,22 @@
 
                                 <td class="text-center">
 
-                                    <!-- EDIT -->
                                     <a asp-action="EditSampleType"
                                        asp-route-id="@sample.SampleTypeId"
                                        class="btn btn-sm btn-outline-primary me-1">
 
-                                        Edit
+                                        <i class="fas fa-edit me-1"></i>
 
                                     </a>
 
-
-                                    <!-- DELETE -->
                                     <button type="button"
-                                            class="btn btn-sm btn-outline-danger delete-sample-btn"
+                                            class="btn btn-sm btn-outline-danger deactivate-supplier-btn"
                                             data-id="@sample.SampleTypeId"
                                             data-name="@sample.SampleName">
-
-                                        Delete
+                                        <i class="fas fa-ban"></i>
 
                                     </button>
-
+                           
                                 </td>
 
                             </tr>

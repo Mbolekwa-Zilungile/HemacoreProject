@@ -5,76 +5,104 @@
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
-
-<!-- JQUERY -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- TEMP MESSAGES -->
+<link rel="stylesheet" href="~/css/delete.css" /> <!-- ========================================================= ALERT MESSAGES ========================================================= -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show mt-2">
+    <div class="alert alert-success">
         @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show mt-2">
+    <div class="alert alert-danger alert-dismissible fade show">
         @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
+
 }
 
-<div class="content-card">
+<!-- ========================================================= MAIN CONTENT ========================================================= --> <div class="content-card">
+<!-- HEADER -->
 
-    <div class="section-title d-flex align-items-center justify-content-between">
+<div class="section-title d-flex align-items-center justify-content-between">
 
-        <div class="d-flex align-items-center">
-            <i class="fas fa-box"></i>
+    <div class="d-flex align-items-center">
 
-            <span>Consumable (@Model.Count)</span>
-        </div>
+        <i class="fas fa-box me-2"></i>
 
-        <a asp-action="AddConsumable"
-           class="btn btn-primary-custom btn-sm">
-            + Add Consumable
-        </a>
+        <span>
+            Consumables (@(Model?.Count ?? 0))
+        </span>
 
     </div>
 
-  
+    <a asp-action="AddConsumable"
+       class="btn btn-primary-custom btn-sm">
 
-    <!-- LIVE SEARCH -->
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Search consumables..." />
+        + Add Consumable
 
-    <!-- TABLE -->
-    <div class="table-responsive">
+    </a>
+
+</div>
+
+<!-- =====================================================
+     SEARCH
+     ===================================================== -->
+
+<input type="text"
+       id="searchBox"
+       class="form-control mb-3"
+       placeholder="Type to search consumables..."
+       autocomplete="off" />
+
+<!-- =====================================================
+     TABLE
+     ===================================================== -->
+
+<div class="card shadow-sm">
+
+    <div class="card-body p-0">
 
         <table class="modern-table">
 
-            <thead class="table-light">
+            <thead>
+
                 <tr>
+
                     <th>Name</th>
+
                     <th>Supplier</th>
+
                     <th>Reorder</th>
+
                     <th>Quantity</th>
+
                     <th>Status</th>
-                    <th width="220">Actions</th>
+
+                    <th>Actions</th>
+
                 </tr>
+
             </thead>
 
-            <tbody id="ConsumableTable">
+            <tbody id="consumableTable">
 
-                @if (!Model.Any())
+                @if (Model == null || !Model.Any())
                 {
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-3">
+
+                        <td colspan="6"
+                            class="text-center text-muted py-3">
+
                             No consumables available.
+
                         </td>
+
                     </tr>
                 }
                 else
@@ -93,54 +121,100 @@
 
                         <tr>
 
-                            <td>@item.ConsumableName</td>
+                            <!-- NAME -->
+
+                            <td class="fw-semibold blue-text">
+
+                                @item.ConsumableName
+
+                            </td>
+
+                            <!-- SUPPLIER -->
+
                             <td>
-                                @if (item.Supplier != null && item.Supplier.IsActive)
+
+                                @if (item.Supplier != null &&
+                                     item.Supplier.IsActive)
                                 {
                                     @item.Supplier.SupplierName
                                 }
                                 else
                                 {
                                     <span class="text-danger">
+
                                         <i class="fas fa-exclamation-triangle me-1"></i>
+
                                         No supplier
+
                                     </span>
                                 }
+
                             </td>
 
-                            <td>@item.ReorderLevel</td>
-                            <td>@item.QuantityInHand</td>
+                            <!-- REORDER -->
 
                             <td>
+
+                                @item.ReorderLevel
+
+                            </td>
+
+                            <!-- QUANTITY -->
+
+                            <td>
+
+                                @item.QuantityInHand
+
+                            </td>
+
+                            <!-- STATUS -->
+
+                            <td>
+
                                 <span class="badge @badgeClass">
+
                                     @status
+
                                 </span>
+
                             </td>
 
                             <!-- ACTIONS -->
+
                             <td>
+
                                 <div class="d-flex gap-2 flex-nowrap">
 
                                     <a asp-action="AdjustStock"
-                                       asp-route-id="@item.ConsumableId"
-                                       class="btn btn-sm btn-outline-primary">
+                                       asp-route-id="@item.ConsumableId"                                 
+                                        class="btn btn-sm btn-outline-info me-1">
                                         Adjust
+
                                     </a>
 
-                                    <a asp-action="EditConsumable"
+                                   
+                                         <a asp-action="EditConsumable"
                                        asp-route-id="@item.ConsumableId"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        Edit
+                               class="btn btn-sm btn-outline-primary me-1">
+
+                                <i class="fas fa-edit me-1"></i>
+
+                            
                                     </a>
 
-                                    <a asp-action="DeleteConsumable"
-                                       asp-route-id="@item.ConsumableId"
-                                       class="btn btn-sm btn-outline-danger"
-                                       onclick="return confirm('Delete this item?');">
-                                        Deactivate
-                                    </a>
+                                    <!-- DEACTIVATE -->
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-consumable-btn"
+                                            data-id="@item.ConsumableId"
+                                            data-name="@item.ConsumableName">
+
+                                        <i class="fas fa-ban"></i>
+
+                                    </button>
 
                                 </div>
+
                             </td>
 
                         </tr>
@@ -155,103 +229,517 @@
 
 </div>
 
-<!-- LIVE SEARCH SCRIPT -->
-<script>
+</div> <!-- ========================================================= DEACTIVATE MODAL ========================================================= --> <div id="deleteModal" class="delete-overlay" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+<div class="delete-box">
 
-    $(document).ready(function () {
+    <!-- ICON -->
 
-    $("#searchBox").on("input", function () {
+    <div class="delete-icon">
 
-    var term = $(this).val();
-
-    $.ajax({
-
-    url: '@Url.Action("SearchConsumablesLive", "Manager")',
-    type: 'GET',
-    data: { term: term },
-
-    success: function (data) {
-
-    var tableBody = $("#ConsumableTable");
-    tableBody.empty();
-
-    if (!data || data.length === 0) {
-
-    tableBody.append(`
-    <tr>
-    <td colspan="6" class="text-center text-muted py-3">
-    No consumables found
-    </td>
-    </tr>
-    `);
-    return;
-    }
-
-    $.each(data, function (index, item) {
-
-    var badgeClass = "bg-secondary";
-
-    if (item.status === "OutOfStock") {
-    badgeClass = "bg-danger";
-    }
-    else if (item.status === "LowStock") {
-    badgeClass = "bg-warning text-dark";
-    }
-    else if (item.status === "InStock") {
-    badgeClass = "bg-success";
-    }
-
-    var row = `
-    <tr>
-
-    <td>${item.consumablename}</td>
-    <td>${item.suppliername}</td>
-    <td>${item.reorderlevel}</td>
-    <td>${item.quantityinhand}</td>
-
-    <td>
-    <span class="badge ${badgeClass}">
-    ${item.status}
-    </span>
-    </td>
-
-    <td>
-    <div class="d-flex gap-2 flex-nowrap">
-
-    <a href="/Manager/AdjustStock/${item.consumableId}"
-    class="btn btn-sm btn-outline-primary">
-    Adjust
-    </a>
-
-    <a href="/Manager/EditConsumable/${item.consumableId}"
-    class="btn btn-sm btn-outline-secondary">
-    Edit
-    </a>
-
-    <a href="/Manager/DeleteConsumable/${item.consumableId}"
-    class="btn btn-sm btn-outline-danger"
-    onclick="return confirm('Delete this item?');">
-    Deactivate
-    </a>
+        <i class="fas fa-exclamation-triangle"></i>
 
     </div>
-    </td>
 
-    </tr>
-    `;
+    <!-- TITLE -->
 
-    tableBody.append(row);
-    });
-    },
+    <h3 id="deleteModalTitle">
 
-    error: function () {
-    alert("Error loading search results.");
-    }
+        Are you sure?
 
-    });
+    </h3>
 
-    });
+    <!-- MESSAGE -->
 
-    });
+    <p>
+
+        Are you sure you want to deactivate
+
+        <strong id="deleteConsumableName"></strong>?
+
+    </p>
+
+    <!-- WARNING -->
+
+    <span class="delete-warning">
+
+        <i class="fas fa-info-circle"></i>
+
+        This consumable will no longer be active.
+
+    </span>
+
+    <!-- BUTTONS -->
+
+    <div class="delete-buttons">
+
+        <!-- CANCEL -->
+
+        <button type="button"
+                id="cancelDeleteBtn"
+                class="cancel-btn">
+
+            Cancel
+
+        </button>
+
+        <!-- DELETE FORM -->
+
+        <form asp-action="DeleteConsumable"
+              method="post"
+              id="deleteForm">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   id="deleteConsumableId" />
+
+            <button type="submit"
+                    id="confirmDeleteBtn"
+                    class="confirm-delete-btn">
+
+                <i class="fas fa-ban me-1"></i>
+
+                Yes, Deactivate
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</div> <!-- ========================================================= JAVASCRIPT ========================================================= --> <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+// =====================================================
+// ELEMENTS
+// =====================================================
+
+const modal =
+document.getElementById("deleteModal");
+
+const consumableIdInput =
+document.getElementById("deleteConsumableId");
+
+const consumableName =
+document.getElementById("deleteConsumableName");
+
+const cancelButton =
+document.getElementById("cancelDeleteBtn");
+
+const deleteForm =
+document.getElementById("deleteForm");
+
+const searchBox =
+document.getElementById("searchBox");
+
+const consumableTable =
+document.getElementById("consumableTable");
+
+// =====================================================
+// OPEN DEACTIVATE MODAL
+// =====================================================
+
+document.addEventListener("click", function (event) {
+
+const button =
+event.target.closest(
+".deactivate-consumable-btn"
+);
+
+if (!button) {
+return;
+}
+
+const id =
+button.getAttribute("data-id");
+
+const name =
+button.getAttribute("data-name");
+
+consumableIdInput.value = id;
+
+consumableName.textContent = name;
+
+modal.classList.add("show");
+
+document.body.classList.add("modal-open");
+
+});
+
+// =====================================================
+// CLOSE MODAL
+// =====================================================
+
+function closeModal() {
+
+modal.classList.remove("show");
+
+document.body.classList.remove("modal-open");
+
+consumableIdInput.value = "";
+
+consumableName.textContent = "";
+
+}
+
+// =====================================================
+// CANCEL
+// =====================================================
+
+cancelButton.addEventListener(
+"click",
+function () {
+
+closeModal();
+
+}
+);
+
+// =====================================================
+// CLICK OUTSIDE MODAL
+// =====================================================
+
+modal.addEventListener(
+"click",
+function (event) {
+
+if (event.target === modal) {
+
+closeModal();
+
+}
+
+}
+);
+
+// =====================================================
+// ESCAPE KEY
+// =====================================================
+
+document.addEventListener(
+"keydown",
+function (event) {
+
+if (
+event.key === "Escape" &&
+modal.classList.contains("show")
+) {
+
+closeModal();
+
+}
+
+}
+);
+
+// =====================================================
+// PREVENT DOUBLE SUBMIT
+// =====================================================
+
+deleteForm.addEventListener(
+"submit",
+function () {
+
+const button =
+document.getElementById(
+"confirmDeleteBtn"
+);
+
+button.disabled = true;
+
+button.innerHTML = `
+
+<i class="fas fa-spinner fa-spin me-1"></i>
+
+Deactivating...
+
+`;
+
+}
+);
+
+// =====================================================
+// LIVE SEARCH
+// =====================================================
+
+searchBox.addEventListener(
+"input",
+function () {
+
+const term =
+this.value.trim();
+
+fetch(
+'@Url.Action("SearchConsumablesLive", "Manager")'
++ '?term='
++ encodeURIComponent(term)
+)
+
+.then(response => {
+
+if (!response.ok) {
+
+throw new Error(
+"Search request failed."
+);
+
+}
+
+return response.json();
+
+})
+
+.then(data => {
+
+// =========================================
+// NO RESULTS
+// =========================================
+
+if (
+!data ||
+data.length === 0
+) {
+
+consumableTable.innerHTML = `
+
+<tr>
+
+<td colspan="6"
+class="text-center text-muted py-3">
+
+No consumables found.
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
+
+let rows = "";
+
+// =========================================
+// RESULTS
+// =========================================
+
+data.forEach(function (item) {
+
+const id =
+item.consumableid ??
+item.consumableId;
+
+const name =
+escapeHtml(
+item.consumablename ??
+item.consumableName ??
+""
+);
+
+const supplier =
+escapeHtml(
+item.suppliername ??
+item.supplierName ??
+""
+);
+
+const reorderLevel =
+item.reorderlevel ??
+item.reorderLevel ??
+0;
+
+const quantity =
+item.quantityinhand ??
+item.quantityInHand ??
+0;
+
+const status =
+item.status ?? "";
+
+// STATUS BADGE
+
+let badgeClass =
+"bg-secondary";
+
+if (status === "OutOfStock") {
+
+badgeClass =
+"bg-danger";
+
+}
+else if (status === "LowStock") {
+
+badgeClass =
+"bg-warning text-dark";
+
+}
+else if (status === "InStock") {
+
+badgeClass =
+"bg-success";
+
+}
+
+// SUPPLIER DISPLAY
+
+const supplierDisplay =
+supplier
+? supplier
+: `
+<span class="text-danger">
+
+<i class="fas fa-exclamation-triangle me-1"></i>
+
+No supplier
+
+</span>
+`;
+
+rows += `
+
+<tr>
+
+<!-- NAME -->
+
+<td class="fw-semibold blue-text">
+
+${name}
+
+</td>
+
+<!-- SUPPLIER -->
+
+<td>
+
+${supplierDisplay}
+
+</td>
+
+<!-- REORDER -->
+
+<td>
+
+${reorderLevel}
+
+</td>
+
+<!-- QUANTITY -->
+
+<td>
+
+${quantity}
+
+</td>
+
+<!-- STATUS -->
+
+<td>
+
+<span class="badge ${badgeClass}">
+
+${escapeHtml(status)}
+
+</span>
+
+</td>
+
+<!-- ACTIONS -->
+
+<td>
+
+<div class="d-flex gap-2 flex-nowrap">
+
+<!-- ADJUST -->
+
+<a href="/Manager/AdjustStock/${id}"
+class="btn btn-sm btn-outline-primary">
+
+Adjust
+
+</a>
+
+<!-- EDIT -->
+
+<a href="/Manager/EditConsumable/${id}"
+class="btn btn-sm btn-outline-secondary">
+
+Edit
+
+</a>
+
+<!-- DEACTIVATE -->
+
+<button type="button"
+class="btn btn-sm btn-outline-danger deactivate-consumable-btn"
+data-id="${id}"
+data-name="${name}">
+
+<i class="fas fa-ban"></i>
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+consumableTable.innerHTML = rows;
+
+})
+
+.catch(function (error) {
+
+console.error(
+"Consumable search failed:",
+error
+);
+
+consumableTable.innerHTML = `
+
+<tr>
+
+<td colspan="6"
+class="text-center text-danger py-3">
+
+Search failed. Please try again.
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+);
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHtml(value) {
+
+const div =
+document.createElement("div");
+
+div.textContent =
+value ?? "";
+
+return div.innerHTML;
+
+}
+
+});
 
 </script>
