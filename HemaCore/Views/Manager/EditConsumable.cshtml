@@ -1,0 +1,135 @@
+﻿@model HemaCore.Models.Consumable
+@using HemaCore.Models
+
+@{
+    ViewData["Title"] = "Edit Consumable";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <div class="mb-4">
+            <h3 class="fw-bold">Edit Consumable</h3>
+            <p class="text-muted">
+                Update the details of the consumable below.
+            </p>
+        </div>
+
+        <form asp-action="EditConsumable" method="post">
+            @Html.AntiForgeryToken()
+
+            <input asp-for="ConsumableId" type="hidden" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger">
+            </div>
+
+            <h5 class="mb-3 text-secondary">
+                Consumable Information
+            </h5>
+
+            <div class="row">
+
+                <!-- Consumable Name -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ConsumableName"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="ConsumableName"
+                           class="form-control" />
+
+                    <span asp-validation-for="ConsumableName"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <!-- Quantity -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="QuantityInHand"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="QuantityInHand"
+                           class="form-control"
+                           type="number"
+                           min="0" />
+
+                    <span asp-validation-for="QuantityInHand"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <!-- Reorder Level -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ReorderLevel"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="ReorderLevel"
+                           class="form-control"
+                           type="number"
+                           min="0" />
+
+                    <span asp-validation-for="ReorderLevel"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <!-- Supplier -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="SupplierId"
+                           class="form-label">
+                        Supplier
+                    </label>
+
+                    <select asp-for="SupplierId"
+                            class="form-control">
+
+                        <option value="">
+                            -- Select Supplier --
+                        </option>
+
+                        @foreach (var s in ViewBag.Suppliers as List<Supplier>)
+                        {
+                            <option value="@s.SupplierId">
+                                @s.SupplierName
+                            </option>
+                        }
+
+                    </select>
+
+                    <span asp-validation-for="SupplierId"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+
+                <a asp-action="Consumables"
+                   class="btn btn-outline-secondary">
+                    ← Back
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary px-4">
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

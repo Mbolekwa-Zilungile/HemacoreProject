@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HemaCore.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260929074547_AddQuantityNeededToTestTypeConsumable")]
-    partial class AddQuantityNeededToTestTypeConsumable
+    [Migration("20260930053828_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -202,6 +202,9 @@ namespace HemaCore.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("GrantedAt")
                         .HasColumnType("datetime2");
 
@@ -224,6 +227,29 @@ namespace HemaCore.Migrations
                     b.ToTable("Consents");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentAllergy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AllergyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ConsentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AllergyId");
+
+                    b.HasIndex("ConsentId");
+
+                    b.ToTable("ConsentAllergies");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentCondition", b =>
                 {
                     b.Property<int>("Id")
@@ -235,16 +261,49 @@ namespace HemaCore.Migrations
                     b.Property<int>("ConditionId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ConditionId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("ConsentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ConsentId1")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ConditionId");
 
+                    b.HasIndex("ConditionId1");
+
                     b.HasIndex("ConsentId");
 
+                    b.HasIndex("ConsentId1");
+
                     b.ToTable("ConsentConditions");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConsentMedication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MedicationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsentId");
+
+                    b.HasIndex("MedicationId");
+
+                    b.ToTable("ConsentMedications");
                 });
 
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
@@ -743,6 +802,9 @@ namespace HemaCore.Migrations
                     b.Property<int>("TestTypeId")
                         .HasColumnType("int");
 
+                    b.Property<int>("TechnicianTestTypeId")
+                        .HasColumnType("int");
+
                     b.HasKey("LabTechnicianId", "TestTypeId");
 
                     b.HasIndex("TestTypeId");
@@ -1229,6 +1291,25 @@ namespace HemaCore.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentAllergy", b =>
+                {
+                    b.HasOne("HemaCore.Models.Allergy", "Allergy")
+                        .WithMany("ConsentAllergies")
+                        .HasForeignKey("AllergyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Consent", "Consent")
+                        .WithMany("Allergies")
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Allergy");
+
+                    b.Navigation("Consent");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentCondition", b =>
                 {
                     b.HasOne("HemaCore.Models.Condition", "Condition")
@@ -1237,15 +1318,42 @@ namespace HemaCore.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("HemaCore.Models.Condition", null)
+                        .WithMany("ConsentConditions")
+                        .HasForeignKey("ConditionId1");
+
                     b.HasOne("HemaCore.Models.Consent", "Consent")
                         .WithMany()
                         .HasForeignKey("ConsentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HemaCore.Models.Consent", null)
+                        .WithMany("Conditions")
+                        .HasForeignKey("ConsentId1");
+
                     b.Navigation("Condition");
 
                     b.Navigation("Consent");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConsentMedication", b =>
+                {
+                    b.HasOne("HemaCore.Models.Consent", "Consent")
+                        .WithMany("Medications")
+                        .HasForeignKey("ConsentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Medication", "Medication")
+                        .WithMany("ConsentMedications")
+                        .HasForeignKey("MedicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consent");
+
+                    b.Navigation("Medication");
                 });
 
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
@@ -1605,6 +1713,8 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.Allergy", b =>
                 {
+                    b.Navigation("ConsentAllergies");
+
                     b.Navigation("PatientAllergies");
                 });
 
@@ -1615,6 +1725,8 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.Condition", b =>
                 {
+                    b.Navigation("ConsentConditions");
+
                     b.Navigation("PatientConditions");
                 });
 
@@ -1625,6 +1737,12 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.Consent", b =>
                 {
+                    b.Navigation("Allergies");
+
+                    b.Navigation("Conditions");
+
+                    b.Navigation("Medications");
+
                     b.Navigation("TestAccesses");
                 });
 
@@ -1642,6 +1760,8 @@ namespace HemaCore.Migrations
 
             modelBuilder.Entity("HemaCore.Models.Medication", b =>
                 {
+                    b.Navigation("ConsentMedications");
+
                     b.Navigation("PatientMedications");
                 });
 

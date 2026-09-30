@@ -538,6 +538,7 @@ namespace HemaCore.Migrations
                     DoctorId = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     GrantedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
@@ -704,7 +705,8 @@ namespace HemaCore.Migrations
                 columns: table => new
                 {
                     TestTypeId = table.Column<int>(type: "int", nullable: false),
-                    LabTechnicianId = table.Column<int>(type: "int", nullable: false)
+                    LabTechnicianId = table.Column<int>(type: "int", nullable: false),
+                    TechnicianTestTypeId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -724,26 +726,53 @@ namespace HemaCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "testTypeConsumables",
+                name: "TestTypeConsumables",
                 columns: table => new
                 {
                     TestTypeId = table.Column<int>(type: "int", nullable: false),
-                    ConsumableId = table.Column<int>(type: "int", nullable: false)
+                    ConsumableId = table.Column<int>(type: "int", nullable: false),
+                    QuantityNeeded = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_testTypeConsumables", x => new { x.TestTypeId, x.ConsumableId });
+                    table.PrimaryKey("PK_TestTypeConsumables", x => new { x.TestTypeId, x.ConsumableId });
                     table.ForeignKey(
-                        name: "FK_testTypeConsumables_Consumables_ConsumableId",
+                        name: "FK_TestTypeConsumables_Consumables_ConsumableId",
                         column: x => x.ConsumableId,
                         principalTable: "Consumables",
                         principalColumn: "ConsumableId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_testTypeConsumables_TestTypes_TestTypeId",
+                        name: "FK_TestTypeConsumables_TestTypes_TestTypeId",
                         column: x => x.TestTypeId,
                         principalTable: "TestTypes",
                         principalColumn: "TestTypeId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConsentAllergies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ConsentId = table.Column<int>(type: "int", nullable: false),
+                    AllergyId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsentAllergies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConsentAllergies_Allergies_AllergyId",
+                        column: x => x.AllergyId,
+                        principalTable: "Allergies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConsentAllergies_Consents_ConsentId",
+                        column: x => x.ConsentId,
+                        principalTable: "Consents",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -754,7 +783,9 @@ namespace HemaCore.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ConsentId = table.Column<int>(type: "int", nullable: false),
-                    ConditionId = table.Column<int>(type: "int", nullable: false)
+                    ConditionId = table.Column<int>(type: "int", nullable: false),
+                    ConditionId1 = table.Column<int>(type: "int", nullable: true),
+                    ConsentId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -765,9 +796,45 @@ namespace HemaCore.Migrations
                         principalTable: "Conditions",
                         principalColumn: "Id");
                     table.ForeignKey(
+                        name: "FK_ConsentConditions_Conditions_ConditionId1",
+                        column: x => x.ConditionId1,
+                        principalTable: "Conditions",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_ConsentConditions_Consents_ConsentId",
                         column: x => x.ConsentId,
                         principalTable: "Consents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConsentConditions_Consents_ConsentId1",
+                        column: x => x.ConsentId1,
+                        principalTable: "Consents",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConsentMedications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ConsentId = table.Column<int>(type: "int", nullable: false),
+                    MedicationId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsentMedications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConsentMedications_Consents_ConsentId",
+                        column: x => x.ConsentId,
+                        principalTable: "Consents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConsentMedications_Medications_MedicationId",
+                        column: x => x.MedicationId,
+                        principalTable: "Medications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -922,14 +989,44 @@ namespace HemaCore.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ConsentAllergies_AllergyId",
+                table: "ConsentAllergies",
+                column: "AllergyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsentAllergies_ConsentId",
+                table: "ConsentAllergies",
+                column: "ConsentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ConsentConditions_ConditionId",
                 table: "ConsentConditions",
                 column: "ConditionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ConsentConditions_ConditionId1",
+                table: "ConsentConditions",
+                column: "ConditionId1");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ConsentConditions_ConsentId",
                 table: "ConsentConditions",
                 column: "ConsentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsentConditions_ConsentId1",
+                table: "ConsentConditions",
+                column: "ConsentId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsentMedications_ConsentId",
+                table: "ConsentMedications",
+                column: "ConsentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsentMedications_MedicationId",
+                table: "ConsentMedications",
+                column: "MedicationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Consents_DoctorId",
@@ -1078,8 +1175,8 @@ namespace HemaCore.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_testTypeConsumables_ConsumableId",
-                table: "testTypeConsumables",
+                name: "IX_TestTypeConsumables_ConsumableId",
+                table: "TestTypeConsumables",
                 column: "ConsumableId");
 
             migrationBuilder.CreateIndex(
@@ -1115,7 +1212,13 @@ namespace HemaCore.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "ConsentAllergies");
+
+            migrationBuilder.DropTable(
                 name: "ConsentConditions");
+
+            migrationBuilder.DropTable(
+                name: "ConsentMedications");
 
             migrationBuilder.DropTable(
                 name: "ConsentTestAccesses");
@@ -1145,7 +1248,7 @@ namespace HemaCore.Migrations
                 name: "TestResultVerifications");
 
             migrationBuilder.DropTable(
-                name: "testTypeConsumables");
+                name: "TestTypeConsumables");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

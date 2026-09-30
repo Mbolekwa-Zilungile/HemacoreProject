@@ -1132,6 +1132,100 @@ namespace HemaCore.Controllers
 
             return RedirectToAction(nameof(Consumables));
         }
+
+        [HttpGet]
+        public IActionResult EditConsumable(int id)
+        {
+            var consumable = _context.Consumables
+                .FirstOrDefault(c => c.ConsumableId == id);
+
+            if (consumable == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Suppliers = _context.Suppliers
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.SupplierName)
+                .ToList();
+
+            return View(consumable);
+        }
+
+        // EDIT (POST)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditConsumable(Consumable model)
+        {
+            ModelState.Remove("SupplierName");
+            ModelState.Remove("OrderItems");
+
+            bool nameExists = _context.Consumables
+        .Any(c =>
+            c.ConsumableName == model.ConsumableName &&
+            c.ConsumableId != model.ConsumableId
+        );
+
+            if (nameExists)
+            {
+                ModelState.AddModelError(
+                    "ConsumableName",
+                    "A consumable with this name already exists."
+                );
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Suppliers = _context.Suppliers
+                    .Where(s => s.IsActive)
+                    .OrderBy(s => s.SupplierName)
+                    .ToList();
+
+                return View(model);
+            }
+
+            var consumable = _context.Consumables
+                .FirstOrDefault(c => c.ConsumableId == model.ConsumableId);
+
+            if (consumable == null)
+            {
+                return NotFound();
+            }
+
+            // Update database entity
+            consumable.ConsumableName = model.ConsumableName;
+            consumable.ReorderLevel = model.ReorderLevel;
+            consumable.QuantityInHand = model.QuantityInHand;
+            consumable.SupplierId = model.SupplierId;
+
+            _context.SaveChanges();
+
+            TempData["Success"] = $"{consumable.ConsumableName} updated successfully.";
+
+            return RedirectToAction(nameof(Consumables));
+        }
+
+        // ADJUST STOCK (GET)
+        [HttpGet]
+        public IActionResult AdjustStock(int id)
+        {
+            var consumable = _context.Consumables
+                .FirstOrDefault(c => c.ConsumableId == id);
+
+            if (consumable == null)
+            {
+                return NotFound();
+            }
+
+            var vm = new StockAdjustmentVM
+            {
+                ConsumableID = consumable.ConsumableId,
+                ConsumableName = consumable.ConsumableName,
+                QuantityOnHand = consumable.QuantityInHand
+            };
+
+            return View(vm);
+        }
         #endregion
 
         #region Supplier
