@@ -1074,9 +1074,31 @@ public async Task<IActionResult> RevokeConsent(int consentId)
         }
 
 
-#endregion
+        #endregion
 
+        
+        #region Reports
 
+        [HttpGet]
+        public async Task<IActionResult> Report()
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+            {
+                return RedirectToAction(nameof(CompleteProfile));
+            }
+
+            var reports = await _context.PatientReports
+                .Where(r => r.PatientId == patient.PatientID)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return View(reports);
+        }
+
+        #endregion
+        
 
 
 
@@ -1087,7 +1109,7 @@ public async Task<IActionResult> RevokeConsent(int consentId)
        // public IActionResult Result() => View();
        // public IActionResult Health() => View();
         //public IActionResult Consent() => View();
-        public IActionResult Report() => View();
+        //public IActionResult Report() => View();
         public IActionResult Index() => View();
     }
 }

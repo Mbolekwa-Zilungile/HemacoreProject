@@ -125,7 +125,7 @@ namespace HemaCore.Controllers
             // Sign the user in
             await _signInManager.SignInAsync(user, isPersistent: false);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("EditProfile", "Patient");
         }
 
         // GET: Account/Logout

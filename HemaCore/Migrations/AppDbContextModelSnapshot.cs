@@ -704,6 +704,44 @@ namespace HemaCore.Migrations
                     b.ToTable("PatientMedications");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.PatientReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("FileData")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ResultId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientReports");
+                });
+
             modelBuilder.Entity("HemaCore.Models.Sample", b =>
                 {
                     b.Property<int>("SampleId")
@@ -1510,6 +1548,17 @@ namespace HemaCore.Migrations
                         .IsRequired();
 
                     b.Navigation("Medication");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.PatientReport", b =>
+                {
+                    b.HasOne("HemaCore.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Patient");
                 });
