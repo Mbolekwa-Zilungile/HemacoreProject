@@ -1,69 +1,70 @@
-﻿@model HemaCore.Models.Patient
+﻿
+@model HemaCore.Models.Patient
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
-    ViewBag.Title = "Dashboard";
+    ViewBag.Title = "Patient Dashboard";
 }
 
 <div class="patient-dashboard">
 
     <!-- =========================================================
-         HEADER
+         WELCOME HEADER
     ========================================================= -->
+    <div class="dashboard-hero">
 
-    <div class="dashboard-header">
-
-        <div>
+        <div class="hero-content">
 
             <div class="dashboard-label">
-                <i class="fas fa-shield-alt"></i>
+                <i class="fas fa-heartbeat"></i>
                 Patient Portal
             </div>
 
             <h1>
-                Welcome
-                @(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
-                    ? ", " + Model.Name
-                    : "")
+                Welcome@(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
+                                    ? ", " + Model.Name
+                                    : "")
             </h1>
 
             <p>
-                Manage your healthcare information from one place.
+                Manage your personal information, medical history,
+                test results and healthcare access securely.
             </p>
 
+        </div>
+
+        <div class="hero-icon">
+            <i class="fas fa-user-md"></i>
         </div>
 
     </div>
 
 
     <!-- =========================================================
-         PROFILE STATUS
+         PROFILE COMPLETION
     ========================================================= -->
     @if (Model == null || string.IsNullOrWhiteSpace(Model.Name))
     {
         <div class="profile-alert">
 
             <div class="profile-alert-icon">
-                <i class="fas fa-exclamation-circle"></i>
+                <i class="fas fa-exclamation"></i>
             </div>
 
             <div class="profile-alert-content">
-
-                <strong>Complete your profile</strong>
+                <strong>Complete your patient profile</strong>
 
                 <span>
-                    Your profile is not complete yet. Add your personal
-                    details, conditions, allergies and medications.
+                    Add your personal details, medical conditions,
+                    allergies and medications to keep your healthcare
+                    information up to date.
                 </span>
-
             </div>
 
             <a asp-action="CompleteProfile"
                class="profile-alert-action">
-
                 Complete Profile
                 <i class="fas fa-arrow-right"></i>
-
             </a>
 
         </div>
@@ -73,261 +74,212 @@
     <!-- =========================================================
          QUICK ACCESS
     ========================================================= -->
-
-    <div class="section-title">
+    <div class="section-heading">
 
         <div>
+            <span class="section-eyebrow">YOUR HEALTHCARE</span>
 
-            <h3>
-                <i class="fas fa-th-large"></i>
+            <h2>
                 Quick Access
-            </h3>
+            </h2>
 
             <p>
-                Access your healthcare information and account settings.
+                Access and manage your healthcare information.
             </p>
-
         </div>
 
     </div>
 
 
-    <div class="row g-3 mb-5">
-
-
-        <!-- COMPLETE PROFILE -->
-
-        <div class="col-lg-4 col-md-6">
-
-            <a asp-action="CompleteProfile"
-               class="patient-card">
-
-                <div class="patient-card-icon profile-bg">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-
-                <div class="patient-card-content">
-
-                    <h4>
-                        Complete Profile
-                    </h4>
-
-                    <p>
-                        Add your personal details, conditions, allergies,
-                        and medications.
-                    </p>
-
-                </div>
-
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
-
-            </a>
-
-        </div>
-
+    <div class="dashboard-grid">
 
         <!-- MY DETAILS -->
+        <a asp-action="PatientDetails"
+           class="dashboard-card">
 
-        <div class="col-lg-4 col-md-6">
+            <div class="card-icon details-icon">
+                <i class="fas fa-id-card"></i>
+            </div>
 
-            <a asp-action="PatientDetails"
-               class="patient-card">
+            <div class="card-content">
+                <h3>My Details</h3>
 
-                <div class="patient-card-icon details-bg">
-                    <i class="fas fa-id-card"></i>
-                </div>
+                <p>
+                    View your personal and medical information.
+                </p>
+            </div>
 
-                <div class="patient-card-content">
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
 
-                    <h4>
-                        My Details
-                    </h4>
-
-                    <p>
-                        View your saved personal and medical information.
-                    </p>
-
-                </div>
-
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
-
-            </a>
-
-        </div>
+        </a>
 
 
         <!-- EDIT PROFILE -->
+        <a asp-action="EditProfile"
+           class="dashboard-card">
 
-        <div class="col-lg-4 col-md-6">
+            <div class="card-icon edit-icon">
+                <i class="fas fa-user-edit"></i>
+            </div>
 
-            <a asp-action="EditProfile"
-               class="patient-card">
+            <div class="card-content">
+                <h3>Edit Profile</h3>
 
-                <div class="patient-card-icon edit-bg">
-                    <i class="fas fa-user-edit"></i>
-                </div>
+                <p>
+                    Update your personal details and medical history.
+                </p>
+            </div>
 
-                <div class="patient-card-content">
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
 
-                    <h4>
-                        Edit Profile
-                    </h4>
-
-                    <p>
-                        Update your personal information and medical history.
-                    </p>
-
-                </div>
-
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
-
-            </a>
-
-        </div>
-
-
-        <!-- CHANGE PASSWORD -->
-
-        <div class="col-lg-4 col-md-6">
-
-            <a asp-action="ChangePassword"
-               class="patient-card">
-
-                <div class="patient-card-icon password-bg">
-                    <i class="fas fa-key"></i>
-                </div>
-
-                <div class="patient-card-content">
-
-                    <h4>
-                        Change Password
-                    </h4>
-
-                    <p>
-                        Keep your account secure by updating your password.
-                    </p>
-
-                </div>
-
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
-
-            </a>
-
-        </div>
-
-
-        <!-- TESTS -->
-
-        <div class="col-lg-4 col-md-6">
-
-            <a asp-action="Tests"
-               class="patient-card">
-
-                <div class="patient-card-icon tests-bg">
-                    <i class="fas fa-vials"></i>
-                </div>
-
-                <div class="patient-card-content">
-
-                    <h4>
-                        Tests
-                    </h4>
-
-                    <p>
-                        View available laboratory tests.
-                    </p>
-
-                </div>
-
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
-
-            </a>
-
-        </div>
+        </a>
 
 
         <!-- RESULTS -->
+        <a asp-action="Result"
+           class="dashboard-card">
 
-        <div class="col-lg-4 col-md-6">
+            <div class="card-icon results-icon">
+                <i class="fas fa-file-medical-alt"></i>
+            </div>
 
-            <a asp-action="Result"
-               class="patient-card">
+            <div class="card-content">
+                <h3>Test Results</h3>
 
-                <div class="patient-card-icon results-bg">
-                    <i class="fas fa-file-medical"></i>
-                </div>
+                <p>
+                    View your available laboratory results.
+                </p>
+            </div>
 
-                <div class="patient-card-content">
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
 
-                    <h4>
-                        Results
-                    </h4>
+        </a>
 
-                    <p>
-                        Check your laboratory test results.
-                    </p>
 
-                </div>
+        <!-- HEALTH -->
+        <a asp-action="Health"
+           class="dashboard-card">
 
-                <i class="fas fa-arrow-right patient-card-arrow"></i>
+            <div class="card-icon health-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
 
-            </a>
+            <div class="card-content">
+                <h3>My Health</h3>
 
-        </div>
+                <p>
+                    Review your health information and history.
+                </p>
+            </div>
+
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+        </a>
+
+
+        <!-- CONSENT -->
+        <a asp-action="Consent"
+           class="dashboard-card">
+
+            <div class="card-icon consent-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+
+            <div class="card-content">
+                <h3>Doctor Consent</h3>
+
+                <p>
+                    Manage which doctors can access your information.
+                </p>
+            </div>
+
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+        </a>
+
+
+        <!-- CHANGE PASSWORD -->
+        <a asp-action="ChangePassword"
+           class="dashboard-card">
+
+            <div class="card-icon password-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <div class="card-content">
+                <h3>Security</h3>
+
+                <p>
+                    Change your password and protect your account.
+                </p>
+            </div>
+
+            <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+        </a>
 
     </div>
 
 
     <!-- =========================================================
-         ACCOUNT SECTION
+         ACCOUNT INFORMATION
     ========================================================= -->
-
-    <div class="section-title">
+    <div class="section-heading account-heading">
 
         <div>
+            <span class="section-eyebrow">ACCOUNT</span>
 
-            <h3>
-                <i class="fas fa-user-circle"></i>
+            <h2>
                 Your Account
-            </h3>
+            </h2>
 
             <p>
-                Manage your profile and account information.
+                Keep your account information accurate and secure.
             </p>
-
         </div>
 
     </div>
 
 
-    <div class="account-banner">
+    <div class="account-panel">
 
-        <div class="account-icon">
+        <div class="account-avatar">
             <i class="fas fa-user"></i>
         </div>
 
-        <div class="account-content">
+        <div class="account-info">
 
-            <span>
-                Current Account
-            </span>
+            <span>Current Patient</span>
 
             <strong>
                 @(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
-                    ? Model.Name
+                    ? $"{Model.Name} {Model.Surname}"
                     : "Profile not completed")
             </strong>
 
             <small>
-                Keep your information up to date for accurate healthcare records.
+                Your healthcare information is stored securely
+                within your patient account.
             </small>
 
         </div>
 
         <a asp-action="EditProfile"
-           class="account-action">
+           class="account-button">
 
-            Manage
+            Manage Profile
             <i class="fas fa-arrow-right"></i>
 
         </a>
@@ -337,119 +289,180 @@
 </div>
 
 
-<!-- =========================================================
-     PATIENT DASHBOARD STYLES
-========================================================= -->
-
 <style>
 
     /* =========================================================
-               GENERAL
-            ========================================================= */
+           GENERAL
+        ========================================================= */
 
     .patient-dashboard {
         width: 100%;
-        max-width: 1400px;
+        max-width: 1350px;
         margin: 0 auto;
-        padding: 24px;
+        padding: 30px;
+        color: #172033;
     }
 
 
     /* =========================================================
-               HEADER
-            ========================================================= */
+           HERO
+        ========================================================= */
 
-    .dashboard-header {
+    .dashboard-hero {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 30px;
+        overflow: hidden;
+        min-height: 190px;
+        padding: 35px 40px;
+        margin-bottom: 28px;
+        background: linear-gradient( 135deg, #f4f7ff 0%, #eef4ff 55%, #f8fbff 100% );
+        border: 1px solid #e2e9f5;
+        border-radius: 22px;
     }
+
+
+        .dashboard-hero::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            right: -70px;
+            top: -100px;
+            background: rgba(49, 87, 199, .07);
+            border-radius: 50%;
+        }
+
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
 
     .dashboard-label {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
+        margin-bottom: 9px;
         color: #3157c7;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .4px;
+        text-transform: uppercase;
     }
 
-    .dashboard-header h1 {
+
+        .dashboard-label i {
+            font-size: 13px;
+        }
+
+
+    .dashboard-hero h1 {
         margin: 0;
         color: #172033;
-        font-size: 30px;
+        font-size: 31px;
         font-weight: 800;
+        letter-spacing: -.5px;
     }
 
-    .dashboard-header p {
-        margin: 6px 0 0;
-        color: #718096;
+
+    .dashboard-hero p {
+        max-width: 650px;
+        margin: 8px 0 0;
+        color: #68758a;
         font-size: 14px;
+        line-height: 1.6;
+    }
+
+
+    .hero-icon {
+        position: relative;
+        z-index: 2;
+        width: 86px;
+        height: 86px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 30px;
+        background: white;
+        color: #3157c7;
+        border: 1px solid #e1e8f4;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(49,87,199,.08);
+        font-size: 34px;
     }
 
 
     /* =========================================================
-               PROFILE ALERT
-            ========================================================= */
+           PROFILE ALERT
+        ========================================================= */
 
     .profile-alert {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 17px;
         padding: 18px 20px;
-        margin-bottom: 40px;
-        background: white;
-        border: 1px solid #e7ebf1;
+        margin-bottom: 38px;
+        background: #fff;
+        border: 1px solid #e5eaf2;
         border-left: 4px solid #3157c7;
         border-radius: 15px;
-        box-shadow: 0 4px 16px rgba(15,23,42,.04);
+        box-shadow: 0 5px 18px rgba(15,23,42,.04);
     }
 
+
     .profile-alert-icon {
-        width: 48px;
-        height: 48px;
-        min-width: 48px;
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        background: #eef2ff;
+        background: #eef3ff;
         color: #3157c7;
-        font-size: 20px;
+        border-radius: 12px;
+        font-size: 17px;
     }
+
 
     .profile-alert-content {
         flex: 1;
     }
 
+
         .profile-alert-content strong {
             display: block;
+            margin-bottom: 3px;
             color: #172033;
             font-size: 14px;
-            margin-bottom: 3px;
+            font-weight: 750;
         }
+
 
         .profile-alert-content span {
             display: block;
             color: #718096;
             font-size: 12px;
+            line-height: 1.5;
         }
+
 
     .profile-alert-action {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        padding: 9px 14px;
+        gap: 8px;
+        padding: 10px 16px;
         background: #3157c7;
         color: white !important;
         border-radius: 9px;
         text-decoration: none !important;
         font-size: 12px;
         font-weight: 700;
-        transition: .2s;
+        transition: all .2s ease;
     }
+
 
         .profile-alert-action:hover {
             background: #2647a7;
@@ -458,82 +471,110 @@
 
 
     /* =========================================================
-               SECTION TITLE
-            ========================================================= */
+           SECTION HEADINGS
+        ========================================================= */
 
-    .section-title {
+    .section-heading {
         margin-bottom: 18px;
     }
 
-        .section-title h3 {
-            margin: 0;
-            color: #172033;
-            font-size: 19px;
-            font-weight: 750;
-        }
 
-            .section-title h3 i {
-                color: #3157c7;
-                margin-right: 7px;
-            }
+    .section-eyebrow {
+        display: block;
+        margin-bottom: 4px;
+        color: #3157c7;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
 
-        .section-title p {
-            margin: 5px 0 0 27px;
-            color: #718096;
-            font-size: 13px;
-        }
+
+    .section-heading h2 {
+        margin: 0;
+        color: #172033;
+        font-size: 21px;
+        font-weight: 800;
+    }
+
+
+    .section-heading p {
+        margin: 5px 0 0;
+        color: #718096;
+        font-size: 13px;
+    }
+
+
+    .account-heading {
+        margin-top: 42px;
+    }
 
 
     /* =========================================================
-               PATIENT CARDS
-            ========================================================= */
+           DASHBOARD GRID
+        ========================================================= */
 
-    .patient-card {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        min-height: 115px;
-        padding: 18px;
-        background: white;
-        border: 1px solid #e7ebf1;
-        border-radius: 15px;
-        text-decoration: none !important;
-        color: inherit !important;
-        box-shadow: 0 4px 16px rgba(15,23,42,.04);
-        transition: .25s ease;
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
     }
 
-        .patient-card:hover {
+
+    /* =========================================================
+           DASHBOARD CARDS
+        ========================================================= */
+
+    .dashboard-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 130px;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #e6eaf0;
+        border-radius: 17px;
+        text-decoration: none !important;
+        color: inherit !important;
+        box-shadow: 0 4px 16px rgba(15,23,42,.035);
+        transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+
+
+        .dashboard-card:hover {
             transform: translateY(-4px);
-            border-color: #3157c7;
-            box-shadow: 0 10px 25px rgba(49,87,199,.10);
+            border-color: #cbd7f5;
+            box-shadow: 0 12px 30px rgba(49,87,199,.09);
         }
 
 
-    .patient-card-icon {
-        width: 50px;
-        height: 50px;
-        min-width: 50px;
+    .card-icon {
+        width: 53px;
+        height: 53px;
+        min-width: 53px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 13px;
+        margin-right: 15px;
+        border-radius: 14px;
         font-size: 21px;
     }
 
 
-    .patient-card-content {
+    .card-content {
         flex: 1;
+        min-width: 0;
     }
 
-        .patient-card-content h4 {
-            margin: 0 0 4px;
+
+        .card-content h3 {
+            margin: 0 0 5px;
             color: #172033;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 750;
         }
 
-        .patient-card-content p {
+
+        .card-content p {
             margin: 0;
             color: #718096;
             font-size: 12px;
@@ -541,160 +582,222 @@
         }
 
 
-    .patient-card-arrow {
-        color: #a5afbd;
+    .card-arrow {
+        margin-left: 10px;
+        color: #a7b0bf;
+        font-size: 12px;
         transition: .2s;
     }
 
-    .patient-card:hover .patient-card-arrow {
+
+    .dashboard-card:hover .card-arrow {
         color: #3157c7;
         transform: translateX(4px);
     }
 
 
     /* =========================================================
-               ACCOUNT BANNER
-            ========================================================= */
+           CARD COLORS
+        ========================================================= */
 
-    .account-banner {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        padding: 20px 23px;
-        margin-bottom: 20px;
-        background: white;
-        border: 1px solid #e7ebf1;
-        border-radius: 17px;
-        box-shadow: 0 4px 16px rgba(15,23,42,.04);
-    }
-
-
-    .account-icon {
-        width: 52px;
-        height: 52px;
-        min-width: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
+    .details-icon {
         background: #eef2ff;
         color: #4f46e5;
-        font-size: 22px;
     }
 
 
-    .account-content {
-        flex: 1;
-    }
-
-        .account-content span {
-            display: block;
-            color: #64748b;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-
-        .account-content strong {
-            display: block;
-            color: #172033;
-            font-size: 17px;
-            font-weight: 800;
-            margin-bottom: 2px;
-        }
-
-        .account-content small {
-            color: #94a3b8;
-            font-size: 12px;
-        }
-
-
-    .account-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        color: #3157c7 !important;
-        font-size: 13px;
-        font-weight: 700;
-        text-decoration: none !important;
-    }
-
-        .account-action:hover {
-            color: #2647a7 !important;
-        }
-
-
-    /* =========================================================
-               CARD COLORS
-            ========================================================= */
-
-    .profile-bg {
-        background: #eaf1ff;
-        color: #2563eb;
-    }
-
-    .details-bg {
-        background: #efedff;
-        color: #6366f1;
-    }
-
-    .edit-bg {
-        background: #e6f8f7;
+    .edit-icon {
+        background: #e7f8f5;
         color: #0f766e;
     }
 
-    .password-bg {
-        background: #fff8dc;
-        color: #ca8a04;
-    }
 
-    .tests-bg {
-        background: #e7f8ef;
-        color: #16a34a;
-    }
-
-    .results-bg {
+    .results-icon {
         background: #fff0e8;
         color: #ea580c;
     }
 
 
-    /* =========================================================
-               MOBILE
-            ========================================================= */
+    .health-icon {
+        background: #ffecee;
+        color: #dc2626;
+    }
 
-    @@media (max-width: 768px) {
+
+    .consent-icon {
+        background: #eaf4ff;
+        color: #2563eb;
+    }
+
+
+    .password-icon {
+        background: #fff8df;
+        color: #ca8a04;
+    }
+
+
+    /* =========================================================
+           ACCOUNT PANEL
+        ========================================================= */
+
+    .account-panel {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 22px 24px;
+        background: #fff;
+        border: 1px solid #e5e9f0;
+        border-radius: 18px;
+        box-shadow: 0 5px 18px rgba(15,23,42,.035);
+    }
+
+
+    .account-avatar {
+        width: 55px;
+        height: 55px;
+        min-width: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        color: #4f46e5;
+        border-radius: 15px;
+        font-size: 21px;
+    }
+
+
+    .account-info {
+        flex: 1;
+    }
+
+
+        .account-info span {
+            display: block;
+            margin-bottom: 2px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+
+        .account-info strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #172033;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+
+        .account-info small {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+
+    .account-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 15px;
+        background: #f3f6ff;
+        color: #3157c7 !important;
+        border-radius: 9px;
+        text-decoration: none !important;
+        font-size: 12px;
+        font-weight: 750;
+        transition: .2s;
+    }
+
+
+        .account-button:hover {
+            background: #e7edff;
+        }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @@media (max-width: 1000px) {
+
+        .dashboard-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+
+    @@media (max-width: 700px) {
 
         .patient-dashboard {
             padding: 20px 15px;
         }
 
-        .dashboard-header {
-            align-items: flex-start;
-            flex-direction: column;
-            gap: 15px;
+
+        .dashboard-hero {
+            min-height: auto;
+            padding: 26px 24px;
         }
 
-            .dashboard-header h1 {
+
+            .dashboard-hero h1 {
                 font-size: 25px;
             }
+
+
+        .hero-icon {
+            display: none;
+        }
+
 
         .profile-alert {
             align-items: flex-start;
             flex-wrap: wrap;
         }
 
+
         .profile-alert-action {
             width: 100%;
             justify-content: center;
         }
 
-        .account-banner {
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .account-panel {
             align-items: flex-start;
         }
 
-        .account-action {
+
+        .account-button {
             display: none;
         }
     }
 
+
+    @@media (max-width: 450px) {
+
+        .dashboard-card {
+            min-height: 110px;
+            padding: 16px;
+        }
+
+
+        .card-icon {
+            width: 47px;
+            height: 47px;
+            min-width: 47px;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+
+        .dashboard-hero p {
+            font-size: 13px;
+        }
+    }
+
 </style>
+

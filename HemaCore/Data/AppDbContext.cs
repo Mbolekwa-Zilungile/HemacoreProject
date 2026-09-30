@@ -16,41 +16,101 @@ namespace HemaCore.Data
         // ==========================================
 
         public DbSet<Alert> Alerts => Set<Alert>();
-        public DbSet<ConsentAllergy> ConsentAllergies { get; set; }
 
-        public DbSet<ConsentMedication> ConsentMedications { get; set; }
+        public DbSet<ConsentAllergy> ConsentAllergies
+        {
+            get; set;
+        }
 
-        public DbSet<Sample> Samples { get; set; }
+        public DbSet<PatientReport> PatientReports
+        {
+            get; set;
+        }
 
-        public DbSet<TestRequest> TestRequests { get; set; }
+        public DbSet<ConsentMedication> ConsentMedications
+        {
+            get; set;
+        }
 
-        public DbSet<LabTechnician> LabTechnicians { get; set; }
+        public DbSet<Sample> Samples
+        {
+            get; set;
+        }
 
-        public DbSet<TestRequestItem> TestRequestTestTypes { get; set; }
+        public DbSet<TestRequest> TestRequests
+        {
+            get; set;
+        }
 
-        public DbSet<TestResult> TestResults { get; set; }
+        public DbSet<LabTechnician> LabTechnicians
+        {
+            get; set;
+        }
 
-        public DbSet<TechnicianTestType> TechnicianTestTypes { get; set; }
+        public DbSet<TestRequestItem> TestRequestTestTypes
+        {
+            get; set;
+        }
 
-        public DbSet<TestResultVerification> TestResultVerifications { get; set; }
+        public DbSet<TestResult> TestResults
+        {
+            get; set;
+        }
 
-        public DbSet<TestCategory> TestCategories { get; set; }
+        public DbSet<TechnicianTestType> TechnicianTestTypes
+        {
+            get; set;
+        }
 
-        public DbSet<TestType> TestTypes { get; set; }
+        public DbSet<TestResultVerification> TestResultVerifications
+        {
+            get; set;
+        }
 
-        public DbSet<SampleType> SampleTypes { get; set; }
+        public DbSet<TestCategory> TestCategories
+        {
+            get; set;
+        }
 
-        public DbSet<TestTypeConsumable> TestTypeConsumables { get; set; }
+        public DbSet<TestType> TestTypes
+        {
+            get; set;
+        }
 
-        public DbSet<Consumable> Consumables { get; set; }
+        public DbSet<SampleType> SampleTypes
+        {
+            get; set;
+        }
 
-        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<TestTypeConsumable> TestTypeConsumables
+        {
+            get; set;
+        }
 
-        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Consumable> Consumables
+        {
+            get; set;
+        }
 
-        public DbSet<Order> Orders { get; set; }
+        public DbSet<Supplier> Suppliers
+        {
+            get; set;
+        }
 
-        public DbSet<Patient> Patients { get; set; }
+        public DbSet<OrderItem> OrderItems
+        {
+            get; set;
+        }
+
+        public DbSet<Order> Orders
+        {
+            get; set;
+        }
+
+        public DbSet<Patient> Patients
+        {
+            get; set;
+        }
 
         public DbSet<Doctor> Doctors => Set<Doctor>();
 
@@ -88,12 +148,26 @@ namespace HemaCore.Data
             => Set<ConsentTestRequest>();
 
         public DbSet<ConsentCondition> ConsentConditions
-        { get; set; }
+        {
+            get; set;
+        }
 
 
         protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
             base.OnModelCreating(modelbuilder);
+
+
+            // =====================================================
+            // PatientReport
+            // Patient 1 ---> Many PatientReports
+            // =====================================================
+
+            modelbuilder.Entity<PatientReport>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             // =====================================================
@@ -133,17 +207,6 @@ namespace HemaCore.Data
 
             // =====================================================
             // TestType - SampleType
-            //
-            // One SampleType
-            //     ↓
-            // Many TestTypes
-            //
-            // SampleType
-            //      1
-            //      |
-            //      |
-            //      *
-            //   TestType
             // =====================================================
 
             modelbuilder.Entity<TestType>()
@@ -155,10 +218,6 @@ namespace HemaCore.Data
 
             // =====================================================
             // TestType - TestCategory
-            //
-            // One TestCategory
-            //     ↓
-            // Many TestTypes
             // =====================================================
 
             modelbuilder.Entity<TestType>()
@@ -307,20 +366,17 @@ namespace HemaCore.Data
                 .HasForeignKey(pa => pa.PatientID)
                 .OnDelete(DeleteBehavior.NoAction);
 
-           
-// ==========================================
-// SampleType - TestType
-// One SampleType has many TestTypes
-// One TestType belongs to one SampleType
-// ==========================================
 
-modelbuilder.Entity<TestType>()
-    .HasOne(t => t.SampleType)
-    .WithMany(s => s.TestTypes)
-    .HasForeignKey(t => t.SampleTypeId)
-    .OnDelete(DeleteBehavior.NoAction);
+            // =====================================================
+            // SampleType - TestType
+            // One SampleType has many TestTypes
+            // =====================================================
 
+            modelbuilder.Entity<TestType>()
+                .HasOne(t => t.SampleType)
+                .WithMany(s => s.TestTypes)
+                .HasForeignKey(t => t.SampleTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
-
