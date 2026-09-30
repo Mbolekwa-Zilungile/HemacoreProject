@@ -82,6 +82,7 @@ namespace HemaCore.Services
                         logger.LogError("Failed to create manager user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
 
+
                 }
                 /////LABTECH
                 logger.LogInformation("Seeding lab technician user");
@@ -151,6 +152,8 @@ namespace HemaCore.Services
                         doctorUser = null;
                     }
                 }
+
+
 
                 // Ensure a matching Doctors table row exists, whether the user was just created or already existed
                 if (doctorUser != null)

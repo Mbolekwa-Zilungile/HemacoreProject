@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Select & Process Tests";
     Layout = "_LabTechnicianLayout";
+    var categories = ViewBag.Categories as List<HemaCore.Models.TestCategory>;
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
@@ -11,44 +12,76 @@
 
     <!-- HEADER -->
     <div class="section-title d-flex align-items-center justify-content-between">
-
         <div class="d-flex align-items-center">
-
             <i class="fas fa-microscope me-2"></i>
-
             <span>Select & Process Tests</span>
-
             <span class="badge blue-badge ms-2">
                 @(Model?.Count() ?? 0)
             </span>
-
         </div>
-
     </div>
 
-
-    <!-- DESCRIPTION -->
     <p class="text-muted mb-3">
-        Select a test to begin processing.
+        Select a test to begin processing. Only test types assigned to you are shown.
     </p>
 
+    <!-- FILTERS -->
+    @{
+        var urgencyList = new SelectList(new List<string> { "Routine", "Urgent", "STAT" });
+    }
 
+    <!-- FILTERS -->
+    <form method="get" asp-action="ProcessTests" class="row g-2 mb-3">
+
+        <div class="col-md-3">
+            <select name="urgency" class="form-select" asp-items="urgencyList">
+                <option value="">All Urgencies</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="categoryId" class="form-select">
+                <option value="">All Categories</option>
+                @if (categories != null)
+                {
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <input type="number" name="requestNumber" class="form-control" placeholder="Request #" />
+        </div>
+
+        <div class="col-md-2">
+            <input type="date" name="dueDate" class="form-control" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100">
+                <i class="fas fa-filter me-1"></i> Filter
+            </button>
+        </div>
+
+    </form>
     <!-- TABLE -->
     <div class="table-responsive">
 
         <table class="modern-table">
 
             <thead>
-
                 <tr>
                     <th>Request Number</th>
                     <th>Patient</th>
                     <th>Test Type</th>
+                    <th>Category</th>
                     <th>Urgency</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
-
             </thead>
 
             <tbody>
@@ -56,22 +89,15 @@
                 @if (!Model.Any())
                 {
                     <tr>
-
-                        <td colspan="6"
-                            class="text-center text-muted py-4">
-
+                        <td colspan="7" class="text-center text-muted py-4">
                             <i class="fas fa-microscope fa-2x mb-2"></i>
-
                             <div class="fw-semibold">
                                 There are currently no tests waiting to be processed.
                             </div>
-
                             <small>
-                                Tests will appear here when samples have been received.
+                                Tests will appear here when samples have been received and match your assigned test types.
                             </small>
-
                         </td>
-
                     </tr>
                 }
                 else
@@ -79,60 +105,42 @@
                     @foreach (var test in Model)
                     {
                         <tr>
-
-                            <!-- REQUEST NUMBER -->
                             <td class="fw-semibold blue-text">
                                 #@test.TestRequestId
                             </td>
 
-
-                            <!-- PATIENT -->
                             <td>
                                 @test.TestRequest?.Patient?.Name
                                 @test.TestRequest?.Patient?.Surname
                             </td>
 
-
-                            <!-- TEST TYPE -->
                             <td>
                                 @test.TestType?.TestTypeName
                             </td>
 
+                            <td>
+                                @test.TestType?.Category?.CategoryName
+                            </td>
 
-                            <!-- URGENCY -->
                             <td>
                                 @test.TestRequest?.Urgency
                             </td>
 
-
-                            <!-- STATUS -->
                             <td>
-
                                 <span class="badge bg-warning text-dark">
                                     @test.Status
                                 </span>
-
                             </td>
 
-
-                            <!-- ACTION -->
                             <td>
-
                                 <form asp-action="StartProcessing"
                                       asp-route-id="@test.TestRequestTestTypeId"
                                       method="post">
-
-                                    <button type="submit"
-                                            class="btn btn-sm btn-primary">
-
+                                    <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="fas fa-play me-1"></i>
-
                                         Start Processing
-
                                     </button>
-
                                 </form>
-
                             </td>
 
                         </tr>

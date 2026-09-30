@@ -105,9 +105,8 @@ namespace HemaCore.Controllers
             };
 
 
-            // ==========================================
             // TEST WORKLOAD
-            // ==========================================
+           
 
             dashboard.Workload = await myTests
                 .Select(t => new LabTechnicianWorkloadViewModel
@@ -133,9 +132,8 @@ namespace HemaCore.Controllers
                 .ToListAsync();
 
 
-            // ==========================================
             // OVERDUE TESTS
-            // ==========================================
+          
 
             dashboard.OverdueTests = dashboard.Workload
                 .Count(t =>
@@ -266,17 +264,73 @@ namespace HemaCore.Controllers
         // PROCESS TESTS
 
 
-        public async Task<IActionResult> ProcessTests()
+        public async Task<IActionResult> ProcessTests(
+    string urgency,
+    int? categoryId,
+    int? requestNumber,
+    DateTime? dueDate)
         {
-            var tests = await _context.TestRequestTestTypes
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+            {
+                return NotFound("Lab technician profile not found.");
+            }
+
+            // Test types this technician is qualified to perform
+            var qualifiedTestTypeIds = await _context.TechnicianTestTypes
+                .Where(tt => tt.LabTechnicianId == technician.LabTechnicianId)
+                .Select(tt => tt.TestTypeId)
+                .ToListAsync();
+
+            var query = _context.TestRequestTestTypes
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
                 .Include(t => t.TestType)
+                    .ThenInclude(tt => tt.Category)
                 .Where(t =>
                     t.Status == "Submitted" &&
-                    t.TestRequest.Status == "SamplesReceived")
-                .ToListAsync();
+                    t.TestRequest.Status == "SamplesReceived" &&
+                    qualifiedTestTypeIds.Contains(t.TestTypeId))
+                .AsQueryable();
 
+            // FILTERS
+            if (!string.IsNullOrEmpty(urgency))
+            {
+                query = query.Where(t => t.TestRequest.Urgency == urgency);
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(t => t.TestType.CategoryId == categoryId.Value);
+            }
+
+            if (requestNumber.HasValue)
+            {
+                query = query.Where(t => t.TestRequestId == requestNumber.Value);
+            }
+
+            if (dueDate.HasValue)
+            {
+                // "Due" here = request date + turnaround time, approximated at query time
+                query = query.Where(t =>
+                    t.TestRequest.RequestDate.AddMinutes(t.TestType.TurnAroundTime).Date == dueDate.Value.Date);
+            }
+
+            var tests = await query.ToListAsync();
+
+            // Pass category list for the filter dropdown
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .ToListAsync();
 
             return View(tests);
         }
@@ -287,55 +341,99 @@ namespace HemaCore.Controllers
         // START PROCESSING TEST
         // ==========================================
 
-        [HttpPost]
-        public async Task<IActionResult> StartProcessing(int id)
+        
+[HttpPost]
+public async Task<IActionResult> StartProcessing(int id)
         {
             var user = await _userManager.GetUserAsync(User);
-
 
             if (user == null)
             {
                 return RedirectToAction("Login", "Account");
             }
 
-
+            // Get the logged-in lab technician
             var technician = await _context.LabTechnicians
-                .FirstOrDefaultAsync(t =>
-                    t.UserId == user.Id);
-
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-
+            // Get the specific test request/test type
             var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                .Include(t => t.TestType)
                 .FirstOrDefaultAsync(t =>
                     t.TestRequestTestTypeId == id);
 
-
             if (test == null)
             {
-                return NotFound();
+                return NotFound("Test could not be found.");
             }
 
+            // The test must still be waiting to be selected
+            if (test.Status != "Submitted")
+            {
+                TempData["Error"] = "This test has already been selected or processed.";
+                return RedirectToAction(nameof(ProcessTests));
+            }
 
-            // Assign the test to the logged-in technician
-            test.LabTechnicianId =
-                technician.LabTechnicianId;
+            // The request must have received samples before processing can start
+            if (test.TestRequest.Status != "SamplesReceived")
+            {
+                TempData["Error"] =
+                    "This test cannot be started because the required sample has not been received.";
+
+                return RedirectToAction(nameof(ProcessTests));
+            }
+
+            // Check that the technician is allowed to perform this test type.
+            // This assignment is normally made by the Laboratory Manager.
+            var isAssignedTestType = await _context.TechnicianTestTypes
+                .AnyAsync(tt =>
+                    tt.LabTechnicianId == technician.LabTechnicianId &&
+                    tt.TestTypeId == test.TestTypeId);
+
+            if (!isAssignedTestType)
+            {
+                TempData["Error"] =
+                    "You are not assigned to perform this test type.";
+
+                return RedirectToAction(nameof(ProcessTests));
+            }
+
+            // Check whether this is the first test being selected
+            // for this test request.
+            bool firstTestForRequest = !await _context.TestRequestTestTypes
+                .AnyAsync(t =>
+                    t.TestRequestId == test.TestRequestId &&
+                    t.Status == "InProgress");
+
+            // Assign the specific test to the logged-in technician
+            test.LabTechnicianId = technician.LabTechnicianId;
+
+            // Change the test status to In Progress
+            test.Status = "InProgress";
+
+            // Record when the technician started the test
+            test.StartDateTime = DateTime.Now;
+
+            // If this is the first test selected from the request,
+            // the overall request becomes In Progress.
+            if (firstTestForRequest)
+            {
+                test.TestRequest.Status = "InProgress";
+            }
 
             await _context.SaveChangesAsync();
 
+            // Take the technician to the result capture screen
             return RedirectToAction(
                 nameof(CaptureTestResult),
-                new
-                {
-                    id = test.TestRequestTestTypeId
-                });
+                new { id = test.TestRequestTestTypeId });
         }
-
 
 
         // ==========================================
@@ -416,24 +514,62 @@ namespace HemaCore.Controllers
         // SAVE TEST RESULT
         // ==========================================
 
-        [HttpPost]
-        public async Task<IActionResult> SaveTestResult(
-            int testRequestTestTypeId,
-            string resultValue,
-            string notes,
-            bool isAbnormal)
-        {
-            var test = await _context.TestRequestTestTypes
-                .FirstOrDefaultAsync(t =>
-                    t.TestRequestTestTypeId ==
-                    testRequestTestTypeId);
+      
+// ==========================================
+// SAVE TEST RESULT
+// ==========================================
 
+[HttpPost]
+public async Task<IActionResult> SaveTestResult(
+    int testRequestTestTypeId,
+    string resultValue,
+    string notes)
+        {
+            // Get the test, including its Test Type
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestType)
+                .Include(t => t.TestRequest)
+                .FirstOrDefaultAsync(t =>
+                    t.TestRequestTestTypeId == testRequestTestTypeId);
 
             if (test == null)
             {
                 return NotFound();
             }
 
+            // Make sure the result is not empty
+            if (string.IsNullOrWhiteSpace(resultValue))
+            {
+                TempData["Error"] = "Please enter a result value.";
+
+                return RedirectToAction(
+                    nameof(CaptureTestResult),
+                    new { id = testRequestTestTypeId });
+            }
+
+            // Try to convert the result into a number
+            if (!double.TryParse(
+                resultValue,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out double numericResult))
+            {
+                TempData["Error"] =
+                    "Please enter a valid numeric result.";
+
+                return RedirectToAction(
+                    nameof(CaptureTestResult),
+                    new { id = testRequestTestTypeId });
+            }
+
+            // Get the normal range configured for this test type
+            double normalMin = test.TestType.NormalRangeMin;
+            double normalMax = test.TestType.NormalRangeMax;
+
+            // Automatically determine whether the result is abnormal
+            bool isAbnormal =
+                numericResult < normalMin ||
+                numericResult > normalMax;
 
             // Create the test result
             var testResult = new TestResult
@@ -444,32 +580,35 @@ namespace HemaCore.Controllers
                 DateCaptured = DateTime.Now
             };
 
-
             _context.TestResults.Add(testResult);
-
 
             await _context.SaveChangesAsync();
 
-
             // Link the result to the test
-            test.TestResultId =
-                testResult.TestResultId;
-
+            test.TestResultId = testResult.TestResultId;
 
             // Mark the test as completed
             test.Status = "Completed";
 
-
             // Record completion time
-            test.CompletionDateTime =
-                DateTime.Now;
+            test.CompletionDateTime = DateTime.Now;
 
+            // Check whether this was the last outstanding test
+            bool allTestsCompleted = !await _context.TestRequestTestTypes
+                .AnyAsync(t =>
+                    t.TestRequestId == test.TestRequestId &&
+                    t.TestRequestTestTypeId != test.TestRequestTestTypeId &&
+                    t.Status != "Completed");
+
+            // If all tests are completed, update the request status
+            if (allTestsCompleted)
+            {
+                test.TestRequest.Status = "Completed";
+            }
 
             await _context.SaveChangesAsync();
 
-
-            return RedirectToAction(
-                nameof(ProcessTests));
+            return RedirectToAction(nameof(ProcessTests));
         }
 
 

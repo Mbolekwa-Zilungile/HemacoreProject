@@ -22,25 +22,20 @@
 
 <div class="content-card">
 
-    <!-- ========================================== -->
     <!-- HEADER -->
-    <!-- ========================================== -->
 
     <div class="section-title d-flex align-items-center">
-
         <i class="fas fa-microscope me-2"></i>
-
         <span>Capture Test Result</span>
-
     </div>
 
     <p class="text-muted mb-4">
-        Review the patient and test information before entering the laboratory result.
+        Review the patient, sample and test information before entering the laboratory result.
     </p>
 
 
     <!-- ========================================== -->
-    <!-- REQUEST / TEST INFORMATION -->
+    <!-- TEST INFORMATION -->
     <!-- ========================================== -->
 
     <div class="info-section">
@@ -96,7 +91,9 @@
                 <div class="info-box">
                     <small>Unit of Measurement</small>
                     <strong>
-                        @Model.TestType?.UnitOfMeasurement
+                        @(string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement)
+                            ? "Not specified"
+                            : Model.TestType.UnitOfMeasurement)
                     </strong>
                 </div>
             </div>
@@ -108,6 +105,10 @@
                         @Model.TestType?.NormalRangeMin
                         -
                         @Model.TestType?.NormalRangeMax
+                        @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
+                        {
+                            <span>@Model.TestType.UnitOfMeasurement</span>
+                        }
                     </strong>
                 </div>
             </div>
@@ -116,11 +117,17 @@
                 <div class="info-box">
                     <small>Turnaround Time</small>
                     <strong>
-                        @Model.TestType?.TurnAroundTime hours
+                        @Model.TestType?.TurnAroundTime minutes
                     </strong>
                 </div>
             </div>
 
+        </div>
+
+        <div class="range-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            The system will automatically determine whether the captured result
+            falls within the configured normal range.
         </div>
 
     </div>
@@ -446,6 +453,7 @@
                                         ? sample.DateTimeReceived.Value.ToString("dd/MM/yyyy HH:mm")
                                         : "Not yet received")
                                 </td>
+
                             </tr>
                         }
 
@@ -491,6 +499,7 @@
                 <div class="info-box">
                     <small>Start Date & Time</small>
                     <strong>
+
                         @if (Model.StartDateTime.HasValue)
                         {
                             @Model.StartDateTime.Value.ToString("dd/MM/yyyy HH:mm")
@@ -501,6 +510,7 @@
                                 Not recorded
                             </span>
                         }
+
                     </strong>
                 </div>
             </div>
@@ -509,6 +519,7 @@
                 <div class="info-box">
                     <small>Technician</small>
                     <strong>
+
                         @if (Model.LabTechnician != null)
                         {
                             @Model.LabTechnician.Name
@@ -520,6 +531,7 @@
                                 Not assigned
                             </span>
                         }
+
                     </strong>
                 </div>
             </div>
@@ -542,7 +554,8 @@
 
         <p class="text-muted">
             Enter the result obtained from the laboratory test.
-            Check the normal range above before marking the result as abnormal.
+            The system will automatically determine whether the result is within
+            the configured normal range.
         </p>
 
 
@@ -581,12 +594,47 @@
 
                 </div>
 
+                <small class="text-muted">
+                    Enter the value obtained from the laboratory test.
+                </small>
+
+            </div>
+
+
+            <!-- NORMAL RANGE REFERENCE -->
+
+            <div class="range-reference mb-3">
+
+                <div class="range-reference-title">
+                    <i class="fas fa-ruler-horizontal me-2"></i>
+                    Normal Range
+                </div>
+
+                <div class="range-reference-value">
+
+                    @Model.TestType?.NormalRangeMin
+                    -
+                    @Model.TestType?.NormalRangeMax
+
+                    @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
+                    {
+                        <span>
+                            @Model.TestType.UnitOfMeasurement
+                        </span>
+                    }
+
+                </div>
+
+                <small class="text-muted">
+                    Results outside this range will automatically be marked as abnormal.
+                </small>
+
             </div>
 
 
             <!-- NOTES -->
 
-            <div class="mb-3">
+            <div class="mb-4">
 
                 <label class="form-label">
                     Notes
@@ -600,30 +648,27 @@
             </div>
 
 
-            <!-- ABNORMAL -->
+            <!-- AUTOMATIC ABNORMAL INFORMATION -->
 
-            <div class="abnormal-box mb-4">
+            <div class="automatic-result-box mb-4">
 
-                <div class="form-check">
+                <div class="d-flex align-items-start">
 
-                    <input type="checkbox"
-                           name="isAbnormal"
-                           value="true"
-                           class="form-check-input"
-                           id="isAbnormal" />
+                    <i class="fas fa-robot me-3 mt-1"></i>
 
-                    <label class="form-check-label"
-                           for="isAbnormal">
+                    <div>
 
                         <strong>
-                            Mark result as abnormal
+                            Automatic Result Classification
                         </strong>
 
-                        <small class="d-block text-muted">
-                            Select this if the result falls outside the normal range.
-                        </small>
+                        <p class="mb-0 text-muted">
+                            The system will automatically compare the captured result
+                            against the normal range. The technician does not need to
+                            manually mark the result as abnormal.
+                        </p>
 
-                    </label>
+                    </div>
 
                 </div>
 
@@ -752,12 +797,52 @@
         margin-bottom: 8px;
     }
 
-    .abnormal-box {
+    .range-info {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px 15px;
+        color: #475467;
+        font-size: 13px;
+    }
+
+    .range-reference {
         background: #f8f9fa;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 15px;
     }
+
+    .range-reference-title {
+        font-weight: 600;
+        color: #344054;
+        margin-bottom: 5px;
+    }
+
+    .range-reference-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #344054;
+        margin-bottom: 3px;
+    }
+
+    .automatic-result-box {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+        .automatic-result-box i {
+            color: #75AABA;
+            font-size: 18px;
+        }
+
+        .automatic-result-box strong {
+            display: block;
+            color: #344054;
+            margin-bottom: 3px;
+        }
 
     .form-label {
         font-weight: 600;
@@ -770,21 +855,3 @@
     }
 
 </style>
-```
-
-This version uses your actual properties:
-
-* `PatientID`
-* `IDNumber`
-* `DateOfBirth`
-* `HPCSANumber`
-* `ClinicalNotes`
-* `TestType.Category`
-* `SampleType.SampleName`
-* `TestType.NormalRangeMin/Max`
-* `TestType.TurnAroundTime`
-* `PatientConditions`
-* `PatientAllergies`
-* `PatientMedications`
-
-And importantly, it does **not** try to use properties that don't exist in your models.

@@ -9,18 +9,13 @@
 <style>
 
     /* ==============================
-           PROFESSIONAL LAB THEME
-           ============================== */
+       PROFESSIONAL LAB THEME
+       ============================== */
 
     body {
         background-color: #f5f6f8;
         color: #212529;
     }
-
-
-    /* ==============================
-           PAGE HEADER
-           ============================== */
 
     .page-title {
         color: #1d2939;
@@ -30,10 +25,9 @@
         color: #667085;
     }
 
-
     /* ==============================
-           TOP KPI CARDS
-           ============================== */
+       TOP KPI CARDS
+       ============================== */
 
     .kpi-card {
         border: 1px solid #eaecf0 !important;
@@ -42,18 +36,15 @@
         transition: all 0.2s ease;
     }
 
-        .kpi-card:hover {
-            transform: translateY(-1px);
-            border-color: #d0d5dd !important;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
-        }
+    .kpi-card:hover {
+        transform: translateY(-1px);
+        border-color: #d0d5dd !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+    }
 
-        .kpi-card .card-body {
-            padding: 16px 18px;
-        }
-
-
-    /* TOP KPI ICON */
+    .kpi-card .card-body {
+        padding: 16px 18px;
+    }
 
     .kpi-icon {
         width: 36px;
@@ -68,17 +59,11 @@
         flex-shrink: 0;
     }
 
-
-    /* TOP KPI LABEL */
-
     .kpi-label {
         color: #667085;
         font-size: 12px;
         font-weight: 500;
     }
-
-
-    /* TOP KPI NUMBER */
 
     .kpi-number {
         color: #1d2939;
@@ -87,10 +72,9 @@
         line-height: 1;
     }
 
-
     /* ==============================
-           ALERT KPI CARDS
-           ============================== */
+       ALERT KPI CARDS
+       ============================== */
 
     .alert-kpi-card {
         border-radius: 8px;
@@ -99,18 +83,15 @@
         transition: all 0.2s ease;
     }
 
-        .alert-kpi-card:hover {
-            transform: translateY(-1px);
-            border-color: #d0d5dd !important;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
-        }
+    .alert-kpi-card:hover {
+        transform: translateY(-1px);
+        border-color: #d0d5dd !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+    }
 
-        .alert-kpi-card .card-body {
-            padding: 15px 18px;
-        }
-
-
-    /* ALERT ICON */
+    .alert-kpi-card .card-body {
+        padding: 15px 18px;
+    }
 
     .alert-kpi-icon {
         width: 36px;
@@ -123,9 +104,6 @@
         flex-shrink: 0;
     }
 
-
-    /* URGENT / STAT */
-
     .urgent-card {
         border-left: 4px solid #b42318 !important;
     }
@@ -134,9 +112,6 @@
         background: #fef3f2;
         color: #b42318;
     }
-
-
-    /* OVERDUE */
 
     .overdue-card {
         border-left: 4px solid #b42318 !important;
@@ -147,9 +122,6 @@
         color: #b42318;
     }
 
-
-    /* NEARING TURNAROUND */
-
     .nearing-card {
         border-left: 4px solid #667085 !important;
     }
@@ -159,17 +131,11 @@
         color: #667085;
     }
 
-
-    /* ALERT LABEL */
-
     .alert-kpi-label {
         color: #475467;
         font-size: 12px;
         font-weight: 600;
     }
-
-
-    /* ALERT NUMBER */
 
     .alert-kpi-number {
         color: #1d2939;
@@ -178,37 +144,27 @@
         line-height: 1;
     }
 
-
-    /* ALERT DESCRIPTION */
-
     .alert-kpi-text {
         color: #98a2b3;
         font-size: 11px;
     }
 
-
     /* ==============================
-           GENERAL CARDS
-           ============================== */
+       GENERAL CARDS
+       ============================== */
 
     .card.border-0.shadow-sm {
         border-radius: 9px;
         background: #ffffff;
     }
 
-
-    /* ==============================
-           SECTION TITLES
-           ============================== */
-
     .section-title {
         color: #1d2939;
     }
 
-
     /* ==============================
-           FILTER SECTION
-           ============================== */
+       FILTERS
+       ============================== */
 
     .form-label {
         font-size: 13px;
@@ -222,16 +178,15 @@
         border-radius: 7px;
     }
 
-        .form-select:focus,
-        .form-control:focus {
-            border-color: #344054;
-            box-shadow: 0 0 0 2px rgba(52, 64, 84, 0.10);
-        }
-
+    .form-select:focus,
+    .form-control:focus {
+        border-color: #344054;
+        box-shadow: 0 0 0 2px rgba(52, 64, 84, 0.10);
+    }
 
     /* ==============================
-           TABLE
-           ============================== */
+       TABLE
+       ============================== */
 
     #workloadTable thead th {
         background-color: #f2f4f7;
@@ -250,10 +205,9 @@
         border-bottom: 1px solid #eaecf0;
     }
 
-
     /* ==============================
-           BADGES
-           ============================== */
+       BADGES
+       ============================== */
 
     .badge {
         padding: 6px 10px;
@@ -261,20 +215,22 @@
         font-weight: 600;
     }
 
-
-    /* ==============================
-           TEST COUNT
-           ============================== */
-
     #testCount {
         background-color: #344054 !important;
+    }
+
+    /* ==============================
+       EMPTY STATE
+       ============================== */
+
+    .empty-state {
+        color: #667085;
     }
 
 </style>
 
 
 <div class="container-fluid px-4 py-4">
-
 
     <!-- ==============================
          PAGE HEADER
@@ -294,7 +250,6 @@
 
         </div>
 
-
         <div class="text-end">
 
             <div class="fw-semibold">
@@ -304,7 +259,6 @@
                 @DateTime.Now.ToString("dd MMMM yyyy")
 
             </div>
-
 
             <div class="text-muted mt-1">
 
@@ -321,13 +275,11 @@
     </div>
 
 
-
     <!-- ==============================
          TOP KPI CARDS
          ============================== -->
 
     <div class="row g-3 mb-3">
-
 
         <!-- MY SELECTED TESTS -->
 
@@ -342,11 +294,8 @@
                     <div class="d-flex align-items-center">
 
                         <div class="kpi-icon">
-
                             <i class="fas fa-microscope"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
@@ -369,7 +318,6 @@
         </div>
 
 
-
         <!-- WAITING TO BE SELECTED -->
 
         <div class="col-xl-3 col-md-6">
@@ -383,11 +331,8 @@
                     <div class="d-flex align-items-center">
 
                         <div class="kpi-icon">
-
                             <i class="fas fa-hourglass-half"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
@@ -410,7 +355,6 @@
         </div>
 
 
-
         <!-- WAITING VERIFICATION -->
 
         <div class="col-xl-3 col-md-6">
@@ -424,11 +368,8 @@
                     <div class="d-flex align-items-center">
 
                         <div class="kpi-icon">
-
                             <i class="fas fa-check-double"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
@@ -451,7 +392,6 @@
         </div>
 
 
-
         <!-- WAITING REVIEW -->
 
         <div class="col-xl-3 col-md-6">
@@ -465,11 +405,8 @@
                     <div class="d-flex align-items-center">
 
                         <div class="kpi-icon">
-
                             <i class="fas fa-clipboard-list"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
@@ -494,13 +431,11 @@
     </div>
 
 
-
     <!-- ==============================
          ALERT KPI CARDS
          ============================== -->
 
     <div class="row g-3 mb-4">
-
 
         <!-- URGENT / STAT -->
 
@@ -515,18 +450,14 @@
                     <div class="d-flex align-items-center">
 
                         <div class="alert-kpi-icon urgent-icon">
-
                             <i class="fas fa-bolt"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
                             <p class="alert-kpi-label mb-1">
                                 Urgent / STAT Tests
                             </p>
-
 
                             <div class="d-flex align-items-baseline">
 
@@ -551,7 +482,6 @@
         </div>
 
 
-
         <!-- OVERDUE -->
 
         <div class="col-lg-4">
@@ -565,18 +495,14 @@
                     <div class="d-flex align-items-center">
 
                         <div class="alert-kpi-icon overdue-icon">
-
                             <i class="fas fa-clock"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
                             <p class="alert-kpi-label mb-1">
                                 Overdue Tests
                             </p>
-
 
                             <div class="d-flex align-items-baseline">
 
@@ -601,7 +527,6 @@
         </div>
 
 
-
         <!-- NEARING TURNAROUND -->
 
         <div class="col-lg-4">
@@ -615,18 +540,14 @@
                     <div class="d-flex align-items-center">
 
                         <div class="alert-kpi-icon nearing-icon">
-
                             <i class="fas fa-stopwatch"></i>
-
                         </div>
-
 
                         <div class="ms-3">
 
                             <p class="alert-kpi-label mb-1">
                                 Nearing Turnaround Limit
                             </p>
-
 
                             <div class="d-flex align-items-baseline">
 
@@ -653,7 +574,6 @@
     </div>
 
 
-
     <!-- ==============================
          FILTERS
          ============================== -->
@@ -672,9 +592,7 @@
 
             </div>
 
-
             <div class="row g-3">
-
 
                 <!-- URGENCY -->
 
@@ -708,7 +626,6 @@
                 </div>
 
 
-
                 <!-- TEST TYPE -->
 
                 <div class="col-md-3">
@@ -739,7 +656,6 @@
                 </div>
 
 
-
                 <!-- STATUS -->
 
                 <div class="col-md-3">
@@ -759,7 +675,7 @@
                             Submitted
                         </option>
 
-                        <option value="In Progress">
+                        <option value="InProgress">
                             In Progress
                         </option>
 
@@ -767,10 +683,17 @@
                             Completed
                         </option>
 
+                        <option value="To Be Reviewed">
+                            To Be Reviewed
+                        </option>
+
+                        <option value="Verified">
+                            Verified
+                        </option>
+
                     </select>
 
                 </div>
-
 
 
                 <!-- REQUEST NUMBER -->
@@ -795,7 +718,6 @@
     </div>
 
 
-
     <!-- ==============================
          TEST WORKLOAD
          ============================== -->
@@ -816,13 +738,11 @@
 
                     </h5>
 
-
                     <p class="card-description mb-0">
                         Tests requiring your attention.
                     </p>
 
                 </div>
-
 
                 <span id="testCount"
                       class="badge">
@@ -832,7 +752,6 @@
                 </span>
 
             </div>
-
 
 
             <div class="table-responsive">
@@ -873,7 +792,6 @@
                     </thead>
 
 
-
                     <tbody>
 
                         @if (Model.Workload == null || !Model.Workload.Any())
@@ -881,7 +799,7 @@
                             <tr>
 
                                 <td colspan="6"
-                                    class="text-center text-muted py-5">
+                                    class="text-center empty-state py-5">
 
                                     <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
 
@@ -900,22 +818,19 @@
                                     data-testtype="@test.TestTypeName"
                                     data-status="@test.Status"
                                     data-request="@test.TestRequestId"
-                                    data-due="@test.DueTime">
+                                    data-due="@(test.DueTime?.ToString("yyyy-MM-ddTHH:mm:ss"))">
 
                                     <td>
                                         #@test.TestRequestId
                                     </td>
 
-
                                     <td>
                                         @test.PatientName
                                     </td>
 
-
                                     <td>
                                         @test.TestTypeName
                                     </td>
-
 
                                     <td>
 
@@ -940,7 +855,6 @@
 
                                     </td>
 
-
                                     <td>
 
                                         @if (test.Status == "Completed")
@@ -949,21 +863,32 @@
                                                 Completed
                                             </span>
                                         }
-                                        else if (test.Status == "In Progress")
+                                        else if (test.Status == "InProgress")
                                         {
                                             <span class="badge bg-primary">
                                                 In Progress
                                             </span>
                                         }
-                                        else
+                                        else if (test.Status == "To Be Reviewed")
                                         {
                                             <span class="badge bg-warning text-dark">
+                                                To Be Reviewed
+                                            </span>
+                                        }
+                                        else if (test.Status == "Verified")
+                                        {
+                                            <span class="badge bg-success">
+                                                Verified
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
                                                 @test.Status
                                             </span>
                                         }
 
                                     </td>
-
 
                                     <td>
                                         @(test.DueTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")
@@ -1001,11 +926,9 @@
 </div>
 
 
-
 <script>
 
-    document.addEventListener("DOMContentLoaded", function() {
-
+    document.addEventListener("DOMContentLoaded", function () {
 
         /* ==============================
            LIVE CLOCK
@@ -1025,9 +948,7 @@
                 document.getElementById("currentTime");
 
             if (timeElement) {
-
                 timeElement.textContent = time;
-
             }
 
         }
@@ -1035,7 +956,6 @@
         updateTime();
 
         setInterval(updateTime, 1000);
-
 
 
         /* ==============================
@@ -1064,7 +984,6 @@
             document.getElementById("noFilterResults");
 
 
-
         /* ==============================
            FILTER TESTS
            ============================== */
@@ -1073,11 +992,9 @@
 
             let visibleCount = 0;
 
-
-            rows.forEach(function(row) {
+            rows.forEach(function (row) {
 
                 let show = true;
-
 
                 const urgency =
                     row.dataset.urgency || "";
@@ -1095,7 +1012,6 @@
                     row.dataset.due || "";
 
 
-
                 /* ==============================
                    NORMAL FILTERS
                    ============================== */
@@ -1105,9 +1021,7 @@
                     urgency.toLowerCase() !==
                     urgencyFilter.value.toLowerCase()
                 ) {
-
                     show = false;
-
                 }
 
 
@@ -1116,9 +1030,7 @@
                     testType.toLowerCase() !==
                     testTypeFilter.value.toLowerCase()
                 ) {
-
                     show = false;
-
                 }
 
 
@@ -1127,9 +1039,7 @@
                     status.toLowerCase() !==
                     statusFilter.value.toLowerCase()
                 ) {
-
                     show = false;
-
                 }
 
 
@@ -1139,11 +1049,8 @@
                         requestFilter.value.toLowerCase()
                     )
                 ) {
-
                     show = false;
-
                 }
-
 
 
                 /* ==============================
@@ -1152,13 +1059,8 @@
 
                 if (cardFilter === "selected") {
 
-                    if (
-                        status === "Completed" ||
-                        status === "Submitted"
-                    ) {
-
+                    if (status !== "InProgress") {
                         show = false;
-
                     }
 
                 }
@@ -1167,9 +1069,7 @@
                 if (cardFilter === "waiting") {
 
                     if (status !== "Submitted") {
-
                         show = false;
-
                     }
 
                 }
@@ -1178,9 +1078,7 @@
                 if (cardFilter === "verification") {
 
                     if (status !== "Completed") {
-
                         show = false;
-
                     }
 
                 }
@@ -1188,17 +1086,20 @@
 
                 if (cardFilter === "review") {
 
-                    show = false;
+                    if (status !== "To Be Reviewed") {
+                        show = false;
+                    }
 
                 }
 
 
                 if (cardFilter === "urgent") {
 
-                    if (urgency !== "STAT") {
-
+                    if (
+                        urgency !== "STAT" &&
+                        urgency !== "Urgent"
+                    ) {
                         show = false;
-
                     }
 
                 }
@@ -1218,11 +1119,10 @@
 
                         if (
                             dueDate >= new Date() ||
-                            status === "Completed"
+                            status === "Completed" ||
+                            status === "Verified"
                         ) {
-
                             show = false;
-
                         }
 
                     }
@@ -1251,21 +1151,18 @@
                                 (2 * 60 * 60 * 1000)
                             );
 
-
                         if (
                             dueDate <= now ||
                             dueDate > twoHours ||
-                            status === "Completed"
+                            status === "Completed" ||
+                            status === "Verified"
                         ) {
-
                             show = false;
-
                         }
 
                     }
 
                 }
-
 
 
                 /* ==============================
@@ -1288,14 +1185,12 @@
             });
 
 
-
             /* ==============================
                UPDATE COUNT
                ============================== */
 
             testCount.textContent =
                 visibleCount + " Tests";
-
 
 
             /* ==============================
@@ -1314,50 +1209,40 @@
         }
 
 
-
         /* ==============================
            NORMAL FILTER EVENTS
            ============================== */
 
         urgencyFilter.addEventListener(
             "change",
-            function() {
-
+            function () {
                 filterTests();
-
             }
         );
 
 
         testTypeFilter.addEventListener(
             "change",
-            function() {
-
+            function () {
                 filterTests();
-
             }
         );
 
 
         statusFilter.addEventListener(
             "change",
-            function() {
-
+            function () {
                 filterTests();
-
             }
         );
 
 
         requestFilter.addEventListener(
             "keyup",
-            function() {
-
+            function () {
                 filterTests();
-
             }
         );
-
 
 
         /* ==============================
@@ -1366,18 +1251,27 @@
 
         document
             .querySelectorAll(".clickable-card")
-            .forEach(function(card) {
+            .forEach(function (card) {
 
                 card.addEventListener(
                     "click",
-                    function() {
+                    function () {
 
                         const filter =
                             card.dataset.filter;
 
+                        /*
+                         * Clear normal filters first.
+                         * This prevents an old filter from
+                         * interfering with the KPI card.
+                         */
+
+                        urgencyFilter.value = "";
+                        testTypeFilter.value = "";
+                        statusFilter.value = "";
+                        requestFilter.value = "";
 
                         filterTests(filter);
-
 
                         document
                             .getElementById("workloadTable")
@@ -1394,3 +1288,4 @@
     });
 
 </script>
+
