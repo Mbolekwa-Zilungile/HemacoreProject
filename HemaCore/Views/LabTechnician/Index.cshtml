@@ -8,223 +8,242 @@
 
 <style>
 
-    /* ==============================
-       PROFESSIONAL LAB THEME
-       ============================== */
-
     body {
         background-color: #f5f6f8;
         color: #212529;
     }
 
+    /* ==============================
+           HEADER
+           ============================== */
+
+    .dashboard-header {
+        margin-bottom: 28px;
+    }
+
     .page-title {
         color: #1d2939;
+        font-size: 25px;
+        font-weight: 700;
+        margin-bottom: 5px;
     }
 
     .page-subtitle {
         color: #667085;
+        font-size: 14px;
+        margin: 0;
     }
+
+    .date-display {
+        color: #667085;
+        font-size: 13px;
+        text-align: right;
+    }
+
 
     /* ==============================
-       TOP KPI CARDS
-       ============================== */
+           KPI CARDS
+           ============================== */
 
     .kpi-card {
-        border: 1px solid #eaecf0 !important;
-        border-radius: 8px;
         background: #ffffff;
-        transition: all 0.2s ease;
+        border: 1px solid #eaecf0;
+        border-radius: 8px;
+        transition: 0.2s ease;
+        cursor: pointer;
+        height: 100%;
     }
 
-    .kpi-card:hover {
-        transform: translateY(-1px);
-        border-color: #d0d5dd !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
-    }
+        .kpi-card:hover {
+            border-color: #75AABA;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+        }
 
-    .kpi-card .card-body {
-        padding: 16px 18px;
-    }
+        .kpi-card .card-body {
+            padding: 18px;
+        }
 
     .kpi-icon {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 38px;
+        height: 38px;
         border-radius: 7px;
         background: #f2f4f7;
         color: #475467;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 14px;
-        flex-shrink: 0;
     }
 
     .kpi-label {
         color: #667085;
         font-size: 12px;
         font-weight: 500;
+        margin-bottom: 4px;
     }
 
     .kpi-number {
         color: #1d2939;
-        font-size: 22px;
+        font-size: 23px;
         font-weight: 700;
         line-height: 1;
+        margin: 0;
     }
 
-    /* ==============================
-       ALERT KPI CARDS
-       ============================== */
 
-    .alert-kpi-card {
-        border-radius: 8px;
+    /* ==============================
+           MAIN DASHBOARD CARDS
+           ============================== */
+
+    .dashboard-card {
         background: #ffffff;
-        border: 1px solid #eaecf0 !important;
-        transition: all 0.2s ease;
-    }
-
-    .alert-kpi-card:hover {
-        transform: translateY(-1px);
-        border-color: #d0d5dd !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
-    }
-
-    .alert-kpi-card .card-body {
-        padding: 15px 18px;
-    }
-
-    .alert-kpi-icon {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 7px;
-        font-size: 14px;
-        flex-shrink: 0;
-    }
-
-    .urgent-card {
-        border-left: 4px solid #b42318 !important;
-    }
-
-    .urgent-icon {
-        background: #fef3f2;
-        color: #b42318;
-    }
-
-    .overdue-card {
-        border-left: 4px solid #b42318 !important;
-    }
-
-    .overdue-icon {
-        background: #fef3f2;
-        color: #b42318;
-    }
-
-    .nearing-card {
-        border-left: 4px solid #667085 !important;
-    }
-
-    .nearing-icon {
-        background: #f2f4f7;
-        color: #667085;
-    }
-
-    .alert-kpi-label {
-        color: #475467;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .alert-kpi-number {
-        color: #1d2939;
-        font-size: 21px;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .alert-kpi-text {
-        color: #98a2b3;
-        font-size: 11px;
-    }
-
-    /* ==============================
-       GENERAL CARDS
-       ============================== */
-
-    .card.border-0.shadow-sm {
+        border: 1px solid #eaecf0;
         border-radius: 9px;
-        background: #ffffff;
+    }
+
+    .section-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid #eaecf0;
     }
 
     .section-title {
         color: #1d2939;
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
     }
+
+    .section-description {
+        color: #667085;
+        font-size: 12px;
+        margin: 4px 0 0;
+    }
+
 
     /* ==============================
-       FILTERS
-       ============================== */
+           QUICK ACTIONS
+           ============================== */
 
-    .form-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #344054;
+    .quick-actions {
+        padding: 18px;
     }
 
-    .form-select,
-    .form-control {
-        border-color: #d0d5dd;
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 13px 14px;
+        background: #ffffff;
+        border: 1px solid #d0d5dd;
         border-radius: 7px;
-    }
-
-    .form-select:focus,
-    .form-control:focus {
-        border-color: #344054;
-        box-shadow: 0 0 0 2px rgba(52, 64, 84, 0.10);
-    }
-
-    /* ==============================
-       TABLE
-       ============================== */
-
-    #workloadTable thead th {
-        background-color: #f2f4f7;
         color: #344054;
+        text-decoration: none;
         font-size: 13px;
         font-weight: 600;
-        border-bottom: 1px solid #d0d5dd;
+        transition: 0.2s ease;
     }
 
-    #workloadTable tbody td {
-        font-size: 14px;
-        color: #344054;
+        .quick-action:hover {
+            border-color: #75AABA;
+            background-color: #f8fbfc;
+            color: #344054;
+        }
+
+        .quick-action i {
+            width: 24px;
+            text-align: center;
+            color: #75AABA;
+        }
+
+
+    /* ==============================
+           ATTENTION SECTION
+           ============================== */
+
+    .attention-list {
+        padding: 6px 18px 10px;
     }
 
-    #workloadTable tbody tr {
+    .attention-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
         border-bottom: 1px solid #eaecf0;
     }
 
-    /* ==============================
-       BADGES
-       ============================== */
+        .attention-item:last-child {
+            border-bottom: none;
+        }
 
-    .badge {
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-weight: 600;
+    .attention-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-    #testCount {
-        background-color: #344054 !important;
+    .attention-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f2f4f7;
+        color: #475467;
+        font-size: 13px;
     }
 
-    /* ==============================
-       EMPTY STATE
-       ============================== */
+    .attention-label {
+        color: #344054;
+        font-size: 13px;
+        font-weight: 500;
+    }
 
-    .empty-state {
+    .attention-description {
+        color: #98a2b3;
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .attention-number {
+        color: #1d2939;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+
+    /* ==============================
+           OVERVIEW
+           ============================== */
+
+    .overview-content {
+        padding: 18px;
+    }
+
+    .overview-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid #eaecf0;
+    }
+
+        .overview-item:last-child {
+            border-bottom: none;
+        }
+
+    .overview-label {
         color: #667085;
+        font-size: 13px;
+    }
+
+    .overview-value {
+        color: #1d2939;
+        font-size: 15px;
+        font-weight: 700;
     }
 
 </style>
@@ -232,194 +251,37 @@
 
 <div class="container-fluid px-4 py-4">
 
-    <!-- ==============================
-         PAGE HEADER
-         ============================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <div>
-
-            <h2 class="fw-bold mb-1 page-title">
-                Welcome, @Model.TechnicianName
-            </h2>
-
-            <p class="mb-0 page-subtitle">
-                Here's your laboratory workload and test activity for today.
-            </p>
-
-        </div>
-
-        <div class="text-end">
-
-            <div class="fw-semibold">
-
-                <i class="fas fa-calendar-day me-2"></i>
-
-                @DateTime.Now.ToString("dd MMMM yyyy")
-
-            </div>
-
-            <div class="text-muted mt-1">
-
-                <i class="fas fa-clock me-2"></i>
-
-                <span id="currentTime">
-                    @DateTime.Now.ToString("HH:mm:ss")
-                </span>
-
-            </div>
-
-        </div>
-
-    </div>
-
 
     <!-- ==============================
-         TOP KPI CARDS
+         HEADER
          ============================== -->
 
-    <div class="row g-3 mb-3">
+    <div class="dashboard-header">
 
-        <!-- MY SELECTED TESTS -->
+        <div class="row align-items-center">
 
-        <div class="col-xl-3 col-md-6">
+            <div class="col">
 
-            <div class="card kpi-card h-100 shadow-sm clickable-card"
-                 data-filter="selected"
-                 style="cursor:pointer;">
+                <h2 class="page-title">
+                    Welcome, @Model.TechnicianName
+                </h2>
 
-                <div class="card-body">
-
-                    <div class="d-flex align-items-center">
-
-                        <div class="kpi-icon">
-                            <i class="fas fa-microscope"></i>
-                        </div>
-
-                        <div class="ms-3">
-
-                            <p class="kpi-label mb-1">
-                                My Selected Tests
-                            </p>
-
-                            <h3 class="kpi-number mb-0">
-                                @Model.MySelectedTests
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-                </div>
+                <p class="page-subtitle">
+                    Laboratory Technician Dashboard
+                </p>
 
             </div>
 
-        </div>
+            <div class="col-auto">
 
+                <div class="date-display">
 
-        <!-- WAITING TO BE SELECTED -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card kpi-card h-100 shadow-sm clickable-card"
-                 data-filter="waiting"
-                 style="cursor:pointer;">
-
-                <div class="card-body">
-
-                    <div class="d-flex align-items-center">
-
-                        <div class="kpi-icon">
-                            <i class="fas fa-hourglass-half"></i>
-                        </div>
-
-                        <div class="ms-3">
-
-                            <p class="kpi-label mb-1">
-                                Waiting to be Selected
-                            </p>
-
-                            <h3 class="kpi-number mb-0">
-                                @Model.WaitingToBeSelected
-                            </h3>
-
-                        </div>
-
+                    <div>
+                        @DateTime.Now.ToString("dd MMMM yyyy")
                     </div>
 
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- WAITING VERIFICATION -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card kpi-card h-100 shadow-sm clickable-card"
-                 data-filter="verification"
-                 style="cursor:pointer;">
-
-                <div class="card-body">
-
-                    <div class="d-flex align-items-center">
-
-                        <div class="kpi-icon">
-                            <i class="fas fa-check-double"></i>
-                        </div>
-
-                        <div class="ms-3">
-
-                            <p class="kpi-label mb-1">
-                                Waiting Verification
-                            </p>
-
-                            <h3 class="kpi-number mb-0">
-                                @Model.WaitingVerification
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- WAITING REVIEW -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card kpi-card h-100 shadow-sm clickable-card"
-                 data-filter="review"
-                 style="cursor:pointer;">
-
-                <div class="card-body">
-
-                    <div class="d-flex align-items-center">
-
-                        <div class="kpi-icon">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-
-                        <div class="ms-3">
-
-                            <p class="kpi-label mb-1">
-                                Waiting Review
-                            </p>
-
-                            <h3 class="kpi-number mb-0">
-                                @Model.WaitingReview
-                            </h3>
-
-                        </div>
-
+                    <div class="mt-1">
+                        @DateTime.Now.ToString("HH:mm")
                     </div>
 
                 </div>
@@ -432,42 +294,41 @@
 
 
     <!-- ==============================
-         ALERT KPI CARDS
+         KPI SUMMARY
          ============================== -->
 
     <div class="row g-3 mb-4">
 
-        <!-- URGENT / STAT -->
 
-        <div class="col-lg-4">
+        <!-- MY TESTS -->
 
-            <div class="card alert-kpi-card urgent-card shadow-sm clickable-card"
-                 data-filter="urgent"
-                 style="cursor:pointer;">
+        <div class="col-xl-3 col-md-6">
 
-                <div class="card-body">
+            <a asp-controller="LabTechnician"
+               asp-action="ProcessTests"
+               class="text-decoration-none">
 
-                    <div class="d-flex align-items-center">
+                <div class="kpi-card">
 
-                        <div class="alert-kpi-icon urgent-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
+                    <div class="card-body">
 
-                        <div class="ms-3">
+                        <div class="d-flex align-items-center">
 
-                            <p class="alert-kpi-label mb-1">
-                                Urgent / STAT Tests
-                            </p>
+                            <div class="kpi-icon">
 
-                            <div class="d-flex align-items-baseline">
+                                <i class="fas fa-microscope"></i>
 
-                                <h3 class="alert-kpi-number mb-0">
-                                    @Model.UrgentTests
-                                </h3>
+                            </div>
 
-                                <span class="alert-kpi-text ms-2">
-                                    requiring attention
-                                </span>
+                            <div class="ms-3">
+
+                                <div class="kpi-label">
+                                    My Tests
+                                </div>
+
+                                <div class="kpi-number">
+                                    @Model.MySelectedTests
+                                </div>
 
                             </div>
 
@@ -477,42 +338,40 @@
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
 
-        <!-- OVERDUE -->
+        <!-- TO BE SELECTED -->
 
-        <div class="col-lg-4">
+        <div class="col-xl-3 col-md-6">
 
-            <div class="card alert-kpi-card overdue-card shadow-sm clickable-card"
-                 data-filter="overdue"
-                 style="cursor:pointer;">
+            <a asp-controller="LabTechnician"
+               asp-action="ProcessTests"
+               class="text-decoration-none">
 
-                <div class="card-body">
+                <div class="kpi-card">
 
-                    <div class="d-flex align-items-center">
+                    <div class="card-body">
 
-                        <div class="alert-kpi-icon overdue-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
+                        <div class="d-flex align-items-center">
 
-                        <div class="ms-3">
+                            <div class="kpi-icon">
 
-                            <p class="alert-kpi-label mb-1">
-                                Overdue Tests
-                            </p>
+                                <i class="fas fa-hourglass-half"></i>
 
-                            <div class="d-flex align-items-baseline">
+                            </div>
 
-                                <h3 class="alert-kpi-number mb-0">
-                                    @Model.OverdueTests
-                                </h3>
+                            <div class="ms-3">
 
-                                <span class="alert-kpi-text ms-2">
-                                    past turnaround time
-                                </span>
+                                <div class="kpi-label">
+                                    To Be Selected
+                                </div>
+
+                                <div class="kpi-number">
+                                    @Model.WaitingToBeSelected
+                                </div>
 
                             </div>
 
@@ -522,42 +381,40 @@
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
 
-        <!-- NEARING TURNAROUND -->
+        <!-- VERIFICATION -->
 
-        <div class="col-lg-4">
+        <div class="col-xl-3 col-md-6">
 
-            <div class="card alert-kpi-card nearing-card shadow-sm clickable-card"
-                 data-filter="nearing"
-                 style="cursor:pointer;">
+            <a asp-controller="LabTechnician"
+               asp-action="VerifyResults"
+               class="text-decoration-none">
 
-                <div class="card-body">
+                <div class="kpi-card">
 
-                    <div class="d-flex align-items-center">
+                    <div class="card-body">
 
-                        <div class="alert-kpi-icon nearing-icon">
-                            <i class="fas fa-stopwatch"></i>
-                        </div>
+                        <div class="d-flex align-items-center">
 
-                        <div class="ms-3">
+                            <div class="kpi-icon">
 
-                            <p class="alert-kpi-label mb-1">
-                                Nearing Turnaround Limit
-                            </p>
+                                <i class="fas fa-check-double"></i>
 
-                            <div class="d-flex align-items-baseline">
+                            </div>
 
-                                <h3 class="alert-kpi-number mb-0">
-                                    @Model.NearingTurnaround
-                                </h3>
+                            <div class="ms-3">
 
-                                <span class="alert-kpi-text ms-2">
-                                    approaching limit
-                                </span>
+                                <div class="kpi-label">
+                                    Awaiting Verification
+                                </div>
+
+                                <div class="kpi-number">
+                                    @Model.WaitingVerification
+                                </div>
 
                             </div>
 
@@ -567,7 +424,50 @@
 
                 </div>
 
-            </div>
+            </a>
+
+        </div>
+
+
+        <!-- REVIEW -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <a asp-controller="LabTechnician"
+               asp-action="ReviewResults"
+               class="text-decoration-none">
+
+                <div class="kpi-card">
+
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center">
+
+                            <div class="kpi-icon">
+
+                                <i class="fas fa-clipboard-check"></i>
+
+                            </div>
+
+                            <div class="ms-3">
+
+                                <div class="kpi-label">
+                                    To Be Reviewed
+                                </div>
+
+                                <div class="kpi-number">
+                                    @Model.WaitingReview
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </a>
 
         </div>
 
@@ -575,139 +475,105 @@
 
 
     <!-- ==============================
-         FILTERS
+         QUICK ACTIONS
          ============================== -->
 
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="dashboard-card mb-4">
 
-        <div class="card-body">
+        <div class="section-header">
 
-            <div class="d-flex align-items-center mb-3">
+            <h5 class="section-title">
 
-                <i class="fas fa-filter me-2"></i>
+                <i class="fas fa-bolt me-2"></i>
 
-                <h5 class="fw-bold mb-0 section-title">
-                    Filter Tests
-                </h5>
+                Quick Actions
 
-            </div>
+            </h5>
+
+            <p class="section-description">
+                Common laboratory tasks.
+            </p>
+
+        </div>
+
+
+        <div class="quick-actions">
 
             <div class="row g-3">
 
-                <!-- URGENCY -->
+
+                <!-- RECEIVE SAMPLES -->
 
                 <div class="col-md-3">
 
-                    <label class="form-label">
-                        Urgency
-                    </label>
+                    <a asp-controller="LabTechnician"
+                       asp-action="ReceiveSample"
+                       class="quick-action">
 
-                    <select id="urgencyFilter"
-                            class="form-select">
+                        <i class="fas fa-vial"></i>
 
-                        <option value="">
-                            All
-                        </option>
+                        <span>
+                            Receive Samples
+                        </span>
 
-                        <option value="Routine">
-                            Routine
-                        </option>
-
-                        <option value="Urgent">
-                            Urgent
-                        </option>
-
-                        <option value="STAT">
-                            STAT
-                        </option>
-
-                    </select>
+                    </a>
 
                 </div>
 
 
-                <!-- TEST TYPE -->
+                <!-- PROCESS TESTS -->
 
                 <div class="col-md-3">
 
-                    <label class="form-label">
-                        Test Type
-                    </label>
+                    <a asp-controller="LabTechnician"
+                       asp-action="ProcessTests"
+                       class="quick-action">
 
-                    <select id="testTypeFilter"
-                            class="form-select">
+                        <i class="fas fa-microscope"></i>
 
-                        <option value="">
-                            All Test Types
-                        </option>
+                        <span>
+                            Process Tests
+                        </span>
 
-                        @foreach (var testType in Model.Workload
-                            .Select(x => x.TestTypeName)
-                            .Where(x => !string.IsNullOrEmpty(x))
-                            .Distinct())
-                        {
-                            <option value="@testType">
-                                @testType
-                            </option>
-                        }
-
-                    </select>
+                    </a>
 
                 </div>
 
 
-                <!-- STATUS -->
+                <!-- VERIFY RESULTS -->
 
                 <div class="col-md-3">
 
-                    <label class="form-label">
-                        Status
-                    </label>
+                    <a asp-controller="LabTechnician"
+                       asp-action="VerifyResults"
+                       class="quick-action">
 
-                    <select id="statusFilter"
-                            class="form-select">
+                        <i class="fas fa-check-double"></i>
 
-                        <option value="">
-                            All
-                        </option>
+                        <span>
+                            Verify Results
+                        </span>
 
-                        <option value="Submitted">
-                            Submitted
-                        </option>
-
-                        <option value="InProgress">
-                            In Progress
-                        </option>
-
-                        <option value="Completed">
-                            Completed
-                        </option>
-
-                        <option value="To Be Reviewed">
-                            To Be Reviewed
-                        </option>
-
-                        <option value="Verified">
-                            Verified
-                        </option>
-
-                    </select>
+                    </a>
 
                 </div>
 
 
-                <!-- REQUEST NUMBER -->
+                <!-- REVIEW RESULTS -->
 
                 <div class="col-md-3">
 
-                    <label class="form-label">
-                        Request Number
-                    </label>
+                    <a asp-controller="LabTechnician"
+                       asp-action="ReviewResults"
+                       class="quick-action">
 
-                    <input type="text"
-                           id="requestFilter"
-                           class="form-control"
-                           placeholder="Search request number">
+                        <i class="fas fa-clipboard-check"></i>
+
+                        <span>
+                            Review Results
+                        </span>
+
+                    </a>
 
                 </div>
 
@@ -719,203 +585,221 @@
 
 
     <!-- ==============================
-         TEST WORKLOAD
+         LOWER DASHBOARD
          ============================== -->
 
-    <div class="card border-0 shadow-sm">
+    <div class="row g-4">
 
-        <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- ATTENTION -->
 
-                <div>
+        <div class="col-lg-7">
 
-                    <h5 class="fw-bold mb-1 section-title">
+            <div class="dashboard-card">
 
-                        <i class="fas fa-microscope me-2"></i>
+                <div class="section-header">
 
-                        Test Workload
+                    <h5 class="section-title">
+
+                        <i class="fas fa-exclamation-circle me-2"></i>
+
+                        Attention
 
                     </h5>
 
-                    <p class="card-description mb-0">
-                        Tests requiring your attention.
+                    <p class="section-description">
+                        Items that may require priority.
                     </p>
 
                 </div>
 
-                <span id="testCount"
-                      class="badge">
 
-                    @Model.Workload.Count Tests
+                <div class="attention-list">
 
-                </span>
+
+                    <!-- URGENT -->
+
+                    <div class="attention-item">
+
+                        <div class="attention-left">
+
+                            <div class="attention-icon">
+
+                                <i class="fas fa-bolt"></i>
+
+                            </div>
+
+                            <div>
+
+                                <div class="attention-label">
+                                    Urgent / STAT Tests
+                                </div>
+
+                                <div class="attention-description">
+                                    Tests requiring immediate attention
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="attention-number">
+                            @Model.UrgentTests
+                        </div>
+
+                    </div>
+
+
+                    <!-- OVERDUE -->
+
+                    <div class="attention-item">
+
+                        <div class="attention-left">
+
+                            <div class="attention-icon">
+
+                                <i class="fas fa-clock"></i>
+
+                            </div>
+
+                            <div>
+
+                                <div class="attention-label">
+                                    Overdue Tests
+                                </div>
+
+                                <div class="attention-description">
+                                    Tests past their turnaround time
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="attention-number">
+                            @Model.OverdueTests
+                        </div>
+
+                    </div>
+
+
+                    <!-- NEARING TAT -->
+
+                    <div class="attention-item">
+
+                        <div class="attention-left">
+
+                            <div class="attention-icon">
+
+                                <i class="fas fa-stopwatch"></i>
+
+                            </div>
+
+                            <div>
+
+                                <div class="attention-label">
+                                    Nearing Turnaround
+                                </div>
+
+                                <div class="attention-description">
+                                    Tests approaching their turnaround limit
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="attention-number">
+                            @Model.NearingTurnaround
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
-
-            <div class="table-responsive">
-
-                <table class="table table-hover align-middle"
-                       id="workloadTable">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Request No.
-                            </th>
-
-                            <th>
-                                Patient
-                            </th>
-
-                            <th>
-                                Test Type
-                            </th>
-
-                            <th>
-                                Urgency
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Due Time
-                            </th>
-
-                        </tr>
-
-                    </thead>
+        </div>
 
 
-                    <tbody>
+        <!-- OVERVIEW -->
 
-                        @if (Model.Workload == null || !Model.Workload.Any())
-                        {
-                            <tr>
+        <div class="col-lg-5">
 
-                                <td colspan="6"
-                                    class="text-center empty-state py-5">
+            <div class="dashboard-card">
 
-                                    <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                <div class="section-header">
 
-                                    No tests currently require your attention.
+                    <h5 class="section-title">
 
-                                </td>
+                        <i class="fas fa-chart-simple me-2"></i>
 
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var test in Model.Workload)
-                            {
-                                <tr class="workload-row"
-                                    data-urgency="@test.Urgency"
-                                    data-testtype="@test.TestTypeName"
-                                    data-status="@test.Status"
-                                    data-request="@test.TestRequestId"
-                                    data-due="@(test.DueTime?.ToString("yyyy-MM-ddTHH:mm:ss"))">
+                        Today's Overview
 
-                                    <td>
-                                        #@test.TestRequestId
-                                    </td>
+                    </h5>
 
-                                    <td>
-                                        @test.PatientName
-                                    </td>
+                    <p class="section-description">
+                        Current workload summary.
+                    </p>
 
-                                    <td>
-                                        @test.TestTypeName
-                                    </td>
-
-                                    <td>
-
-                                        @if (test.Urgency == "STAT")
-                                        {
-                                            <span class="badge bg-danger">
-                                                STAT
-                                            </span>
-                                        }
-                                        else if (test.Urgency == "Urgent")
-                                        {
-                                            <span class="badge bg-warning text-dark">
-                                                Urgent
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">
-                                                @test.Urgency
-                                            </span>
-                                        }
-
-                                    </td>
-
-                                    <td>
-
-                                        @if (test.Status == "Completed")
-                                        {
-                                            <span class="badge bg-success">
-                                                Completed
-                                            </span>
-                                        }
-                                        else if (test.Status == "InProgress")
-                                        {
-                                            <span class="badge bg-primary">
-                                                In Progress
-                                            </span>
-                                        }
-                                        else if (test.Status == "To Be Reviewed")
-                                        {
-                                            <span class="badge bg-warning text-dark">
-                                                To Be Reviewed
-                                            </span>
-                                        }
-                                        else if (test.Status == "Verified")
-                                        {
-                                            <span class="badge bg-success">
-                                                Verified
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">
-                                                @test.Status
-                                            </span>
-                                        }
-
-                                    </td>
-
-                                    <td>
-                                        @(test.DueTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")
-                                    </td>
-
-                                </tr>
-                            }
+                </div>
 
 
-                            <tr id="noFilterResults"
-                                style="display:none;">
+                <div class="overview-content">
 
-                                <td colspan="6"
-                                    class="text-center text-muted py-5">
 
-                                    <i class="fas fa-search fa-2x mb-3 d-block"></i>
+                    <div class="overview-item">
 
-                                    No tests match the selected filter.
+                        <span class="overview-label">
+                            Tests in Progress
+                        </span>
 
-                                </td>
+                        <span class="overview-value">
+                            @Model.MySelectedTests
+                        </span>
 
-                            </tr>
-                        }
+                    </div>
 
-                    </tbody>
 
-                </table>
+                    <div class="overview-item">
+
+                        <span class="overview-label">
+                            Awaiting Selection
+                        </span>
+
+                        <span class="overview-value">
+                            @Model.WaitingToBeSelected
+                        </span>
+
+                    </div>
+
+
+                    <div class="overview-item">
+
+                        <span class="overview-label">
+                            Awaiting Verification
+                        </span>
+
+                        <span class="overview-value">
+                            @Model.WaitingVerification
+                        </span>
+
+                    </div>
+
+
+                    <div class="overview-item">
+
+                        <span class="overview-label">
+                            Awaiting Review
+                        </span>
+
+                        <span class="overview-value">
+                            @Model.WaitingReview
+                        </span>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -924,368 +808,3 @@
     </div>
 
 </div>
-
-
-<script>
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-        /* ==============================
-           LIVE CLOCK
-           ============================== */
-
-        function updateTime() {
-
-            const now = new Date();
-
-            const time = now.toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
-            });
-
-            const timeElement =
-                document.getElementById("currentTime");
-
-            if (timeElement) {
-                timeElement.textContent = time;
-            }
-
-        }
-
-        updateTime();
-
-        setInterval(updateTime, 1000);
-
-
-        /* ==============================
-           FILTER ELEMENTS
-           ============================== */
-
-        const urgencyFilter =
-            document.getElementById("urgencyFilter");
-
-        const testTypeFilter =
-            document.getElementById("testTypeFilter");
-
-        const statusFilter =
-            document.getElementById("statusFilter");
-
-        const requestFilter =
-            document.getElementById("requestFilter");
-
-        const rows =
-            document.querySelectorAll(".workload-row");
-
-        const testCount =
-            document.getElementById("testCount");
-
-        const noResults =
-            document.getElementById("noFilterResults");
-
-
-        /* ==============================
-           FILTER TESTS
-           ============================== */
-
-        function filterTests(cardFilter = null) {
-
-            let visibleCount = 0;
-
-            rows.forEach(function (row) {
-
-                let show = true;
-
-                const urgency =
-                    row.dataset.urgency || "";
-
-                const testType =
-                    row.dataset.testtype || "";
-
-                const status =
-                    row.dataset.status || "";
-
-                const request =
-                    row.dataset.request || "";
-
-                const due =
-                    row.dataset.due || "";
-
-
-                /* ==============================
-                   NORMAL FILTERS
-                   ============================== */
-
-                if (
-                    urgencyFilter.value &&
-                    urgency.toLowerCase() !==
-                    urgencyFilter.value.toLowerCase()
-                ) {
-                    show = false;
-                }
-
-
-                if (
-                    testTypeFilter.value &&
-                    testType.toLowerCase() !==
-                    testTypeFilter.value.toLowerCase()
-                ) {
-                    show = false;
-                }
-
-
-                if (
-                    statusFilter.value &&
-                    status.toLowerCase() !==
-                    statusFilter.value.toLowerCase()
-                ) {
-                    show = false;
-                }
-
-
-                if (
-                    requestFilter.value &&
-                    !request.toLowerCase().includes(
-                        requestFilter.value.toLowerCase()
-                    )
-                ) {
-                    show = false;
-                }
-
-
-                /* ==============================
-                   DASHBOARD CARD FILTERS
-                   ============================== */
-
-                if (cardFilter === "selected") {
-
-                    if (status !== "InProgress") {
-                        show = false;
-                    }
-
-                }
-
-
-                if (cardFilter === "waiting") {
-
-                    if (status !== "Submitted") {
-                        show = false;
-                    }
-
-                }
-
-
-                if (cardFilter === "verification") {
-
-                    if (status !== "Completed") {
-                        show = false;
-                    }
-
-                }
-
-
-                if (cardFilter === "review") {
-
-                    if (status !== "To Be Reviewed") {
-                        show = false;
-                    }
-
-                }
-
-
-                if (cardFilter === "urgent") {
-
-                    if (
-                        urgency !== "STAT" &&
-                        urgency !== "Urgent"
-                    ) {
-                        show = false;
-                    }
-
-                }
-
-
-                if (cardFilter === "overdue") {
-
-                    if (!due) {
-
-                        show = false;
-
-                    }
-                    else {
-
-                        const dueDate =
-                            new Date(due);
-
-                        if (
-                            dueDate >= new Date() ||
-                            status === "Completed" ||
-                            status === "Verified"
-                        ) {
-                            show = false;
-                        }
-
-                    }
-
-                }
-
-
-                if (cardFilter === "nearing") {
-
-                    if (!due) {
-
-                        show = false;
-
-                    }
-                    else {
-
-                        const dueDate =
-                            new Date(due);
-
-                        const now =
-                            new Date();
-
-                        const twoHours =
-                            new Date(
-                                now.getTime() +
-                                (2 * 60 * 60 * 1000)
-                            );
-
-                        if (
-                            dueDate <= now ||
-                            dueDate > twoHours ||
-                            status === "Completed" ||
-                            status === "Verified"
-                        ) {
-                            show = false;
-                        }
-
-                    }
-
-                }
-
-
-                /* ==============================
-                   SHOW / HIDE
-                   ============================== */
-
-                if (show) {
-
-                    row.style.display = "";
-
-                    visibleCount++;
-
-                }
-                else {
-
-                    row.style.display = "none";
-
-                }
-
-            });
-
-
-            /* ==============================
-               UPDATE COUNT
-               ============================== */
-
-            testCount.textContent =
-                visibleCount + " Tests";
-
-
-            /* ==============================
-               NO RESULTS
-               ============================== */
-
-            if (noResults) {
-
-                noResults.style.display =
-                    visibleCount === 0
-                        ? ""
-                        : "none";
-
-            }
-
-        }
-
-
-        /* ==============================
-           NORMAL FILTER EVENTS
-           ============================== */
-
-        urgencyFilter.addEventListener(
-            "change",
-            function () {
-                filterTests();
-            }
-        );
-
-
-        testTypeFilter.addEventListener(
-            "change",
-            function () {
-                filterTests();
-            }
-        );
-
-
-        statusFilter.addEventListener(
-            "change",
-            function () {
-                filterTests();
-            }
-        );
-
-
-        requestFilter.addEventListener(
-            "keyup",
-            function () {
-                filterTests();
-            }
-        );
-
-
-        /* ==============================
-           DASHBOARD CARD EVENTS
-           ============================== */
-
-        document
-            .querySelectorAll(".clickable-card")
-            .forEach(function (card) {
-
-                card.addEventListener(
-                    "click",
-                    function () {
-
-                        const filter =
-                            card.dataset.filter;
-
-                        /*
-                         * Clear normal filters first.
-                         * This prevents an old filter from
-                         * interfering with the KPI card.
-                         */
-
-                        urgencyFilter.value = "";
-                        testTypeFilter.value = "";
-                        statusFilter.value = "";
-                        requestFilter.value = "";
-
-                        filterTests(filter);
-
-                        document
-                            .getElementById("workloadTable")
-                            .scrollIntoView({
-                                behavior: "smooth",
-                                block: "start"
-                            });
-
-                    }
-                );
-
-            });
-
-    });
-
-</script>
-

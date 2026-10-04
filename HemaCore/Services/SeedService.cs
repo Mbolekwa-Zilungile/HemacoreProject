@@ -116,6 +116,104 @@ namespace HemaCore.Services
                             string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
+                
+// =============================================
+// SECOND LAB TECHNICIAN - TEST ACCOUNT
+// =============================================
+
+logger.LogInformation("Seeding second lab technician user");
+
+                var labTech2Email = "labtech2@gmail.com";
+
+                var labTech2User = await userManager.FindByEmailAsync(labTech2Email);
+
+                if (labTech2User == null)
+                {
+                    labTech2User = new Users
+                    {
+                        FullName = "Test Technician",
+                        UserName = labTech2Email,
+                        NormalizedUserName = labTech2Email.ToUpper(),
+                        Email = labTech2Email,
+                        NormalizedEmail = labTech2Email.ToUpper(),
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString()
+                    };
+
+                    var result = await userManager.CreateAsync(
+                        labTech2User,
+                        "Welcome@2026"
+                    );
+
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(
+                            labTech2User,
+                            "LabTechnician"
+                        );
+
+                        logger.LogInformation(
+                            "Second lab technician user created."
+                        );
+                    }
+                }
+
+                // Create the LabTechnicians table record
+                if (labTech2User != null)
+                {
+                    var technician2 = await context.LabTechnicians
+                        .FirstOrDefaultAsync(t => t.UserId == labTech2User.Id);
+
+                    if (technician2 == null)
+                    {
+                        technician2 = new LabTechnician
+                        {
+                            Name = "Test",
+                            Surname = "Technician",
+                            IsActive = true,
+                            IDNumber = "9001015800081",
+                            EmployeeNumber = "LT002",
+                            PhoneNumber = "+27820000002",
+                            UserId = labTech2User.Id
+                        };
+
+                        context.LabTechnicians.Add(technician2);
+
+                        await context.SaveChangesAsync();
+
+                        logger.LogInformation(
+                            "Second lab technician record created."
+                        );
+                    }
+
+                    // Give Technician 2 permission to perform Haemoglobin
+                    bool haemoglobinAssignmentExists =
+                        await context.TechnicianTestTypes
+                            .AnyAsync(tt =>
+                                tt.LabTechnicianId == technician2.LabTechnicianId &&
+                                tt.TestTypeId == 4);
+
+                    if (!haemoglobinAssignmentExists)
+                    {
+                        context.TechnicianTestTypes.Add(
+                            new TechnicianTestType
+                            {
+                                LabTechnicianId = technician2.LabTechnicianId,
+                                TestTypeId = 4
+                            });
+
+                        await context.SaveChangesAsync();
+
+                        logger.LogInformation(
+                            "Haemoglobin assigned to second technician."
+                        );
+                    }
+                }
+
+
+
+
+
                 // DOCTOR
                 logger.LogInformation("Seeding doctor user");
 

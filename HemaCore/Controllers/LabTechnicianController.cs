@@ -1275,5 +1275,32 @@ public async Task<IActionResult> SaveTestResult(
                 "application/pdf",
                 $"LabTechnicianReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         }
+        
+public async Task<IActionResult> MyCompletedTests()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+                return NotFound("Lab technician profile not found.");
+
+            var completedTests = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                .Where(t =>
+                    t.LabTechnicianId == technician.LabTechnicianId &&
+                    (t.Status == "Completed" || t.Status == "Verified"))
+                .OrderByDescending(t => t.CompletionDateTime)
+                .ToListAsync();
+
+            return View(completedTests);
+        }
+
     }
 }

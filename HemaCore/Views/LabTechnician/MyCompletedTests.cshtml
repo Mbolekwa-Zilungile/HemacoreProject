@@ -1,0 +1,85 @@
+﻿
+@model IEnumerable<HemaCore.Models.TestRequestItem>
+
+@{
+    ViewData["Title"] = "My Completed Tests";
+    Layout = "_LabTechnicianLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="page-header">
+    <div>
+        <h2>My Completed Tests</h2>
+        <p>Tests that you have performed and captured results for.</p>
+    </div>
+</div>
+
+<div class="content-card">
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-flask"></i>
+            <h4>No completed tests</h4>
+            <p>You have not completed any tests yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Patient</th>
+                        <th>Test Type</th>
+                        <th>Result Status</th>
+                        <th>Completed</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var test in Model)
+                    {
+                        <tr>
+                            <td>
+                                #@test.TestRequestId
+                            </td>
+
+                            <td>
+                                @test.TestRequest.Patient.Name
+                                @test.TestRequest.Patient.Surname
+                            </td>
+
+                            <td>
+                                @test.TestType.TestTypeName
+                            </td>
+
+                            <td>
+                                @if (test.Status == "Verified")
+                                {
+                                    <span class="status-badge verified">
+                                        Verified
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge completed">
+                                        Completed
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @(test.CompletionDateTime?.ToString("dd MMM yyyy HH:mm") ?? "-")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+</div>
+

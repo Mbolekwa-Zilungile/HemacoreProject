@@ -2,7 +2,7 @@
 @model HemaCore.Models.TestResult
 
 @{
-    ViewData["Title"] = "Review Test Result";
+    ViewData["Title"] = "Verify Test Result";
     Layout = "_LabTechnicianLayout";
 
     var test = Model.TestRequestTestType.FirstOrDefault();
@@ -14,9 +14,8 @@
     <div class="mb-4">
 
         <h2 class="fw-bold">
-            Review Test Result
+            Verify Test Result
         </h2>
-
         <p class="text-muted mb-0">
             Review the captured result before verification.
         </p>
