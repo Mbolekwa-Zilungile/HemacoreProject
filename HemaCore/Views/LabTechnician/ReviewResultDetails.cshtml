@@ -1,8 +1,7 @@
-﻿
-@model HemaCore.Models.TestResultVerification
+﻿@model HemaCore.Models.TestResultVerification
 
 @{
-    ViewData["Title"] = "Review Result Details";
+    ViewData["Title"] = "Review Result";
     Layout = "_LabTechnicianLayout";
 
     var result = Model.TestResult;
@@ -13,21 +12,18 @@
 
     <!-- HEADER -->
     <div class="mb-4">
-
         <h2 class="fw-bold">
             Review Result
         </h2>
 
         <p class="text-muted mb-0">
-            Review the test result that requires further attention.
+            Review and correct the test result that was sent back for further attention.
         </p>
-
     </div>
 
 
     <!-- PATIENT & TEST INFORMATION -->
     <div class="card border-0 shadow-sm mb-4">
-
         <div class="card-body">
 
             <h5 class="fw-bold mb-4">
@@ -38,7 +34,6 @@
             <div class="row g-4">
 
                 <div class="col-md-3">
-
                     <small class="text-muted">
                         Request Number
                     </small>
@@ -46,12 +41,9 @@
                     <div class="fw-semibold">
                         #@test?.TestRequestId
                     </div>
-
                 </div>
 
-
                 <div class="col-md-3">
-
                     <small class="text-muted">
                         Patient
                     </small>
@@ -60,12 +52,9 @@
                         @test?.TestRequest?.Patient?.Name
                         @test?.TestRequest?.Patient?.Surname
                     </div>
-
                 </div>
 
-
                 <div class="col-md-3">
-
                     <small class="text-muted">
                         Test Type
                     </small>
@@ -73,37 +62,63 @@
                     <div class="fw-semibold">
                         @test?.TestType?.TestTypeName
                     </div>
-
                 </div>
 
-
                 <div class="col-md-3">
-
                     <small class="text-muted">
-                        Date Captured
+                        Original Result Date
                     </small>
 
                     <div class="fw-semibold">
                         @(result?.DateCaptured.ToString("dd/MM/yyyy HH:mm") ?? "-")
                     </div>
-
                 </div>
 
             </div>
 
         </div>
-
     </div>
 
 
-    <!-- TEST RESULT -->
+    <!-- VERIFIER'S REASON -->
     <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
 
+            <h5 class="fw-bold mb-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Reason for Review
+            </h5>
+
+            <p class="text-muted mb-2">
+                The following feedback was provided by the technician who reviewed this result.
+            </p>
+
+            <div class="border rounded p-3 bg-light">
+
+                @if (string.IsNullOrWhiteSpace(Model.ReviewNotes))
+                {
+                    <span class="text-muted">
+                        No review notes were provided.
+                    </span>
+                }
+                else
+                {
+                    @Model.ReviewNotes
+                }
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- CURRENT RESULT -->
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
 
             <h5 class="fw-bold mb-4">
                 <i class="fas fa-vial me-2"></i>
-                Test Result
+                Current Result
             </h5>
 
             <div class="row g-4">
@@ -111,7 +126,7 @@
                 <div class="col-md-6">
 
                     <small class="text-muted">
-                        Result Value
+                        Current Result Value
                     </small>
 
                     <div class="mt-2">
@@ -133,11 +148,10 @@
 
                 </div>
 
-
                 <div class="col-md-6">
 
                     <small class="text-muted">
-                        Result Status
+                        Current Result Status
                     </small>
 
                     <div class="mt-2">
@@ -159,7 +173,6 @@
 
                 </div>
 
-
                 <div class="col-12">
 
                     <small class="text-muted">
@@ -179,77 +192,62 @@
             </div>
 
         </div>
-
     </div>
 
 
-    <!-- REVIEW INFORMATION -->
+    <!-- CORRECTION -->
     <div class="card border-0 shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5 class="fw-bold mb-4">
-                <i class="fas fa-clipboard-check me-2"></i>
-                Review Information
-            </h5>
-
-            <div class="mb-3">
-
-                <small class="text-muted">
-                    Previous Review Notes
-                </small>
-
-                <div class="border rounded p-3 mt-2 bg-light">
-
-                    @(string.IsNullOrWhiteSpace(Model.ReviewNotes)
-                        ? "No review notes were provided."
-                        : Model.ReviewNotes)
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- ACTIONS -->
-    <div class="card border-0 shadow-sm">
-
         <div class="card-body">
 
             <h5 class="fw-bold mb-3">
-                Review Action
+                <i class="fas fa-edit me-2"></i>
+                Correct Result
             </h5>
 
             <p class="text-muted">
-                Review the result and decide whether it can be verified
-                or requires further correction.
+                Review the feedback above, make any necessary corrections,
+                and resubmit the result for verification.
             </p>
 
-            <form asp-action="CompleteReview"
-                  method="post">
+            <form asp-action="CompleteReview" method="post">
 
                 <input type="hidden"
                        name="id"
                        value="@Model.TestResultVerificationId" />
 
 
+                <!-- RESULT VALUE -->
                 <div class="mb-3">
 
                     <label class="form-label fw-semibold">
-                        Review Notes
+                        Result Value
                     </label>
 
-                    <textarea name="reviewNotes"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Enter your review notes"></textarea>
+                    <input type="text"
+                           name="resultValue"
+                           class="form-control"
+                           value="@result?.ResultValue"
+                           required />
 
                 </div>
 
 
+                <!-- NOTES -->
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Technician Notes
+                    </label>
+
+                    <textarea name="notes"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Enter any relevant notes about the corrected result">@result?.Notes</textarea>
+
+                </div>
+
+
+                <!-- ACTIONS -->
                 <div class="d-flex gap-2">
 
                     <a asp-action="ReviewResults"
@@ -262,23 +260,10 @@
 
 
                     <button type="submit"
-                            name="action"
-                            value="SendBack"
-                            class="btn btn-warning">
+                            class="btn btn-primary">
 
-                        <i class="fas fa-undo me-1"></i>
-                        Send Back
-
-                    </button>
-
-
-                    <button type="submit"
-                            name="action"
-                            value="Verify"
-                            class="btn btn-success">
-
-                        <i class="fas fa-check me-1"></i>
-                        Verify Result
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Resubmit for Verification
 
                     </button>
 
@@ -287,8 +272,6 @@
             </form>
 
         </div>
-
     </div>
 
 </div>
-
