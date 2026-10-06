@@ -166,12 +166,11 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // CONFIRM RECEIVE SAMPLE
-        // ==========================================
+        
 
-        [HttpPost]
-        public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
+     
+[HttpPost]
+public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -191,49 +190,48 @@ namespace HemaCore.Controllers
             var sample = await _context.Samples
                 .Include(s => s.TestRequest)
                     .ThenInclude(r => r.Samples)
-                .FirstOrDefaultAsync(s =>
-                    s.SampleId == sampleId);
+                .FirstOrDefaultAsync(s => s.SampleId == sampleId);
 
             if (sample == null)
             {
                 return NotFound();
             }
 
-            sample.DateTimeReceived = DateTime.Now;
-            sample.LabTechnicianId =
-                technician.LabTechnicianId;
+            // Prevent the same sample from being received twice
+            if (sample.DateTimeReceived.HasValue)
+            {
+                return RedirectToAction(nameof(ReceiveSample));
+            }
 
+            // Record the sample receipt
+            sample.DateTimeReceived = DateTime.Now;
+            sample.LabTechnicianId = technician.LabTechnicianId;
+
+            // Check whether all samples for this request have been received
             bool allReceived = sample.TestRequest.Samples
                 .All(s => s.DateTimeReceived.HasValue);
 
             if (allReceived)
             {
-                sample.TestRequest.Status =
-                    "SamplesReceived";
+                sample.TestRequest.Status = "SamplesReceived";
+
+                if (sample.TestRequest.Samples.Count == 1)
+                {
+                    TempData["SampleReceivedSuccess"] =
+                        $"Sample {sample.Barcode} has been successfully received.";
+                }
+                else
+                {
+                    TempData["SampleReceivedSuccess"] =
+                        $"All samples for Request #{sample.TestRequestId} have been successfully received.";
+                }
             }
 
             await _context.SaveChangesAsync();
 
-            TempData["SampleReceivedSuccess"] =
-                allReceived
-                    ? $"All samples for Request #{sample.TestRequestId} have been received."
-                    : $"Sample {sample.Barcode} received. Waiting on remaining samples.";
-
-            TempData["ReceivedRequestId"] =
-                sample.TestRequestId;
-
-            return RedirectToAction(
-                nameof(ReceiveSampleDetails),
-                new
-                {
-                    id = sample.TestRequestId
-                });
+            return RedirectToAction(nameof(ReceiveSample));
         }
 
-
-        // ==========================================
-        // PROCESS TESTS
-        // ==========================================
 
         public async Task<IActionResult> ProcessTests(
             string urgency,
@@ -325,10 +323,7 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // START PROCESSING TEST
-        // ==========================================
-
+    
         [HttpPost]
         public async Task<IActionResult> StartProcessing(int id)
         {
@@ -435,9 +430,7 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // CAPTURE TEST RESULT
-        // ==========================================
+       
 
         [HttpGet]
         public async Task<IActionResult> CaptureTestResult(int id)
@@ -504,31 +497,71 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // SAVE TEST RESULT
-        // ==========================================
+      
 
-        [HttpPost]
-        public async Task<IActionResult> SaveTestResult(
-            int testRequestTestTypeId,
-            string resultValue,
-            string notes)
+  
+[HttpPost]
+public async Task<IActionResult> SaveTestResult(
+    int testRequestTestTypeId,
+    string resultValue,
+    string notes)
         {
-            var test =
-                await _context.TestRequestTestTypes
-                    .Include(t => t.TestType)
-                    .Include(t => t.TestRequest)
-                    .FirstOrDefaultAsync(t =>
-                        t.TestRequestTestTypeId ==
-                        testRequestTestTypeId);
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+            {
+                return NotFound(
+                    "Lab technician profile not found.");
+            }
+
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestType)
+                .Include(t => t.TestRequest)
+                .FirstOrDefaultAsync(t =>
+                    t.TestRequestTestTypeId ==
+                    testRequestTestTypeId);
 
             if (test == null)
             {
-                return NotFound();
+                return NotFound(
+                    "Test could not be found.");
             }
 
-            if (string.IsNullOrWhiteSpace(
-                resultValue))
+            // Make sure this technician is the technician
+            // who started the test.
+            if (test.LabTechnicianId !=
+                technician.LabTechnicianId)
+            {
+                TempData["Error"] =
+                    "You are not authorised to capture the result for this test.";
+
+                return RedirectToAction(
+                    nameof(ProcessTests));
+            }
+
+            // The result can only be captured
+            // after the test has been started.
+            if (test.Status != "InProgress")
+            {
+                TempData["Error"] =
+                    "This test is not currently being processed.";
+
+                return RedirectToAction(
+                    nameof(ProcessTests));
+            }
+
+            // Result value is required.
+            if (string.IsNullOrWhiteSpace(resultValue))
             {
                 TempData["Error"] =
                     "Please enter a result value.";
@@ -537,14 +570,28 @@ namespace HemaCore.Controllers
                     nameof(CaptureTestResult),
                     new
                     {
-                        id =
-                            testRequestTestTypeId
+                        id = testRequestTestTypeId
                     });
             }
 
+            // Notes are required.
+            if (string.IsNullOrWhiteSpace(notes))
+            {
+                TempData["Error"] =
+                    "Please enter notes for the test result.";
+
+                return RedirectToAction(
+                    nameof(CaptureTestResult),
+                    new
+                    {
+                        id = testRequestTestTypeId
+                    });
+            }
+
+            // Result must be numeric and decimals are allowed.
             if (!double.TryParse(
                 resultValue,
-                System.Globalization.NumberStyles.Any,
+                System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture,
                 out double numericResult))
             {
@@ -555,11 +602,12 @@ namespace HemaCore.Controllers
                     nameof(CaptureTestResult),
                     new
                     {
-                        id =
-                            testRequestTestTypeId
+                        id = testRequestTestTypeId
                     });
             }
 
+            // Determine whether the result is outside
+            // the normal range for this test type.
             double normalMin =
                 test.TestType.NormalRangeMin;
 
@@ -570,44 +618,46 @@ namespace HemaCore.Controllers
                 numericResult < normalMin ||
                 numericResult > normalMax;
 
-            var testResult =
-                new TestResult
-                {
-                    ResultValue =
-                        resultValue,
+            var testResult = new TestResult
+            {
+                ResultValue = resultValue.Trim(),
 
-                    Notes =
-                        notes,
+                Notes = notes.Trim(),
 
-                    IsAbnormal =
-                        isAbnormal,
+                IsAbnormal = isAbnormal,
 
-                    DateCaptured =
-                        DateTime.Now
-                };
+                DateCaptured = DateTime.Now
+            };
 
-            _context.TestResults.Add(
-                testResult);
+            _context.TestResults.Add(testResult);
 
             await _context.SaveChangesAsync();
 
+            // Link the captured result to the test.
             test.TestResultId =
                 testResult.TestResultId;
 
+            // Result has now been captured.
             test.Status =
                 "Completed";
 
             test.CompletionDateTime =
                 DateTime.Now;
 
+            // Check whether every test belonging to
+            // this request has been completed.
             bool allTestsCompleted =
                 !await _context.TestRequestTestTypes
                     .AnyAsync(t =>
                         t.TestRequestId ==
                             test.TestRequestId &&
+
                         t.TestRequestTestTypeId !=
                             test.TestRequestTestTypeId &&
-                        t.Status != "Completed");
+
+                        t.Status != "Completed" &&
+
+                        t.Status != "Verified");
 
             if (allTestsCompleted)
             {
@@ -617,14 +667,12 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
+            TempData["ResultSuccess"] =
+                "Results successfully processed.";
+
             return RedirectToAction(
                 nameof(ProcessTests));
         }
-
-
-        // ==========================================
-        // VERIFY TEST RESULTS - LIST
-        // ==========================================
 
         public async Task<IActionResult> VerifyResults()
         {
@@ -691,10 +739,7 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // VERIFY RESULT - DETAILS
-        // ==========================================
-
+        
         public async Task<IActionResult> VerifyResultDetails(
             int id)
         {
@@ -792,9 +837,7 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // VERIFY / SEND BACK TEST RESULT
-        // ==========================================
+        
 
         [HttpPost]
         public async Task<IActionResult> VerifyResult(
@@ -847,9 +890,7 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // PREVENT SELF-VERIFICATION
-            // ==========================================
+          
 
             if (test.LabTechnicianId ==
                 technician.LabTechnicianId)
@@ -862,9 +903,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // CHECK TECHNICIAN PERMISSION
-            // ==========================================
 
             var canVerify =
                 await _context.TechnicianTestTypes
@@ -884,9 +922,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // RESULT MUST BE COMPLETED
-            // ==========================================
 
             if (test.Status != "Completed")
             {
@@ -898,10 +933,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // FIND EXISTING VERIFICATION
-            // ==========================================
-
             var verification =
                 await _context.TestResultVerifications
                     .FirstOrDefaultAsync(v =>
@@ -909,10 +940,7 @@ namespace HemaCore.Controllers
                         result.TestResultId);
 
 
-            // ==========================================
-            // VERIFY RESULT
-            // ==========================================
-
+           
             if (action == "Verify")
             {
                 test.Status =
@@ -966,10 +994,6 @@ namespace HemaCore.Controllers
                     nameof(VerifyResults));
             }
 
-
-            // ==========================================
-            // SEND BACK FOR REVIEW
-            // ==========================================
 
             if (action == "SendBack")
             {
@@ -1207,10 +1231,7 @@ namespace HemaCore.Controllers
         }
 
 
-        // ==========================================
-        // COMPLETE REVIEW / RESUBMIT
-        // ==========================================
-
+      
         [HttpPost]
         public async Task<IActionResult> CompleteReview(
             int id,
@@ -1289,9 +1310,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // ONLY ORIGINAL TECHNICIAN CAN REVIEW
-            // ==========================================
 
             if (test.LabTechnicianId !=
                 technician.LabTechnicianId)
@@ -1304,9 +1322,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // MUST BE WAITING FOR REVIEW
-            // ==========================================
 
             if (test.Status !=
                 "To Be Reviewed")
@@ -1319,9 +1334,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // VALIDATE RESULT
-            // ==========================================
 
             if (string.IsNullOrWhiteSpace(
                 resultValue))
@@ -1360,9 +1372,6 @@ namespace HemaCore.Controllers
             }
 
 
-            // ==========================================
-            // RECALCULATE ABNORMAL STATUS
-            // ==========================================
 
             double normalMin =
                 test.TestType.NormalRangeMin;
@@ -1375,9 +1384,6 @@ namespace HemaCore.Controllers
                 numericResult > normalMax;
 
 
-            // ==========================================
-            // UPDATE EXISTING RESULT
-            // ==========================================
 
             result.ResultValue =
                 resultValue;
@@ -1392,9 +1398,6 @@ namespace HemaCore.Controllers
                 DateTime.Now;
 
 
-            // ==========================================
-            // RESUBMIT FOR VERIFICATION
-            // ==========================================
 
             test.Status =
                 "Completed";
@@ -1403,9 +1406,7 @@ namespace HemaCore.Controllers
                 DateTime.Now;
 
 
-            // Reuse the existing verification record.
-            // Do NOT create another one because
-            // TestResultId is unique.
+         
             verification.Status =
                 "Resubmitted";
 

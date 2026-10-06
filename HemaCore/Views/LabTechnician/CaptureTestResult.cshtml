@@ -1,857 +1,312 @@
 ﻿
-@model HemaCore.Models.TestRequestItem
+<!-- ========================================== -->
+<!-- CAPTURE RESULT -->
+<!-- ========================================== -->
 
-@{
-    ViewData["Title"] = "Capture Test Result";
-    Layout = "_LabTechnicianLayout";
+<div class="result-section">
 
-    var conditions = ViewBag.PatientConditions
-        as List<HemaCore.Models.PatientCondition>
-        ?? new List<HemaCore.Models.PatientCondition>();
-
-    var allergies = ViewBag.PatientAllergies
-        as List<HemaCore.Models.PatientAllergy>
-        ?? new List<HemaCore.Models.PatientAllergy>();
-
-    var medications = ViewBag.PatientMedications
-        as List<HemaCore.Models.PatientMedication>
-        ?? new List<HemaCore.Models.PatientMedication>();
-}
-
-<link rel="stylesheet" href="~/css/doctor.css" />
-
-<div class="content-card">
-
-    <!-- HEADER -->
-
-    <div class="section-title d-flex align-items-center">
-        <i class="fas fa-microscope me-2"></i>
-        <span>Capture Test Result</span>
+    <div class="result-section-title">
+        <i class="fas fa-edit me-2"></i>
+        Enter Test Result
     </div>
 
-    <p class="text-muted mb-4">
-        Review the patient, sample and test information before entering the laboratory result.
+    <p class="text-muted">
+        Enter the result obtained from the laboratory test.
+        The system will automatically determine whether the result
+        is within the configured normal range.
     </p>
 
 
-    <!-- ========================================== -->
-    <!-- TEST INFORMATION -->
-    <!-- ========================================== -->
+    <form asp-action="SaveTestResult"
+          method="post"
+          id="resultForm">
 
-    <div class="info-section">
+        @Html.AntiForgeryToken()
 
-        <div class="info-section-title">
-            <i class="fas fa-flask me-2"></i>
-            Test Information
-        </div>
-
-        <div class="row g-3">
-
-            <div class="col-md-3">
-                <div class="info-box">
-                    <small>Request Number</small>
-                    <strong>
-                        #@Model.TestRequestId
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="info-box">
-                    <small>Test Type</small>
-                    <strong>
-                        @Model.TestType?.TestTypeName
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="info-box">
-                    <small>Category</small>
-                    <strong>
-                        @Model.TestType?.Category?.CategoryName
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="info-box">
-                    <small>Urgency</small>
-                    <strong>
-                        @Model.TestRequest?.Urgency
-                    </strong>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="row g-3 mt-1">
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Unit of Measurement</small>
-                    <strong>
-                        @(string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement)
-                            ? "Not specified"
-                            : Model.TestType.UnitOfMeasurement)
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Normal Range</small>
-                    <strong>
-                        @Model.TestType?.NormalRangeMin
-                        -
-                        @Model.TestType?.NormalRangeMax
-                        @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
-                        {
-                            <span>@Model.TestType.UnitOfMeasurement</span>
-                        }
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Turnaround Time</small>
-                    <strong>
-                        @Model.TestType?.TurnAroundTime minutes
-                    </strong>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="range-info mt-3">
-            <i class="fas fa-info-circle me-2"></i>
-            The system will automatically determine whether the captured result
-            falls within the configured normal range.
-        </div>
-
-    </div>
+        <input type="hidden"
+               name="testRequestTestTypeId"
+               value="@Model.TestRequestTestTypeId" />
 
 
-    <!-- ========================================== -->
-    <!-- PATIENT INFORMATION -->
-    <!-- ========================================== -->
+        <!-- RESULT VALUE -->
 
-    <div class="info-section">
+        <div class="mb-3">
 
-        <div class="info-section-title">
-            <i class="fas fa-user me-2"></i>
-            Patient Information
-        </div>
+            <label for="resultValue"
+                   class="form-label">
 
-        <div class="row g-3">
+                Result Value
+                <span class="text-danger">*</span>
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Patient Name</small>
-                    <strong>
-                        @Model.TestRequest?.Patient?.Name
-                        @Model.TestRequest?.Patient?.Surname
-                    </strong>
-                </div>
-            </div>
+            </label>
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>ID Number</small>
-                    <strong>
-                        @Model.TestRequest?.Patient?.IDNumber
-                    </strong>
-                </div>
-            </div>
+            <div class="input-group">
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Date of Birth</small>
-                    <strong>
-                        @Model.TestRequest?.Patient?.DateOfBirth.ToString("dd/MM/yyyy")
-                    </strong>
-                </div>
-            </div>
+                <input type="number"
+                       id="resultValue"
+                       name="resultValue"
+                       class="form-control"
+                       placeholder="Enter numeric result"
+                       step="any"
+                       min="0"
+                       inputmode="decimal"
+                       required
+                       data-normal-min="@Model.TestType?.NormalRangeMin"
+                       data-normal-max="@Model.TestType?.NormalRangeMax" />
 
-        </div>
-
-    </div>
-
-
-    <!-- ========================================== -->
-    <!-- CLINICAL INFORMATION -->
-    <!-- ========================================== -->
-
-    <div class="info-section">
-
-        <div class="info-section-title">
-            <i class="fas fa-notes-medical me-2"></i>
-            Clinical Information
-        </div>
-
-        <div class="clinical-box">
-
-            <div class="clinical-label">
-                Clinical Notes
-            </div>
-
-            <div class="clinical-text">
-
-                @if (!string.IsNullOrWhiteSpace(Model.TestRequest?.ClinicalNotes))
+                @if (!string.IsNullOrWhiteSpace(
+                    Model.TestType?.UnitOfMeasurement))
                 {
-                    @Model.TestRequest.ClinicalNotes
-                }
-                else
-                {
-                    <span class="text-muted">
-                        No clinical notes provided.
+                    <span class="input-group-text">
+                        @Model.TestType.UnitOfMeasurement
                     </span>
                 }
 
             </div>
 
-        </div>
+
+            <small class="text-muted">
+                Enter a numeric value. Decimal values are allowed.
+            </small>
 
 
-        <div class="row g-3 mt-2">
+            <!-- LIVE ABNORMAL WARNING -->
 
-            <!-- CONDITIONS -->
+            <div id="abnormalWarning"
+                 class="alert alert-warning mt-3 d-none">
 
-            <div class="col-md-4">
+                <i class="fas fa-exclamation-triangle me-2"></i>
 
-                <div class="clinical-list-box">
-
-                    <div class="clinical-list-title">
-                        <i class="fas fa-heartbeat me-2"></i>
-                        Conditions
-                    </div>
-
-                    @if (conditions.Any())
-                    {
-                        <ul>
-
-                            @foreach (var condition in conditions)
-                            {
-                                <li>
-                                    @condition.Condition?.Name
-
-                                    @if (condition.DiagnosedDate.HasValue)
-                                    {
-                                        <small class="text-muted">
-                                            (@condition.DiagnosedDate.Value.ToString("dd/MM/yyyy"))
-                                        </small>
-                                    }
-                                </li>
-                            }
-
-                        </ul>
-                    }
-                    else
-                    {
-                        <span class="text-muted">
-                            No recorded conditions.
-                        </span>
-                    }
-
-                </div>
+                <strong>Be aware:</strong>
+                this result is outside the normal range
+                and will be marked as abnormal.
 
             </div>
 
 
-            <!-- ALLERGIES -->
+            <!-- LIVE NORMAL MESSAGE -->
 
-            <div class="col-md-4">
+            <div id="normalMessage"
+                 class="alert alert-success mt-3 d-none">
 
-                <div class="clinical-list-box">
+                <i class="fas fa-check-circle me-2"></i>
 
-                    <div class="clinical-list-title">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Allergies
-                    </div>
-
-                    @if (allergies.Any())
-                    {
-                        <ul>
-
-                            @foreach (var allergy in allergies)
-                            {
-                                <li>
-
-                                    @allergy.Allergy?.Name
-
-                                    @if (!string.IsNullOrWhiteSpace(allergy.Severity))
-                                    {
-                                        <small class="text-muted">
-                                            (@allergy.Severity)
-                                        </small>
-                                    }
-
-                                </li>
-                            }
-
-                        </ul>
-                    }
-                    else
-                    {
-                        <span class="text-muted">
-                            No recorded allergies.
-                        </span>
-                    }
-
-                </div>
-
-            </div>
-
-
-            <!-- MEDICATIONS -->
-
-            <div class="col-md-4">
-
-                <div class="clinical-list-box">
-
-                    <div class="clinical-list-title">
-                        <i class="fas fa-pills me-2"></i>
-                        Medication
-                    </div>
-
-                    @if (medications.Any())
-                    {
-                        <ul>
-
-                            @foreach (var medication in medications)
-                            {
-                                <li>
-
-                                    <strong>
-                                        @medication.Medication?.Name
-                                    </strong>
-
-                                    @if (!string.IsNullOrWhiteSpace(medication.Dosage))
-                                    {
-                                        <small class="text-muted">
-                                            - @medication.Dosage
-                                        </small>
-                                    }
-
-                                    @if (!string.IsNullOrWhiteSpace(medication.Frequency))
-                                    {
-                                        <small class="text-muted">
-                                            (@medication.Frequency)
-                                        </small>
-                                    }
-
-                                </li>
-                            }
-
-                        </ul>
-                    }
-                    else
-                    {
-                        <span class="text-muted">
-                            No recorded medication.
-                        </span>
-                    }
-
-                </div>
+                This result is within the normal range.
 
             </div>
 
         </div>
 
-    </div>
 
 
-    <!-- ========================================== -->
-    <!-- DOCTOR INFORMATION -->
-    <!-- ========================================== -->
+        <!-- NORMAL RANGE REFERENCE -->
 
-    <div class="info-section">
+        <div class="range-reference mb-4">
 
-        <div class="info-section-title">
-            <i class="fas fa-user-md me-2"></i>
-            Requesting Doctor
+            <div class="range-reference-title">
+
+                <i class="fas fa-ruler-horizontal me-2"></i>
+
+                Normal Range
+
+            </div>
+
+            <div class="range-reference-value">
+
+                @Model.TestType?.NormalRangeMin
+                -
+                @Model.TestType?.NormalRangeMax
+
+                @if (!string.IsNullOrWhiteSpace(
+                    Model.TestType?.UnitOfMeasurement))
+                {
+                    <span>
+                        @Model.TestType.UnitOfMeasurement
+                    </span>
+                }
+
+            </div>
+
+            <small class="text-muted">
+
+                Results outside this range will automatically
+                be classified as abnormal.
+
+            </small>
+
         </div>
 
-        <div class="row g-3">
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Doctor</small>
+
+        <!-- NOTES -->
+
+        <div class="mb-4">
+
+            <label for="notes"
+                   class="form-label">
+
+                Notes
+                <span class="text-danger">*</span>
+
+            </label>
+
+            <textarea id="notes"
+                      name="notes"
+                      class="form-control"
+                      rows="4"
+                      placeholder="Enter any relevant observations or notes"
+                      required></textarea>
+
+            <small class="text-muted">
+
+                Notes are required before the test can be completed.
+
+            </small>
+
+        </div>
+
+
+
+        <!-- AUTOMATIC ABNORMAL INFORMATION -->
+
+        <div class="automatic-result-box mb-4">
+
+            <div class="d-flex align-items-start">
+
+                <i class="fas fa-robot me-3 mt-1"></i>
+
+                <div>
+
                     <strong>
-                        @Model.TestRequest?.Doctor?.Name
-                        @Model.TestRequest?.Doctor?.Surname
+                        Automatic Result Classification
                     </strong>
-                </div>
-            </div>
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>HPCSA Number</small>
-                    <strong>
-                        @Model.TestRequest?.Doctor?.HPCSANumber
-                    </strong>
-                </div>
-            </div>
+                    <p class="mb-0 text-muted">
 
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Phone Number</small>
-                    <strong>
-                        @Model.TestRequest?.Doctor?.PhoneNumber
-                    </strong>
+                        The system automatically compares the captured
+                        result against the configured normal range.
+                        You do not need to manually mark the result
+                        as abnormal.
+
+                    </p>
+
                 </div>
+
             </div>
 
         </div>
 
-    </div>
 
 
-    <!-- ========================================== -->
-    <!-- SAMPLE INFORMATION -->
-    <!-- ========================================== -->
+        <!-- ACTIONS -->
 
-    <div class="info-section">
+        <div class="d-flex justify-content-end gap-2">
 
-        <div class="info-section-title">
-            <i class="fas fa-vial me-2"></i>
-            Sample Information
-        </div>
+            <a asp-action="ProcessTests"
+               class="btn btn-secondary">
 
-        @if (Model.TestRequest?.Samples != null &&
-             Model.TestRequest.Samples.Any())
-        {
-            <div class="table-responsive">
+                <i class="fas fa-arrow-left me-1"></i>
 
-                <table class="modern-table">
+                Back to Tests
 
-                    <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Sample Type</th>
-                            <th>Date Received</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        @foreach (var sample in Model.TestRequest.Samples)
-                        {
-                            <tr>
-
-                                <td class="fw-semibold blue-text">
-                                    @sample.Barcode
-                                </td>
-
-                                <td>
-                                    @sample.SampleType?.SampleName
-                                </td>
-
-                                <td>
-                                    @(sample.DateTimeReceived.HasValue
-                                        ? sample.DateTimeReceived.Value.ToString("dd/MM/yyyy HH:mm")
-                                        : "Not yet received")
-                                </td>
-
-                            </tr>
-                        }
-
-                    </tbody>
-
-                </table>
-
-            </div>
-        }
-        else
-        {
-            <div class="text-muted">
-                No sample information available.
-            </div>
-        }
-
-    </div>
+            </a>
 
 
-    <!-- ========================================== -->
-    <!-- CURRENT PROCESSING INFORMATION -->
-    <!-- ========================================== -->
+            <button type="submit"
+                    class="btn btn-primary">
 
-    <div class="info-section">
+                <i class="fas fa-check me-1"></i>
 
-        <div class="info-section-title">
-            <i class="fas fa-user-cog me-2"></i>
-            Processing Information
-        </div>
+                Complete Test
 
-        <div class="row g-3">
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Status</small>
-                    <strong>
-                        @Model.Status
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Start Date & Time</small>
-                    <strong>
-
-                        @if (Model.StartDateTime.HasValue)
-                        {
-                            @Model.StartDateTime.Value.ToString("dd/MM/yyyy HH:mm")
-                        }
-                        else
-                        {
-                            <span class="text-muted">
-                                Not recorded
-                            </span>
-                        }
-
-                    </strong>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-box">
-                    <small>Technician</small>
-                    <strong>
-
-                        @if (Model.LabTechnician != null)
-                        {
-                            @Model.LabTechnician.Name
-                            @Model.LabTechnician.Surname
-                        }
-                        else
-                        {
-                            <span class="text-muted">
-                                Not assigned
-                            </span>
-                        }
-
-                    </strong>
-                </div>
-            </div>
+            </button>
 
         </div>
 
-    </div>
-
-
-    <!-- ========================================== -->
-    <!-- CAPTURE RESULT -->
-    <!-- ========================================== -->
-
-    <div class="result-section">
-
-        <div class="result-section-title">
-            <i class="fas fa-edit me-2"></i>
-            Enter Test Result
-        </div>
-
-        <p class="text-muted">
-            Enter the result obtained from the laboratory test.
-            The system will automatically determine whether the result is within
-            the configured normal range.
-        </p>
-
-
-        <form asp-action="SaveTestResult"
-              method="post">
-
-            @Html.AntiForgeryToken()
-
-            <input type="hidden"
-                   name="testRequestTestTypeId"
-                   value="@Model.TestRequestTestTypeId" />
-
-
-            <!-- RESULT VALUE -->
-
-            <div class="mb-3">
-
-                <label class="form-label">
-                    Result Value
-                </label>
-
-                <div class="input-group">
-
-                    <input type="text"
-                           name="resultValue"
-                           class="form-control"
-                           placeholder="Enter result"
-                           required />
-
-                    @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
-                    {
-                        <span class="input-group-text">
-                            @Model.TestType.UnitOfMeasurement
-                        </span>
-                    }
-
-                </div>
-
-                <small class="text-muted">
-                    Enter the value obtained from the laboratory test.
-                </small>
-
-            </div>
-
-
-            <!-- NORMAL RANGE REFERENCE -->
-
-            <div class="range-reference mb-3">
-
-                <div class="range-reference-title">
-                    <i class="fas fa-ruler-horizontal me-2"></i>
-                    Normal Range
-                </div>
-
-                <div class="range-reference-value">
-
-                    @Model.TestType?.NormalRangeMin
-                    -
-                    @Model.TestType?.NormalRangeMax
-
-                    @if (!string.IsNullOrWhiteSpace(Model.TestType?.UnitOfMeasurement))
-                    {
-                        <span>
-                            @Model.TestType.UnitOfMeasurement
-                        </span>
-                    }
-
-                </div>
-
-                <small class="text-muted">
-                    Results outside this range will automatically be marked as abnormal.
-                </small>
-
-            </div>
-
-
-            <!-- NOTES -->
-
-            <div class="mb-4">
-
-                <label class="form-label">
-                    Notes
-                </label>
-
-                <textarea name="notes"
-                          class="form-control"
-                          rows="4"
-                          placeholder="Enter any relevant observations or notes"></textarea>
-
-            </div>
-
-
-            <!-- AUTOMATIC ABNORMAL INFORMATION -->
-
-            <div class="automatic-result-box mb-4">
-
-                <div class="d-flex align-items-start">
-
-                    <i class="fas fa-robot me-3 mt-1"></i>
-
-                    <div>
-
-                        <strong>
-                            Automatic Result Classification
-                        </strong>
-
-                        <p class="mb-0 text-muted">
-                            The system will automatically compare the captured result
-                            against the normal range. The technician does not need to
-                            manually mark the result as abnormal.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ACTIONS -->
-
-            <div class="d-flex justify-content-end gap-2">
-
-                <a asp-action="ProcessTests"
-                   class="btn btn-secondary">
-
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Back to Tests
-
-                </a>
-
-                <button type="submit"
-                        class="btn btn-primary">
-
-                    <i class="fas fa-save me-1"></i>
-                    Save Test Result
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
+    </form>
 
 </div>
 
 
-<style>
+<!-- ========================================== -->
+<!-- RESULT SUCCESS / ERROR POPUP -->
+<!-- ========================================== -->
+@if (TempData["ResultSuccess"] != null ||
+     TempData["Error"] != null)
+{
+    <div class="modal fade"
+         id="resultMessageModal"
+         tabindex="-1"
+         aria-hidden="true">
 
-    .info-section {
-        margin-bottom: 25px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #e5e7eb;
-    }
+        <div class="modal-dialog modal-dialog-centered">
 
-    .info-section-title {
-        font-size: 17px;
-        font-weight: 600;
-        margin-bottom: 15px;
-        color: #344054;
-    }
+            <div class="modal-content border-0 shadow">
 
-    .info-box {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 12px 15px;
-        min-height: 70px;
-    }
+                <div class="modal-header
+                    @(TempData["ResultSuccess"] != null
+                        ? "bg-success text-white"
+                        : "bg-danger text-white")">
 
-        .info-box small {
-            display: block;
-            color: #667085;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
+                    <h5 class="modal-title">
 
-        .info-box strong {
-            display: block;
-            color: #344054;
-            font-size: 14px;
-        }
+                        <i class="fas
+                            @(TempData["ResultSuccess"] != null
+                               ? "fa-check-circle"
+                               : "fa-exclamation-circle")
+                            me-2">
+                        </i>
 
-    .clinical-box {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-    }
+                        @(TempData["ResultSuccess"] != null
+                            ? "Success"
+                            : "Unable to Save Result")
 
-    .clinical-label {
-        font-size: 12px;
-        color: #667085;
-        margin-bottom: 5px;
-    }
+                    </h5>
 
-    .clinical-text {
-        color: #344054;
-        line-height: 1.5;
-    }
+                    <button type="button"
+                            class="btn-close
+                        @(TempData["ResultSuccess"] != null
+                            ? "btn-close-white"
+                            : "")"
+                            data-bs-dismiss="modal">
+                    </button>
 
-    .clinical-list-box {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-        height: 100%;
-    }
+                </div>
 
-    .clinical-list-title {
-        font-weight: 600;
-        color: #344054;
-        margin-bottom: 10px;
-    }
 
-    .clinical-list-box ul {
-        margin: 0;
-        padding-left: 20px;
-    }
+                <div class="modal-body">
 
-    .clinical-list-box li {
-        margin-bottom: 6px;
-        color: #475467;
-    }
+                    @if (TempData["ResultSuccess"] != null)
+                    {
+                        <p class="mb-0">
+                            @TempData["ResultSuccess"]
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="mb-0">
+                            @TempData["Error"]
+                        </p>
+                    }
 
-    .result-section {
-        background: #ffffff;
-        border: 1px solid #d9e1e7;
-        border-radius: 10px;
-        padding: 25px;
-        margin-top: 10px;
-    }
+                </div>
 
-    .result-section-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #344054;
-        margin-bottom: 8px;
-    }
 
-    .range-info {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 12px 15px;
-        color: #475467;
-        font-size: 13px;
-    }
+                <div class="modal-footer">
 
-    .range-reference {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-    }
+                    <button type="button"
+                            class="btn btn-primary"
+                            data-bs-dismiss="modal">
 
-    .range-reference-title {
-        font-weight: 600;
-        color: #344054;
-        margin-bottom: 5px;
-    }
+                        OK
 
-    .range-reference-value {
-        font-size: 18px;
-        font-weight: 600;
-        color: #344054;
-        margin-bottom: 3px;
-    }
+                    </button>
 
-    .automatic-result-box {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-    }
+                </div>
 
-        .automatic-result-box i {
-            color: #75AABA;
-            font-size: 18px;
-        }
+            </div>
 
-        .automatic-result-box strong {
-            display: block;
-            color: #344054;
-            margin-bottom: 3px;
-        }
+        </div>
 
-    .form-label {
-        font-weight: 600;
-        color: #344054;
-    }
-
-    .form-control:focus {
-        border-color: #75AABA;
-        box-shadow: 0 0 0 0.2rem rgba(117, 170, 186, 0.15);
-    }
-
-</style>
+    </div>
+}
