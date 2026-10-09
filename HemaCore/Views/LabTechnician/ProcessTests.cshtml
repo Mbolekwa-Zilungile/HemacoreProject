@@ -1,4 +1,5 @@
-﻿@model IEnumerable<HemaCore.Models.TestRequestItem>
+﻿
+@model IEnumerable<HemaCore.Models.TestRequestItem>
 
 @{
     ViewData["Title"] = "Select & Process Tests";
@@ -15,11 +16,7 @@
         <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
             <i class="fas fa-check-circle me-2"></i>
             @TempData["ResultSuccess"]
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close">
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
@@ -28,15 +25,10 @@
         <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
             <i class="fas fa-exclamation-circle me-2"></i>
             @TempData["Error"]
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close">
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <!-- HEADER -->
     <div class="section-title d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
             <i class="fas fa-microscope me-2"></i>
@@ -48,15 +40,15 @@
     </div>
 
     <p class="text-muted mb-3">
-        Select a test to begin processing. Only test types assigned to you are shown.
+        Start an eligible test or continue a test you have already started.
     </p>
 
-    <!-- FILTERS -->
     @{
-        var urgencyList = new SelectList(new List<string> { "Routine", "Urgent", "STAT" });
+        var urgencyList = new SelectList(
+            new List<string> { "Routine", "Urgent", "STAT" },
+            selectedValue: Context.Request.Query["urgency"].ToString());
     }
 
-    <!-- FILTERS -->
     <form method="get" asp-action="ProcessTests" class="row g-2 mb-3">
 
         <div class="col-md-3">
@@ -72,18 +64,28 @@
                 {
                     @foreach (var cat in categories)
                     {
-                        <option value="@cat.CategoryId">@cat.CategoryName</option>
+                        <option value="@cat.CategoryId"
+                                selected="@(Context.Request.Query["categoryId"] == cat.CategoryId.ToString())">
+                            @cat.CategoryName
+                        </option>
                     }
                 }
             </select>
         </div>
 
         <div class="col-md-2">
-            <input type="number" name="requestNumber" class="form-control" placeholder="Request #" />
+            <input type="number"
+                   name="requestNumber"
+                   class="form-control"
+                   placeholder="Request #"
+                   value="@Context.Request.Query["requestNumber"]" />
         </div>
 
         <div class="col-md-2">
-            <input type="date" name="dueDate" class="form-control" />
+            <input type="date"
+                   name="dueDate"
+                   class="form-control"
+                   value="@Context.Request.Query["dueDate"]" />
         </div>
 
         <div class="col-md-2">
@@ -93,9 +95,8 @@
         </div>
 
     </form>
-    <!-- TABLE -->
-    <div class="table-responsive">
 
+    <div class="table-responsive">
         <table class="modern-table">
 
             <thead>
@@ -111,17 +112,17 @@
             </thead>
 
             <tbody>
-
-                @if (!Model.Any())
+                @if (Model == null || !Model.Any())
                 {
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="fas fa-microscope fa-2x mb-2"></i>
                             <div class="fw-semibold">
-                                There are currently no tests waiting to be processed.
+                                There are currently no tests to display.
                             </div>
                             <small>
-                                Tests will appear here when samples have been received and match your assigned test types.
+                                Eligible tests appear after their required samples have been received.
+                                Tests you have already started remain available here.
                             </small>
                         </td>
                     </tr>
@@ -153,30 +154,48 @@
                             </td>
 
                             <td>
-                                <span class="badge bg-warning text-dark">
-                                    @test.Status
-                                </span>
+                                @if (test.Status == "InProgress")
+                                {
+                                    <span class="badge bg-primary">
+                                        In Progress
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        @test.Status
+                                    </span>
+                                }
                             </td>
 
                             <td>
-                                <form asp-action="StartProcessing"
-                                      asp-route-id="@test.TestRequestTestTypeId"
-                                      method="post">
-                                    <button type="submit" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-play me-1"></i>
-                                        Start Processing
-                                    </button>
-                                </form>
+                                @if (test.Status == "InProgress")
+                                {
+                                    <a asp-action="CaptureTestResult"
+                                       asp-route-id="@test.TestRequestTestTypeId"
+                                       class="btn btn-sm btn-success">
+                                        <i class="fas fa-arrow-right me-1"></i>
+                                        Continue Test
+                                    </a>
+                                }
+                                else if (test.Status == "Submitted")
+                                {
+                                    <form asp-action="StartProcessing"
+                                          asp-route-id="@test.TestRequestTestTypeId"
+                                          method="post">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-play me-1"></i>
+                                            Start Processing
+                                        </button>
+                                    </form>
+                                }
                             </td>
-
                         </tr>
                     }
                 }
-
             </tbody>
 
         </table>
-
     </div>
 
 </div>

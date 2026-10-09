@@ -1,21 +1,225 @@
 ﻿
-<!-- ========================================== -->
-<!-- CAPTURE RESULT -->
-<!-- ========================================== -->
+@model HemaCore.Models.TestRequestItem
 
-<div class="result-section">
+@{
+    ViewData["Title"] = "Capture Test Result";
+    Layout = "_LabTechnicianLayout";
+}
 
-    <div class="result-section-title">
-        <i class="fas fa-edit me-2"></i>
-        Enter Test Result
+<style>
+    .result-card {
+        background: #fff;
+        border: 1px solid #e2e9ec;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 4px 16px rgba(35, 55, 65, .05);
+        margin-bottom: 24px;
+    }
+
+    .result-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #294b57;
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+        .result-heading i {
+            color: #75AABA;
+        }
+
+    .result-description {
+        color: #718087;
+        line-height: 1.6;
+        margin-bottom: 28px;
+    }
+
+    .form-label {
+        color: #344e58;
+        font-weight: 600;
+        margin-bottom: 9px;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    .result-input {
+        min-height: 54px;
+        border: 1px solid #d8e1e5;
+        border-radius: 10px 0 0 10px;
+        font-size: 17px;
+    }
+
+        .result-input:focus {
+            border-color: #75AABA;
+            box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
+        }
+
+        .result-input.is-invalid {
+            border-color: #dc3545;
+            background-image: none;
+        }
+
+        .result-input.is-valid {
+            border-color: #198754;
+            background-image: none;
+        }
+
+    .unit-label {
+        background: #f3f7f8;
+        border-color: #d8e1e5;
+        color: #526c75;
+        font-weight: 600;
+        border-radius: 0 10px 10px 0;
+        padding: 0 18px;
+    }
+
+    .result-feedback {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 12px 14px;
+        border-radius: 9px;
+        margin-top: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .feedback-error {
+        background: #fff1f1;
+        color: #b02a37;
+        border: 1px solid #f3c6ca;
+    }
+
+    .feedback-warning {
+        background: #fff7e6;
+        color: #8a6116;
+        border: 1px solid #f0d9a7;
+    }
+
+    .feedback-success {
+        background: #edf8f1;
+        color: #187346;
+        border: 1px solid #c8e8d3;
+    }
+
+    .range-card {
+        background: #f6f9fa;
+        border: 1px solid #e3ebee;
+        border-radius: 11px;
+        padding: 18px 20px;
+        margin-top: 22px;
+    }
+
+    .range-title {
+        color: #536e78;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 7px;
+    }
+
+    .range-value {
+        color: #294b57;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .help-text {
+        color: #788990;
+        font-size: 13px;
+        margin-top: 9px;
+    }
+
+    .info-card {
+        display: flex;
+        gap: 13px;
+        background: #f0f7f9;
+        border: 1px solid #d9e9ed;
+        border-radius: 10px;
+        padding: 17px;
+        margin: 24px 0;
+    }
+
+        .info-card > i {
+            color: #6096a6;
+            font-size: 20px;
+            margin-top: 3px;
+        }
+
+        .info-card strong {
+            color: #315967;
+        }
+
+        .info-card p {
+            color: #718087;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 5px 0 0;
+        }
+
+    .notes-input {
+        border: 1px solid #d8e1e5;
+        border-radius: 10px;
+        resize: vertical;
+    }
+
+        .notes-input:focus {
+            border-color: #75AABA;
+            box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
+        }
+
+    .btn-complete {
+        background: #477f91;
+        border: 1px solid #477f91;
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+    }
+
+        .btn-complete:hover {
+            background: #356778;
+            border-color: #356778;
+            color: #fff;
+        }
+
+    .btn-back {
+        border-radius: 8px;
+        padding: 10px 18px;
+    }
+
+    @@media (max-width: 576px) {
+        .result-card {
+            padding: 18px;
+        }
+
+        .result-actions {
+            flex-direction: column-reverse;
+        }
+
+            .result-actions .btn {
+                width: 100%;
+            }
+    }
+</style>
+
+<div class="result-card">
+
+    <div class="result-heading">
+        <i class="fas fa-edit"></i>
+        Capture Test Result
     </div>
 
-    <p class="text-muted">
-        Enter the result obtained from the laboratory test.
-        The system will automatically determine whether the result
-        is within the configured normal range.
+    <p class="result-description">
+        Enter the laboratory result below. The system will compare
+        the value with the configured normal range and notify you
+        immediately if the result is outside that range.
     </p>
-
 
     <form asp-action="SaveTestResult"
           method="post"
@@ -27,198 +231,128 @@
                name="testRequestTestTypeId"
                value="@Model.TestRequestTestTypeId" />
 
+        <div class="mb-4">
 
-        <!-- RESULT VALUE -->
-
-        <div class="mb-3">
-
-            <label for="resultValue"
-                   class="form-label">
-
-                Result Value
-                <span class="text-danger">*</span>
-
+            <label for="resultValue" class="form-label">
+                Result Value <span class="required">*</span>
             </label>
 
-            <div class="input-group">
+            <div class="input-group input-group-lg">
 
-                <input type="number"
+                <input type="text"
                        id="resultValue"
                        name="resultValue"
-                       class="form-control"
+                       class="form-control result-input"
                        placeholder="Enter numeric result"
-                       step="any"
-                       min="0"
                        inputmode="decimal"
+                       autocomplete="off"
+                       spellcheck="false"
                        required
                        data-normal-min="@Model.TestType?.NormalRangeMin"
-                       data-normal-max="@Model.TestType?.NormalRangeMax" />
+                       data-normal-max="@Model.TestType?.NormalRangeMax"
+                       aria-describedby="resultHelp resultValidation" />
 
                 @if (!string.IsNullOrWhiteSpace(
                     Model.TestType?.UnitOfMeasurement))
                 {
-                    <span class="input-group-text">
+                    <span class="input-group-text unit-label">
                         @Model.TestType.UnitOfMeasurement
                     </span>
                 }
 
             </div>
 
-
-            <small class="text-muted">
-                Enter a numeric value. Decimal values are allowed.
-            </small>
-
-
-            <!-- LIVE ABNORMAL WARNING -->
-
-            <div id="abnormalWarning"
-                 class="alert alert-warning mt-3 d-none">
-
-                <i class="fas fa-exclamation-triangle me-2"></i>
-
-                <strong>Be aware:</strong>
-                this result is outside the normal range
-                and will be marked as abnormal.
-
+            <div id="resultHelp" class="help-text">
+                <i class="fas fa-info-circle me-1"></i>
+                Numbers and one decimal point are allowed. Letters and
+                other special characters cannot be entered.
             </div>
 
+            <div id="resultValidation"
+                 class="result-feedback d-none"
+                 role="status"
+                 aria-live="polite">
+            </div>
 
-            <!-- LIVE NORMAL MESSAGE -->
+            <div class="range-card">
 
-            <div id="normalMessage"
-                 class="alert alert-success mt-3 d-none">
+                <div class="range-title">
+                    <i class="fas fa-ruler-horizontal me-2"></i>
+                    Configured Normal Range
+                </div>
 
-                <i class="fas fa-check-circle me-2"></i>
+                <div class="range-value">
 
-                This result is within the normal range.
+                    @Model.TestType?.NormalRangeMin
+                    –
+                    @Model.TestType?.NormalRangeMax
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        Model.TestType?.UnitOfMeasurement))
+                    {
+                        <span>@Model.TestType.UnitOfMeasurement</span>
+                    }
+
+                </div>
+
+                <small class="text-muted">
+                    Values below the minimum or above the maximum
+                    will be classified as abnormal.
+                </small>
 
             </div>
 
         </div>
 
+        <div class="info-card">
 
+            <i class="fas fa-info-circle"></i>
 
-        <!-- NORMAL RANGE REFERENCE -->
+            <div>
+                <strong>Automatic Result Classification</strong>
 
-        <div class="range-reference mb-4">
-
-            <div class="range-reference-title">
-
-                <i class="fas fa-ruler-horizontal me-2"></i>
-
-                Normal Range
-
+                <p>
+                    The system compares the result with the configured
+                    normal range. A numeric result outside the range
+                    can still be submitted, but it will be flagged
+                    as abnormal.
+                </p>
             </div>
-
-            <div class="range-reference-value">
-
-                @Model.TestType?.NormalRangeMin
-                -
-                @Model.TestType?.NormalRangeMax
-
-                @if (!string.IsNullOrWhiteSpace(
-                    Model.TestType?.UnitOfMeasurement))
-                {
-                    <span>
-                        @Model.TestType.UnitOfMeasurement
-                    </span>
-                }
-
-            </div>
-
-            <small class="text-muted">
-
-                Results outside this range will automatically
-                be classified as abnormal.
-
-            </small>
 
         </div>
-
-
-
-        <!-- NOTES -->
 
         <div class="mb-4">
 
-            <label for="notes"
-                   class="form-label">
-
-                Notes
-                <span class="text-danger">*</span>
-
+            <label for="notes" class="form-label">
+                Notes <span class="required">*</span>
             </label>
 
             <textarea id="notes"
                       name="notes"
-                      class="form-control"
+                      class="form-control notes-input"
                       rows="4"
-                      placeholder="Enter any relevant observations or notes"
+                      maxlength="2000"
+                      placeholder="Enter relevant observations or notes"
                       required></textarea>
 
             <small class="text-muted">
-
-                Notes are required before the test can be completed.
-
+                Please enter any relevant observations before completing
+                the test.
             </small>
 
         </div>
 
-
-
-        <!-- AUTOMATIC ABNORMAL INFORMATION -->
-
-        <div class="automatic-result-box mb-4">
-
-            <div class="d-flex align-items-start">
-
-                <i class="fas fa-robot me-3 mt-1"></i>
-
-                <div>
-
-                    <strong>
-                        Automatic Result Classification
-                    </strong>
-
-                    <p class="mb-0 text-muted">
-
-                        The system automatically compares the captured
-                        result against the configured normal range.
-                        You do not need to manually mark the result
-                        as abnormal.
-
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- ACTIONS -->
-
-        <div class="d-flex justify-content-end gap-2">
+        <div class="d-flex justify-content-end gap-2 result-actions">
 
             <a asp-action="ProcessTests"
-               class="btn btn-secondary">
-
+               class="btn btn-outline-secondary btn-back">
                 <i class="fas fa-arrow-left me-1"></i>
-
                 Back to Tests
-
             </a>
 
-
-            <button type="submit"
-                    class="btn btn-primary">
-
+            <button type="submit" class="btn btn-complete">
                 <i class="fas fa-check me-1"></i>
-
                 Complete Test
-
             </button>
 
         </div>
@@ -227,16 +361,13 @@
 
 </div>
 
-
-<!-- ========================================== -->
-<!-- RESULT SUCCESS / ERROR POPUP -->
-<!-- ========================================== -->
 @if (TempData["ResultSuccess"] != null ||
      TempData["Error"] != null)
 {
     <div class="modal fade"
          id="resultMessageModal"
          tabindex="-1"
+         aria-labelledby="resultMessageTitle"
          aria-hidden="true">
 
         <div class="modal-dialog modal-dialog-centered">
@@ -248,14 +379,12 @@
                         ? "bg-success text-white"
                         : "bg-danger text-white")">
 
-                    <h5 class="modal-title">
+                    <h5 class="modal-title" id="resultMessageTitle">
 
                         <i class="fas
-                            @(TempData["ResultSuccess"] != null
-                               ? "fa-check-circle"
-                               : "fa-exclamation-circle")
-                            me-2">
-                        </i>
+                        @(TempData["ResultSuccess"] != null
+                            ? "fa-check-circle"
+                            : "fa-exclamation-circle") me-2"></i>
 
                         @(TempData["ResultSuccess"] != null
                             ? "Success"
@@ -264,42 +393,32 @@
                     </h5>
 
                     <button type="button"
-                            class="btn-close
-                        @(TempData["ResultSuccess"] != null
-                            ? "btn-close-white"
-                            : "")"
-                            data-bs-dismiss="modal">
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
                     </button>
 
                 </div>
-
 
                 <div class="modal-body">
 
                     @if (TempData["ResultSuccess"] != null)
                     {
-                        <p class="mb-0">
-                            @TempData["ResultSuccess"]
-                        </p>
+                        @TempData["ResultSuccess"]
                     }
                     else
                     {
-                        <p class="mb-0">
-                            @TempData["Error"]
-                        </p>
+                        @TempData["Error"]
                     }
 
                 </div>
-
 
                 <div class="modal-footer">
 
                     <button type="button"
                             class="btn btn-primary"
                             data-bs-dismiss="modal">
-
                         OK
-
                     </button>
 
                 </div>
@@ -310,3 +429,230 @@
 
     </div>
 }
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const input = document.getElementById("resultValue");
+        const feedback = document.getElementById("resultValidation");
+        const form = document.getElementById("resultForm");
+
+        if (!input || !feedback || !form) return;
+
+        const min = Number(input.dataset.normalMin);
+        const max = Number(input.dataset.normalMax);
+
+        // Display feedback without interpreting user-entered text as HTML.
+        function showFeedback(message, type) {
+
+            feedback.className = "result-feedback feedback-" + type;
+
+            const icon = document.createElement("i");
+
+            if (type === "error") {
+                icon.className = "fas fa-exclamation-circle";
+            } else if (type === "warning") {
+                icon.className = "fas fa-exclamation-triangle";
+            } else {
+                icon.className = "fas fa-check-circle";
+            }
+
+            const text = document.createElement("span");
+            text.textContent = message;
+
+            feedback.replaceChildren(icon, text);
+        }
+
+        function hideFeedback() {
+            feedback.className = "result-feedback d-none";
+            feedback.replaceChildren();
+        }
+
+        // Validate the value and show range feedback.
+        function validateResult() {
+
+            const value = input.value.trim();
+
+            input.classList.remove("is-invalid", "is-valid");
+            hideFeedback();
+
+            if (value === "") {
+                return false;
+            }
+
+            // Prevent incomplete decimals from being submitted.
+            if (value === "." || value.endsWith(".")) {
+                input.classList.add("is-invalid");
+
+                showFeedback(
+                    "Please finish entering the decimal value.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            if (!/^\d+(\.\d+)?$/.test(value)) {
+
+                input.classList.add("is-invalid");
+
+                showFeedback(
+                    "Enter a valid number, for example 12 or 12.5.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            const number = Number(value);
+
+            if (!Number.isFinite(number) || number < 0) {
+
+                input.classList.add("is-invalid");
+
+                showFeedback(
+                    "Please enter a valid number greater than or equal to zero.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            if (
+                !Number.isFinite(min) ||
+                !Number.isFinite(max) ||
+                min > max
+            ) {
+                input.classList.add("is-invalid");
+
+                showFeedback(
+                    "The configured normal range is unavailable or invalid.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            input.classList.add("is-valid");
+
+            if (number < min) {
+
+                showFeedback(
+                    "Below the normal range. The minimum is " +
+                    min + ". This result will be flagged as abnormal.",
+                    "warning"
+                );
+
+            } else if (number > max) {
+
+                showFeedback(
+                    "Above the normal range. The maximum is " +
+                    max + ". This result will be flagged as abnormal.",
+                    "warning"
+                );
+
+            } else {
+
+                showFeedback(
+                    "This value is within the configured normal range.",
+                    "success"
+                );
+
+            }
+
+            return true;
+        }
+
+        // Block invalid characters before they appear in the input.
+        input.addEventListener("beforeinput", function(event) {
+
+            if (event.inputType &&
+                event.inputType.startsWith("delete")) {
+                return;
+            }
+
+            if (event.data == null) {
+                return;
+            }
+
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+
+            const proposedValue =
+                input.value.substring(0, start) +
+                event.data +
+                input.value.substring(end);
+
+            // Only digits and at most one decimal point.
+            if (!/^\d*\.?\d*$/.test(proposedValue)) {
+                event.preventDefault();
+            }
+        });
+
+        // Sanitize pasted text and input methods that bypass beforeinput.
+        input.addEventListener("input", function() {
+
+            const originalValue = input.value;
+            const cursor = input.selectionStart ?? originalValue.length;
+
+            let cleanedValue = originalValue.replace(/[^\d.]/g, "");
+
+            const firstDecimal = cleanedValue.indexOf(".");
+
+            if (firstDecimal !== -1) {
+                cleanedValue =
+                    cleanedValue.substring(0, firstDecimal + 1) +
+                    cleanedValue.substring(firstDecimal + 1).replace(/\./g, "");
+            }
+
+            if (cleanedValue !== originalValue) {
+
+                const removedBeforeCursor =
+                    originalValue.substring(0, cursor)
+                        .replace(/[^\d.]/g, "").length;
+
+                input.value = cleanedValue;
+
+                const newCursor = Math.min(
+                    removedBeforeCursor,
+                    cleanedValue.length
+                );
+
+                input.setSelectionRange(newCursor, newCursor);
+            }
+
+            validateResult();
+        });
+
+        // Prevent submission of an empty or invalid result.
+        form.addEventListener("submit", function(event) {
+
+            if (!validateResult()) {
+                event.preventDefault();
+                input.focus();
+
+                if (input.value.trim() === "") {
+                    showFeedback(
+                        "Please enter a result value before completing the test.",
+                        "error"
+                    );
+                }
+
+                return;
+            }
+
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                form.reportValidity();
+            }
+        });
+
+        // Automatically display any server response popup.
+        const modalElement = document.getElementById("resultMessageModal");
+
+        if (modalElement && window.bootstrap) {
+            new bootstrap.Modal(modalElement).show();
+        }
+
+    });
+</script>

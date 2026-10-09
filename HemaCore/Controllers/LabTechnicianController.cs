@@ -233,53 +233,64 @@ public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
         }
 
 
-        public async Task<IActionResult> ProcessTests(
-            string urgency,
-            int? categoryId,
-            int? requestNumber,
-            DateTime? dueDate)
+       
+
+public async Task<IActionResult> ProcessTests(
+    string urgency,
+    int? categoryId,
+    int? requestNumber,
+    DateTime? dueDate)
         {
             var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
             var technician = await _context.LabTechnicians
-                .FirstOrDefaultAsync(t =>
-                    t.UserId == user.Id);
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
             var qualifiedTestTypeIds =
                 await _context.TechnicianTestTypes
                     .Where(tt =>
-                        tt.LabTechnicianId ==
-                        technician.LabTechnicianId)
-                    .Select(tt =>
-                        tt.TestTypeId)
+                        tt.LabTechnicianId == technician.LabTechnicianId)
+                    .Select(tt => tt.TestTypeId)
                     .ToListAsync();
 
-            var query =
-                _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Patient)
-                    .Include(t => t.TestType)
-                        .ThenInclude(tt => tt.Category)
-                    .Where(t =>
-                        t.Status == "Submitted" &&
-                        t.TestRequest.Status ==
-                            "SamplesReceived" &&
-                        qualifiedTestTypeIds.Contains(
-                            t.TestTypeId))
-                    .AsQueryable();
+            var query = _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                    .ThenInclude(tt => tt.Category)
+                .Where(t =>
+                    (
+                        // New tests the technician is qualified to perform
+                        (
+                            t.Status == "Submitted" &&
+                            (t.TestRequest.Status == "SamplesReceived" ||
+                             t.TestRequest.Status == "InProgress") &&
+                            qualifiedTestTypeIds.Contains(t.TestTypeId) &&
+                            _context.Samples.Any(s =>
+                                s.TestRequestId == t.TestRequestId &&
+                                s.SampleTypeId == t.TestType.SampleTypeId &&
+                                s.DateTimeReceived.HasValue)
+                        )
+
+                        ||
+
+                        // Tests already started by this technician
+                        (
+                            t.Status == "InProgress" &&
+                            t.LabTechnicianId == technician.LabTechnicianId
+                        )
+                    ))
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(urgency))
             {
@@ -290,40 +301,35 @@ public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
             if (categoryId.HasValue)
             {
                 query = query.Where(t =>
-                    t.TestType.CategoryId ==
-                    categoryId.Value);
+                    t.TestType.CategoryId == categoryId.Value);
             }
 
             if (requestNumber.HasValue)
             {
                 query = query.Where(t =>
-                    t.TestRequestId ==
-                    requestNumber.Value);
+                    t.TestRequestId == requestNumber.Value);
             }
 
             if (dueDate.HasValue)
             {
                 query = query.Where(t =>
                     t.TestRequest.RequestDate
-                        .AddMinutes(
-                            t.TestType.TurnAroundTime)
-                        .Date ==
-                    dueDate.Value.Date);
+                        .AddMinutes(t.TestType.TurnAroundTime)
+                        .Date == dueDate.Value.Date);
             }
 
-            var tests =
-                await query.ToListAsync();
+            var tests = await query
+                .OrderBy(t => t.TestRequestId)
+                .ToListAsync();
 
-            ViewBag.Categories =
-                await _context.TestCategories
-                    .Where(c => c.IsActive)
-                    .ToListAsync();
+            ViewBag.Categories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .ToListAsync();
 
             return View(tests);
         }
 
 
-    
         [HttpPost]
         public async Task<IActionResult> StartProcessing(int id)
         {
@@ -331,33 +337,26 @@ public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var test =
-                await _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                    .Include(t => t.TestType)
-                    .FirstOrDefaultAsync(t =>
-                        t.TestRequestTestTypeId == id);
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                .Include(t => t.TestType)
+                .FirstOrDefaultAsync(t =>
+                    t.TestRequestTestTypeId == id);
 
             if (test == null)
             {
-                return NotFound(
-                    "Test could not be found.");
+                return NotFound("Test could not be found.");
             }
 
             if (test.Status != "Submitted")
@@ -365,72 +364,69 @@ public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
                 TempData["Error"] =
                     "This test has already been selected or processed.";
 
-                return RedirectToAction(
-                    nameof(ProcessTests));
+                return RedirectToAction(nameof(ProcessTests));
             }
 
-            if (test.TestRequest.Status !=
-                "SamplesReceived")
+            if (test.TestRequest.Status != "SamplesReceived" &&
+                test.TestRequest.Status != "InProgress")
             {
                 TempData["Error"] =
-                    "This test cannot be started because the required sample has not been received.";
+                    "This test cannot be started because the request is not ready for processing.";
 
-                return RedirectToAction(
-                    nameof(ProcessTests));
+                return RedirectToAction(nameof(ProcessTests));
             }
 
-            var isAssignedTestType =
-                await _context.TechnicianTestTypes
-                    .AnyAsync(tt =>
-                        tt.LabTechnicianId ==
-                            technician.LabTechnicianId &&
-                        tt.TestTypeId ==
-                            test.TestTypeId);
+            var isAssignedTestType = await _context.TechnicianTestTypes
+                .AnyAsync(tt =>
+                    tt.LabTechnicianId == technician.LabTechnicianId &&
+                    tt.TestTypeId == test.TestTypeId);
 
             if (!isAssignedTestType)
             {
                 TempData["Error"] =
                     "You are not assigned to perform this test type.";
 
-                return RedirectToAction(
-                    nameof(ProcessTests));
+                return RedirectToAction(nameof(ProcessTests));
+            }
+
+            // Confirm that the required sample type has been received
+            // for this specific test request.
+            var requiredSampleReceived = await _context.Samples
+                .AnyAsync(s =>
+                    s.TestRequestId == test.TestRequestId &&
+                    s.SampleTypeId == test.TestType.SampleTypeId &&
+                    s.DateTimeReceived.HasValue);
+
+            if (!requiredSampleReceived)
+            {
+                TempData["Error"] =
+                    $"The required {test.TestType.TestTypeName} sample has not been received.";
+
+                return RedirectToAction(nameof(ProcessTests));
             }
 
             bool firstTestForRequest =
                 !await _context.TestRequestTestTypes
                     .AnyAsync(t =>
-                        t.TestRequestId ==
-                            test.TestRequestId &&
+                        t.TestRequestId == test.TestRequestId &&
                         t.Status == "InProgress");
 
-            test.LabTechnicianId =
-                technician.LabTechnicianId;
-
-            test.Status =
-                "InProgress";
-
-            test.StartDateTime =
-                DateTime.Now;
+            test.LabTechnicianId = technician.LabTechnicianId;
+            test.Status = "InProgress";
+            test.StartDateTime = DateTime.Now;
 
             if (firstTestForRequest)
             {
-                test.TestRequest.Status =
-                    "InProgress";
+                test.TestRequest.Status = "InProgress";
             }
 
             await _context.SaveChangesAsync();
 
             return RedirectToAction(
                 nameof(CaptureTestResult),
-                new
-                {
-                    id =
-                        test.TestRequestTestTypeId
-                });
+                new { id = test.TestRequestTestTypeId });
         }
 
-
-       
 
         [HttpGet]
         public async Task<IActionResult> CaptureTestResult(int id)
