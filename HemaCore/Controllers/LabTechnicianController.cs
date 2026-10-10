@@ -2,6 +2,7 @@
 using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Models.ViewModels;
+using HemaCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -1932,5 +1933,169 @@ public async Task<IActionResult> SaveTestResult(
 
             return View(completedTests);
         }
+
+
+
+        // ==========================================
+        // MY ACCOUNT - VIEW PROFILE
+        // ==========================================
+
+        [HttpGet]
+        public async Task<IActionResult> TechnicianProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var model = new ProfileViewModel
+            {
+                Email = user.Email ?? "",
+                FullName = user.FullName ?? "",
+                PhoneNumber = user.PhoneNumber
+            };
+
+            return View(model);
+        }
+
+
+        // ==========================================
+        // MY ACCOUNT - EDIT PROFILE
+        // ==========================================
+
+        [HttpGet]
+        public async Task<IActionResult> EditProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var model = new ProfileViewModel
+            {
+                Email = user.Email ?? "",
+                FullName = user.FullName ?? "",
+                PhoneNumber = user.PhoneNumber
+            };
+
+            return View(model);
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile(ProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Check whether another user already has this email address.
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+
+            if (existingUser != null && existingUser.Id != user.Id)
+            {
+                ModelState.AddModelError(nameof(model.Email),
+                    "This email address is already in use.");
+
+                return View(model);
+            }
+
+            // Update the Identity user.
+            user.FullName = model.FullName;
+            user.Email = model.Email;
+            user.UserName = model.Email;
+            user.PhoneNumber = model.PhoneNumber;
+
+            var identityResult = await _userManager.UpdateAsync(user);
+
+            if (!identityResult.Succeeded)
+            {
+                foreach (var error in identityResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
+            // Find the technician record linked to this logged-in user.
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            // Update the technician's phone number as well.
+            if (technician != null)
+            {
+                technician.PhoneNumber = model.PhoneNumber;
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["SuccessMessage"] = "Your profile has been updated successfully.";
+
+            return RedirectToAction(nameof(TechnicianProfile));
+        }
+
+        // ==========================================
+        // MY ACCOUNT - CHANGE PASSWORD
+        // ==========================================
+
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(
+            ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(
+                user,
+                model.CurrentPassword,
+                model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+
+                return View(model);
+            }
+
+            TempData["AccountSuccess"] = "Your password was changed successfully.";
+
+            return RedirectToAction(nameof(TechnicianProfile));
+        }
+
     }
 }
