@@ -3,488 +3,563 @@
 @{
     ViewData["Title"] = "Lab Technician Reporting";
     Layout = "_LabTechnicianLayout";
+
+    var testCount = Model.Tests?.Count ?? 0;
+    var hasFilters = Model.FromDate.HasValue
+                     || Model.ToDate.HasValue
+                     || !string.IsNullOrEmpty(Model.TestType)
+                     || !string.IsNullOrEmpty(Model.Status)
+                     || !string.IsNullOrEmpty(Model.Urgency);
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
-<div class="content-card">
+<div class="rp-page">
 
-    <!-- HEADER -->
-    <div class="section-title d-flex align-items-center justify-content-between">
+    <!-- Page heading -->
+    <header class="rp-heading">
+        <div>
+            <h2>Lab technician reporting</h2>
+            <p>Report on test processing, results, verification and turnaround times.</p>
+        </div>
+    </header>
 
-        <div class="d-flex align-items-center">
-
-            <i class="fas fa-chart-bar me-2"></i>
-
-            <span>Lab Technician Reporting</span>
-
+    <!-- Filters -->
+    <section class="rp-card" aria-label="Report filters">
+        <div class="rp-card-head">
+            <div>
+                <h5>Report filters</h5>
+                <p>Choose what to include, then generate the report.</p>
+            </div>
         </div>
 
-    </div>
-
-    <p class="text-muted mb-4">
-        Generate reports on laboratory test processing, results,
-        verification and turnaround times.
-    </p>
-
-
-    <!-- REPORT FILTERS -->
-
-    <div class="section-title mb-3">
-
-        <div class="d-flex align-items-center">
-
-            <i class="fas fa-filter me-2"></i>
-
-            <span>Report Filters</span>
-
-        </div>
-
-    </div>
-
-
-    <form asp-action="Reports" method="get">
-
-        <div class="row g-3 mb-4">
-
-            <!-- FROM DATE -->
-            <div class="col-md-3">
-
-                <label class="form-label fw-semibold">
-                    From Date
-                </label>
-
+        <form asp-action="Reports" method="get" class="rp-filters">
+            <div class="rp-field">
+                <label for="fromDate" class="rp-label">From date</label>
                 <input type="date"
+                       id="fromDate"
                        name="fromDate"
                        value="@(Model.FromDate?.ToString("yyyy-MM-dd"))"
                        class="form-control" />
-
             </div>
 
-
-            <!-- TO DATE -->
-            <div class="col-md-3">
-
-                <label class="form-label fw-semibold">
-                    To Date
-                </label>
-
+            <div class="rp-field">
+                <label for="toDate" class="rp-label">To date</label>
                 <input type="date"
+                       id="toDate"
                        name="toDate"
                        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))"
                        class="form-control" />
-
             </div>
 
-
-            <!-- TEST TYPE -->
-            <div class="col-md-2">
-
-                <label class="form-label fw-semibold">
-                    Test Type
-                </label>
-
-                <select name="testType" class="form-select">
-
-                    <option value="">
-                        All
-                    </option>
-
-                    <option value="Full Blood Count"
-                            selected="@(Model.TestType == "Full Blood Count")">
-                        Full Blood Count
-                    </option>
-
-                    <option value="ESR"
-                            selected="@(Model.TestType == "ESR")">
-                        ESR
-                    </option>
-
-                    <option value="Blood Group"
-                            selected="@(Model.TestType == "Blood Group")">
-                        Blood Group
-                    </option>
-
+            <div class="rp-field">
+                <label for="testType" class="rp-label">Test type</label>
+                <select id="testType" name="testType" class="form-select">
+                    <option value="">All</option>
+                    <option value="Full Blood Count" selected="@(Model.TestType == "Full Blood Count")">Full Blood Count</option>
+                    <option value="ESR" selected="@(Model.TestType == "ESR")">ESR</option>
+                    <option value="Blood Group" selected="@(Model.TestType == "Blood Group")">Blood Group</option>
                 </select>
-
             </div>
 
-
-            <!-- STATUS -->
-            <div class="col-md-2">
-
-                <label class="form-label fw-semibold">
-                    Status
-                </label>
-
-                <select name="status" class="form-select">
-
-                    <option value="">
-                        All
-                    </option>
-
-                    <option value="Completed"
-                            selected="@(Model.Status == "Completed")">
-                        Completed
-                    </option>
-
-                    <option value="InProgress"
-                            selected="@(Model.Status == "InProgress")">
-                        In Progress
-                    </option>
-
+            <div class="rp-field">
+                <label for="status" class="rp-label">Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="Completed" selected="@(Model.Status == "Completed")">Completed</option>
+                    <option value="InProgress" selected="@(Model.Status == "InProgress")">In progress</option>
                 </select>
-
             </div>
 
-
-            <!-- URGENCY -->
-            <div class="col-md-2">
-
-                <label class="form-label fw-semibold">
-                    Urgency
-                </label>
-
-                <select name="urgency" class="form-select">
-
-                    <option value="">
-                        All
-                    </option>
-
-                    <option value="Routine"
-                            selected="@(Model.Urgency == "Routine")">
-                        Routine
-                    </option>
-
-                    <option value="Urgent"
-                            selected="@(Model.Urgency == "Urgent")">
-                        Urgent
-                    </option>
-
-                    <option value="STAT"
-                            selected="@(Model.Urgency == "STAT")">
-                        STAT
-                    </option>
-
+            <div class="rp-field">
+                <label for="urgency" class="rp-label">Urgency</label>
+                <select id="urgency" name="urgency" class="form-select">
+                    <option value="">All</option>
+                    <option value="Routine" selected="@(Model.Urgency == "Routine")">Routine</option>
+                    <option value="Urgent" selected="@(Model.Urgency == "Urgent")">Urgent</option>
+                    <option value="STAT" selected="@(Model.Urgency == "STAT")">STAT</option>
                 </select>
-
             </div>
 
+            <div class="rp-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-chart-bar me-1"></i>Generate report
+                </button>
+
+                <a asp-action="Reports" class="btn btn-outline-secondary">
+                    <i class="fas fa-rotate-left me-1"></i>Clear filters
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <!-- Summary -->
+    <section class="rp-stats" aria-label="Report summary">
+        <div class="rp-stat">
+            <span class="rp-label">Total tests</span>
+            <span class="rp-stat-value">@Model.TotalTests</span>
         </div>
 
+        <div class="rp-stat">
+            <span class="rp-label">Completed</span>
+            <span class="rp-stat-value">@Model.CompletedTests</span>
+        </div>
 
-        <div class="d-flex gap-2 mb-4">
+        <div class="rp-stat">
+            <span class="rp-label">In progress</span>
+            <span class="rp-stat-value">@Model.InProgressTests</span>
+        </div>
 
-            <button type="submit"
-                    class="btn btn-primary">
+        <div class="rp-stat @(Model.AbnormalResults > 0 ? "rp-stat-abnormal" : "")">
+            <span class="rp-label">Abnormal results</span>
+            <span class="rp-stat-value">@Model.AbnormalResults</span>
+        </div>
+    </section>
 
-                <i class="fas fa-chart-bar me-1"></i>
+    <!-- Report table -->
+    <section class="rp-card" aria-label="Generated report">
+        <div class="rp-card-head">
+            <div>
+                <h5>
+                    Generated report
+                    <span class="rp-count">@testCount @(testCount == 1 ? "test" : "tests")</span>
+                </h5>
+                <p>@(hasFilters ? "Showing results for the selected filters." : "Showing all tests.")</p>
+            </div>
 
-                Generate Report
-
-            </button>
-
-            <a asp-action="Reports"
-               class="btn btn-secondary">
-
-                <i class="fas fa-rotate-left me-1"></i>
-
-                Clear Filters
-
+            <a asp-action="ExportReportPdf"
+               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+               asp-route-testType="@Model.TestType"
+               asp-route-status="@Model.Status"
+               asp-route-urgency="@Model.Urgency"
+               class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i>Export PDF
             </a>
-
         </div>
 
-    </form>
-
-
-    <!-- SUMMARY -->
-
-    <div class="section-title mb-3">
-
-        <div class="d-flex align-items-center">
-
-            <i class="fas fa-chart-pie me-2"></i>
-
-            <span>Report Summary</span>
-
-        </div>
-
-    </div>
-
-
-    <div class="row g-3 mb-4">
-
-        <div class="col-md-4 col-lg">
-
-            <div class="border rounded p-3">
-
-                <small class="text-muted">
-                    Total Tests
-                </small>
-
-                <h3 class="fw-bold mb-0">
-                    @Model.TotalTests
-                </h3>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4 col-lg">
-
-            <div class="border rounded p-3">
-
-                <small class="text-muted">
-                    Completed
-                </small>
-
-                <h3 class="fw-bold mb-0">
-                    @Model.CompletedTests
-                </h3>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4 col-lg">
-
-            <div class="border rounded p-3">
-
-                <small class="text-muted">
-                    In Progress
-                </small>
-
-                <h3 class="fw-bold mb-0">
-                    @Model.InProgressTests
-                </h3>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-4 col-lg">
-
-            <div class="border rounded p-3">
-
-                <small class="text-muted">
-                    Abnormal Results
-                </small>
-
-                <h3 class="fw-bold mb-0">
-                    @Model.AbnormalResults
-                </h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- REPORT TABLE -->
-
-    <div class="section-title mb-3">
-
-        <div class="d-flex align-items-center">
-
-            <i class="fas fa-table me-2"></i>
-
-            <span>Generated Report</span>
-
-            <span class="badge blue-badge ms-2">
-                @(Model.Tests?.Count ?? 0)
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="table-responsive">
-
-        <table class="modern-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Request No.</th>
-
-                    <th>Patient</th>
-
-                    <th>Test Type</th>
-
-                    <th>Technician</th>
-
-                    <th>Urgency</th>
-
-                    <th>Status</th>
-
-                    <th>Result</th>
-
-                    <th>Turnaround</th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-                @if (Model.Tests == null || !Model.Tests.Any())
-                {
+        <div class="rp-table-wrap">
+            <table class="rp-table">
+                <thead>
                     <tr>
-
-                        <td colspan="8"
-                            class="text-center text-muted py-4">
-
-                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
-
-                            <div class="fw-semibold">
-                                No test results found for the selected filters.
-                            </div>
-
-                            <small>
-                                Try changing the date range or report filters.
-                            </small>
-
-                        </td>
-
+                        <th>Request</th>
+                        <th>Patient</th>
+                        <th>Test type</th>
+                        <th>Technician</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Result</th>
+                        <th class="num">Turnaround</th>
                     </tr>
-                }
-                else
-                {
-                    foreach (var test in Model.Tests)
+                </thead>
+
+                <tbody>
+                    @if (Model.Tests == null || !Model.Tests.Any())
                     {
                         <tr>
-
-                            <td class="fw-semibold blue-text">
-                                #@test.TestRequestId
+                            <td colspan="8" class="rp-empty">
+                                <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                                <div class="rp-empty-title">No test results found for these filters.</div>
+                                <div>Try a wider date range or clear the filters.</div>
                             </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var test in Model.Tests)
+                        {
+                            var urgencyClass = test.Urgency switch
+                            {
+                                "STAT" => "pill-stat",
+                                "Urgent" => "pill-urgent",
+                                _ => "pill-plain"
+                            };
 
-                            <td>
-                                @test.PatientName
-                            </td>
+                            var statusClass = test.Status switch
+                            {
+                                "Completed" => "pill-ok",
+                                "InProgress" => "pill-progress",
+                                _ => "pill-plain"
+                            };
 
-                            <td>
-                                @test.TestTypeName
-                            </td>
+                            var statusText = test.Status == "InProgress" ? "In progress" : test.Status;
 
-                            <td>
-                                @test.TechnicianName
-                            </td>
+                            <tr>
+                                <td class="rp-request">#@test.TestRequestId</td>
+                                <td>@test.PatientName</td>
+                                <td>@test.TestTypeName</td>
+                                <td>@test.TechnicianName</td>
 
-                            <td>
-                                @test.Urgency
-                            </td>
+                                <td>
+                                    <span class="pill @urgencyClass">@test.Urgency</span>
+                                </td>
 
-                            <td>
+                                <td>
+                                    <span class="pill @statusClass">@statusText</span>
+                                </td>
 
-                                @if (test.Status == "Completed")
-                                {
-                                    <span class="badge bg-success">
-                                        Completed
-                                    </span>
-                                }
-                                else if (test.Status == "InProgress")
-                                {
-                                    <span class="badge bg-warning text-dark">
-                                        In Progress
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">
-                                        @test.Status
-                                    </span>
-                                }
-
-                            </td>
-
-                            <td>
-
-                                @if (test.IsAbnormal)
-                                {
-                                    <span class="badge bg-danger">
-                                        @test.ResultValue
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">
-                                        @test.ResultValue
-                                    </span>
-                                }
-
-                            </td>
-
-                            <td>
-
-                                @if (test.TurnaroundMinutes.HasValue)
-                                {
-                                    var minutes =
-                                        Math.Round(test.TurnaroundMinutes.Value);
-
-                                    if (minutes < 60)
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(test.ResultValue))
                                     {
-                                        @($"{minutes} min")
+                                        <span class="rp-muted">—</span>
                                     }
                                     else
                                     {
-                                        var hours =
-                                            Math.Floor(minutes / 60);
-
-                                        var remainingMinutes =
-                                            minutes % 60;
-
-                                        @($"{hours}h {remainingMinutes}min")
+                                        <span class="result-chip @(test.IsAbnormal ? "result-abnormal" : "")">
+                                            @test.ResultValue
+                                        </span>
+                                        @if (test.IsAbnormal)
+                                        {
+                                            <span class="abnormal-note">Abnormal</span>
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    <span class="text-muted">
-                                        —
-                                    </span>
-                                }
+                                </td>
 
-                            </td>
+                                <td class="num">
+                                    @if (test.TurnaroundMinutes.HasValue)
+                                    {
+                                        var totalMinutes = (int)Math.Round(test.TurnaroundMinutes.Value);
 
-                        </tr>
+                                        if (totalMinutes < 60)
+                                        {
+                                            @($"{totalMinutes} min")
+                                        }
+                                        else
+                                        {
+                                            @($"{totalMinutes / 60}h {totalMinutes % 60}min")
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="rp-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
                     }
-                }
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-
-    <!-- PDF BUTTON - WE WILL CONNECT THIS NEXT -->
-
-    <div class="mt-4">
-
-        <a asp-action="ExportReportPdf"
-           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
-           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
-           asp-route-testType="@Model.TestType"
-           asp-route-status="@Model.Status"
-           asp-route-urgency="@Model.Urgency"
-           class="btn btn-outline-danger">
-
-            <i class="fas fa-file-pdf me-1"></i>
-
-            Export PDF
-
-        </a>
-
-        <small class="text-muted ms-2">
-            PDF export will be added next.
-        </small>
-
-    </div>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
 </div>
+
+<style>
+    :root {
+        --ink: #1f2933;
+        --ink-soft: #52606d;
+        --ink-faint: #7b8794;
+        --surface: #ffffff;
+        --page: #f4f6f8;
+        --line: #e1e6eb;
+        --line-soft: #edf0f3;
+        --accent: #0f766e;
+        --danger: #b42318;
+        --danger-bg: #fdf0ee;
+        --warn: #b45309;
+        --warn-bg: #fef4e6;
+        --ok: #15803d;
+        --ok-bg: #e9f6ee;
+        --radius: 8px;
+    }
+
+    .rp-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        min-height: 100vh;
+        background: var(--page);
+        color: var(--ink);
+        line-height: 1.5;
+    }
+
+    /* Heading */
+    .rp-heading {
+        margin-bottom: 20px;
+    }
+
+        .rp-heading h2 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .rp-heading p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 14px;
+            max-width: 65ch;
+        }
+
+    .rp-label {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Cards */
+    .rp-card {
+        margin-bottom: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .rp-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line-soft);
+    }
+
+        .rp-card-head h5 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .rp-card-head p {
+            margin: 2px 0 0;
+            color: var(--ink-soft);
+            font-size: 13px;
+        }
+
+    .rp-count {
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: #eef1f4;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Filters */
+    .rp-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        align-items: end;
+        padding: 20px;
+    }
+
+    .rp-field {
+        min-width: 0;
+    }
+
+        .rp-field .rp-label {
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+    .rp-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 16px;
+        border-top: 1px solid var(--line-soft);
+    }
+
+    /* Summary stats */
+    .rp-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .rp-stat {
+        padding: 16px 20px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+    }
+
+    .rp-stat-value {
+        display: block;
+        font-size: 30px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .rp-stat-abnormal {
+        border-left: 4px solid var(--danger);
+    }
+
+        .rp-stat-abnormal .rp-stat-value {
+            color: var(--danger);
+        }
+
+    /* Table */
+    .rp-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .rp-table {
+        width: 100%;
+        min-width: 880px;
+        margin: 0;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+        .rp-table th {
+            padding: 11px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--line);
+            color: var(--ink-soft);
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .rp-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line-soft);
+            vertical-align: middle;
+        }
+
+        .rp-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rp-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .rp-table .num {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+    .rp-request {
+        font-weight: 600;
+        color: var(--accent);
+        white-space: nowrap;
+    }
+
+    .rp-muted {
+        color: var(--ink-faint);
+    }
+
+    /* Pills */
+    .pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .pill-plain {
+        background: #eef1f4;
+        color: var(--ink-soft);
+    }
+
+    .pill-ok {
+        background: var(--ok-bg);
+        color: var(--ok);
+    }
+
+    .pill-progress {
+        background: var(--warn-bg);
+        color: var(--warn);
+    }
+
+    .pill-urgent {
+        background: var(--warn-bg);
+        color: var(--warn);
+    }
+
+    .pill-stat {
+        background: var(--danger-bg);
+        color: var(--danger);
+        font-weight: 600;
+    }
+
+    /* Results */
+    .result-chip {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #eef1f4;
+        color: var(--ink);
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+        .result-chip.result-abnormal {
+            background: var(--danger-bg);
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+    .abnormal-note {
+        margin-left: 6px;
+        color: var(--danger);
+        font-size: 12px;
+    }
+
+    /* Empty state */
+    .rp-empty {
+        padding: 40px 20px !important;
+        text-align: center;
+        color: var(--ink-faint);
+    }
+
+        .rp-empty i {
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+    .rp-empty-title {
+        color: var(--ink-soft);
+        font-weight: 600;
+    }
+
+    /* Focus */
+    .rp-page .btn:focus-visible,
+    .rp-page .form-control:focus-visible,
+    .rp-page .form-select:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .rp-page {
+            padding: 14px 12px 32px;
+        }
+
+        .rp-card-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .rp-filters {
+            grid-template-columns: 1fr 1fr;
+            padding: 16px;
+        }
+
+        .rp-actions .btn {
+            flex: 1 1 100%;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .rp-filters {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

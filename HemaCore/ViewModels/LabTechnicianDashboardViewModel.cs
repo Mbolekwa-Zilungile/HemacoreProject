@@ -3,9 +3,9 @@
     public class LabTechnicianDashboardViewModel
     {
         public string TechnicianName { get; set; }
-        public int MySelectedTests { get; set; }
+        public int SamplesAwaitingReceipt { get; set; }
 
-        public int WaitingToBeSelected { get; set; }
+        public int TestsAwaitingProcessing { get; set; }
 
         public int WaitingVerification { get; set; }
 

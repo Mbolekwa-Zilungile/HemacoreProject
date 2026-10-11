@@ -152,6 +152,11 @@ namespace HemaCore.Data
             get; set;
         }
 
+        public DbSet<TestResultHistory> TestResultHistories
+        {
+            get; set;
+        }
+
 
         protected override void OnModelCreating(ModelBuilder modelbuilder)
         {
@@ -377,6 +382,23 @@ namespace HemaCore.Data
                 .WithMany(s => s.TestTypes)
                 .HasForeignKey(t => t.SampleTypeId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // =====================================================
+            // Test Result History
+            // =====================================================
+
+            modelbuilder.Entity<TestResultHistory>()
+                .HasOne(h => h.TestRequestItem)
+                .WithMany()
+                .HasForeignKey(h => h.TestRequestTestTypeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelbuilder.Entity<TestResultHistory>()
+                .HasOne(h => h.LabTechnician)
+                .WithMany()
+                .HasForeignKey(h => h.LabTechnicianId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
+
     }
 }

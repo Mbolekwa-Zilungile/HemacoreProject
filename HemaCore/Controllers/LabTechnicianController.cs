@@ -64,11 +64,11 @@ namespace HemaCore.Controllers
             {
                 TechnicianName = user.FullName,
 
-                MySelectedTests = await myTests
+                SamplesAwaitingReceipt = await myTests
                     .CountAsync(t =>
                         t.Status != "Completed"),
 
-                WaitingToBeSelected = await _context.TestRequestTestTypes
+                TestsAwaitingProcessing = await _context.TestRequestTestTypes
                     .CountAsync(t =>
                         t.Status == "Submitted" &&
                         t.LabTechnicianId == null),
@@ -167,11 +167,11 @@ namespace HemaCore.Controllers
         }
 
 
-        
 
-     
-[HttpPost]
-public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
+
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -234,13 +234,13 @@ public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
         }
 
 
-       
 
-public async Task<IActionResult> ProcessTests(
-    string urgency,
-    int? categoryId,
-    int? requestNumber,
-    DateTime? dueDate)
+
+        public async Task<IActionResult> ProcessTests(
+            string urgency,
+            int? categoryId,
+            int? requestNumber,
+            DateTime? dueDate)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -494,9 +494,10 @@ public async Task<IActionResult> ProcessTests(
         }
 
 
-      
 
-  
+
+
+        
 [HttpPost]
 public async Task<IActionResult> SaveTestResult(
     int testRequestTestTypeId,
@@ -507,9 +508,7 @@ public async Task<IActionResult> SaveTestResult(
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
             var technician = await _context.LabTechnicians
@@ -517,61 +516,45 @@ public async Task<IActionResult> SaveTestResult(
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
             var test = await _context.TestRequestTestTypes
                 .Include(t => t.TestType)
                 .Include(t => t.TestRequest)
                 .FirstOrDefaultAsync(t =>
-                    t.TestRequestTestTypeId ==
-                    testRequestTestTypeId);
+                    t.TestRequestTestTypeId == testRequestTestTypeId);
 
             if (test == null)
             {
-                return NotFound(
-                    "Test could not be found.");
+                return NotFound("Test could not be found.");
             }
 
-            // Make sure this technician is the technician
-            // who started the test.
-            if (test.LabTechnicianId !=
-                technician.LabTechnicianId)
+            if (test.LabTechnicianId != technician.LabTechnicianId)
             {
                 TempData["Error"] =
                     "You are not authorised to capture the result for this test.";
 
-                return RedirectToAction(
-                    nameof(ProcessTests));
+                return RedirectToAction(nameof(ProcessTests));
             }
 
-            // The result can only be captured
-            // after the test has been started.
             if (test.Status != "InProgress")
             {
                 TempData["Error"] =
                     "This test is not currently being processed.";
 
-                return RedirectToAction(
-                    nameof(ProcessTests));
+                return RedirectToAction(nameof(ProcessTests));
             }
 
-            // Result value is required.
             if (string.IsNullOrWhiteSpace(resultValue))
             {
-                TempData["Error"] =
-                    "Please enter a result value.";
+                TempData["Error"] = "Please enter a result value.";
 
                 return RedirectToAction(
                     nameof(CaptureTestResult),
-                    new
-                    {
-                        id = testRequestTestTypeId
-                    });
+                    new { id = testRequestTestTypeId });
             }
 
-            // Notes are required.
             if (string.IsNullOrWhiteSpace(notes))
             {
                 TempData["Error"] =
@@ -579,13 +562,9 @@ public async Task<IActionResult> SaveTestResult(
 
                 return RedirectToAction(
                     nameof(CaptureTestResult),
-                    new
-                    {
-                        id = testRequestTestTypeId
-                    });
+                    new { id = testRequestTestTypeId });
             }
 
-            // Result must be numeric and decimals are allowed.
             if (!double.TryParse(
                 resultValue,
                 System.Globalization.NumberStyles.Float,
@@ -597,19 +576,11 @@ public async Task<IActionResult> SaveTestResult(
 
                 return RedirectToAction(
                     nameof(CaptureTestResult),
-                    new
-                    {
-                        id = testRequestTestTypeId
-                    });
+                    new { id = testRequestTestTypeId });
             }
 
-            // Determine whether the result is outside
-            // the normal range for this test type.
-            double normalMin =
-                test.TestType.NormalRangeMin;
-
-            double normalMax =
-                test.TestType.NormalRangeMax;
+            double normalMin = test.TestType.NormalRangeMin;
+            double normalMax = test.TestType.NormalRangeMax;
 
             bool isAbnormal =
                 numericResult < normalMin ||
@@ -618,11 +589,8 @@ public async Task<IActionResult> SaveTestResult(
             var testResult = new TestResult
             {
                 ResultValue = resultValue.Trim(),
-
                 Notes = notes.Trim(),
-
                 IsAbnormal = isAbnormal,
-
                 DateCaptured = DateTime.Now
             };
 
@@ -630,36 +598,32 @@ public async Task<IActionResult> SaveTestResult(
 
             await _context.SaveChangesAsync();
 
-            // Link the captured result to the test.
-            test.TestResultId =
-                testResult.TestResultId;
+            // Link the saved result to the test.
+            test.TestResultId = testResult.TestResultId;
+            test.Status = "Completed";
+            test.CompletionDateTime = DateTime.Now;
 
-            // Result has now been captured.
-            test.Status =
-                "Completed";
+            // Record the result capture in the history table.
+            AddTestResultHistory(
+                test,
+                technician.LabTechnicianId,
+                "Result Captured",
+                "InProgress",
+                "Completed",
+                testResult);
 
-            test.CompletionDateTime =
-                DateTime.Now;
-
-            // Check whether every test belonging to
-            // this request has been completed.
+            // Check whether all tests for this request are completed.
             bool allTestsCompleted =
                 !await _context.TestRequestTestTypes
                     .AnyAsync(t =>
-                        t.TestRequestId ==
-                            test.TestRequestId &&
-
-                        t.TestRequestTestTypeId !=
-                            test.TestRequestTestTypeId &&
-
+                        t.TestRequestId == test.TestRequestId &&
+                        t.TestRequestTestTypeId != test.TestRequestTestTypeId &&
                         t.Status != "Completed" &&
-
                         t.Status != "Verified");
 
             if (allTestsCompleted)
             {
-                test.TestRequest.Status =
-                    "Completed";
+                test.TestRequest.Status = "Completed";
             }
 
             await _context.SaveChangesAsync();
@@ -667,8 +631,7 @@ public async Task<IActionResult> SaveTestResult(
             TempData["ResultSuccess"] =
                 "Results successfully processed.";
 
-            return RedirectToAction(
-                nameof(ProcessTests));
+            return RedirectToAction(nameof(ProcessTests));
         }
 
         public async Task<IActionResult> VerifyResults()
@@ -736,57 +699,43 @@ public async Task<IActionResult> SaveTestResult(
         }
 
 
-        
-        public async Task<IActionResult> VerifyResultDetails(
-            int id)
+
+      
+public async Task<IActionResult> VerifyResultDetails(int id)
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            // Get the currently logged-in user.
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            // Get the lab technician profile linked to the user.
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var result =
-                await _context.TestResults
-                    .Include(r =>
-                        r.TestRequestTestType)
-                        .ThenInclude(t =>
-                            t.TestRequest)
-                            .ThenInclude(r =>
-                                r.Patient)
-
-                    .Include(r =>
-                        r.TestRequestTestType)
-                        .ThenInclude(t =>
-                            t.TestType)
-
-                    .FirstOrDefaultAsync(r =>
-                        r.TestResultId == id);
+            // Retrieve the test result and its related test, patient and test type.
+            var result = await _context.TestResults
+                .Include(r => r.TestRequestTestType)
+                    .ThenInclude(t => t.TestRequest)
+                        .ThenInclude(r => r.Patient)
+                .Include(r => r.TestRequestTestType)
+                    .ThenInclude(t => t.TestType)
+                .FirstOrDefaultAsync(r => r.TestResultId == id);
 
             if (result == null)
             {
-                return NotFound(
-                    "Test result could not be found.");
+                return NotFound("Test result could not be found.");
             }
 
-            var test =
-                result.TestRequestTestType
-                    .FirstOrDefault();
+            // Get the test associated with this result.
+            var test = result.TestRequestTestType.FirstOrDefault();
 
             if (test == null)
             {
@@ -794,91 +743,89 @@ public async Task<IActionResult> SaveTestResult(
                     "The test associated with this result could not be found.");
             }
 
-            if (test.LabTechnicianId ==
-                technician.LabTechnicianId)
+            // Prevent a technician from verifying their own result.
+            if (test.LabTechnicianId == technician.LabTechnicianId)
             {
                 TempData["Error"] =
                     "You cannot verify a result that you performed yourself.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
-            var canVerify =
-                await _context.TechnicianTestTypes
-                    .AnyAsync(tt =>
-                        tt.LabTechnicianId ==
-                            technician.LabTechnicianId &&
-                        tt.TestTypeId ==
-                            test.TestTypeId);
+            // Confirm that this technician is qualified to verify the test type.
+            var canVerify = await _context.TechnicianTestTypes
+                .AnyAsync(tt =>
+                    tt.LabTechnicianId == technician.LabTechnicianId &&
+                    tt.TestTypeId == test.TestTypeId);
 
             if (!canVerify)
             {
                 TempData["Error"] =
                     "You are not assigned to verify this test type.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
+            // Only allow results that are currently awaiting verification.
             if (test.Status != "Completed")
             {
                 TempData["Error"] =
                     "This test result is not currently waiting for verification.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
+            // Load the complete history for this specific test.
+            // This includes the original result, previous reviews,
+            // send-back notes and corrected results, if recorded.
+        
+ViewBag.TestResultHistory = await _context.TestResultHistories
+    .Include(h => h.LabTechnician)
+        .ThenInclude(t => t.User)
+    .Where(h =>
+        h.TestRequestTestTypeId == test.TestRequestTestTypeId)
+    .OrderByDescending(h => h.ActionDateTime)
+    .ToListAsync();
+
+
+            // Display the result details and history.
             return View(result);
         }
 
 
-        
 
-        [HttpPost]
-        public async Task<IActionResult> VerifyResult(
-            int id,
-            string action,
-            string reviewNotes)
+       
+[HttpPost]
+public async Task<IActionResult> VerifyResult(
+    int id,
+    string action,
+    string reviewNotes)
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var result =
-                await _context.TestResults
-                    .Include(r =>
-                        r.TestRequestTestType)
-                    .FirstOrDefaultAsync(r =>
-                        r.TestResultId == id);
+            var result = await _context.TestResults
+                .Include(r => r.TestRequestTestType)
+                .FirstOrDefaultAsync(r => r.TestResultId == id);
 
             if (result == null)
             {
-                return NotFound(
-                    "Test result could not be found.");
+                return NotFound("Test result could not be found.");
             }
 
-            var test =
-                result.TestRequestTestType
-                    .FirstOrDefault();
+            var test = result.TestRequestTestType.FirstOrDefault();
 
             if (test == null)
             {
@@ -886,184 +833,140 @@ public async Task<IActionResult> SaveTestResult(
                     "The test associated with this result could not be found.");
             }
 
-
-          
-
-            if (test.LabTechnicianId ==
-                technician.LabTechnicianId)
+            if (test.LabTechnicianId == technician.LabTechnicianId)
             {
                 TempData["Error"] =
                     "You cannot verify a result that you performed yourself.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
-
-
-            var canVerify =
-                await _context.TechnicianTestTypes
-                    .AnyAsync(tt =>
-                        tt.LabTechnicianId ==
-                            technician.LabTechnicianId &&
-                        tt.TestTypeId ==
-                            test.TestTypeId);
+            var canVerify = await _context.TechnicianTestTypes
+                .AnyAsync(tt =>
+                    tt.LabTechnicianId == technician.LabTechnicianId &&
+                    tt.TestTypeId == test.TestTypeId);
 
             if (!canVerify)
             {
                 TempData["Error"] =
                     "You are not assigned to verify this test type.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
-
-
 
             if (test.Status != "Completed")
             {
                 TempData["Error"] =
                     "This test result is not currently waiting for verification.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
+            var verification = await _context.TestResultVerifications
+                .FirstOrDefaultAsync(v => v.TestResultId == result.TestResultId);
 
-            var verification =
-                await _context.TestResultVerifications
-                    .FirstOrDefaultAsync(v =>
-                        v.TestResultId ==
-                        result.TestResultId);
-
-
-           
             if (action == "Verify")
             {
-                test.Status =
-                    "Verified";
+                test.Status = "Verified";
 
                 if (verification == null)
                 {
-                    verification =
-                        new TestResultVerification
-                        {
-                            TestResultId =
-                                result.TestResultId,
+                    verification = new TestResultVerification
+                    {
+                        TestResultId = result.TestResultId,
+                        VerifiedByTechnicianId = technician.LabTechnicianId,
+                        VerificationDateTime = DateTime.Now,
+                        Status = "Verified",
+                        ReviewNotes = reviewNotes ?? ""
+                    };
 
-                            VerifiedByTechnicianId =
-                                technician.LabTechnicianId,
-
-                            VerificationDateTime =
-                                DateTime.Now,
-
-                            Status =
-                                "Verified",
-
-                            ReviewNotes =
-                                reviewNotes ?? ""
-                        };
-
-                    _context.TestResultVerifications
-                        .Add(verification);
+                    _context.TestResultVerifications.Add(verification);
                 }
                 else
                 {
                     verification.VerifiedByTechnicianId =
                         technician.LabTechnicianId;
 
-                    verification.VerificationDateTime =
-                        DateTime.Now;
-
-                    verification.Status =
-                        "Verified";
-
-                    verification.ReviewNotes =
-                        reviewNotes ?? "";
+                    verification.VerificationDateTime = DateTime.Now;
+                    verification.Status = "Verified";
+                    verification.ReviewNotes = reviewNotes ?? "";
                 }
+
+                // Record successful verification.
+                AddTestResultHistory(
+                    test,
+                    technician.LabTechnicianId,
+                    "Result Verified",
+                    "Completed",
+                    "Verified",
+                    result,
+                    reviewNotes);
 
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] =
                     "Test result has been successfully verified.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
-
 
             if (action == "SendBack")
             {
-                if (string.IsNullOrWhiteSpace(
-                    reviewNotes))
+                if (string.IsNullOrWhiteSpace(reviewNotes))
                 {
                     TempData["Error"] =
                         "Please provide a reason before sending the result back for review.";
 
                     return RedirectToAction(
                         nameof(VerifyResultDetails),
-                        new
-                        {
-                            id =
-                                result.TestResultId
-                        });
+                        new { id = result.TestResultId });
                 }
 
-                test.Status =
-                    "To Be Reviewed";
+                test.Status = "To Be Reviewed";
 
                 if (verification == null)
                 {
-                    verification =
-                        new TestResultVerification
-                        {
-                            TestResultId =
-                                result.TestResultId,
+                    verification = new TestResultVerification
+                    {
+                        TestResultId = result.TestResultId,
+                        VerifiedByTechnicianId = technician.LabTechnicianId,
+                        VerificationDateTime = DateTime.Now,
+                        Status = "To Be Reviewed",
+                        ReviewNotes = reviewNotes
+                    };
 
-                            VerifiedByTechnicianId =
-                                technician.LabTechnicianId,
-
-                            VerificationDateTime =
-                                DateTime.Now,
-
-                            Status =
-                                "To Be Reviewed",
-
-                            ReviewNotes =
-                                reviewNotes
-                        };
-
-                    _context.TestResultVerifications
-                        .Add(verification);
+                    _context.TestResultVerifications.Add(verification);
                 }
                 else
                 {
                     verification.VerifiedByTechnicianId =
                         technician.LabTechnicianId;
 
-                    verification.VerificationDateTime =
-                        DateTime.Now;
-
-                    verification.Status =
-                        "To Be Reviewed";
-
-                    verification.ReviewNotes =
-                        reviewNotes;
+                    verification.VerificationDateTime = DateTime.Now;
+                    verification.Status = "To Be Reviewed";
+                    verification.ReviewNotes = reviewNotes;
                 }
+
+                // Record why the result was sent back.
+                AddTestResultHistory(
+                    test,
+                    technician.LabTechnicianId,
+                    "Sent Back for Review",
+                    "Completed",
+                    "To Be Reviewed",
+                    result,
+                    reviewNotes);
 
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] =
                     "Test result has been sent back to the original technician for review.";
 
-                return RedirectToAction(
-                    nameof(VerifyResults));
+                return RedirectToAction(nameof(VerifyResults));
             }
 
-            return BadRequest(
-                "Invalid verification action.");
+            return BadRequest("Invalid verification action.");
         }
-
 
         // ==========================================
         // REVIEW TEST RESULTS - LIST
@@ -1228,199 +1131,136 @@ public async Task<IActionResult> SaveTestResult(
         }
 
 
-      
-        [HttpPost]
-        public async Task<IActionResult> CompleteReview(
-            int id,
-            string resultValue,
-            string notes)
+
+   
+[HttpPost]
+public async Task<IActionResult> CompleteReview(
+    int id,
+    string resultValue,
+    string notes)
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var verification =
-                await _context
-                    .TestResultVerifications
-                    .Include(v =>
-                        v.TestResult)
-                    .FirstOrDefaultAsync(v =>
-                        v.TestResultVerificationId ==
-                            id);
+            var verification = await _context.TestResultVerifications
+                .Include(v => v.TestResult)
+                .FirstOrDefaultAsync(v =>
+                    v.TestResultVerificationId == id);
 
             if (verification == null)
             {
-                TempData["Error"] =
-                    "The review record could not be found.";
-
-                return RedirectToAction(
-                    nameof(ReviewResults));
+                TempData["Error"] = "The review record could not be found.";
+                return RedirectToAction(nameof(ReviewResults));
             }
 
             if (verification.TestResult == null)
             {
-                TempData["Error"] =
-                    "The test result could not be found.";
-
-                return RedirectToAction(
-                    nameof(ReviewResults));
+                TempData["Error"] = "The test result could not be found.";
+                return RedirectToAction(nameof(ReviewResults));
             }
 
-            var result =
-                verification.TestResult;
+            var result = verification.TestResult;
 
-            var test =
-                await _context
-                    .TestRequestTestTypes
-                    .Include(t =>
-                        t.TestType)
-                    .Include(t =>
-                        t.TestRequest)
-                    .FirstOrDefaultAsync(t =>
-                        t.TestResultId ==
-                            result.TestResultId);
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestType)
+                .Include(t => t.TestRequest)
+                .FirstOrDefaultAsync(t =>
+                    t.TestResultId == result.TestResultId);
 
             if (test == null)
             {
                 TempData["Error"] =
                     "The test associated with this result could not be found.";
 
-                return RedirectToAction(
-                    nameof(ReviewResults));
+                return RedirectToAction(nameof(ReviewResults));
             }
 
-
-
-            if (test.LabTechnicianId !=
-                technician.LabTechnicianId)
+            if (test.LabTechnicianId != technician.LabTechnicianId)
             {
                 TempData["Error"] =
                     "You are not authorised to review this test result.";
 
-                return RedirectToAction(
-                    nameof(ReviewResults));
+                return RedirectToAction(nameof(ReviewResults));
             }
 
-
-
-            if (test.Status !=
-                "To Be Reviewed")
+            if (test.Status != "To Be Reviewed")
             {
                 TempData["Error"] =
                     "This test result is no longer waiting for review.";
 
-                return RedirectToAction(
-                    nameof(ReviewResults));
+                return RedirectToAction(nameof(ReviewResults));
             }
 
-
-
-            if (string.IsNullOrWhiteSpace(
-                resultValue))
+            if (string.IsNullOrWhiteSpace(resultValue))
             {
-                TempData["Error"] =
-                    "Please enter a result value.";
+                TempData["Error"] = "Please enter a result value.";
 
                 return RedirectToAction(
                     nameof(ReviewResultDetails),
-                    new
-                    {
-                        id =
-                            verification
-                                .TestResultVerificationId
-                    });
+                    new { id = verification.TestResultVerificationId });
             }
-
 
             if (!double.TryParse(
                 resultValue,
-                System.Globalization.NumberStyles.Any,
+                System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture,
                 out double numericResult))
             {
-                TempData["Error"] =
-                    "Please enter a valid numeric result.";
+                TempData["Error"] = "Please enter a valid numeric result.";
 
                 return RedirectToAction(
                     nameof(ReviewResultDetails),
-                    new
-                    {
-                        id =
-                            verification
-                                .TestResultVerificationId
-                    });
+                    new { id = verification.TestResultVerificationId });
             }
 
-
-
-            double normalMin =
-                test.TestType.NormalRangeMin;
-
-            double normalMax =
-                test.TestType.NormalRangeMax;
+            double normalMin = test.TestType.NormalRangeMin;
+            double normalMax = test.TestType.NormalRangeMax;
 
             bool isAbnormal =
                 numericResult < normalMin ||
                 numericResult > normalMax;
 
+            // Update the existing result with the corrected values.
+            result.ResultValue = resultValue.Trim();
+            result.Notes = notes?.Trim() ?? "";
+            result.IsAbnormal = isAbnormal;
+            result.DateCaptured = DateTime.Now;
 
+            test.Status = "Completed";
+            test.CompletionDateTime = DateTime.Now;
 
-            result.ResultValue =
-                resultValue;
+            verification.Status = "Resubmitted";
+            verification.VerificationDateTime = DateTime.Now;
 
-            result.Notes =
-                notes ?? "";
-
-            result.IsAbnormal =
-                isAbnormal;
-
-            result.DateCaptured =
-                DateTime.Now;
-
-
-
-            test.Status =
-                "Completed";
-
-            test.CompletionDateTime =
-                DateTime.Now;
-
-
-         
-            verification.Status =
-                "Resubmitted";
-
-            verification.VerificationDateTime =
-                DateTime.Now;
-
+            // Record the corrected result in the history table.
+            AddTestResultHistory(
+                test,
+                technician.LabTechnicianId,
+                "Corrected Result Resubmitted",
+                "To Be Reviewed",
+                "Completed",
+                result,
+                verification.ReviewNotes);
 
             await _context.SaveChangesAsync();
-
 
             TempData["Success"] =
                 "The corrected result has been resubmitted for verification.";
 
-            return RedirectToAction(
-                nameof(ReviewResults));
+            return RedirectToAction(nameof(ReviewResults));
         }
-
 
         // ==========================================
         // REPORTS
@@ -1933,6 +1773,41 @@ public async Task<IActionResult> SaveTestResult(
 
             return View(completedTests);
         }
+        
+public async Task<IActionResult> CompletedTestDetails(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+            {
+                return NotFound("Lab technician profile not found.");
+            }
+
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                .FirstOrDefaultAsync(t =>
+                    t.TestRequestTestTypeId == id &&
+                    t.LabTechnicianId == technician.LabTechnicianId &&
+                    (t.Status == "Completed" || t.Status == "Verified"));
+
+            if (test == null)
+            {
+                return NotFound("Completed test not found.");
+            }
+
+            return View(test);
+        }
+
 
 
 
@@ -2097,5 +1972,32 @@ public async Task<IActionResult> SaveTestResult(
             return RedirectToAction(nameof(TechnicianProfile));
         }
 
+
+
+        private void AddTestResultHistory(
+            TestRequestItem test,
+            int technicianId,
+            string action,
+            string? previousStatus,
+            string? newStatus,
+            TestResult? result,
+            string? reviewNotes = null)
+        {
+            var history = new TestResultHistory
+            {
+                TestRequestTestTypeId = test.TestRequestTestTypeId,
+                LabTechnicianId = technicianId,
+                Action = action,
+                PreviousStatus = previousStatus,
+                NewStatus = newStatus,
+                ResultValue = result?.ResultValue,
+                ResultNotes = result?.Notes,
+                IsAbnormal = result?.IsAbnormal,
+                ReviewNotes = reviewNotes,
+                ActionDateTime = DateTime.Now
+            };
+
+            _context.TestResultHistories.Add(history);
+        }
     }
-}
+    }

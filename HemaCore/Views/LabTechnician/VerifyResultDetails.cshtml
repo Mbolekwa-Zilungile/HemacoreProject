@@ -1,262 +1,607 @@
-﻿
-@model HemaCore.Models.TestResult
+﻿@model HemaCore.Models.TestResult
+@using HemaCore.Models
+@using System.Linq
 
 @{
     ViewData["Title"] = "Verify Test Result";
     Layout = "_LabTechnicianLayout";
 
     var test = Model.TestRequestTestType.FirstOrDefault();
+
+    var history = ViewBag.TestResultHistory as IEnumerable<TestResultHistory>
+                  ?? Enumerable.Empty<TestResultHistory>();
+
+    var historyRecords = history
+        .OrderBy(h => h.ActionDateTime)
+        .ToList();
+
+    var patientName = test?.TestRequest?.Patient != null
+        ? $"{test.TestRequest.Patient.Name} {test.TestRequest.Patient.Surname}"
+        : "N/A";
 }
 
-<div class="container-fluid px-4 py-4">
+<div class="verify-page">
 
-    <!-- HEADER -->
-    <div class="mb-4">
+    <!-- Page heading -->
+    <header class="page-heading">
+        <div>
+            <h2>Verify test result</h2>
+            <p>Review the recorded result and its history, then verify it or send it back.</p>
+        </div>
 
-        <h2 class="fw-bold">
-            Verify Test Result
-        </h2>
-        <p class="text-muted mb-0">
-            Review the captured result before verification.
-        </p>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+    </header>
 
-    </div>
+    <!-- Patient and test summary -->
+    <section class="summary-bar" aria-label="Patient and test">
+        <div class="summary-item">
+            <span class="label">Patient</span>
+            <span class="value">@patientName</span>
+        </div>
+        <div class="summary-item">
+            <span class="label">Test</span>
+            <span class="value">@(test?.TestType?.TestTypeName ?? "N/A")</span>
+        </div>
+        <div class="summary-item">
+            <span class="label">Recorded</span>
+            <span class="value">@Model.DateCaptured.ToString("dd MMM yyyy, HH:mm")</span>
+        </div>
+    </section>
 
-
-    <!-- PATIENT & TEST INFORMATION -->
-    <div class="card border-0 shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5 class="fw-bold mb-4">
-                <i class="fas fa-user me-2"></i>
-                Patient & Test Information
-            </h5>
-
-            <div class="row g-4">
-
-                <div class="col-md-3">
-
-                    <small class="text-muted">
-                        Request Number
-                    </small>
-
-                    <div class="fw-semibold">
-                        #@test?.TestRequestId
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-3">
-
-                    <small class="text-muted">
-                        Patient
-                    </small>
-
-                    <div class="fw-semibold">
-                        @test?.TestRequest?.Patient?.Name
-                        @test?.TestRequest?.Patient?.Surname
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-3">
-
-                    <small class="text-muted">
-                        Test Type
-                    </small>
-
-                    <div class="fw-semibold">
-                        @test?.TestType?.TestTypeName
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-3">
-
-                    <small class="text-muted">
-                        Date Captured
-                    </small>
-
-                    <div class="fw-semibold">
-                        @Model.DateCaptured.ToString("dd/MM/yyyy HH:mm")
-                    </div>
-
-                </div>
-
+    <!-- Current result -->
+    <section class="verify-card @(Model.IsAbnormal ? "is-abnormal" : "")">
+        <div class="card-head">
+            <div>
+                <h5>Current result</h5>
+                <p>Latest result recorded for this test.</p>
             </div>
 
+            <span class="flag @(Model.IsAbnormal ? "flag-abnormal" : "flag-normal")">
+                @(Model.IsAbnormal ? "Abnormal" : "Not marked abnormal")
+            </span>
         </div>
 
-    </div>
-
-
-    <!-- RESULT -->
-    <div class="card border-0 shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5 class="fw-bold mb-4">
-                <i class="fas fa-vial me-2"></i>
-                Test Result
-            </h5>
-
-
-            <div class="row g-4">
-
-                <div class="col-md-6">
-
-                    <small class="text-muted">
-                        Result Value
-                    </small>
-
-                    <div class="mt-2">
-
-                        @if (Model.IsAbnormal)
-                        {
-                            <span class="badge bg-danger fs-6">
-                                @Model.ResultValue
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success fs-6">
-                                @Model.ResultValue
-                            </span>
-                        }
-
-                    </div>
-
+        <div class="result-layout">
+            <div class="result-main">
+                <span class="label">Result value</span>
+                <div class="result-value @(string.IsNullOrWhiteSpace(Model.ResultValue) ? "is-empty" : "")">
+                    @(string.IsNullOrWhiteSpace(Model.ResultValue) ? "Not recorded" : Model.ResultValue)
                 </div>
-
-
-                <div class="col-md-6">
-
-                    <small class="text-muted">
-                        Result Status
-                    </small>
-
-                    <div class="mt-2">
-
-                        @if (Model.IsAbnormal)
-                        {
-                            <span class="badge bg-danger">
-                                Abnormal
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">
-                                Normal
-                            </span>
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-12">
-
-                    <small class="text-muted">
-                        Notes
-                    </small>
-
-                    <div class="border rounded p-3 mt-2 bg-light">
-
-                        @(string.IsNullOrWhiteSpace(Model.Notes)
-                            ? "No notes were provided."
-                            : Model.Notes)
-
-                    </div>
-
-                </div>
-
             </div>
 
+            <div class="result-notes">
+                <span class="label">Result notes</span>
+                <div class="notes-text @(string.IsNullOrWhiteSpace(Model.Notes) ? "is-empty" : "")">
+                    @(string.IsNullOrWhiteSpace(Model.Notes) ? "No notes recorded" : Model.Notes)
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Review history -->
+    <section class="verify-card">
+        <div class="card-head">
+            <div>
+                <h5>Review history</h5>
+                <p>From capture to verification, oldest first.</p>
+            </div>
+
+            <span class="count-pill">@historyRecords.Count @(historyRecords.Count == 1 ? "event" : "events")</span>
         </div>
 
-    </div>
+        @if (historyRecords.Any())
+        {
+            <ol class="timeline">
+                @foreach (var item in historyRecords)
+                {
+                    var eventTitle = item.Action switch
+                    {
+                        "Result Captured" => "Result captured",
+                        "Sent Back for Review" => "Sent back for correction",
+                        "Corrected Result Resubmitted" => "Correction resubmitted",
+                        "Result Verified" => "Result verified",
+                        _ => item.Action
+                    };
 
+                    var eventClass = item.Action switch
+                    {
+                        "Result Captured" => "ev-captured",
+                        "Sent Back for Review" => "ev-sentback",
+                        "Corrected Result Resubmitted" => "ev-resubmitted",
+                        "Result Verified" => "ev-verified",
+                        _ => "ev-captured"
+                    };
 
-    <!-- VERIFICATION ACTIONS -->
-    <div class="card border-0 shadow-sm">
+                    var technicianName = item.LabTechnician?.User?.FullName;
 
-        <div class="card-body">
+                    <li class="timeline-item @eventClass">
+                        <span class="timeline-dot" aria-hidden="true"></span>
 
-            <h5 class="fw-bold mb-3">
-                Verification
-            </h5>
+                        <div class="timeline-body">
+                            <div class="timeline-top">
+                                <strong class="timeline-title">@eventTitle</strong>
+                                <time class="timeline-date">@item.ActionDateTime.ToString("dd MMM yyyy, HH:mm")</time>
+                            </div>
 
-            <p class="text-muted">
-                Confirm whether this test result is accurate and ready
-                to proceed to the next stage.
-            </p>
+                            <div class="timeline-meta">
+                                <span>
+                                    By @(string.IsNullOrWhiteSpace(technicianName) ? "unknown technician" : technicianName)
+                                </span>
 
+                                @if (!string.IsNullOrWhiteSpace(item.ResultValue))
+                                {
+                                    <span class="result-chip">Result: @item.ResultValue</span>
+                                }
+                            </div>
 
-            <form asp-action="VerifyResult"
-                  method="post">
+                            @if (!string.IsNullOrWhiteSpace(item.ReviewNotes))
+                            {
+                                <blockquote class="timeline-note">@item.ReviewNotes</blockquote>
+                            }
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <div class="empty-history">
+                No review history has been recorded for this test yet.
+            </div>
+        }
+    </section>
 
-                <input type="hidden"
-                       name="id"
-                       value="@Model.TestResultId" />
-
-
-                <div class="mb-3">
-
-                    <label class="form-label fw-semibold">
-                        Review Notes
-                    </label>
-
-                    <textarea name="reviewNotes"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Enter verification notes (optional)"></textarea>
-
-                </div>
-
-
-                <div class="d-flex gap-2">
-
-                    <a asp-action="VerifyResults"
-                       class="btn btn-secondary">
-
-                        Back
-
-                    </a>
-
-
-                    <button type="submit"
-                            name="action"
-                            value="SendBack"
-                            class="btn btn-warning">
-
-                        <i class="fas fa-undo me-1"></i>
-                        Send Back
-
-                    </button>
-
-
-                    <button type="submit"
-                            name="action"
-                            value="Verify"
-                            class="btn btn-success">
-
-                        <i class="fas fa-check me-1"></i>
-                        Verify Result
-
-                    </button>
-
-                </div>
-
-            </form>
-
+    <!-- Verification decision -->
+    <section class="verify-card decision-card">
+        <div class="card-head">
+            <div>
+                <h5>Your decision</h5>
+                <p>Verify the result if it is correct. If it needs changing, explain what to correct and send it back.</p>
+            </div>
         </div>
 
-    </div>
+        <form asp-action="VerifyResult" method="post" id="decisionForm" class="decision-form">
+            <input type="hidden" name="id" value="@Model.TestResultId" />
+
+            <label for="reviewNotes" class="form-label">Review notes</label>
+            <textarea id="reviewNotes"
+                      name="reviewNotes"
+                      class="form-control"
+                      rows="3"
+                      aria-describedby="notesHelp"
+                      placeholder="Required when sending back, for example: the haemoglobin value looks transposed."></textarea>
+            <div id="notesHelp" class="notes-help">Add a note if you send this result back for correction.</div>
+
+            <div class="decision-actions">
+                <button type="submit"
+                        name="action"
+                        value="SendBack"
+                        class="btn btn-outline-danger"
+                        formnovalidate>
+                    Send back for correction
+                </button>
+
+                <button type="submit"
+                        name="action"
+                        value="Verify"
+                        class="btn btn-primary">
+                    Verify result
+                </button>
+            </div>
+        </form>
+    </section>
 
 </div>
 
+<script>
+    // Require a note when sending a result back, so the technician knows what to fix.
+    (function () {
+        var form = document.getElementById("decisionForm");
+        var notes = document.getElementById("reviewNotes");
+        var help = document.getElementById("notesHelp");
+        if (!form || !notes) return;
+
+        var defaultHelp = help.textContent;
+
+        form.addEventListener("submit", function (e) {
+            var action = e.submitter ? e.submitter.value : "";
+            if (action === "SendBack" && notes.value.trim() === "") {
+                e.preventDefault();
+                notes.classList.add("is-invalid");
+                help.textContent = "Add a note explaining what needs to be corrected.";
+                help.classList.add("is-error");
+                notes.focus();
+            }
+        });
+
+        notes.addEventListener("input", function () {
+            notes.classList.remove("is-invalid");
+            help.classList.remove("is-error");
+            help.textContent = defaultHelp;
+        });
+    })();
+</script>
+
+<style>
+    :root {
+        --ink: #1f2933;
+        --ink-soft: #52606d;
+        --ink-faint: #7b8794;
+        --surface: #ffffff;
+        --page: #f4f6f8;
+        --line: #e1e6eb;
+        --line-soft: #edf0f3;
+        --accent: #0f766e;
+        --danger: #b42318;
+        --danger-bg: #fdf0ee;
+        --warn: #b45309;
+        --ok: #15803d;
+        --radius: 8px;
+    }
+
+    .verify-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        min-height: 100vh;
+        background: var(--page);
+        color: var(--ink);
+        line-height: 1.5;
+    }
+
+    /* Heading */
+    .page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+        .page-heading h2 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 14px;
+            max-width: 60ch;
+        }
+
+    /* Shared label */
+    .label {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        margin-bottom: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+    }
+
+    .summary-item {
+        padding: 14px 18px;
+        min-width: 0;
+    }
+
+        .summary-item + .summary-item {
+            border-left: 1px solid var(--line-soft);
+        }
+
+        .summary-item .value {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+    /* Cards */
+    .verify-card {
+        margin-bottom: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line-soft);
+    }
+
+        .card-head h5 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-head p {
+            margin: 2px 0 0;
+            color: var(--ink-soft);
+            font-size: 13px;
+        }
+
+    /* Current result */
+    .verify-card.is-abnormal {
+        border-left: 4px solid var(--danger);
+    }
+
+    .result-layout {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr);
+        gap: 24px;
+        padding: 20px;
+        align-items: start;
+    }
+
+    .result-value {
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    .is-abnormal .result-value {
+        color: var(--danger);
+    }
+
+    .result-value.is-empty,
+    .notes-text.is-empty {
+        color: var(--ink-faint);
+        font-weight: 400;
+    }
+
+    .result-value.is-empty {
+        font-size: 18px;
+    }
+
+    .notes-text {
+        font-size: 14px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-width: 70ch;
+    }
+
+    .flag {
+        flex-shrink: 0;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .flag-normal {
+        background: #eef1f4;
+        color: var(--ink-soft);
+    }
+
+    .flag-abnormal {
+        background: var(--danger-bg);
+        color: var(--danger);
+    }
+
+    /* History timeline */
+    .count-pill {
+        flex-shrink: 0;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #eef1f4;
+        color: var(--ink-soft);
+        font-size: 12px;
+    }
+
+    .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 20px 20px 8px 20px;
+    }
+
+    .timeline-item {
+        position: relative;
+        display: flex;
+        gap: 16px;
+        padding-bottom: 20px;
+    }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 18px;
+            bottom: -2px;
+            width: 2px;
+            background: var(--line);
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+    .timeline-dot {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+        margin-top: 4px;
+        border-radius: 50%;
+        background: var(--ink-faint);
+        box-shadow: 0 0 0 3px var(--surface);
+        position: relative;
+        z-index: 1;
+    }
+
+    .ev-sentback .timeline-dot {
+        background: var(--warn);
+    }
+
+    .ev-resubmitted .timeline-dot {
+        background: var(--accent);
+    }
+
+    .ev-verified .timeline-dot {
+        background: var(--ok);
+    }
+
+    .timeline-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .timeline-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .timeline-title {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .timeline-date {
+        color: var(--ink-faint);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .timeline-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+        color: var(--ink-soft);
+        font-size: 13px;
+    }
+
+    .result-chip {
+        padding: 1px 8px;
+        border-radius: 4px;
+        background: #eef1f4;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .timeline-note {
+        margin: 8px 0 0;
+        padding: 8px 12px;
+        border-left: 3px solid var(--line);
+        background: #f8f9fa;
+        color: var(--ink);
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .ev-sentback .timeline-note {
+        border-left-color: var(--warn);
+    }
+
+    .empty-history {
+        padding: 28px 20px;
+        text-align: center;
+        color: var(--ink-faint);
+        font-size: 14px;
+    }
+
+    /* Decision */
+    .decision-form {
+        padding: 20px;
+    }
+
+    .form-label {
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+    }
+
+    #reviewNotes {
+        font-size: 14px;
+        resize: vertical;
+    }
+
+        #reviewNotes.is-invalid {
+            border-color: var(--danger);
+        }
+
+    .notes-help {
+        margin-top: 6px;
+        color: var(--ink-faint);
+        font-size: 12px;
+    }
+
+        .notes-help.is-error {
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+    .decision-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line-soft);
+    }
+
+    .decision-card .btn:focus-visible,
+    .page-heading .btn:focus-visible,
+    #reviewNotes:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .verify-page {
+            padding: 14px 12px 32px;
+        }
+
+        .page-heading {
+            flex-direction: column;
+        }
+
+        .summary-bar {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-item + .summary-item {
+            border-left: none;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .result-layout {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .decision-actions {
+            flex-direction: column-reverse;
+        }
+
+            .decision-actions .btn {
+                width: 100%;
+            }
+    }
+</style>

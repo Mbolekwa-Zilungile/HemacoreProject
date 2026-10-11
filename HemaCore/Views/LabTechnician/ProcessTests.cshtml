@@ -51,49 +51,7 @@
 
     <form method="get" asp-action="ProcessTests" class="row g-2 mb-3">
 
-        <div class="col-md-3">
-            <select name="urgency" class="form-select" asp-items="urgencyList">
-                <option value="">All Urgencies</option>
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <select name="categoryId" class="form-select">
-                <option value="">All Categories</option>
-                @if (categories != null)
-                {
-                    @foreach (var cat in categories)
-                    {
-                        <option value="@cat.CategoryId"
-                                selected="@(Context.Request.Query["categoryId"] == cat.CategoryId.ToString())">
-                            @cat.CategoryName
-                        </option>
-                    }
-                }
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <input type="number"
-                   name="requestNumber"
-                   class="form-control"
-                   placeholder="Request #"
-                   value="@Context.Request.Query["requestNumber"]" />
-        </div>
-
-        <div class="col-md-2">
-            <input type="date"
-                   name="dueDate"
-                   class="form-control"
-                   value="@Context.Request.Query["dueDate"]" />
-        </div>
-
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-outline-primary w-100">
-                <i class="fas fa-filter me-1"></i> Filter
-            </button>
-        </div>
-
+        
     </form>
 
     <div class="table-responsive">

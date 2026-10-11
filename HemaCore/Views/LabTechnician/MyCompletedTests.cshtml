@@ -8,78 +8,322 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-<div class="page-header">
-    <div>
-        <h2>My Completed Tests</h2>
-        <p>Tests that you have performed and captured results for.</p>
+<div class="completed-page">
+
+    <div class="page-header">
+        <div>
+            <h2>My Completed Tests</h2>
+            <p>View tests you have performed and the results you have recorded.</p>
+        </div>
+
+        <div class="completed-total">
+            <span>Total completed tests</span>
+            <strong>@(Model?.Count() ?? 0)</strong>
+        </div>
+    </div>
+
+    <div class="content-card">
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-flask"></i>
+                <h4>No completed tests</h4>
+                <p>You have not completed any tests yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="completed-table">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Patient</th>
+                            <th>Test Type</th>
+                            <th>Result</th>
+                            <th>Status</th>
+                            <th>Completed</th>
+                            <th class="action-column">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var test in Model.OrderByDescending(t => t.CompletionDateTime))
+                        {
+                            <tr>
+                                <td class="request-number">
+                                    #@test.TestRequestId
+                                </td>
+
+                                <td>
+                                    @if (test.TestRequest?.Patient != null)
+                                    {
+                                        <span>
+                                            @test.TestRequest.Patient.Name
+                                            @test.TestRequest.Patient.Surname
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted-text">N/A</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @(test.TestType?.TestTypeName ?? "N/A")
+                                </td>
+
+                                <td class="result-value">
+                                    @* Update this expression if your result
+                                       is stored through a different relationship. *@
+                                    @(test.TestResult == null ||
+                                      string.IsNullOrWhiteSpace(test.TestResult.ResultValue)
+                                        ? "—"
+                                        : test.TestResult.ResultValue)
+                                </td>
+
+                                <td>
+                                    @if (test.Status == "Verified")
+                                    {
+                                        <span class="status-badge verified">
+                                            Verified
+                                        </span>
+                                    }
+                                    else if (test.Status == "Completed")
+                                    {
+                                        <span class="status-badge completed">
+                                            Completed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge other-status">
+                                            @test.Status
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="date-column">
+                                    @(test.CompletionDateTime?.ToString("dd MMM yyyy, HH:mm") ?? "—")
+                                </td>
+
+                                <td>
+                                    <a asp-action="CompletedTestDetails"
+                                       asp-route-id="@test.TestRequestTestTypeId"
+                                       class="view-button">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
     </div>
 </div>
 
-<div class="content-card">
-
-    @if (!Model.Any())
-    {
-        <div class="empty-state">
-            <i class="fas fa-flask"></i>
-            <h4>No completed tests</h4>
-            <p>You have not completed any tests yet.</p>
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Request</th>
-                        <th>Patient</th>
-                        <th>Test Type</th>
-                        <th>Result Status</th>
-                        <th>Completed</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach (var test in Model)
-                    {
-                        <tr>
-                            <td>
-                                #@test.TestRequestId
-                            </td>
-
-                            <td>
-                                @test.TestRequest.Patient.Name
-                                @test.TestRequest.Patient.Surname
-                            </td>
-
-                            <td>
-                                @test.TestType.TestTypeName
-                            </td>
-
-                            <td>
-                                @if (test.Status == "Verified")
-                                {
-                                    <span class="status-badge verified">
-                                        Verified
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge completed">
-                                        Completed
-                                    </span>
-                                }
-                            </td>
-
-                            <td>
-                                @(test.CompletionDateTime?.ToString("dd MMM yyyy HH:mm") ?? "-")
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+<style>
+    .completed-page {
+        padding: 22px;
+        min-height: 100vh;
+        background: #f6f7f9;
+        color: #263238;
     }
 
-</div>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 22px;
+    }
 
+        .page-header h2 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+    .completed-total {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 18px;
+        min-width: 155px;
+        background: #fff;
+        border: 1px solid #e1e5e9;
+        border-radius: 6px;
+    }
+
+        .completed-total span {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .completed-total strong {
+            font-size: 23px;
+            font-weight: 600;
+        }
+
+    .content-card {
+        background: #fff;
+        border: 1px solid #e1e5e9;
+        border-radius: 7px;
+        overflow: hidden;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .completed-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+        .completed-table th {
+            padding: 13px 14px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            color: #59636e;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .completed-table td {
+            padding: 14px;
+            border-bottom: 1px solid #edf0f2;
+            vertical-align: middle;
+        }
+
+        .completed-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .completed-table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+    .request-number {
+        color: #374151;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .result-value {
+        font-weight: 600;
+    }
+
+    .date-column {
+        color: #59636e;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+
+    .muted-text {
+        color: #9ca3af;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+        .status-badge.verified {
+            background: #e8f3ed;
+            color: #287348;
+        }
+
+        .status-badge.completed {
+            background: #eaf0f7;
+            color: #365b82;
+        }
+
+        .status-badge.other-status {
+            background: #f0f2f4;
+            color: #59636e;
+        }
+
+    .action-column {
+        text-align: center !important;
+    }
+
+    .view-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 7px 11px;
+        border: 1px solid #d5dce3;
+        border-radius: 5px;
+        background: #fff;
+        color: #34495e;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+        .view-button:hover {
+            background: #f1f5f9;
+            color: #1f2937;
+            border-color: #b8c4d0;
+        }
+
+    .empty-state {
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+        .empty-state i {
+            margin-bottom: 14px;
+            color: #94a3b8;
+            font-size: 30px;
+        }
+
+        .empty-state h4 {
+            margin-bottom: 8px;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+    @@media (max-width: 768px) {
+        .completed-page {
+            padding: 12px;
+        }
+
+        .page-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .completed-total {
+            width: 100%;
+        }
+    }
+</style>
