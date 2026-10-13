@@ -5,28 +5,18 @@
     ViewBag.Title = "My Consent";
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
 
+    var doctors = ViewBag.Doctors as IEnumerable<Doctor>
+                   ?? new List<Doctor>();
 
-var doctors = ViewBag.Doctors as IEnumerable<Doctor>
-               ?? new List<Doctor>();
-
-    var patientConditions = ViewBag.Conditions as IEnumerable<PatientCondition>
-                            ?? new List<PatientCondition>();
-
-    var patientAllergies = ViewBag.Allergies as IEnumerable<PatientAllergy>
-                           ?? new List<PatientAllergy>();
-
-    var patientMedications = ViewBag.Medications as IEnumerable<PatientMedication>
-                             ?? new List<PatientMedication>();
+    var completedTestRequests = ViewBag.CompletedTestRequests as IEnumerable<TestRequest>
+                                ?? new List<TestRequest>();
 
     var consents = ViewBag.Consents as IEnumerable<Consent>
                    ?? new List<Consent>();
-
-
 }
 
 <div class="consent-page">
 
-    
     <!-- PAGE HEADER -->
     <div class="consent-header">
 
@@ -36,13 +26,11 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                 PATIENT PORTAL
             </div>
 
-            <h1>
-                My Consent
-            </h1>
+            <h1>My Consent</h1>
 
             <p>
-                Control which medical information your doctors can access
-                and how long they can access it.
+                Control which doctors can access your completed test requests
+                and how long they can access them.
             </p>
         </div>
 
@@ -51,7 +39,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         </div>
 
     </div>
-
 
     <!-- ALERTS -->
     @if (TempData["Success"] != null)
@@ -94,13 +81,9 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         </div>
     }
 
-
     <div class="consent-layout">
 
-        <!-- =====================================================
-         MAIN COLUMN
-    ====================================================== -->
-
+        <!-- MAIN COLUMN -->
         <div class="consent-main">
 
             <!-- GRANT CONSENT -->
@@ -115,19 +98,18 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                     <div>
                         <h2>Grant Doctor Access</h2>
                         <p>
-                            Choose what information you want to share.
+                            Choose a doctor and select the completed test requests
+                            you want to share.
                         </p>
                     </div>
 
                 </div>
-
 
                 <form asp-controller="Patient"
                       asp-action="Consent"
                       method="post">
 
                     @Html.AntiForgeryToken()
-
 
                     <!-- DOCTOR -->
                     <div class="form-section">
@@ -160,7 +142,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                         </small>
 
                     </div>
-
 
                     <!-- DURATION -->
                     <div class="form-section">
@@ -196,7 +177,7 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                             </option>
 
                             <option value="Custom">
-                                Custom Date & Time
+                                Custom Date &amp; Time
                             </option>
 
                         </select>
@@ -206,7 +187,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                         </small>
 
                     </div>
-
 
                     <!-- CUSTOM EXPIRY -->
                     <div class="form-section"
@@ -229,78 +209,100 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                     </div>
 
-
                     <!-- INFORMATION TO SHARE -->
                     <div class="share-heading">
 
                         <div>
                             <h3>
                                 <i class="fas fa-file-medical"></i>
-                                Information to Share
+                                Completed Test Requests to Share
                             </h3>
 
                             <p>
-                                Select only the medical information you want this doctor to access.
+                                Select one or more completed test requests that
+                                the selected doctor may access.
                             </p>
                         </div>
 
                     </div>
 
-
-                    <!-- CONDITIONS -->
+                    <!-- COMPLETED TEST REQUESTS -->
                     <div class="medical-section">
 
                         <div class="medical-section-header">
 
                             <div class="medical-title">
+
                                 <div class="medical-icon condition">
-                                    <i class="fas fa-notes-medical"></i>
+                                    <i class="fas fa-flask"></i>
                                 </div>
 
                                 <div>
-                                    <strong>Medical Conditions</strong>
+                                    <strong>Completed Test Requests</strong>
+
                                     <span>
-                                        Conditions you choose will be shared.
+                                        Only completed test requests can be selected.
                                     </span>
                                 </div>
+
                             </div>
 
-                            @if (patientConditions.Any())
+                            @if (completedTestRequests.Any())
                             {
                                 <span class="count-badge">
-                                    @patientConditions.Count()
+                                    @completedTestRequests.Count()
                                 </span>
                             }
 
                         </div>
 
-
-                        @if (patientConditions.Any())
+                        @if (completedTestRequests.Any())
                         {
                             <div class="medical-list">
 
-                                @foreach (var item in patientConditions)
+                                @foreach (var request in completedTestRequests)
                                 {
-                                    if (item.Condition != null)
-                                    {
-                                        <label class="medical-item">
+                                    <label class="medical-item"
+                                           for="testRequest_@request.TestRequestId">
 
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   name="selectedConditionIds"
-                                                   value="@item.ConditionId"
-                                                   id="condition_@item.ConditionId" />
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="selectedTestRequestIds"
+                                               value="@request.TestRequestId"
+                                               id="testRequest_@request.TestRequestId" />
 
-                                            <span class="custom-check">
-                                                <i class="fas fa-check"></i>
+                                        <span class="custom-check">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+
+                                        <span class="medical-name">
+
+                                            <span>
+                                                Test Request #@request.TestRequestId
                                             </span>
 
-                                            <span class="medical-name">
-                                                @item.Condition.Name
-                                            </span>
+                                            @if (request.RequestDate != default)
+                                            {
+                                                <small>
+                                                    @request.RequestDate.ToString("dd MMM yyyy")
+                                                </small>
+                                            }
 
-                                        </label>
-                                    }
+                                            @if (request.TestRequestTestTypes != null &&
+                                                 request.TestRequestTestTypes.Any())
+                                            {
+                                                <small>
+                                                    Tests:
+                                                    @string.Join(", ",
+                                                        request.TestRequestTestTypes
+                                                            .Where(t => t.TestType != null)
+                                                            .Select(t => t.TestType.TestTypeName))
+                                                </small>
+                                            }
+
+                                        </span>
+
+                                    </label>
                                 }
 
                             </div>
@@ -309,174 +311,14 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                         {
                             <div class="empty-information">
                                 <i class="fas fa-info-circle"></i>
+
                                 <span>
-                                    No medical conditions are currently recorded.
+                                    You have no completed test requests available to share.
                                 </span>
                             </div>
                         }
 
                     </div>
-
-
-                    <!-- ALLERGIES -->
-                    <div class="medical-section">
-
-                        <div class="medical-section-header">
-
-                            <div class="medical-title">
-                                <div class="medical-icon allergy">
-                                    <i class="fas fa-allergies"></i>
-                                </div>
-
-                                <div>
-                                    <strong>Allergies</strong>
-                                    <span>
-                                        Allergies you choose will be shared.
-                                    </span>
-                                </div>
-                            </div>
-
-                            @if (patientAllergies.Any())
-                            {
-                                <span class="count-badge">
-                                    @patientAllergies.Count()
-                                </span>
-                            }
-
-                        </div>
-
-
-                        @if (patientAllergies.Any())
-                        {
-                            <div class="medical-list">
-
-                                @foreach (var item in patientAllergies)
-                                {
-                                    if (item.Allergy != null)
-                                    {
-                                        <label class="medical-item">
-
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   name="selectedAllergyIds"
-                                                   value="@item.AllergyId"
-                                                   id="allergy_@item.AllergyId" />
-
-                                            <span class="custom-check">
-                                                <i class="fas fa-check"></i>
-                                            </span>
-
-                                            <span class="medical-name">
-
-                                                @item.Allergy.Name
-
-                                                @if (!string.IsNullOrWhiteSpace(item.Severity))
-                                                {
-                                                    <small>
-                                                        @item.Severity
-                                                    </small>
-                                                }
-
-                                            </span>
-
-                                        </label>
-                                    }
-                                }
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-information">
-                                <i class="fas fa-info-circle"></i>
-                                <span>
-                                    No allergies are currently recorded.
-                                </span>
-                            </div>
-                        }
-
-                    </div>
-
-
-                    <!-- MEDICATIONS -->
-                    <div class="medical-section">
-
-                        <div class="medical-section-header">
-
-                            <div class="medical-title">
-                                <div class="medical-icon medication">
-                                    <i class="fas fa-pills"></i>
-                                </div>
-
-                                <div>
-                                    <strong>Medications</strong>
-                                    <span>
-                                        Medications you choose will be shared.
-                                    </span>
-                                </div>
-                            </div>
-
-                            @if (patientMedications.Any())
-                            {
-                                <span class="count-badge">
-                                    @patientMedications.Count()
-                                </span>
-                            }
-
-                        </div>
-
-
-                        @if (patientMedications.Any())
-                        {
-                            <div class="medical-list">
-
-                                @foreach (var item in patientMedications)
-                                {
-                                    if (item.Medication != null)
-                                    {
-                                        <label class="medical-item">
-
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   name="selectedMedicationIds"
-                                                   value="@item.MedicationId"
-                                                   id="medication_@item.MedicationId" />
-
-                                            <span class="custom-check">
-                                                <i class="fas fa-check"></i>
-                                            </span>
-
-                                            <span class="medical-name">
-
-                                                @item.Medication.Name
-
-                                                @if (!string.IsNullOrWhiteSpace(item.Dosage))
-                                                {
-                                                    <small>
-                                                        @item.Dosage
-                                                    </small>
-                                                }
-
-                                            </span>
-
-                                        </label>
-                                    }
-                                }
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-information">
-                                <i class="fas fa-info-circle"></i>
-                                <span>
-                                    No medications are currently recorded.
-                                </span>
-                            </div>
-                        }
-
-                    </div>
-
 
                     <!-- PRIVACY NOTICE -->
                     <div class="privacy-notice">
@@ -486,24 +328,26 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                         </div>
 
                         <div>
-                            <strong>Your medical information stays under your control.</strong>
+                            <strong>
+                                Your medical information stays under your control.
+                            </strong>
 
                             <p>
-                                Only the conditions, allergies and medications
-                                you select will be included in this consent.
-                                Access automatically expires at the selected time.
+                                Only the completed test requests you select will be
+                                included in this consent. Access automatically expires
+                                at the selected time. You can revoke active consent
+                                whenever you choose.
                             </p>
                         </div>
 
                     </div>
-
 
                     <!-- SUBMIT -->
                     <div class="consent-submit">
 
                         <button type="submit"
                                 class="grant-button"
-                            @(doctors.Any() ? "" : "disabled")>
+                            @((doctors.Any() && completedTestRequests.Any()) ? "" : "disabled")>
 
                             <i class="fas fa-check"></i>
                             Grant Consent
@@ -516,11 +360,7 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
             </div>
 
-
-            <!-- =====================================================
-             EXISTING CONSENTS
-        ====================================================== -->
-
+            <!-- EXISTING CONSENTS -->
             <div class="consent-card existing-card">
 
                 <div class="card-heading">
@@ -531,13 +371,13 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                     <div>
                         <h2>My Doctor Consents</h2>
+
                         <p>
                             View and manage the access you have granted.
                         </p>
                     </div>
 
                 </div>
-
 
                 @if (consents.Any())
                 {
@@ -571,14 +411,11 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                                             <small>
                                                 Granted
-                                                @consent.GrantedAt
-                                                .ToLocalTime()
-                                                .ToString("dd MMM yyyy HH:mm")
+                                                @consent.GrantedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
                                             </small>
                                         </div>
 
                                     </div>
-
 
                                     @if (active)
                                     {
@@ -601,22 +438,23 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                                 </div>
 
-
-                                <div class="shared-information">
+                                <!-- SHARED TEST REQUESTS -->
+                                <div class="shared-information test-request-information">
 
                                     <div>
                                         <span class="shared-label">
-                                            Conditions
+                                            Shared Completed Test Requests
                                         </span>
 
-                                        @if (consent.Conditions.Any())
+                                        @if (consent.TestAccesses != null &&
+                                             consent.TestAccesses.Any())
                                         {
                                             <div class="tag-list">
 
-                                                @foreach (var item in consent.Conditions)
+                                                @foreach (var access in consent.TestAccesses)
                                                 {
                                                     <span class="medical-tag">
-                                                        @item.Condition.Name
+                                                        Test Request #@access.TestRequestId
                                                     </span>
                                                 }
 
@@ -625,68 +463,14 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                                         else
                                         {
                                             <small class="none-text">
-                                                None shared
-                                            </small>
-                                        }
-                                    </div>
-
-
-                                    <div>
-                                        <span class="shared-label">
-                                            Allergies
-                                        </span>
-
-                                        @if (consent.Allergies.Any())
-                                        {
-                                            <div class="tag-list">
-
-                                                @foreach (var item in consent.Allergies)
-                                                {
-                                                    <span class="medical-tag">
-                                                        @item.Allergy.Name
-                                                    </span>
-                                                }
-
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <small class="none-text">
-                                                None shared
-                                            </small>
-                                        }
-                                    </div>
-
-
-                                    <div>
-                                        <span class="shared-label">
-                                            Medications
-                                        </span>
-
-                                        @if (consent.Medications.Any())
-                                        {
-                                            <div class="tag-list">
-
-                                                @foreach (var item in consent.Medications)
-                                                {
-                                                    <span class="medical-tag">
-                                                        @item.Medication.Name
-                                                    </span>
-                                                }
-
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <small class="none-text">
-                                                None shared
+                                                No test requests recorded for this consent.
                                             </small>
                                         }
                                     </div>
 
                                 </div>
 
-
+                                <!-- CONSENT FOOTER -->
                                 <div class="existing-footer">
 
                                     @if (consent.ExpiresAt.HasValue)
@@ -694,19 +478,16 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                                         <span>
                                             <i class="fas fa-clock"></i>
                                             Expires
-                                            @consent.ExpiresAt.Value
-                                            .ToLocalTime()
-                                            .ToString("dd MMM yyyy HH:mm")
+                                            @consent.ExpiresAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
                                         </span>
                                     }
-
 
                                     @if (active)
                                     {
                                         <form asp-controller="Patient"
                                               asp-action="RevokeConsent"
                                               method="post"
-                                              onsubmit="return confirm('Are you sure you want to revoke this consent? The doctor will no longer have access to the selected medical information.');">
+                                              onsubmit="return confirm('Are you sure you want to revoke this consent? The doctor will no longer have access to the selected test requests.');">
 
                                             @Html.AntiForgeryToken()
 
@@ -753,11 +534,7 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
         </div>
 
-
-        <!-- =====================================================
-         RIGHT INFORMATION PANEL
-    ====================================================== -->
-
+        <!-- RIGHT INFORMATION PANEL -->
         <aside class="consent-sidebar">
 
             <div class="info-card">
@@ -775,7 +552,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                 </div>
 
-
                 <div class="step">
 
                     <div class="step-number">
@@ -792,7 +568,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
                 </div>
 
-
                 <div class="step">
 
                     <div class="step-number">
@@ -800,16 +575,15 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                     </div>
 
                     <div>
-                        <strong>Select information</strong>
+                        <strong>Select test requests</strong>
 
                         <p>
-                            Choose the conditions, allergies and medications
-                            you want to share.
+                            Choose one or more completed test requests you want
+                            the doctor to access.
                         </p>
                     </div>
 
                 </div>
-
 
                 <div class="step">
 
@@ -821,12 +595,12 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                         <strong>Set a duration</strong>
 
                         <p>
-                            Decide how long the doctor can access your information.
+                            Decide how long the doctor can access the selected
+                            test requests.
                         </p>
                     </div>
 
                 </div>
-
 
                 <div class="step">
 
@@ -846,7 +620,7 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
             </div>
 
-
+            <!-- PRIVACY CARD -->
             <div class="privacy-card">
 
                 <div class="privacy-card-icon">
@@ -857,8 +631,8 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
                     <h4>Your Privacy</h4>
 
                     <p>
-                        Only the information you specifically select is
-                        included in the consent.
+                        Only the completed test requests you specifically select
+                        are included in the consent.
                     </p>
                 </div>
 
@@ -867,7 +641,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         </aside>
 
     </div>
-    ```
 
 </div>
 
@@ -884,7 +657,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         padding: 28px 30px 40px;
         box-sizing: border-box;
     }
-
 
     /* =========================================================
            HEADER
@@ -934,7 +706,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         color: #3157c7;
         font-size: 23px;
     }
-
 
     /* =========================================================
            ALERTS
@@ -999,7 +770,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         cursor: pointer;
     }
 
-
     /* =========================================================
            LAYOUT
         ========================================================= */
@@ -1020,7 +790,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         position: sticky;
         top: 20px;
     }
-
 
     /* =========================================================
            CARDS
@@ -1085,7 +854,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         font-size: 12px;
     }
 
-
     /* =========================================================
            FORM
         ========================================================= */
@@ -1128,7 +896,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         font-size: 11px;
     }
 
-
     /* =========================================================
            SHARE HEADING
         ========================================================= */
@@ -1155,9 +922,8 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
             font-size: 11px;
         }
 
-
     /* =========================================================
-           MEDICAL SECTIONS
+           TEST REQUEST SECTION
         ========================================================= */
 
     .medical-section {
@@ -1198,15 +964,19 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
             color: #2563eb;
         }
 
-        .medical-icon.allergy {
-            background: #fff0f0;
-            color: #dc2626;
-        }
-
-        .medical-icon.medication {
-            background: #eaf8ef;
-            color: #16a34a;
-        }
+    .count-badge {
+        min-width: 25px;
+        height: 25px;
+        padding: 0 7px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background: #e9eefb;
+        color: #3157c7;
+        font-size: 10px;
+        font-weight: 700;
+    }
 
     .medical-title strong,
     .medical-title span {
@@ -1223,21 +993,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         font-size: 10px;
         margin-top: 2px;
     }
-
-    .count-badge {
-        min-width: 25px;
-        height: 25px;
-        padding: 0 7px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 20px;
-        background: #e9eefb;
-        color: #3157c7;
-        font-size: 10px;
-        font-weight: 700;
-    }
-
 
     /* =========================================================
            CHECKBOX LIST
@@ -1299,20 +1054,24 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
     }
 
     .medical-name {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
         color: #344054;
         font-size: 12px;
         font-weight: 600;
+        overflow-wrap: anywhere;
     }
 
         .medical-name small {
             color: #8a94a6;
             font-size: 10px;
-            margin-left: 3px;
+            font-weight: 400;
         }
 
-
     /* =========================================================
-           EMPTY
+           EMPTY INFORMATION
         ========================================================= */
 
     .empty-information {
@@ -1329,7 +1088,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         .empty-information i {
             color: #64748b;
         }
-
 
     /* =========================================================
            PRIVACY
@@ -1371,7 +1129,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         line-height: 1.5;
     }
 
-
     /* =========================================================
            SUBMIT
         ========================================================= */
@@ -1408,7 +1165,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
             opacity: .5;
             cursor: not-allowed;
         }
-
 
     /* =========================================================
            EXISTING CONSENTS
@@ -1486,7 +1242,7 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
     .shared-information {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         gap: 15px;
         margin-top: 15px;
         padding: 13px 0;
@@ -1557,7 +1313,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
             background: #fff3f3;
         }
 
-
     /* =========================================================
            EMPTY CONSENTS
         ========================================================= */
@@ -1591,7 +1346,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         color: #8a94a6;
         font-size: 11px;
     }
-
 
     /* =========================================================
            RIGHT SIDEBAR
@@ -1663,7 +1417,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         line-height: 1.5;
     }
 
-
     /* =========================================================
            PRIVACY CARD
         ========================================================= */
@@ -1701,7 +1454,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         line-height: 1.5;
     }
 
-
     /* =========================================================
            RESPONSIVE
         ========================================================= */
@@ -1722,7 +1474,6 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
         }
     }
 
-
     @@media (max-width: 850px) {
 
         .consent-layout {
@@ -1735,10 +1486,8 @@ var doctors = ViewBag.Doctors as IEnumerable<Doctor>
 
         .shared-information {
             grid-template-columns: 1fr;
-            gap: 12px;
         }
     }
-
 
     @@media (max-width: 600px) {
 
