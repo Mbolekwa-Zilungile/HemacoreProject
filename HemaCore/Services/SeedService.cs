@@ -241,7 +241,7 @@ namespace HemaCore.Services
             {
                 await AddRoleAsync(roleManager, "Doctor");
 
-                var doctorEmail = "LihleDlilanga@gmail.com";
+                var doctorEmail = "dlilangalihle48@gmail.com";
                 var doctorUser = await userManager.FindByEmailAsync(doctorEmail);
 
                 if (doctorUser == null)

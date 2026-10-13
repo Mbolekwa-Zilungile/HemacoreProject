@@ -607,14 +607,16 @@ namespace HemaCore.Controllers
             return View(requests);
         }
         #endregion
-       
+
         #region Consent
 
-// ---------------------------------------------------------------------
-// Patient Consent (GET)
-// ---------------------------------------------------------------------
-[HttpGet]
-public async Task<IActionResult> Consent()
+        #region Consent
+
+        // ---------------------------------------------------------------------
+        // Patient Consent (GET)
+        // ---------------------------------------------------------------------
+        [HttpGet]
+        public async Task<IActionResult> Consent()
         {
             var patient = await GetCurrentPatientAsync();
 
@@ -623,9 +625,7 @@ public async Task<IActionResult> Consent()
                 return RedirectToAction(nameof(CompleteProfile));
             }
 
-            // -------------------------------------------------------------
             // Active doctors
-            // -------------------------------------------------------------
             var doctors = await _context.Doctors
                 .Include(d => d.User)
                 .Where(d => d.IsActive)
@@ -633,60 +633,29 @@ public async Task<IActionResult> Consent()
                 .ThenBy(d => d.Name)
                 .ToListAsync();
 
-
-            // -------------------------------------------------------------
-            // Patient conditions
-            // -------------------------------------------------------------
-            var conditions = await _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.PatientID)
-                .Include(pc => pc.Condition)
-                .Where(pc => pc.Condition != null &&
-                             pc.Condition.IsActive)
-                .OrderBy(pc => pc.Condition.Name)
+            // Completed test requests belonging to this patient
+            var completedTestRequests = await _context.TestRequests
+                .Include(r => r.Doctor)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestType)
+                .Where(r =>
+                    r.PatientID == patient.PatientID &&
+                    r.Status == "Completed")
+                .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
 
-
-            // -------------------------------------------------------------
-            // Patient allergies
-            // -------------------------------------------------------------
-            var allergies = await _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.PatientID)
-                .Include(pa => pa.Allergy)
-                .Where(pa => pa.Allergy != null &&
-                             pa.Allergy.IsActive)
-                .OrderBy(pa => pa.Allergy.Name)
-                .ToListAsync();
-
-
-            // -------------------------------------------------------------
-            // Patient medications
-            // -------------------------------------------------------------
-            var medications = await _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.PatientID)
-                .Include(pm => pm.Medication)
-                .Where(pm => pm.Medication != null &&
-                             pm.Medication.IsActive)
-                .OrderBy(pm => pm.Medication.Name)
-                .ToListAsync();
-
-
-            // -------------------------------------------------------------
-            // Existing consents
-            // -------------------------------------------------------------
+            // Existing consents and shared test requests
             var consents = await _context.Consents
                 .Where(c => c.PatientID == patient.UserId)
                 .Include(c => c.Doctor)
-                .Include(c => c.Conditions)
-                    .ThenInclude(cc => cc.Condition)
-                .Include(c => c.Allergies)
-                    .ThenInclude(ca => ca.Allergy)
-                .Include(c => c.Medications)
-                    .ThenInclude(cm => cm.Medication)
+                .Include(c => c.TestAccesses)
+                    .ThenInclude(ct => ct.TestRequest)
+                        .ThenInclude(r => r.TestRequestTestTypes)
+                            .ThenInclude(i => i.TestType)
                 .OrderByDescending(c => c.GrantedAt)
                 .ToListAsync();
 
-
-            // Automatically mark expired consents as inactive
+            // Automatically deactivate expired consents
             var now = DateTime.UtcNow;
 
             var expiredConsents = consents
@@ -706,11 +675,8 @@ public async Task<IActionResult> Consent()
                 await _context.SaveChangesAsync();
             }
 
-
             ViewBag.Doctors = doctors;
-            ViewBag.Conditions = conditions;
-            ViewBag.Allergies = allergies;
-            ViewBag.Medications = medications;
+            ViewBag.CompletedTestRequests = completedTestRequests;
             ViewBag.Consents = consents;
 
             return View();
@@ -724,9 +690,7 @@ public async Task<IActionResult> Consent()
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Consent(
             int doctorId,
-            List<int>? selectedConditionIds,
-            List<int>? selectedAllergyIds,
-            List<int>? selectedMedicationIds,
+            List<int>? selectedTestRequestIds,
             string consentDuration,
             DateTime? customExpiry)
         {
@@ -743,7 +707,6 @@ public async Task<IActionResult> Consent()
             {
                 return RedirectToAction("Login", "Account");
             }
-
 
             // -------------------------------------------------------------
             // Validate doctor
@@ -762,7 +725,6 @@ public async Task<IActionResult> Consent()
                 return RedirectToAction(nameof(Consent));
             }
 
-
             // -------------------------------------------------------------
             // Remove expired active consent before checking
             // -------------------------------------------------------------
@@ -779,11 +741,11 @@ public async Task<IActionResult> Consent()
                 existingConsent.ExpiresAt.Value <= now)
             {
                 existingConsent.IsActive = false;
+
                 await _context.SaveChangesAsync();
 
                 existingConsent = null;
             }
-
 
             // -------------------------------------------------------------
             // Prevent duplicate active consent
@@ -796,7 +758,6 @@ public async Task<IActionResult> Consent()
 
                 return RedirectToAction(nameof(Consent));
             }
-
 
             // -------------------------------------------------------------
             // Determine expiry date
@@ -831,7 +792,6 @@ public async Task<IActionResult> Consent()
                         return RedirectToAction(nameof(Consent));
                     }
 
-                    // Convert local browser-submitted date to UTC
                     expiresAt = customExpiry.Value;
 
                     if (expiresAt <= now)
@@ -852,45 +812,27 @@ public async Task<IActionResult> Consent()
                     return RedirectToAction(nameof(Consent));
             }
 
-
             // -------------------------------------------------------------
-            // Validate selected medical information belongs to patient
+            // Validate selected completed test requests
             // -------------------------------------------------------------
+            selectedTestRequestIds ??= new List<int>();
 
-            selectedConditionIds ??= new List<int>();
-            selectedAllergyIds ??= new List<int>();
-            selectedMedicationIds ??= new List<int>();
-
-
-            var validConditionIds = await _context.PatientConditions
-                .Where(pc =>
-                    pc.PatientID == patient.PatientID &&
-                    selectedConditionIds.Contains(pc.ConditionId) &&
-                    pc.Condition.IsActive)
-                .Select(pc => pc.ConditionId)
+            var validTestRequestIds = await _context.TestRequests
+                .Where(r =>
+                    r.PatientID == patient.PatientID &&
+                    r.Status == "Completed" &&
+                    selectedTestRequestIds.Contains(r.TestRequestId))
+                .Select(r => r.TestRequestId)
                 .Distinct()
                 .ToListAsync();
 
+            if (!validTestRequestIds.Any())
+            {
+                TempData["Error"] =
+                    "Please select at least one completed test request.";
 
-            var validAllergyIds = await _context.PatientAllergies
-                .Where(pa =>
-                    pa.PatientID == patient.PatientID &&
-                    selectedAllergyIds.Contains(pa.AllergyId) &&
-                    pa.Allergy.IsActive)
-                .Select(pa => pa.AllergyId)
-                .Distinct()
-                .ToListAsync();
-
-
-            var validMedicationIds = await _context.PatientMedications
-                .Where(pm =>
-                    pm.PatientID == patient.PatientID &&
-                    selectedMedicationIds.Contains(pm.MedicationId) &&
-                    pm.Medication.IsActive)
-                .Select(pm => pm.MedicationId)
-                .Distinct()
-                .ToListAsync();
-
+                return RedirectToAction(nameof(Consent));
+            }
 
             // -------------------------------------------------------------
             // Create consent
@@ -909,84 +851,27 @@ public async Task<IActionResult> Consent()
 
             await _context.SaveChangesAsync();
 
-
             // -------------------------------------------------------------
-            // Save selected conditions
+            // Save selected test requests
             // -------------------------------------------------------------
-            foreach (var conditionId in validConditionIds)
+            foreach (var testRequestId in validTestRequestIds)
             {
-                _context.ConsentConditions.Add(
-                    new ConsentCondition
-                    {
-                        ConsentId = consent.Id,
-                        ConditionId = conditionId
-                    });
+                consent.TestAccesses.Add(new ConsentTestRequest
+                {
+                    ConsentId = consent.Id,
+                    TestRequestId = testRequestId
+                });
             }
-
-
-            // -------------------------------------------------------------
-            // Save selected allergies
-            // -------------------------------------------------------------
-            foreach (var allergyId in validAllergyIds)
-            {
-                _context.ConsentAllergies.Add(
-                    new ConsentAllergy
-                    {
-                        ConsentId = consent.Id,
-                        AllergyId = allergyId
-                    });
-            }
-
-
-            // -------------------------------------------------------------
-            // Save selected medications
-            // -------------------------------------------------------------
-            foreach (var medicationId in validMedicationIds)
-            {
-                _context.ConsentMedications.Add(
-                    new ConsentMedication
-                    {
-                        ConsentId = consent.Id,
-                        MedicationId = medicationId
-                    });
-            }
-
 
             await _context.SaveChangesAsync();
 
-
             // -------------------------------------------------------------
-            // Get shared condition names
+            // Get shared test request names for the notification
             // -------------------------------------------------------------
-            var sharedConditions = await _context.ConsentConditions
-                .Where(cc => cc.ConsentId == consent.Id)
-                .Include(cc => cc.Condition)
-                .Select(cc => cc.Condition.Name)
-                .OrderBy(name => name)
+            var sharedTestRequests = await _context.TestRequests
+                .Where(r => validTestRequestIds.Contains(r.TestRequestId))
+                .Select(r => "Test Request #" + r.TestRequestId)
                 .ToListAsync();
-
-
-            // -------------------------------------------------------------
-            // Get shared allergy names
-            // -------------------------------------------------------------
-            var sharedAllergies = await _context.ConsentAllergies
-                .Where(ca => ca.ConsentId == consent.Id)
-                .Include(ca => ca.Allergy)
-                .Select(ca => ca.Allergy.Name)
-                .OrderBy(name => name)
-                .ToListAsync();
-
-
-            // -------------------------------------------------------------
-            // Get shared medication names
-            // -------------------------------------------------------------
-            var sharedMedications = await _context.ConsentMedications
-                .Where(cm => cm.ConsentId == consent.Id)
-                .Include(cm => cm.Medication)
-                .Select(cm => cm.Medication.Name)
-                .OrderBy(name => name)
-                .ToListAsync();
-
 
             // -------------------------------------------------------------
             // Email doctor
@@ -1000,9 +885,8 @@ public async Task<IActionResult> Consent()
                     doctor.Name,
                     patient.Name,
                     patient.Surname,
-                    sharedConditions);
+                    sharedTestRequests);
             }
-
 
             TempData["Success"] =
                 $"Consent granted to Dr. {doctor.Name} {doctor.Surname} " +
@@ -1014,9 +898,16 @@ public async Task<IActionResult> Consent()
 
         // ---------------------------------------------------------------------
         // Revoke Consent
+        // Keep your existing RevokeConsent action here unchanged.
         // ---------------------------------------------------------------------
-       
-[HttpPost]
+
+        #endregion
+
+        // ---------------------------------------------------------------------
+        // Revoke Consent
+        // ---------------------------------------------------------------------
+
+        [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> RevokeConsent(int consentId)
         {
