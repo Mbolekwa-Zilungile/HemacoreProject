@@ -1664,9 +1664,9 @@ namespace HemaCore.Controllers
                 order.Status = OrderStatus.Completed;
                 order.DateCompleted = DateTime.Now;
             }
-            else if (items.All(i => i.Status == OrderItemStatus.Rejected))
+            else if (items.All(i => i.Status == OrderItemStatus.Cancelled))
             {
-                order.Status = OrderStatus.Rejected;
+                order.Status = OrderStatus.Cancelled;
                 order.DateCancelled = DateTime.Now;
             }
             else if (items.Any(i => i.Status == OrderItemStatus.Received))
@@ -1711,7 +1711,7 @@ namespace HemaCore.Controllers
                 );
             }
 
-            item.Status = OrderItemStatus.Rejected;
+            item.Status = OrderItemStatus.Cancelled;
             item.DateRejected = DateTime.Now;
             item.RejectReason = reason;
 
@@ -1722,13 +1722,13 @@ namespace HemaCore.Controllers
                 order.Status = OrderStatus.Completed;
                 order.DateCompleted = DateTime.Now;
             }
-            else if (items.All(i => i.Status == OrderItemStatus.Rejected))
+            else if (items.All(i => i.Status == OrderItemStatus.Cancelled))
             {
-                order.Status = OrderStatus.Rejected;
+                order.Status = OrderStatus.Cancelled;
                 order.DateCancelled = DateTime.Now;
             }
             else if (items.Any(i => i.Status == OrderItemStatus.Received) &&
-                     items.Any(i => i.Status == OrderItemStatus.Rejected))
+                     items.Any(i => i.Status == OrderItemStatus.Cancelled))
             {
                 order.Status = OrderStatus.PartiallyCompleted;
             }
@@ -1982,16 +1982,41 @@ namespace HemaCore.Controllers
         {
             var doctor = await _context.Doctors
                 .Include(x => x.User)
-                .Where(x => x.IsActive)
                 .OrderBy(x => x.Surname)
                 .ThenBy(x => x.Name)
                 .ToListAsync();
 
+            ViewBag.FilterTitle = "All Doctors";
+
             return View(doctor);
         }
-        // ==========================================
-        // ADD DOCTOR - GET
-        // ==========================================
+
+        public async Task<IActionResult> ActiveDoctors()
+        {
+            var doctor = await _context.Doctors
+                .Include(x => x.User)
+                .Where(d => d.IsActive)
+                .OrderBy(x => x.Surname)
+                .ThenBy(x => x.Name)
+                .ToListAsync();
+
+            ViewBag.FilterTitle = "Active Doctors";
+
+            return View("Doctors", doctor);
+        }
+
+        public async Task<IActionResult> InactiveDoctors()
+        {
+            var doctor = await _context.Doctors
+                .Include(x => x.User)
+                .Where(d => !d.IsActive)
+                .OrderBy(x => x.Surname)
+                .ThenBy(x => x.Name)
+                .ToListAsync();
+
+            ViewBag.FilterTitle = "Inactive Doctors";
+            return View("Doctors", doctor);
+        }
 
         [HttpGet]
         public IActionResult AddDoctor()
@@ -2148,9 +2173,7 @@ namespace HemaCore.Controllers
                        .Substring(0, 8);
         }
 
-        // =========================================================
-        // EDIT DOCTOR - GET
-        // =========================================================
+     
         [HttpGet]
         public async Task<IActionResult> EditDoctor(int id)
         {
@@ -2180,9 +2203,7 @@ namespace HemaCore.Controllers
 
 
 
-        // =========================================================
-        // EDIT DOCTOR - POST
-        // =========================================================
+      
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -2309,6 +2330,58 @@ namespace HemaCore.Controllers
             return RedirectToAction(nameof(Doctors));
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> SearchDoctorsLive(
+            string term = "",
+            string status = "All")
+                {
+                    var query = _context.Doctors
+                        .Include(d => d.User)
+                        .AsQueryable();
+
+                    // Filter by active/inactive status
+                    if (status == "Active")
+                    {
+                        query = query.Where(d => d.IsActive == true);
+                    }
+                    else if (status == "Inactive")
+                    {
+                        query = query.Where(d => d.IsActive == false);
+                    }
+
+                    // Search by name, surname, HPCSA number, phone or email
+                    if (!string.IsNullOrWhiteSpace(term))
+                    {
+                        term = term.Trim();
+
+                        query = query.Where(d =>
+                            (d.Name != null && d.Name.Contains(term)) ||
+                            (d.Surname != null && d.Surname.Contains(term)) ||
+                            (d.HPCSANumber != null &&
+                             d.HPCSANumber.Contains(term)) ||
+                            (d.PhoneNumber != null &&
+                             d.PhoneNumber.Contains(term)) ||
+                            (d.User != null &&
+                             d.User.Email != null &&
+                             d.User.Email.Contains(term))
+                        );
+                    }
+
+                    var doctors = await query
+                        .Select(d => new
+                        {
+                            doctorID = d.DoctorId,
+                            name = d.Name,
+                            surname = d.Surname,
+                            email = d.User != null ? d.User.Email : null,
+                            hpcsaNumber = d.HPCSANumber,
+                            phoneNumber = d.PhoneNumber
+                        })
+                        .ToListAsync();
+
+                    return Json(doctors);
+                }
 
         #endregion
 

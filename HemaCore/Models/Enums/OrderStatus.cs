@@ -5,6 +5,6 @@
         Ordered,
         Completed,
         PartiallyCompleted,
-        Rejected
+        Cancelled
     }
 }

@@ -83,7 +83,7 @@
 
                 <li class="section-label">USER MANAGEMENT</li>
                 <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Doctors" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="Doctors">
+                    <a asp-controller="Manager" asp-action="ActiveDoctors">
                         <i class="fas fa-user-doctor"></i>
                         <span class="menu-text">Doctors</span>
                     </a>
@@ -145,5 +145,7 @@
             });
     </script>
         @RenderSection("Scripts", required: false)
+
 </body>
 </html>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

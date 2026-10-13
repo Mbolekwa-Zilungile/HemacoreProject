@@ -86,19 +86,19 @@
                                     {
                                         <span class="badge bg-success">Completed</span>
                                     }
-                                    else if (order.Status.ToString() == "Rejected")
+                                    else if (order.Status.ToString() == "Cancelled")
                                     {
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="badge bg-danger">Cancelled</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">@order.Status</span>
+                                        <span class="badge bg-info">@order.Status</span>
                                     }
                                 </td>
 
                                 <td>
                                     <a asp-action="OrderDetails" asp-route-id="@order.OrderId"
-                                    class="btn btn-sm btn-primary">
+                                       class="btn btn-sm btn-outline-info me-1">
                                         View / Manage
                                     </a>
                                 </td>
