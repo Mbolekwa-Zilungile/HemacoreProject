@@ -7,314 +7,748 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-<div class="fade-in">
-
-    ```
-    <div class="page-header">
-        <h2><i class="fas fa-plus-circle"></i> Create New Test Request</h2>
-        <p>Fill in the details below to submit a laboratory test request</p>
-    </div>
-
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <div class="inline-notice error" style="margin-bottom:1.25rem;">
-            <i class="fas fa-exclamation-circle"></i>
-            Please correct the errors below before submitting the request.
-        </div>
+<style>
+    .create-request-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 0 40px;
     }
+
+    .page-heading {
+        margin-bottom: 25px;
+    }
+
+        .page-heading h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f5068;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+    .request-step-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 22px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .request-step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 22px;
+        background: #f8fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .step-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #2c7da0;
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .request-step-header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #1f5068;
+        font-weight: 700;
+    }
+
+    .request-step-header p {
+        margin: 3px 0 0;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .request-step-body {
+        padding: 22px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .required-star {
+        color: #dc2626;
+    }
+
+    .request-select,
+    .request-input,
+    .request-textarea {
+        width: 100%;
+        padding: 11px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        background: #fff;
+        color: #374151;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+        .request-select:focus,
+        .request-input:focus,
+        .request-textarea:focus {
+            outline: none;
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.12);
+        }
+
+        .request-input.input-error {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+    .request-textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .field-validation {
+        display: block;
+        margin-top: 6px;
+        color: #dc2626;
+        font-size: 13px;
+    }
+
+    .id-search-wrapper {
+        position: relative;
+    }
+
+    .id-suggestions {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 260px;
+        overflow-y: auto;
+    }
+
+    .id-suggestion-item {
+        padding: 0.7rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+        .id-suggestion-item:hover {
+            background: #f8fafc;
+        }
+
+    .id-suggestion-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #2c7da0;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .id-suggestion-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #1f5068;
+    }
+
+    .id-suggestion-id {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-family: monospace;
+    }
+
+    .patient-summary {
+        margin-top: 16px;
+        padding: 18px;
+        border: 1px solid #dbe7ec;
+        background: #f6fbfd;
+        border-radius: 9px;
+        display: none;
+    }
+
+        .patient-summary.show {
+            display: block;
+        }
+
+    .patient-summary-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .patient-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #2c7da0;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .patient-summary h3 {
+        margin: 0 0 3px;
+        color: #1f5068;
+        font-size: 16px;
+    }
+
+    .patient-summary p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .patient-summary-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        font-size: 13px;
+        color: #374151;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid #dbe7ec;
+    }
+
+        .patient-summary-details strong {
+            display: block;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 2px;
+        }
+
+    .not-found-box {
+        display: none;
+        margin-top: 16px;
+        padding: 18px;
+        border: 1px dashed #fca5a5;
+        background: #fef2f2;
+        border-radius: 9px;
+        text-align: center;
+    }
+
+        .not-found-box.show {
+            display: block;
+        }
+
+        .not-found-box p {
+            margin: 0 0 12px;
+            color: #991b1b;
+            font-size: 14px;
+        }
+
+        .not-found-box a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2c7da0;
+            color: white;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+            .not-found-box a:hover {
+                background: #1f5068;
+                color: white;
+            }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .test-types-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .test-type-card {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid #d9e1e5;
+        border-radius: 9px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .test-type-card:hover {
+            border-color: #61a5c2;
+            background: #f8fcfd;
+        }
+
+        .test-type-card.selected {
+            border-color: #2c7da0;
+            background: #eef8fb;
+        }
+
+    .test-checkbox {
+        margin-top: 3px;
+        width: 17px;
+        height: 17px;
+        accent-color: #2c7da0;
+        flex-shrink: 0;
+    }
+
+    .test-type-content {
+        flex: 1;
+    }
+
+    .test-type-name {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .test-type-sample {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 3px;
+    }
+
+    .selected-count {
+        margin-bottom: 15px;
+        padding: 10px 13px;
+        border-radius: 7px;
+        background: #f3f7f9;
+        color: #4b5563;
+        font-size: 13px;
+    }
+
+    .sample-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .sample-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 15px;
+        border: 1px solid #e1e6e9;
+        border-radius: 9px;
+        background: #fafcfd;
+    }
+
+    .sample-field label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4b5563;
+    }
+
+    .sample-type-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 13px;
+        background: #eef8fb;
+        border: 1px solid #bfe0ec;
+        border-radius: 7px;
+        color: #1f5068;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+        .sample-type-label i {
+            color: #2c7da0;
+        }
+
+    .no-options,
+    .no-samples-yet {
+        padding: 20px;
+        text-align: center;
+        color: #6b7280;
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        border-radius: 8px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel {
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #4b5563;
+    }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+        }
+
+    .btn-submit {
+        border: 1px solid #2c7da0;
+        background: #2c7da0;
+        color: white;
+    }
+
+        .btn-submit:hover {
+            background: #1f5068;
+        }
+
+    .validation-summary {
+        margin-bottom: 20px;
+        padding: 13px 16px;
+        border-radius: 8px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+        font-size: 14px;
+    }
+
+    #clientValidationSummary {
+        display: none;
+    }
+
+        #clientValidationSummary ul {
+            margin: 6px 0 0;
+            padding-left: 20px;
+        }
+
+    @@media (max-width: 768px) {
+        .form-row,
+        .test-types-grid,
+        .sample-row,
+        .patient-summary-details {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .btn-cancel,
+        .btn-submit {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="create-request-page">
+
+    <div class="page-heading">
+        <h1>Create New Test Request</h1>
+       @*  <p>Create a laboratory test request for one of your patients.</p> *@
+    </div>
 
     <form asp-controller="Doctor"
           asp-action="CreateTestRequest"
           method="post"
-          id="createRequestForm">
+          id="createTestRequestForm">
 
         @Html.AntiForgeryToken()
 
-        <!-- STEP 1: PATIENT -->
+        <div asp-validation-summary="All"
+             class="validation-summary"></div>
+
+        <div id="clientValidationSummary" class="validation-summary">
+            <strong>Please fix the following before submitting:</strong>
+            <ul id="clientValidationList"></ul>
+        </div>
+
+        <!-- STEP 1 -->
         <div class="request-step-card">
 
             <div class="request-step-header">
                 <div class="step-badge">1</div>
+
                 <div>
-                    <div class="step-title">
-                        <i class="fas fa-user"></i> Patient Selection
-                    </div>
-                    <div class="step-subtitle">
-                        Select the patient for this laboratory request
-                    </div>
+                    <h2>Patient Selection</h2>
+                    <p>Search for the patient by ID number to confirm their identity.</p>
                 </div>
             </div>
 
-            <div class="request-form-group">
+            <div class="request-step-body">
 
-                <label asp-for="PatientId" class="request-label">
-                    Patient
-                </label>
+                <div class="form-group id-search-wrapper">
 
-                <select asp-for="PatientId"
-                        class="request-select"
-                        id="patientSelect">
-
-                    <option value="">-- Select Patient --</option>
-
-                    @foreach (var patient in Model.Patients)
-                    {
-                        <option value="@patient.PatientId">
-                            @patient.FullName
-                        </option>
-                    }
-
-                </select>
-
-                <span asp-validation-for="PatientId"
-                      class="text-danger">
-                </span>
-
-            </div>
-
-            <div id="selectedPatient"
-                 class="patient-summary"
-                 style="display:none;">
-
-                <div class="patient-summary-header">
-
-                    <div class="patient-avatar" id="patientAvatar">
-                        --
-                    </div>
-
-                    <div>
-                        <div class="patient-summary-name"
-                             id="patientName">
-                        </div>
-
-                        <div class="patient-summary-meta">
-                            Selected patient
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="request-form-row">
-
-                <div class="request-form-group">
-
-                    <label asp-for="Urgency"
-                           class="request-label">
-                        Urgency Level
+                    <label for="patientIdSearch" class="form-label">
+                        Patient ID Number <span class="required-star">*</span>
                     </label>
 
-                    <select asp-for="Urgency"
-                            class="request-select">
+                    <input type="text"
+                           id="patientIdSearch"
+                           class="request-input"
+                           placeholder="Enter the patient's ID number..."
+                           autocomplete="off" />
 
-                        <option value="">-- Select Urgency --</option>
-                        <option value="Routine">Routine</option>
-                        <option value="Urgent">Urgent</option>
-                        <option value="STAT">STAT</option>
+                    <div id="idSuggestions" class="id-suggestions"></div>
 
-                    </select>
+                    <input type="hidden" asp-for="PatientId" id="patientIdHidden" />
 
-                    <span asp-validation-for="Urgency"
-                          class="text-danger">
-                    </span>
+                    <span asp-validation-for="PatientId"
+                          class="field-validation"></span>
+
+                </div>
+
+                <div class="patient-summary" id="patientSummary">
+
+                    <div class="patient-summary-title">
+
+                        <div class="patient-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h3 id="selectedPatientName"></h3>
+                            <p>Confirmed patient — details below</p>
+                        </div>
+
+                    </div>
+
+                    <div class="patient-summary-details">
+                        <div>
+                            <strong>ID Number</strong>
+                            <span id="selectedPatientId"></span>
+                        </div>
+                        <div>
+                            <strong>Date of Birth</strong>
+                            <span id="selectedPatientDob"></span>
+                        </div>
+                        <div>
+                            <strong>Phone Number</strong>
+                            <span id="selectedPatientPhone"></span>
+                        </div>
+                        <div>
+                            <strong>Address</strong>
+                            <span id="selectedPatientAddress"></span>
+                        </div>
+                    </div>
 
                 </div>
 
-            </div>
-
-            <div class="request-form-group"
-                 style="margin-top:1rem;">
-
-                <label asp-for="ClinicalNotes"
-                       class="request-label">
-                    Clinical Notes
-                </label>
-
-                <textarea asp-for="ClinicalNotes"
-                          rows="4"
-                          class="request-textarea"
-                          placeholder="Relevant clinical information for the laboratory..."></textarea>
-
-                <span asp-validation-for="ClinicalNotes"
-                      class="text-danger">
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <!-- STEP 2: TEST TYPES -->
-        <div class="request-step-card">
-
-            <div class="request-step-header">
-
-                <div class="step-badge">2</div>
-
-                <div>
-                    <div class="step-title">
-                        <i class="fas fa-microscope"></i>
-                        Select Test Types
-                    </div>
-
-                    <div class="step-subtitle">
-                        Choose one or more tests to request
-                    </div>
+                <div class="not-found-box" id="notFoundBox">
+                    <p>
+                        <i class="fas fa-exclamation-circle"></i>
+                        Sorry, we don't have a patient with that ID number.
+                    </p>
+                    <a href="#" id="addPatientLink">
+                        <i class="fas fa-user-plus"></i>
+                        Add New Patient
+                    </a>
                 </div>
 
-            </div>
+                <div class="form-row">
 
-            @if (Model.TestTypes != null && Model.TestTypes.Any())
-            {
-                <div class="test-type-grid">
+                    <div class="form-group">
 
-                    @foreach (var test in Model.TestTypes)
-                    {
-                        <label class="test-type-card">
-
-                            <input type="checkbox"
-                                   name="SelectedTestTypeIds"
-                                   value="@test.TestTypeId"
-                                   class="test-checkbox"
-                            @(Model.SelectedTestTypeIds.Contains(test.TestTypeId)
-                                ? "checked"
-                                : "") />
-
-                            <div class="test-type-info">
-
-                                <div class="test-type-name">
-                                    @test.TestTypeName
-                                </div>
-
-                            </div>
-
-                            <div class="test-type-check">
-                                <i class="fas fa-check"></i>
-                            </div>
-
-                        </label>
-                    }
-
-                </div>
-            }
-            else
-            {
-                <div class="inline-notice warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    No active test types are currently available.
-                </div>
-            }
-
-            <div class="validation-message"
-                 id="testTypeError"
-                 style="display:none;">
-                <i class="fas fa-exclamation-circle"></i>
-                Please select at least one test type.
-            </div>
-
-        </div>
-
-
-        <!-- STEP 3: SAMPLES -->
-        <div class="request-step-card">
-
-            <div class="request-step-header">
-
-                <div class="step-badge">3</div>
-
-                <div>
-                    <div class="step-title">
-                        <i class="fas fa-vial"></i>
-                        Sample Barcodes
-                    </div>
-
-                    <div class="step-subtitle">
-                        Record the barcode and sample type for each collected sample
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="inline-notice info"
-                 style="margin-bottom:1.25rem;">
-
-                <i class="fas fa-info-circle"></i>
-
-                Enter the barcode printed on each collected sample and select its sample type.
-
-            </div>
-
-
-            <div id="samplesContainer">
-
-                <div class="sample-row">
-
-                    <div class="sample-type-badge">
-                        <i class="fas fa-vial"></i>
-                        Sample 1
-                    </div>
-
-                    <div class="sample-barcode-wrap">
-
-                        <label class="request-label">
-                            Sample Type
+                        <label asp-for="Urgency" class="form-label">
+                            Urgency <span class="required-star">*</span>
                         </label>
 
-                        <select name="SampleTypeIds"
-                                class="request-select"
-                                required>
+                        <select asp-for="Urgency"
+                                class="request-select">
 
-                            <option value="">
-                                -- Select Sample Type --
-                            </option>
-
-                            @foreach (var sampleType in Model.SampleTypes)
-                            {
-                                <option value="@sampleType.SampleTypeId">
-                                    @sampleType.SampleName
-                                </option>
-                            }
+                            <option value="">-- Select Urgency --</option>
+                            <option value="Routine">Routine</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="STAT">STAT</option>
 
                         </select>
 
-                        <label class="request-label"
-                               style="margin-top:0.75rem;">
-                            Barcode
-                        </label>
-
-                        <input type="text"
-                               name="BarcodeNumbers"
-                               required
-                               class="request-input"
-                               placeholder="e.g. BC-20260001" />
+                        <span asp-validation-for="Urgency"
+                              class="field-validation"></span>
 
                     </div>
 
                 </div>
 
+                <div class="form-group">
+
+                    <label asp-for="ClinicalNotes" class="form-label">
+                        Clinical Notes
+                    </label>
+
+                    <textarea asp-for="ClinicalNotes"
+                              class="request-textarea"
+                              placeholder="Enter any relevant clinical information, symptoms or notes..."></textarea>
+
+                    <span asp-validation-for="ClinicalNotes"
+                          class="field-validation"></span>
+
+                </div>
+
             </div>
-
-
-            <button type="button"
-                    id="addSampleButton"
-                    class="btn-secondary-custom"
-                    style="margin-top:1rem;">
-
-                <i class="fas fa-plus"></i>
-                Add Another Sample
-
-            </button>
-
         </div>
 
 
-        <!-- SUBMIT -->
-        <div class="request-actions">
+        <!-- STEP 2 -->
+        <div class="request-step-card">
+
+            <div class="request-step-header">
+                <div class="step-badge">2</div>
+
+                <div>
+                    <h2>Select Test Types</h2>
+                    <p>Select one or more laboratory tests required for this patient.</p>
+                </div>
+            </div>
+
+            <div class="request-step-body">
+
+                <div class="selected-count">
+                    <i class="fas fa-vial"></i>
+                    <span id="selectedTestCount">0</span>
+                    test(s) selected
+                </div>
+
+                @if (Model.TestTypes != null && Model.TestTypes.Any())
+                {
+                    <div class="test-types-grid">
+
+                        @foreach (var test in Model.TestTypes)
+                        {
+                            var isSelected =
+                                Model.SelectedTestTypeIds != null &&
+                                Model.SelectedTestTypeIds.Contains(test.TestTypeId);
+
+                            <label class="test-type-card @(isSelected ? "selected" : "")"
+                                   data-sample-type-id="@test.SampleTypeId"
+                                   data-sample-type-name="@test.SampleTypeName">
+
+                                <input type="checkbox"
+                                       name="SelectedTestTypeIds"
+                                       value="@test.TestTypeId"
+                                       class="test-checkbox"
+                                @(isSelected ? "checked" : "") />
+
+                                <div class="test-type-content">
+
+                                    <span class="test-type-name">
+                                        @test.TestTypeName
+                                    </span>
+
+                                    <span class="test-type-sample">
+                                        <i class="fas fa-tint"></i> Requires: @test.SampleTypeName
+                                    </span>
+
+                                </div>
+
+                            </label>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="no-options">
+                        <i class="fas fa-info-circle"></i>
+                        No test types are currently available.
+                    </div>
+                }
+
+            </div>
+        </div>
+
+
+        <!-- STEP 3 -->
+        <div class="request-step-card">
+
+            <div class="request-step-header">
+                <div class="step-badge">3</div>
+
+                <div>
+                    <h2>Sample Information</h2>
+                    <p>These samples are needed based on the test types you selected above. Enter a barcode for each.</p>
+                </div>
+            </div>
+
+            <div class="request-step-body">
+
+                <div id="sampleList" class="sample-list">
+                    <div class="no-samples-yet" id="noSamplesYet">
+                        <i class="fas fa-info-circle"></i>
+                        Select test types above to see which samples are needed.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
 
             <a asp-controller="Doctor"
-               asp-action="MyRequests"
-               class="btn-cancel-custom">
+               asp-action="Index"
+               class="btn-cancel">
 
                 <i class="fas fa-times"></i>
                 Cancel
@@ -322,260 +756,346 @@
             </a>
 
             <button type="submit"
-                    class="btn-primary-custom btn-submit">
+                    class="btn-submit">
 
                 <i class="fas fa-paper-plane"></i>
-                Submit Request
+                Submit Test Request
 
             </button>
 
         </div>
 
     </form>
-    ```
 
 </div>
 
-<script>
 
-    document.addEventListener("DOMContentLoaded", function() {
+@section Scripts {
 
-        const patientSelect = document.getElementById("patientSelect");
-        const selectedPatient = document.getElementById("selectedPatient");
-        const patientName = document.getElementById("patientName");
-        const patientAvatar = document.getElementById("patientAvatar");
+    <partial name="_ValidationScriptsPartial" />
 
-        /*
-         * REAL PATIENT DATA
-         *
-         * The patient list comes from Model.Patients,
-         * which is populated by the DoctorController.
-         */
+    <script>
 
-        const patients = [
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const idSearch = document.getElementById("patientIdSearch");
+            const idSuggestions = document.getElementById("idSuggestions");
+            const patientIdHidden = document.getElementById("patientIdHidden");
+
+            const patientSummary = document.getElementById("patientSummary");
+            const selectedPatientName = document.getElementById("selectedPatientName");
+            const selectedPatientId = document.getElementById("selectedPatientId");
+            const selectedPatientDob = document.getElementById("selectedPatientDob");
+            const selectedPatientPhone = document.getElementById("selectedPatientPhone");
+            const selectedPatientAddress = document.getElementById("selectedPatientAddress");
+
+            const notFoundBox = document.getElementById("notFoundBox");
+            const addPatientLink = document.getElementById("addPatientLink");
+
+            const testCheckboxes = document.querySelectorAll(".test-checkbox");
+            const selectedTestCount = document.getElementById("selectedTestCount");
+
+            const sampleList = document.getElementById("sampleList");
+
+            const clientValidationSummary = document.getElementById("clientValidationSummary");
+            const clientValidationList = document.getElementById("clientValidationList");
+
+            /*
+             * PATIENT DATA
+             */
+
+            const patients = [
+
                 @foreach (var patient in Model.Patients)
-            {
-                <text>
-                        {
-                            id: @patient.PatientId,
-                        name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.FullName))
+                {
+                        <text>
+                            {
+                                id: @patient.PatientId,
+                                name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.FullName)),
+                                idNumber: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.IDNumber)),
+                                dob: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.DateOfBirth.HasValue ? patient.DateOfBirth.Value.ToString("dd MMM yyyy") : "Not recorded")),
+                                phone: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.PhoneNumber)),
+                                address: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(string.IsNullOrEmpty(patient.Address) ? "Not recorded" : patient.Address))
                             },
-                </text>
+                        </text>
                 }
+
             ];
 
+            /*
+             * EXISTING BARCODES (for postback with validation errors)
+             */
 
-        patientSelect.addEventListener("change", function() {
+            const existingBarcodes = {};
 
-            const selectedId = parseInt(this.value);
-
-            if (!selectedId) {
-
-                selectedPatient.style.display = "none";
-                return;
-
+            @if (Model.SampleTypeIds != null && Model.BarcodeNumbers != null)
+            {
+                    for (int i = 0; i < Model.SampleTypeIds.Count && i < Model.BarcodeNumbers.Count; i++)
+                    {
+                            if (Model.SampleTypeIds[i].HasValue)
+                            {
+                                    <text>
+                                        existingBarcodes[@Model.SampleTypeIds[i]!.Value] = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BarcodeNumbers[i]));
+                                    </text>
+                            }
+                    }
             }
 
-            const patient = patients.find(function(p) {
-                return p.id === selectedId;
-            });
+            /*
+             * SELECT A PATIENT
+             */
 
-            if (!patient) {
+            function selectPatient(patient) {
 
-                selectedPatient.style.display = "none";
-                return;
+                patientIdHidden.value = patient.id;
+                idSearch.value = patient.idNumber;
 
+                selectedPatientName.textContent = patient.name;
+                selectedPatientId.textContent = patient.idNumber;
+                selectedPatientDob.textContent = patient.dob;
+                selectedPatientPhone.textContent = patient.phone;
+                selectedPatientAddress.textContent = patient.address;
+
+                patientSummary.classList.add("show");
+                notFoundBox.classList.remove("show");
+                idSuggestions.style.display = "none";
             }
 
-            patientName.textContent = patient.name;
-
-            const parts = patient.name.trim().split(" ");
-
-            let initials = "";
-
-            if (parts.length >= 2) {
-                initials =
-                    parts[0].charAt(0) +
-                    parts[parts.length - 1].charAt(0);
-            }
-            else {
-                initials = patient.name.substring(0, 2);
+            function clearSelection() {
+                patientIdHidden.value = "";
+                patientSummary.classList.remove("show");
             }
 
-            patientAvatar.textContent =
-                initials.toUpperCase();
+            idSearch.addEventListener("input", function () {
 
-            selectedPatient.style.display = "block";
+                const query = this.value.trim().toLowerCase();
 
-        });
+                clearSelection();
+                notFoundBox.classList.remove("show");
 
-
-        /*
-         * TEST TYPE CARD SELECTION
-         */
-
-        document.querySelectorAll(".test-type-card")
-            .forEach(function(card) {
-
-                const checkbox =
-                    card.querySelector(".test-checkbox");
-
-                if (!checkbox) {
+                if (query === "") {
+                    idSuggestions.style.display = "none";
                     return;
                 }
 
-                if (checkbox.checked) {
-                    card.classList.add("selected");
+                const matches = patients.filter(function (p) {
+                    return p.idNumber.toLowerCase().includes(query);
+                });
+
+                if (matches.length > 0) {
+
+                    idSuggestions.innerHTML = "";
+
+                    matches.forEach(function (p) {
+
+                        const item = document.createElement("div");
+                        item.className = "id-suggestion-item";
+
+                        const initial = p.name.charAt(0).toUpperCase();
+
+                        item.innerHTML = `
+                            <div class="id-suggestion-avatar">${initial}</div>
+                            <div>
+                                <div class="id-suggestion-name">${p.name}</div>
+                                <div class="id-suggestion-id">${p.idNumber}</div>
+                            </div>
+                        `;
+
+                        item.addEventListener("click", function () {
+                            selectPatient(p);
+                        });
+
+                        idSuggestions.appendChild(item);
+                    });
+
+                    idSuggestions.style.display = "block";
+
+                } else {
+
+                    idSuggestions.style.display = "none";
+
+                    if (query.length >= 6) {
+                        notFoundBox.classList.add("show");
+                        addPatientLink.href = "/Doctor/AddPatient?idNumber=" + encodeURIComponent(this.value.trim());
+                    }
+                }
+            });
+
+            document.addEventListener("click", function (e) {
+                if (e.target !== idSearch && !idSuggestions.contains(e.target)) {
+                    idSuggestions.style.display = "none";
+                }
+            });
+
+            /*
+             * TEST TYPE SELECTION -> AUTO-BUILD SAMPLE ROWS
+             */
+
+            function rebuildSampleRows() {
+
+                const currentBarcodes = {};
+                sampleList.querySelectorAll(".sample-row").forEach(function (row) {
+                    const sid = row.getAttribute("data-sample-type-id");
+                    const input = row.querySelector('input[name="BarcodeNumbers"]');
+                    if (sid && input) {
+                        currentBarcodes[sid] = input.value;
+                    }
+                });
+
+                const neededMap = new Map();
+
+                testCheckboxes.forEach(function (checkbox) {
+                    const card = checkbox.closest(".test-type-card");
+                    if (checkbox.checked && card) {
+                        const sId = card.getAttribute("data-sample-type-id");
+                        const sName = card.getAttribute("data-sample-type-name");
+                        if (sId && !neededMap.has(sId)) {
+                            neededMap.set(sId, sName);
+                        }
+                    }
+                });
+
+                sampleList.innerHTML = "";
+
+                if (neededMap.size === 0) {
+                    const empty = document.createElement("div");
+                    empty.className = "no-samples-yet";
+                    empty.id = "noSamplesYet";
+                    empty.innerHTML = '<i class="fas fa-info-circle"></i> Select test types above to see which samples are needed.';
+                    sampleList.appendChild(empty);
+                    return;
                 }
 
-                checkbox.addEventListener("change", function() {
+                neededMap.forEach(function (sName, sId) {
 
-                    card.classList.toggle(
-                        "selected",
-                        checkbox.checked
-                    );
+                    const row = document.createElement("div");
+                    row.className = "sample-row";
+                    row.setAttribute("data-sample-type-id", sId);
+
+                    const prefill = currentBarcodes[sId] !== undefined
+                        ? currentBarcodes[sId]
+                        : (existingBarcodes[sId] || "");
+
+                    row.innerHTML = `
+                        <div class="sample-field">
+                            <label>Sample Type</label>
+                            <div class="sample-type-label">
+                                <i class="fas fa-tint"></i> ${sName}
+                            </div>
+                            <input type="hidden" name="SampleTypeIds" value="${sId}" />
+                        </div>
+
+                        <div class="sample-field">
+                            <label>Barcode Number</label>
+                            <input type="text" name="BarcodeNumbers" class="request-input" placeholder="Enter barcode" value="${prefill}" data-sample-name="${sName}" />
+                            <span class="field-validation barcode-error" style="display:none;"></span>
+                        </div>
+                    `;
+
+                    sampleList.appendChild(row);
+                });
+            }
+
+            function updateTestCount() {
+
+                let count = 0;
+
+                testCheckboxes.forEach(function (checkbox) {
+
+                    const card = checkbox.closest(".test-type-card");
+
+                    if (checkbox.checked) {
+                        count++;
+                        if (card) card.classList.add("selected");
+                    } else {
+                        if (card) card.classList.remove("selected");
+                    }
+                });
+
+                selectedTestCount.textContent = count;
+            }
+
+            testCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener("change", function () {
+                    updateTestCount();
+                    rebuildSampleRows();
+                });
+            });
+
+            /*
+             * INITIAL STATE
+             */
+
+            updateTestCount();
+            rebuildSampleRows();
+
+            /*
+             * FORM VALIDATION (inline, no alerts)
+             */
+
+            function clearValidationState() {
+                clientValidationSummary.style.display = "none";
+                clientValidationList.innerHTML = "";
+
+                document.querySelectorAll(".request-input.input-error").forEach(function (el) {
+                    el.classList.remove("input-error");
+                });
+
+                document.querySelectorAll(".barcode-error").forEach(function (el) {
+                    el.style.display = "none";
+                    el.textContent = "";
+                });
+            }
+
+            document.getElementById("createTestRequestForm")
+                .addEventListener("submit", function (event) {
+
+                    clearValidationState();
+
+                    const problems = [];
+
+                    if (!patientIdHidden.value || patientIdHidden.value === "0") {
+                        problems.push("Please search for and select a patient by ID number.");
+                    }
+
+                    const selectedTests = document.querySelectorAll(".test-checkbox:checked");
+                    if (selectedTests.length === 0) {
+                        problems.push("Please select at least one test type.");
+                    }
+
+                    const barcodeInputs = document.querySelectorAll('input[name="BarcodeNumbers"]');
+                    barcodeInputs.forEach(function (input) {
+                        if (!input.value.trim()) {
+                            input.classList.add("input-error");
+                            const sampleName = input.getAttribute("data-sample-name") || "sample";
+                            const errorSpan = input.nextElementSibling;
+                            if (errorSpan && errorSpan.classList.contains("barcode-error")) {
+                                errorSpan.textContent = `Barcode is required for ${sampleName}.`;
+                                errorSpan.style.display = "block";
+                            }
+                            problems.push(`Enter a barcode for the ${sampleName} sample.`);
+                        }
+                    });
+
+                    if (problems.length > 0) {
+                        event.preventDefault();
+
+                        clientValidationList.innerHTML = "";
+                        problems.forEach(function (p) {
+                            const li = document.createElement("li");
+                            li.textContent = p;
+                            clientValidationList.appendChild(li);
+                        });
+
+                        clientValidationSummary.style.display = "block";
+                        clientValidationSummary.scrollIntoView({ behavior: "smooth", block: "start" });
+
+                        return;
+                    }
 
                 });
 
-            });
-
-
-        /*
-         * ADD SAMPLE
-         */
-
-        const addSampleButton =
-            document.getElementById("addSampleButton");
-
-        const samplesContainer =
-            document.getElementById("samplesContainer");
-
-        let sampleNumber = 1;
-
-        addSampleButton.addEventListener("click", function() {
-
-            sampleNumber++;
-
-            const sampleRow =
-                document.createElement("div");
-
-            sampleRow.className = "sample-row";
-            sampleRow.style.marginTop = "1rem";
-
-            sampleRow.innerHTML = `
-                    <div class="sample-type-badge">
-                        <i class="fas fa-vial"></i>
-                        Sample ${sampleNumber}
-                    </div>
-
-                    <div class="sample-barcode-wrap">
-
-                        <label class="request-label">
-                            Sample Type
-                        </label>
-
-                        <select name="SampleTypeIds"
-                                class="request-select"
-                                required>
-
-                            <option value="">
-                                -- Select Sample Type --
-                            </option>
-
-                            @foreach (var sampleType in Model.SampleTypes)
-                            {
-                                    <option value="@sampleType.SampleTypeId">
-                                            @sampleType.SampleName
-                                    </option>
-                            }
-
-                        </select>
-
-                        <label class="request-label"
-                               style="margin-top:0.75rem;">
-                            Barcode
-                        </label>
-
-                        <input type="text"
-                               name="BarcodeNumbers"
-                               required
-                               class="request-input"
-                               placeholder="e.g. BC-20260001" />
-
-                        <button type="button"
-                                class="remove-sample-button"
-                                style="margin-top:0.75rem;">
-
-                            <i class="fas fa-trash"></i>
-                            Remove Sample
-
-                        </button>
-
-                    </div>
-                `;
-
-            samplesContainer.appendChild(sampleRow);
-
         });
 
-
-        /*
-         * REMOVE SAMPLE
-         */
-
-        samplesContainer.addEventListener("click", function(event) {
-
-            const button =
-                event.target.closest(".remove-sample-button");
-
-            if (!button) {
-                return;
-            }
-
-            const row =
-                button.closest(".sample-row");
-
-            if (row) {
-                row.remove();
-            }
-
-        });
-
-
-        /*
-         * FORM VALIDATION
-         */
-
-        document.getElementById("createRequestForm")
-            .addEventListener("submit", function(event) {
-
-                const selectedTests =
-                    document.querySelectorAll(
-                        "input[name='SelectedTestTypeIds']:checked"
-                    );
-
-                const error =
-                    document.getElementById("testTypeError");
-
-                if (selectedTests.length === 0) {
-
-                    event.preventDefault();
-
-                    error.style.display = "flex";
-
-                    error.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center"
-                    });
-
-                    return;
-
-                }
-
-                error.style.display = "none";
-
-            });
-
-    });
-
-</script>
+    </script>
+}

@@ -1,139 +1,670 @@
-﻿```cshtml
-@model HemaCore.ViewModels.DoctorViewModels.EditPatientHistoryViewModel
+﻿@model HemaCore.ViewModels.DoctorViewModels.EditPatientHistoryViewModel
 
 @{
-    ViewData["Title"] = "Edit Medical History";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Edit Patient History";
 }
 
-<div class="container-fluid py-4">
-    <div class="mb-4">
-        <h2 class="fw-bold">Edit Medical History</h2>
-        <p class="text-muted">
-            Update the medical history for <strong>@Model.PatientName</strong>.
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<style>
+    .history-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .history-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        border-top: 4px solid;
+    }
+
+    .history-section.conditions {
+        border-top-color: #1565c0;
+    }
+
+    .history-section.allergies {
+        border-top-color: #c62828;
+    }
+
+    .history-section.medications {
+        border-top-color: #2e7d32;
+    }
+
+    .history-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 8px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .conditions .history-section-title {
+        color: #1565c0;
+        border-color: #1565c0;
+    }
+
+    .allergies .history-section-title {
+        color: #c62828;
+        border-color: #c62828;
+    }
+
+    .medications .history-section-title {
+        color: #2e7d32;
+        border-color: #2e7d32;
+    }
+
+    .history-description {
+        color: var(--gray, #6b7280);
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .medical-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        align-items: end;
+    }
+
+    .medical-row .form-group {
+        margin-bottom: 0;
+    }
+
+    .medical-row label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .medical-row input {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid #dfe5e8;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .medical-row input:focus {
+        outline: none;
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 2px rgba(44, 125, 160, 0.1);
+    }
+
+    .remove-row {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.6rem 0.9rem;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .remove-row:hover {
+        background: #bb2d3b;
+    }
+
+    .add-row {
+        margin-top: 0.5rem;
+        padding: 0.6rem 1rem;
+        border: 1px solid #2c7da0;
+        background: white;
+        color: #2c7da0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .add-row:hover {
+        background: #eef7fa;
+    }
+
+    .history-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-bottom: 2rem;
+    }
+
+    .history-cancel {
+        text-decoration: none;
+        padding: 0.65rem 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        color: #666;
+        background: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .history-cancel:hover {
+        background: #f8f8f8;
+        color: #444;
+    }
+
+    .history-save {
+        padding: 0.65rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        background: #2c7da0;
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 600;
+    }
+
+    .history-save:hover {
+        background: #1f5068;
+    }
+
+    @@media (max-width: 700px) {
+        .medical-row {
+            grid-template-columns: 1fr;
+        }
+
+        .remove-row {
+            width: fit-content;
+        }
+
+        .history-actions {
+            flex-direction: column-reverse;
+        }
+
+        .history-cancel,
+        .history-save {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+
+<div class="fade-in history-page">
+
+    <div class="page-header">
+
+        <h2>
+            <i class="fas fa-edit"></i>
+            Edit Medical History — @Model.PatientName
+        </h2>
+
+        <p>
+            Update the patient's medical conditions, allergies, and medications
         </p>
+
     </div>
 
-    <form asp-action="EditPatientHistory" method="post">
 
-        <input type="hidden" asp-for="PatientId" />
+    <form asp-controller="Doctor"
+          asp-action="EditPatientHistory"
+          method="post">
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
+        @Html.AntiForgeryToken()
 
-                <h5 class="fw-bold mb-3">Known Conditions</h5>
+        <input type="hidden"
+               asp-for="PatientId" />
 
-                <div class="row">
-                    @foreach (var condition in Model.AllConditions)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="SelectedConditionIds"
-                                       value="@condition.Id"
-                                @(condition.IsSelected ? "checked" : "") />
 
-                                <label class="form-check-label">
-                                    @condition.Name
-                                </label>
-                            </div>
-                        </div>
-                    }
-                </div>
+        <!-- MEDICAL CONDITIONS -->
+
+        <div class="history-section conditions">
+
+            <div class="history-section-title">
+
+                <i class="fas fa-heartbeat"></i>
+                Medical Conditions
 
             </div>
-        </div>
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
+            <p class="history-description">
+                Update any known chronic conditions the patient has.
+            </p>
 
-                <h5 class="fw-bold mb-3">Allergies</h5>
 
-                <div class="row">
-                    @foreach (var allergy in Model.AllAllergies)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="SelectedAllergyIds"
-                                       value="@allergy.Id"
-                                @(allergy.IsSelected ? "checked" : "") />
+            <div id="conditionsContainer">
 
-                                <label class="form-check-label">
-                                    @allergy.Name
-                                </label>
-                            </div>
+                @foreach (var condition in Model.AllConditions.Where(x => x.IsSelected))
+                {
+                    <div class="medical-row"
+                         data-id="@condition.Id">
+
+                        <div class="form-group">
+
+                            <label>Condition Name</label>
+
+                            <input type="text"
+                                   value="@condition.Name"
+                                   readonly />
+
+                            <input type="hidden"
+                                   name="SelectedConditionIds"
+                                   value="@condition.Id" />
+
                         </div>
-                    }
-                </div>
+
+
+                        <div class="form-group">
+
+                            <label>Description / Notes</label>
+
+                            <input type="text"
+                                   value=""
+                                   placeholder="Description / Notes"
+                                   readonly />
+
+                        </div>
+
+
+                        <div>
+
+                            <button type="button"
+                                    class="remove-row"
+                                    onclick="removeRow(this)">
+
+                                <i class="fas fa-trash"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
 
             </div>
-        </div>
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
 
-                <h5 class="fw-bold mb-3">Medications</h5>
+            <button type="button"
+                    class="add-row"
+                    onclick="addExistingOption(
+                        'conditionsContainer',
+                        'condition',
+                        'Condition Name',
+                        'Description / Notes')">
 
-                <div class="row">
-                    @foreach (var medication in Model.AllMedications)
-                    {
-                        <div class="col-md-4 mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="SelectedMedicationIds"
-                                       value="@medication.Id"
-                                @(medication.IsSelected ? "checked" : "") />
+                <i class="fas fa-plus"></i>
+                Add Condition
 
-                                <label class="form-check-label">
-                                    @medication.Name
-                                </label>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-            </div>
-        </div>
-
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary px-4">
-                Save Changes
             </button>
 
+        </div>
+
+
+
+        <!-- ALLERGIES -->
+
+        <div class="history-section allergies">
+
+            <div class="history-section-title">
+
+                <i class="fas fa-exclamation-triangle"></i>
+                Allergies
+
+            </div>
+
+            <p class="history-description">
+                Update any known allergies the patient has.
+            </p>
+
+
+            <div id="allergiesContainer">
+
+                @foreach (var allergy in Model.AllAllergies.Where(x => x.IsSelected))
+                {
+                    <div class="medical-row"
+                         data-id="@allergy.Id">
+
+                        <div class="form-group">
+
+                            <label>Allergy Name</label>
+
+                            <input type="text"
+                                   value="@allergy.Name"
+                                   readonly />
+
+                            <input type="hidden"
+                                   name="SelectedAllergyIds"
+                                   value="@allergy.Id" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>Description / Notes</label>
+
+                            <input type="text"
+                                   value=""
+                                   placeholder="Description / Notes"
+                                   readonly />
+
+                        </div>
+
+
+                        <div>
+
+                            <button type="button"
+                                    class="remove-row"
+                                    onclick="removeRow(this)">
+
+                                <i class="fas fa-trash"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+
+            <button type="button"
+                    class="add-row"
+                    onclick="addExistingOption(
+                        'allergiesContainer',
+                        'allergy',
+                        'Allergy Name',
+                        'Description / Notes')">
+
+                <i class="fas fa-plus"></i>
+                Add Allergy
+
+            </button>
+
+        </div>
+
+
+
+        <!-- MEDICATIONS -->
+
+        <div class="history-section medications">
+
+            <div class="history-section-title">
+
+                <i class="fas fa-pills"></i>
+                Current Medications
+
+            </div>
+
+            <p class="history-description">
+                Update any medications the patient is currently taking.
+            </p>
+
+
+            <div id="medicationsContainer">
+
+                @foreach (var medication in Model.AllMedications.Where(x => x.IsSelected))
+                {
+                    <div class="medical-row"
+                         data-id="@medication.Id">
+
+                        <div class="form-group">
+
+                            <label>Medication Name</label>
+
+                            <input type="text"
+                                   value="@medication.Name"
+                                   readonly />
+
+                            <input type="hidden"
+                                   name="SelectedMedicationIds"
+                                   value="@medication.Id" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>Dosage / Notes</label>
+
+                            <input type="text"
+                                   value=""
+                                   placeholder="Dosage / Notes"
+                                   readonly />
+
+                        </div>
+
+
+                        <div>
+
+                            <button type="button"
+                                    class="remove-row"
+                                    onclick="removeRow(this)">
+
+                                <i class="fas fa-trash"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+
+            <button type="button"
+                    class="add-row"
+                    onclick="addExistingOption(
+                        'medicationsContainer',
+                        'medication',
+                        'Medication Name',
+                        'Dosage / Notes')">
+
+                <i class="fas fa-plus"></i>
+                Add Medication
+
+            </button>
+
+        </div>
+
+
+
+        <!-- ACTIONS -->
+
+        <div class="history-actions">
+
             <a asp-controller="Doctor"
-               asp-action="ManagePatients"
-               class="btn btn-outline-secondary px-4">
+               asp-action="PatientDetails"
+               asp-route-id="@Model.PatientId"
+               class="history-cancel">
+
+                <i class="fas fa-times"></i>
                 Cancel
+
             </a>
+
+
+            <button type="submit"
+                    class="history-save">
+
+                <i class="fas fa-save"></i>
+                Save Changes
+
+            </button>
+
         </div>
 
     </form>
+
 </div>
 
-<style>
-    .card {
-        border-radius: 12px;
-    }
 
-    .form-check-input {
-        cursor: pointer;
-    }
+<script>
 
-    .form-check-label {
-        cursor: pointer;
-    }
+    function removeRow(button) {
 
-    .btn-primary {
-        background-color: #2c7da0;
-        border-color: #2c7da0;
-    }
+        const row = button.closest(".medical-row");
 
-        .btn-primary:hover {
-            background-color: #1f5068;
-            border-color: #1f5068;
+        if (row) {
+            row.remove();
         }
-</style>
-```
+
+    }
+
+
+    function addExistingOption(
+        containerId,
+        type,
+        nameLabel,
+        descriptionLabel) {
+
+        const container =
+            document.getElementById(containerId);
+
+        if (!container) {
+            return;
+        }
+
+        /*
+         * Get the available options from the checkbox
+         * data already rendered by Razor.
+         */
+
+        let options = [];
+
+
+        if (type === "condition") {
+
+            options = [
+                @foreach (var item in Model.AllConditions.Where(x => !x.IsSelected))
+                {
+                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+                }
+            ];
+
+        }
+        else if (type === "allergy") {
+
+            options = [
+                @foreach (var item in Model.AllAllergies.Where(x => !x.IsSelected))
+                {
+                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+                }
+            ];
+
+        }
+        else if (type === "medication") {
+
+            options = [
+                @foreach (var item in Model.AllMedications.Where(x => !x.IsSelected))
+                {
+                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+                }
+            ];
+
+        }
+
+
+        if (options.length === 0) {
+
+            alert("There are no more available options.");
+
+            return;
+        }
+
+
+        const row =
+            document.createElement("div");
+
+        row.className = "medical-row";
+
+
+        const usedIds =
+            Array.from(
+                container.querySelectorAll(
+                    'input[type="hidden"]'
+                )
+            ).map(input => input.value);
+
+
+        const available =
+            options.find(option =>
+                !usedIds.includes(option.id.toString())
+            );
+
+
+        if (!available) {
+
+            alert("All available options have already been added.");
+
+            return;
+        }
+
+
+        let inputName;
+
+
+        if (type === "condition") {
+            inputName = "SelectedConditionIds";
+        }
+        else if (type === "allergy") {
+            inputName = "SelectedAllergyIds";
+        }
+        else {
+            inputName = "SelectedMedicationIds";
+        }
+
+
+        row.innerHTML = `
+
+            <div class="form-group">
+
+                <label>${nameLabel}</label>
+
+                <input type="text"
+                       value="${available.name}"
+                       readonly />
+
+                <input type="hidden"
+                       name="${inputName}"
+                       value="${available.id}" />
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>${descriptionLabel}</label>
+
+                <input type="text"
+                       placeholder="${descriptionLabel}"
+                       readonly />
+
+            </div>
+
+
+            <div>
+
+                <button type="button"
+                        class="remove-row"
+                        onclick="removeRow(this)">
+
+                    <i class="fas fa-trash"></i>
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(row);
+
+    }
+
+</script>

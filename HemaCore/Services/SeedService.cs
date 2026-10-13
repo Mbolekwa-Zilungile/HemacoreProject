@@ -116,12 +116,12 @@ namespace HemaCore.Services
                             string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
-                
-// =============================================
-// SECOND LAB TECHNICIAN - TEST ACCOUNT
-// =============================================
 
-logger.LogInformation("Seeding second lab technician user");
+                // =============================================
+                // SECOND LAB TECHNICIAN - TEST ACCOUNT
+                // =============================================
+
+                logger.LogInformation("Seeding second lab technician user");
 
                 var labTech2Email = "labtech2@gmail.com";
 
@@ -186,39 +186,62 @@ logger.LogInformation("Seeding second lab technician user");
                         );
                     }
 
-                    // Give Technician 2 permission to perform Haemoglobin
-                    bool haemoglobinAssignmentExists =
-                        await context.TechnicianTestTypes
-                            .AnyAsync(tt =>
-                                tt.LabTechnicianId == technician2.LabTechnicianId &&
-                                tt.TestTypeId == 4);
+                    // Only assign TestType 4 if it exists, so a missing
+                    // test type does not crash the seeder
+                    bool testType4Exists = await context.TestTypes
+                        .AnyAsync(t => t.TestTypeId == 4);
 
-                    if (!haemoglobinAssignmentExists)
+                    if (testType4Exists)
                     {
-                        context.TechnicianTestTypes.Add(
-                            new TechnicianTestType
-                            {
-                                LabTechnicianId = technician2.LabTechnicianId,
-                                TestTypeId = 4
-                            });
+                        // Give Technician 2 permission to perform Haemoglobin
+                        bool haemoglobinAssignmentExists =
+                            await context.TechnicianTestTypes
+                                .AnyAsync(tt =>
+                                    tt.LabTechnicianId == technician2.LabTechnicianId &&
+                                    tt.TestTypeId == 4);
 
-                        await context.SaveChangesAsync();
+                        if (!haemoglobinAssignmentExists)
+                        {
+                            context.TechnicianTestTypes.Add(
+                                new TechnicianTestType
+                                {
+                                    LabTechnicianId = technician2.LabTechnicianId,
+                                    TestTypeId = 4
+                                });
 
-                        logger.LogInformation(
-                            "Haemoglobin assigned to second technician."
-                        );
+                            await context.SaveChangesAsync();
+
+                            logger.LogInformation(
+                                "Haemoglobin assigned to second technician."
+                            );
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("TestType 4 not found, skipping technician assignment.");
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while seeding the database,");
+            }
 
+            // Doctor is seeded separately so nothing above can block it
+            await SeedDoctorAsync(context, roleManager, userManager, logger);
+        }
 
-
-
-
-                // DOCTOR
-                logger.LogInformation("Seeding doctor user");
+        private static async Task SeedDoctorAsync(
+            AppDbContext context,
+            RoleManager<IdentityRole> roleManager,
+            UserManager<Users> userManager,
+            ILogger<SeedService> logger)
+        {
+            try
+            {
+                await AddRoleAsync(roleManager, "Doctor");
 
                 var doctorEmail = "LihleDlilanga@gmail.com";
-
                 var doctorUser = await userManager.FindByEmailAsync(doctorEmail);
 
                 if (doctorUser == null)
@@ -227,57 +250,49 @@ logger.LogInformation("Seeding second lab technician user");
                     {
                         FullName = "Lihle Dlilanga",
                         UserName = doctorEmail,
-                        NormalizedUserName = doctorEmail.ToUpper(),
                         Email = doctorEmail,
-                        NormalizedEmail = doctorEmail.ToUpper(),
-                        EmailConfirmed = true,
-                        SecurityStamp = Guid.NewGuid().ToString()
+                        EmailConfirmed = true
                     };
 
                     var result = await userManager.CreateAsync(doctorUser, "Bombibethu@2026");
 
-                    if (result.Succeeded)
-                    {
-                        logger.LogInformation("Assigning Doctor role to the doctor user.");
-                        await userManager.AddToRoleAsync(doctorUser, "Doctor");
-                    }
-                    else
+                    if (!result.Succeeded)
                     {
                         logger.LogError(
-                            "Failed to create doctor user: {Errors}",
-                            string.Join(", ", result.Errors.Select(e => e.Description))
-                        );
-                        doctorUser = null;
+                            "Doctor seeding failed: {Errors}",
+                            string.Join(", ", result.Errors.Select(e => e.Description)));
+                        return;
                     }
                 }
 
-
-
-                // Ensure a matching Doctors table row exists, whether the user was just created or already existed
-                if (doctorUser != null)
+                if (!await userManager.IsInRoleAsync(doctorUser, "Doctor"))
                 {
-                    bool doctorRecordExists = await context.Doctors
-                        .AnyAsync(d => d.UserId == doctorUser.Id);
-
-                    if (!doctorRecordExists)
-                    {
-                        logger.LogInformation("Creating Doctors table record for the doctor user.");
-                        context.Doctors.Add(new Doctor
-                        {
-                            Name = "Lihle",
-                            Surname = "Dlilanga",
-                            HPCSANumber = "MP0123456",
-                            PhoneNumber = "+27674578698",
-                            UserId = doctorUser.Id,
-                            IsActive = true
-                        });
-                        await context.SaveChangesAsync();
-                    }
+                    await userManager.AddToRoleAsync(doctorUser, "Doctor");
                 }
+
+                bool doctorRecordExists = await context.Doctors
+                    .AnyAsync(d => d.UserId == doctorUser.Id);
+
+                if (!doctorRecordExists)
+                {
+                    context.Doctors.Add(new Doctor
+                    {
+                        Name = "Lihle",
+                        Surname = "Dlilanga",
+                        HPCSANumber = "MP0123456",
+                        PhoneNumber = "+27674578698",
+                        UserId = doctorUser.Id,
+                        IsActive = true
+                    });
+
+                    await context.SaveChangesAsync();
+                }
+
+                logger.LogInformation("Doctor seeding finished.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while seeding the database,");
+                logger.LogError(ex, "Doctor seeding failed.");
             }
         }
 

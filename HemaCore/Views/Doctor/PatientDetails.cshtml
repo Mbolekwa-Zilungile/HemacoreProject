@@ -1,196 +1,530 @@
-﻿```cshtml
-@model HemaCore.ViewModels.DoctorViewModels.PatientDetailsViewModel
+﻿@model HemaCore.ViewModels.DoctorViewModels.PatientDetailsViewModel
 
 @{
     ViewData["Title"] = "Patient Details";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
 }
 
-<div class="container-fluid py-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">Patient Details</h2>
-            <p class="text-muted mb-0">
-                View patient information and medical history.
-            </p>
-        </div>
-
-        <a asp-controller="Doctor"
-           asp-action="ManagePatients"
-           class="btn btn-outline-secondary">
-            Back to Patients
-        </a>
-    </div>
-
-    <!-- Patient Information -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-4">
-
-            <h5 class="fw-bold mb-4">Personal Information</h5>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label class="text-muted small">Full Name</label>
-                    <div class="fw-semibold">@Model.FullName</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="text-muted small">ID Number</label>
-                    <div class="fw-semibold">@Model.IDNumber</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="text-muted small">Date of Birth</label>
-                    <div class="fw-semibold">
-                        @Model.DateOfBirth.ToString("dd MMMM yyyy")
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="text-muted small">Phone Number</label>
-                    <div class="fw-semibold">@Model.PhoneNumber</div>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label class="text-muted small">Address</label>
-                    <div class="fw-semibold">
-                        @(string.IsNullOrWhiteSpace(Model.Address)
-                            ? "No address recorded"
-                            : Model.Address)
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Medical History -->
-    <div class="row">
-
-        <!-- Conditions -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-4">
-
-                    <h5 class="fw-bold mb-3">Known Conditions</h5>
-
-                    @if (Model.Conditions.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var condition in Model.Conditions)
-                            {
-                                <li class="list-group-item px-0">
-                                    @condition
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted mb-0">
-                            No conditions recorded.
-                        </p>
-                    }
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Allergies -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-4">
-
-                    <h5 class="fw-bold mb-3">Allergies</h5>
-
-                    @if (Model.Allergies.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var allergy in Model.Allergies)
-                            {
-                                <li class="list-group-item px-0">
-                                    @allergy
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted mb-0">
-                            No allergies recorded.
-                        </p>
-                    }
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Medications -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-4">
-
-                    <h5 class="fw-bold mb-3">Medications</h5>
-
-                    @if (Model.Medications.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var medication in Model.Medications)
-                            {
-                                <li class="list-group-item px-0">
-                                    @medication
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted mb-0">
-                            No medications recorded.
-                        </p>
-                    }
-
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Edit History -->
-    <div class="mt-2">
-        <a asp-controller="Doctor"
-           asp-action="EditPatientHistory"
-           asp-route-patientId="@Model.PatientId"
-           class="btn btn-primary px-4">
-            Edit Medical History
-        </a>
-    </div>
-
-</div>
-
 <style>
-    .card {
-        border-radius: 12px;
+    .details-container {
+        max-width: 100%;
     }
 
-    .list-group-item {
-        border: none;
-        border-bottom: 1px solid #eee;
+    .page-header {
+        margin-bottom: 1.75rem;
     }
 
-        .list-group-item:last-child {
-            border-bottom: none;
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
+        .page-header p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 1rem;
+    }
+
+        .info-card label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+            .info-card label i {
+                color: #185FA5;
+                width: 14px;
+            }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #0f172a;
+        word-break: break-word;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.75rem;
+        flex-wrap: wrap;
+    }
+
     .btn-primary {
-        background-color: #2c7da0;
-        border-color: #2c7da0;
+        background: #185FA5;
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.813rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
         .btn-primary:hover {
-            background-color: #1f5068;
-            border-color: #1f5068;
+            background: #0C447C;
+            text-decoration: none;
+            color: white;
         }
+
+    .btn-outline {
+        background: transparent;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.813rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            text-decoration: none;
+            color: #1e293b;
+        }
+
+    .history-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .history-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .history-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .history-header h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+    .history-content {
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .history-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+    .history-bullet {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-top: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .history-name {
+        font-weight: 600;
+        font-size: 0.813rem;
+        color: #0f172a;
+    }
+
+    .empty-history {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-style: italic;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .card-conditions .history-header { background: #eff6ff; border-bottom-color: #bfdbfe; }
+    .card-conditions .history-header i { color: #2563eb; }
+    .card-conditions .history-bullet { background: #3b82f6; }
+
+    .card-allergies .history-header { background: #fef2f2; border-bottom-color: #fecaca; }
+    .card-allergies .history-header i { color: #dc2626; }
+    .card-allergies .history-bullet { background: #ef4444; }
+
+    .card-medications .history-header { background: #f0fdf4; border-bottom-color: #bbf7d0; }
+    .card-medications .history-header i { color: #16a34a; }
+    .card-medications .history-bullet { background: #22c55e; }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .table-wrapper {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow-x: auto;
+    }
+
+    .request-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.813rem;
+        min-width: 600px;
+    }
+
+        .request-table th {
+            text-align: left;
+            padding: 0.875rem 1rem;
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .request-table td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #334155;
+        }
+
+        .request-table tr:hover td {
+            background: #f8fafc;
+        }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-routine { background: #e2e8f0; color: #475569; }
+    .badge-urgent { background: #fef3c7; color: #b45309; }
+    .badge-stat { background: #fee2e2; color: #b91c1c; }
+    .badge-submitted { background: #e2e8f0; color: #475569; }
+    .badge-samplesreceived { background: #fef3c7; color: #b45309; }
+    .badge-inprogress { background: #dbeafe; color: #1d4ed8; }
+    .badge-completed { background: #dcfce7; color: #166534; }
+    .badge-released { background: #f3e8ff; color: #6b21a5; }
+    .badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .action-link {
+        color: #185FA5;
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-right: 0.75rem;
+        white-space: nowrap;
+    }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+    .empty-requests {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .empty-icon {
+        width: 56px;
+        height: 56px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+    }
+
+        .empty-icon i {
+            font-size: 1.25rem;
+            color: #94a3b8;
+        }
+
+    .empty-requests h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #475569;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .empty-requests p {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .info-grid, .history-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .action-bar {
+            flex-direction: column;
+        }
+
+        .btn-primary, .btn-outline {
+            justify-content: center;
+        }
+    }
 </style>
-```
+
+<div class="details-container">
+
+    <div class="page-header">
+        <h1><i class="fas fa-user-circle" style="color:#185FA5;"></i> Patient Profile</h1>
+        <p>Complete medical record and test request history for @Model.FullName</p>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <div class="info-value">@Model.FullName</div>
+        </div>
+        <div class="info-card">
+            <label><i class="fas fa-id-card"></i> ID Number</label>
+            <div class="info-value" style="font-family:monospace;">@Model.IDNumber</div>
+        </div>
+        <div class="info-card">
+            <label><i class="fas fa-calendar-alt"></i> Date of Birth</label>
+            <div class="info-value">@Model.DateOfBirth.ToString("dd MMMM yyyy")</div>
+        </div>
+        <div class="info-card">
+            <label><i class="fas fa-phone"></i> Phone Number</label>
+            <div class="info-value">@Model.PhoneNumber</div>
+        </div>
+        <div class="info-card">
+            <label><i class="fas fa-envelope"></i> Email Address</label>
+            <div class="info-value" style="word-break:break-all;">@Model.Email</div>
+        </div>
+        <div class="info-card">
+            <label><i class="fas fa-map-marker-alt"></i> Home Address</label>
+            <div class="info-value">@(string.IsNullOrEmpty(Model.Address) ? "Not provided" : Model.Address)</div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <a asp-controller="Doctor" asp-action="CreateTestRequest" asp-route-patientId="@Model.PatientId" class="btn-primary">
+            <i class="fas fa-plus-circle"></i> New Test Request
+        </a>
+        <a asp-controller="Doctor" asp-action="EditPatientHistory" asp-route-id="@Model.PatientId" class="btn-outline">
+            <i class="fas fa-notes-medical"></i> Edit Medical History
+        </a>
+        <a asp-controller="Doctor" asp-action="ManagePatients" class="btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Patients
+        </a>
+    </div>
+
+    <div class="history-grid">
+
+        <div class="history-card card-conditions">
+            <div class="history-header">
+                <i class="fas fa-heartbeat"></i>
+                <h3>Medical Conditions</h3>
+            </div>
+            <div class="history-content">
+                @if (Model.Conditions.Any())
+                {
+                    foreach (var condition in Model.Conditions)
+                    {
+                        <div class="history-item">
+                            <div class="history-bullet"></div>
+                            <div class="history-name">@condition</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-history"><i class="fas fa-info-circle"></i> No medical conditions recorded</div>
+                }
+            </div>
+        </div>
+
+        <div class="history-card card-allergies">
+            <div class="history-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Allergies</h3>
+            </div>
+            <div class="history-content">
+                @if (Model.Allergies.Any())
+                {
+                    foreach (var allergy in Model.Allergies)
+                    {
+                        <div class="history-item">
+                            <div class="history-bullet"></div>
+                            <div class="history-name">@allergy</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-history"><i class="fas fa-info-circle"></i> No allergies recorded</div>
+                }
+            </div>
+        </div>
+
+        <div class="history-card card-medications">
+            <div class="history-header">
+                <i class="fas fa-pills"></i>
+                <h3>Current Medications</h3>
+            </div>
+            <div class="history-content">
+                @if (Model.Medications.Any())
+                {
+                    foreach (var medication in Model.Medications)
+                    {
+                        <div class="history-item">
+                            <div class="history-bullet"></div>
+                            <div class="history-name">@medication</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-history"><i class="fas fa-info-circle"></i> No medications recorded</div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section-title">
+        <i class="fas fa-history" style="color:#185FA5;"></i> Test Request History
+    </div>
+
+    @if (Model.Requests.Any())
+    {
+        <div class="table-wrapper">
+            <table class="request-table">
+                <thead>
+                    <tr>
+                        <th>Request #</th>
+                        <th>Date</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in Model.Requests)
+                    {
+                        <tr>
+                            <td style="font-weight:600; color:#185FA5;">#@request.TestRequestId</td>
+                            <td>@request.RequestDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                @{
+                                    var urgencyClass = request.Urgency switch
+                                    {
+                                        "Urgent" => "badge-urgent",
+                                        "STAT" => "badge-stat",
+                                        _ => "badge-routine"
+                                    };
+                                }
+                                <span class="badge @urgencyClass">@request.Urgency</span>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = request.Status switch
+                                    {
+                                        "Sample(s) received" => "badge-samplesreceived",
+                                        "In progress" => "badge-inprogress",
+                                        "Completed" => "badge-completed",
+                                        "Released by doctor" => "badge-released",
+                                        "Cancelled" => "badge-cancelled",
+                                        _ => "badge-submitted"
+                                    };
+                                }
+                                <span class="badge @statusClass">@request.Status</span>
+                            </td>
+                            <td>
+                                <a asp-controller="Doctor" asp-action="RequestStatus" asp-route-id="@request.TestRequestId" class="action-link">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                @if (request.Status == "Completed" || request.Status == "Released by doctor")
+                                {
+                                    <a asp-controller="Doctor" asp-action="Results" asp-route-id="@request.TestRequestId" class="action-link">
+                                        <i class="fas fa-file-alt"></i> Results
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-requests">
+            <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
+            <h4>No Test Requests</h4>
+            <p>This patient has no test requests yet</p>
+            <a asp-controller="Doctor" asp-action="CreateTestRequest" asp-route-patientId="@Model.PatientId" class="btn-primary" style="display:inline-flex;">
+                <i class="fas fa-plus-circle"></i> Create First Request
+            </a>
+        </div>
+    }
+
+</div>

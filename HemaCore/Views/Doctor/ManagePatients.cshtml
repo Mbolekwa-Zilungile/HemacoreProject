@@ -3,168 +3,133 @@
 @{
     ViewData["Title"] = "Manage Patients";
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+
+    var totalPatients = Model.Count;
+    var totalRequests = Model.Sum(p => p.RequestCount);
+    var patientsWithConditions = Model.Count(p => p.Conditions != null && p.Conditions.Any());
+    var patientsOnMedication = Model.Count(p => p.Medications != null && p.Medications.Any());
 }
 
 <style>
-    .patients-page {
-        padding: 10px 5px 30px;
-    }
+    /* ============================================
+       PATIENT MANAGEMENT
+       ============================================ */
 
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 25px;
-    }
-
-    .page-title h1 {
-        margin: 0;
-        color: #1f5068;
-        font-size: 28px;
-        font-weight: 700;
-    }
-
-    .page-title p {
-        margin: 6px 0 0;
-        color: #6b7280;
-        font-size: 14px;
-    }
-
-    .add-patient-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #2c7da0;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 11px 18px;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: 0.2s ease;
-    }
-
-        .add-patient-btn:hover {
-            background: #1f5068;
-            color: white;
-        }
-
-    .patients-card {
-        background: #ffffff;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        overflow: hidden;
-    }
-
-    .card-top {
-        padding: 20px 22px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-    }
-
-        .card-top h2 {
-            margin: 0;
-            color: #1f5068;
-            font-size: 18px;
-            font-weight: 650;
-        }
-
-    .patient-count {
-        color: #6b7280;
-        font-size: 13px;
-        margin-top: 4px;
-    }
-
-    .search-box {
-        position: relative;
-        width: 280px;
-    }
-
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            font-size: 14px;
-        }
-
-        .search-box input {
-            width: 100%;
-            height: 40px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            padding: 0 12px 0 36px;
-            outline: none;
-            font-size: 13px;
-            color: #374151;
-            background: #fff;
-        }
-
-            .search-box input:focus {
-                border-color: #61a5c2;
-                box-shadow: 0 0 0 3px rgba(97, 165, 194, 0.12);
-            }
-
-    .table-wrapper {
-        width: 100%;
+    .patients-container {
+        max-width: 100%;
         overflow-x: auto;
     }
 
-    .patients-table {
-        width: 100%;
-        border-collapse: collapse;
+    /* Page Header */
+    .page-header {
+        margin-bottom: 1.75rem;
     }
 
-        .patients-table thead {
-            background: #f8fafb;
-        }
-
-        .patients-table th {
-            padding: 14px 20px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
-        }
-
-        .patients-table td {
-            padding: 16px 20px;
-            font-size: 14px;
-            color: #374151;
-            border-bottom: 1px solid #edf0f2;
-            vertical-align: middle;
-        }
-
-        .patients-table tbody tr {
-            transition: background 0.15s ease;
-        }
-
-            .patients-table tbody tr:hover {
-                background: #f8fbfc;
-            }
-
-    .patient-name {
-        display: flex;
-        align-items: center;
-        gap: 11px;
+    .page-header h1 {
+        font-size: 1.5rem;
         font-weight: 600;
         color: #1f5068;
+        margin: 0 0 0.25rem 0;
+        letter-spacing: -0.3px;
     }
 
-    .patient-avatar {
-        width: 38px;
-        height: 38px;
+    .page-header p {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    /* Search Card */
+    .search-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .search-flex {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-field {
+        flex: 1;
+        position: relative;
+        min-width: 250px;
+    }
+
+    .search-field i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.875rem;
+        pointer-events: none;
+    }
+
+    .search-field input {
+        width: 100%;
+        padding: 0.625rem 1rem 0.625rem 2.5rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        color: #334155;
+    }
+
+    .search-field input:focus {
+        outline: none;
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.1);
+    }
+
+    .search-field input::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Search Suggestions */
+    .suggestions-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+    .suggestion-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: background 0.15s ease;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background: #f8fafc;
+    }
+
+    .suggestion-avatar {
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
         background: #e6f3f7;
         color: #2c7da0;
@@ -172,23 +137,276 @@
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 14px;
+        font-size: 0.75rem;
         flex-shrink: 0;
     }
 
-    .patient-id {
+    .suggestion-name {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #1f5068;
+    }
+
+    .suggestion-id {
+        font-size: 0.7rem;
         color: #64748b;
-        font-size: 13px;
+        margin-top: 2px;
     }
 
-    .phone-number {
+    .suggestion-email {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: #2c7da0;
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background: #1f5068;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #2c7da0;
+        border: 1px solid #2c7da0;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline:hover {
+        background: #eef7fa;
+        text-decoration: none;
+        color: #1f5068;
+    }
+
+    /* Statistics */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.25rem;
+    }
+
+    /* Table */
+    .table-wrapper {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .patient-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.813rem;
+        min-width: 1100px;
+    }
+
+    .patient-table th {
+        text-align: left;
+        padding: 1rem;
+        background: #f8fafc;
+        font-weight: 600;
         color: #475569;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
     }
 
+    .patient-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        color: #334155;
+    }
+
+    .patient-table tbody tr:hover td {
+        background: #f8fafc;
+    }
+
+    .patient-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Patient Information */
+    .patient-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 220px;
+    }
+
+    .patient-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #e6f3f7;
+        color: #2c7da0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+
+    .patient-details {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .patient-name {
+        font-weight: 600;
+        color: #1f5068;
+        margin-bottom: 0.125rem;
+    }
+
+    .patient-email {
+        font-size: 0.7rem;
+        color: #64748b;
+        word-break: break-word;
+    }
+
+    .request-count {
+        font-size: 0.65rem;
+        color: #2c7da0;
+        margin-top: 0.125rem;
+    }
+
+    /* ID */
+    .patient-id {
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    /* Contact */
+    .contact-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .contact-cell i {
+        color: #94a3b8;
+        width: 14px;
+    }
+
+    /* Badges */
+    .badge-condition,
+    .badge-allergy,
+    .badge-medication,
+    .badge-more {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin: 0.125rem;
+        white-space: nowrap;
+    }
+
+    .badge-condition {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-allergy {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-medication {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-more {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .empty-badge {
+        color: #94a3b8;
+        font-size: 0.7rem;
+        font-style: italic;
+    }
+
+    /* Actions */
     .actions {
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 0.4rem;
         white-space: nowrap;
     }
 
@@ -196,15 +414,14 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        min-height: 34px;
-        padding: 7px 11px;
+        gap: 5px;
+        padding: 7px 10px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 0.72rem;
         font-weight: 600;
         text-decoration: none;
         border: 1px solid transparent;
-        transition: 0.2s ease;
+        transition: all 0.2s ease;
     }
 
     .view-btn {
@@ -213,10 +430,21 @@
         border-color: #d8edf3;
     }
 
-        .view-btn:hover {
-            background: #dceff5;
-            color: #1f5068;
-        }
+    .view-btn:hover {
+        background: #dceff5;
+        color: #1f5068;
+    }
+
+    .test-btn {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #bae6fd;
+    }
+
+    .test-btn:hover {
+        background: #bae6fd;
+        color: #075985;
+    }
 
     .history-btn {
         background: #f5f7f9;
@@ -224,72 +452,91 @@
         border-color: #e2e8f0;
     }
 
-        .history-btn:hover {
-            background: #e9eef2;
-            color: #1f5068;
-        }
+    .history-btn:hover {
+        background: #e9eef2;
+        color: #1f5068;
+    }
 
-    .empty-state {
-        padding: 60px 20px;
+    /* No Search Results */
+    .no-results {
+        display: none;
+        padding: 2.5rem 1rem;
         text-align: center;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .no-results i {
+        font-size: 1.5rem;
+        color: #94a3b8;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
     }
 
     .empty-icon {
-        width: 58px;
-        height: 58px;
-        margin: 0 auto 15px;
-        border-radius: 50%;
+        width: 64px;
+        height: 64px;
         background: #eef7fa;
-        color: #2c7da0;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 23px;
+        margin: 0 auto 1rem;
+    }
+
+    .empty-icon i {
+        font-size: 1.5rem;
+        color: #2c7da0;
     }
 
     .empty-state h3 {
-        margin: 0 0 6px;
+        font-size: 1rem;
+        font-weight: 600;
         color: #1f5068;
-        font-size: 17px;
+        margin: 0 0 0.25rem 0;
     }
 
     .empty-state p {
-        margin: 0;
-        color: #6b7280;
-        font-size: 14px;
+        font-size: 0.813rem;
+        color: #64748b;
+        margin-bottom: 1rem;
     }
 
-    .no-results {
-        display: none;
-        padding: 35px 20px;
-        text-align: center;
-        color: #6b7280;
-        font-size: 14px;
+    /* Responsive */
+    @@media (max-width: 1000px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     @@media (max-width: 768px) {
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
         }
 
-        .add-patient-btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .card-top {
+        .search-flex {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .search-box {
+        .search-field {
             width: 100%;
         }
 
-        .patients-table th,
-        .patients-table td {
-            padding: 12px 14px;
+        .btn-primary,
+        .btn-outline {
+            width: 100%;
+            justify-content: center;
         }
 
         .actions {
@@ -301,220 +548,895 @@
             width: 100%;
         }
     }
+
+    @@media (max-width: 500px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="patients-page">
+<div class="patients-container">
+
+    <!-- ============================================
+         HEADER
+         ============================================ -->
 
     <div class="page-header">
-        <div class="page-title">
-            <h1>Manage Patients</h1>
-            <p>View and manage patients who are associated with your doctor profile.</p>
-        </div>
+        <h1>
+            <i class="fas fa-users" style="color: #2c7da0;"></i>
+            Patient Directory
+        </h1>
 
-        <a asp-controller="Doctor"
-           asp-action="AddPatient"
-           class="add-patient-btn">
-            <i class="bi bi-person-plus"></i>
-            Add New Patient
-        </a>
+        @* <p>
+            Manage patient records, view medical history, and create test requests
+        </p> *@
     </div>
 
-    <div class="patients-card">
 
-        <div class="card-top">
-            <div>
-                <h2>My Patients</h2>
+    <!-- ============================================
+         SEARCH
+         ============================================ -->
 
-                <div class="patient-count">
-                    @Model.Count patient@(Model.Count == 1 ? "" : "s")
+    <div class="search-card">
+
+        <div class="search-flex">
+
+            <div class="search-field">
+
+                <i class="fas fa-search"></i>
+
+                <input type="text"
+                       id="patientSearch"
+                       placeholder="Search by  ID number "
+                       oninput="handleSearch(this.value)"
+                       onfocus="handleSearch(this.value)"
+                       autocomplete="off" />
+
+                <div id="suggestionsBox"
+                     class="suggestions-dropdown">
                 </div>
+
             </div>
 
-            @if (Model.Any())
-            {
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
+            <button type="button"
+                    onclick="runSearch()"
+                    class="btn-primary">
 
-                    <input type="text"
-                           id="patientSearch"
-                           placeholder="Search patients..."
-                           autocomplete="off" />
-                </div>
-            }
+                <i class="fas fa-search"></i>
+                Search
+
+            </button>
+
+            <a asp-action="AddPatient"
+               asp-controller="Doctor"
+               class="btn-outline">
+
+                <i class="fas fa-user-plus"></i>
+                New Patient
+
+            </a>
+
         </div>
 
-        @if (Model.Any())
-        {
-            <div class="table-wrapper">
+    </div>
 
-                <table class="patients-table" id="patientsTable">
 
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>ID Number</th>
-                            <th>Phone Number</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
+    <!-- ============================================
+         STATISTICS
+         ============================================ -->
 
-                    <tbody id="patientsTableBody">
+    <div class="stats-row">
 
-                        @foreach (var patient in Model)
+        <!-- Total Patients -->
+        <div class="stat-card">
+
+            <div class="stat-icon"
+                 style="background: #e0f2fe;">
+
+                <i class="fas fa-users"
+                   style="color: #0284c7;">
+                </i>
+
+            </div>
+
+            <div class="stat-number">
+                @totalPatients
+            </div>
+
+            <div class="stat-label">
+                Total Patients
+            </div>
+
+        </div>
+
+
+        <!-- Test Requests -->
+        <div class="stat-card">
+
+            <div class="stat-icon"
+                 style="background: #dcfce7;">
+
+                <i class="fas fa-flask"
+                   style="color: #16a34a;">
+                </i>
+
+            </div>
+
+            <div class="stat-number">
+                @totalRequests
+            </div>
+
+            <div class="stat-label">
+                Test Requests
+            </div>
+
+        </div>
+
+
+        <!-- Patients With Conditions -->
+        <div class="stat-card">
+
+            <div class="stat-icon"
+                 style="background: #fee2e2;">
+
+                <i class="fas fa-heartbeat"
+                   style="color: #dc2626;">
+                </i>
+
+            </div>
+
+            <div class="stat-number">
+                @patientsWithConditions
+            </div>
+
+            <div class="stat-label">
+                With Conditions
+            </div>
+
+        </div>
+
+
+        <!-- Patients On Medication -->
+        <div class="stat-card">
+
+            <div class="stat-icon"
+                 style="background: #fef3c7;">
+
+                <i class="fas fa-pills"
+                   style="color: #d97706;">
+                </i>
+
+            </div>
+
+            <div class="stat-number">
+                @patientsOnMedication
+            </div>
+
+            <div class="stat-label">
+                On Medication
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================
+         PATIENT TABLE
+         ============================================ -->
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i class="fas fa-user-slash"></i>
+            </div>
+
+            <h3>
+                No patients registered
+            </h3>
+
+            <p>
+                Get started by adding your first patient to the system.
+            </p>
+
+            <a asp-action="AddPatient"
+               asp-controller="Doctor"
+               class="btn-primary"
+               style="display: inline-flex;">
+
+                <i class="fas fa-user-plus"></i>
+                Add Patient
+
+            </a>
+
+        </div>
+    }
+    else
+    {
+        <div class="table-wrapper">
+
+            <table class="patient-table"
+                   id="patientsTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Patient</th>
+
+                        <th>ID Number</th>
+
+                        <th>Date of Birth</th>
+
+                        <th>Contact</th>
+
+                        <th>Conditions</th>
+
+                        <th>Allergies</th>
+
+                        <th>Medications</th>
+
+                        <th style="text-align: center;">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="patientsBody">
+
+                    @foreach (var patient in Model.OrderBy(p => p.FullName))
+                    {
+                        var initials = "";
+
+                        if (!string.IsNullOrWhiteSpace(patient.FullName))
                         {
-                            var initials = "";
+                            var nameParts = patient.FullName
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                            if (!string.IsNullOrWhiteSpace(patient.FullName))
+                            if (nameParts.Length >= 2)
                             {
-                                var nameParts = patient.FullName
-                                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                                if (nameParts.Length >= 2)
-                                {
-                                    initials =
-                                        nameParts[0].Substring(0, 1).ToUpper() +
-                                        nameParts[^1].Substring(0, 1).ToUpper();
-                                }
-                                else
-                                {
-                                    initials = nameParts[0]
-                                        .Substring(0, 1)
-                                        .ToUpper();
-                                }
+                                initials =
+                                    nameParts[0].Substring(0, 1).ToUpper() +
+                                    nameParts[^1].Substring(0, 1).ToUpper();
                             }
+                            else
+                            {
+                                initials = nameParts[0]
+                                    .Substring(0, 1)
+                                    .ToUpper();
+                            }
+                        }
 
-                            <tr class="patient-row"
-                                data-search="@($"{patient.FullName} {patient.IDNumber} {patient.PhoneNumber}")">
+                        <tr class="patient-row"
+                            data-name="@patient.FullName.ToLower()"
+                            data-idnumber="@patient.IDNumber.ToLower()"
+                            data-email="@patient.Email.ToLower()"
+                            data-phone="@patient.PhoneNumber.ToLower()"
+                            data-displayname="@patient.FullName">
 
-                                <td>
-                                    <div class="patient-name">
+                            <!-- Patient -->
+                            <td>
 
-                                        <div class="patient-avatar">
-                                            @initials
-                                        </div>
+                                <div class="patient-info">
 
-                                        <span>
+                                    <div class="patient-avatar">
+                                        @initials
+                                    </div>
+
+                                    <div class="patient-details">
+
+                                        <span class="patient-name">
                                             @patient.FullName
                                         </span>
 
+                                        <span class="patient-email">
+                                            @patient.Email
+                                        </span>
+
+                                        <span class="request-count">
+
+                                            <i class="fas fa-flask"></i>
+
+                                            @patient.RequestCount
+                                            request@(patient.RequestCount != 1 ? "s" : "")
+
+                                        </span>
+
                                     </div>
-                                </td>
 
-                                <td>
-                                    <span class="patient-id">
-                                        @patient.IDNumber
-                                    </span>
-                                </td>
+                                </div>
 
-                                <td>
-                                    <span class="phone-number">
+                            </td>
+
+
+                            <!-- ID Number -->
+                            <td>
+
+                                <span class="patient-id">
+                                    @patient.IDNumber
+                                </span>
+
+                            </td>
+
+
+                            <!-- Date of Birth -->
+                            <td>
+                                @* Date of birth is not currently exposed by PatientListItemViewModel *@
+                                <span class="empty-badge">
+                                    —
+                                </span>
+                            </td>
+
+
+                            <!-- Contact -->
+                            <td>
+
+                                <div class="contact-cell">
+
+                                    <i class="fas fa-phone"></i>
+
+                                    <span>
                                         @patient.PhoneNumber
                                     </span>
-                                </td>
 
-                                <td>
-                                    <div class="actions">
+                                </div>
 
-                                        <a asp-controller="Doctor"
-                                           asp-action="PatientDetails"
-                                           asp-route-id="@patient.PatientId"
-                                           class="action-btn view-btn">
-                                            <i class="bi bi-eye"></i>
-                                            View
-                                        </a>
+                            </td>
 
-                                        <a asp-controller="Doctor"
-                                           asp-action="EditPatientHistory"
-                                           asp-route-id="@patient.PatientId"
-                                           class="action-btn history-btn">
-                                            <i class="bi bi-clipboard2-pulse"></i>
-                                            Medical History
-                                        </a>
 
-                                    </div>
-                                </td>
+                            <!-- Conditions -->
+                            <td>
 
-                            </tr>
-                        }
+                                @if (patient.Conditions != null &&
+                                     patient.Conditions.Any())
+                                {
+                                    foreach (var condition in patient.Conditions.Take(2))
+                                    {
+                                        <span class="badge-condition">
+                                            @condition
+                                        </span>
+                                    }
 
-                    </tbody>
+                                    if (patient.Conditions.Count > 2)
+                                    {
+                                        <span class="badge-more">
+                                            +@(patient.Conditions.Count - 2)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="empty-badge">
+                                        —
+                                    </span>
+                                }
 
-                </table>
+                            </td>
 
-                <div class="no-results" id="noResults">
+
+                            <!-- Allergies -->
+                            <td>
+
+                                @if (patient.Allergies != null &&
+                                     patient.Allergies.Any())
+                                {
+                                    foreach (var allergy in patient.Allergies.Take(2))
+                                    {
+                                        <span class="badge-allergy">
+                                            @allergy
+                                        </span>
+                                    }
+
+                                    if (patient.Allergies.Count > 2)
+                                    {
+                                        <span class="badge-more">
+                                            +@(patient.Allergies.Count - 2)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="empty-badge">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <!-- Medications -->
+                            <td>
+
+                                @if (patient.Medications != null &&
+                                     patient.Medications.Any())
+                                {
+                                    foreach (var medication in patient.Medications.Take(2))
+                                    {
+                                        <span class="badge-medication">
+                                            @medication
+                                        </span>
+                                    }
+
+                                    if (patient.Medications.Count > 2)
+                                    {
+                                        <span class="badge-more">
+                                            +@(patient.Medications.Count - 2)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="empty-badge">
+                                        —
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <!-- Actions -->
+                            <td>
+
+                                <div class="actions">
+
+                                    <!-- View -->
+                                    <a asp-action="PatientDetails"
+                                       asp-controller="Doctor"
+                                       asp-route-id="@patient.PatientId"
+                                       class="action-btn view-btn"
+                                       title="View patient details">
+
+                                        <i class="fas fa-eye"></i>
+                                        View
+
+                                    </a>
+
+
+                                    <!-- Test -->
+                                    <a asp-action="CreateTestRequest"
+                                       asp-controller="Doctor"
+                                       asp-route-patientId="@patient.PatientId"
+                                       class="action-btn test-btn"
+                                       title="Create test request">
+
+                                        <i class="fas fa-vial"></i>
+                                        Test
+
+                                    </a>
+
+
+                                    <!-- Medical History -->
+                                    <a asp-action="EditPatientHistory"
+                                       asp-controller="Doctor"
+                                       asp-route-id="@patient.PatientId"
+                                       class="action-btn history-btn"
+                                       title="Manage medical history">
+
+                                        <i class="fas fa-notes-medical"></i>
+                                        History
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+
+            <!-- No Search Results -->
+
+            <div class="no-results"
+                 id="noResults">
+
+                <i class="fas fa-search"></i>
+
+                <div>
                     No patients match your search.
                 </div>
 
             </div>
-        }
-        else
-        {
-            <div class="empty-state">
 
-                <div class="empty-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-
-                <h3>No patients found</h3>
-
-                <p>
-                    You currently do not have any patients associated with your profile.
-                </p>
-
-                <div style="margin-top: 18px;">
-                    <a asp-controller="Doctor"
-                       asp-action="AddPatient"
-                       class="add-patient-btn">
-                        <i class="bi bi-person-plus"></i>
-                        Add New Patient
-                    </a>
-                </div>
-
-            </div>
-        }
-
-    </div>
+        </div>
+    }
 
 </div>
 
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
 
-        const searchInput = document.getElementById("patientSearch");
-        const rows = document.querySelectorAll(".patient-row");
-        const noResults = document.getElementById("noResults");
+    /*
+     * ============================================
+     * PATIENT SEARCH
+     * ============================================
+     */
 
-        if (!searchInput) {
+    var allRows = Array.from(
+        document.querySelectorAll("#patientsBody .patient-row")
+    );
+
+
+    function handleSearch(query) {
+
+        query = query.trim().toLowerCase();
+
+        var box = document.getElementById("suggestionsBox");
+
+        if (!box) {
             return;
         }
 
-        searchInput.addEventListener("input", function() {
 
-            const searchValue = this.value
-                .toLowerCase()
-                .trim();
+        /*
+         * If search is empty:
+         * - hide suggestions
+         * - show all patients
+         */
 
-            let visibleRows = 0;
+        if (query === "") {
 
-            rows.forEach(function(row) {
+            box.style.display = "none";
 
-                const searchText = row
-                    .getAttribute("data-search")
-                    .toLowerCase();
+            allRows.forEach(function (row) {
 
-                if (searchText.includes(searchValue)) {
-                    row.style.display = "";
-                    visibleRows++;
-                }
-                else {
-                    row.style.display = "none";
-                }
+                row.style.display = "";
+
             });
 
-            if (noResults) {
-                noResults.style.display =
-                    visibleRows === 0 ? "block" : "none";
-            }
+            updateNoResults();
+
+            return;
+        }
+
+
+        /*
+         * Find matching patients
+         */
+
+        var matched = allRows.filter(function (row) {
+
+            var name =
+                row.getAttribute("data-name") || "";
+
+            var idNumber =
+                row.getAttribute("data-idnumber") || "";
+
+            var email =
+                row.getAttribute("data-email") || "";
+
+            var phone =
+                row.getAttribute("data-phone") || "";
+
+
+            return name.includes(query) ||
+                   idNumber.includes(query) ||
+                   email.includes(query) ||
+                   phone.includes(query);
+
         });
-    });
+
+
+        /*
+         * Build suggestions
+         */
+
+        box.innerHTML = "";
+
+
+        if (matched.length > 0) {
+
+            matched.slice(0, 8).forEach(function (row) {
+
+                var name =
+                    row.getAttribute("data-displayname") || "";
+
+                var idNumber =
+                    row.getAttribute("data-idnumber") || "";
+
+                var email =
+                    row.getAttribute("data-email") || "";
+
+                var initial =
+                    name.charAt(0).toUpperCase();
+
+
+                var item =
+                    document.createElement("div");
+
+                item.className =
+                    "suggestion-item";
+
+
+                item.innerHTML = `
+                    <div class="suggestion-avatar">
+                        ${initial}
+                    </div>
+
+                    <div>
+                        <div class="suggestion-name">
+                            ${escapeHtml(name)}
+                        </div>
+
+                        <div class="suggestion-id">
+                            <i class="fas fa-id-card"></i>
+                            ${escapeHtml(idNumber)}
+                        </div>
+
+                        <div class="suggestion-email">
+                            ${escapeHtml(email)}
+                        </div>
+                    </div>
+                `;
+
+
+                item.addEventListener(
+                    "click",
+                    function () {
+
+                        document.getElementById(
+                            "patientSearch"
+                        ).value = name;
+
+                        box.style.display = "none";
+
+                        filterTable(name);
+
+                    }
+                );
+
+
+                box.appendChild(item);
+
+            });
+
+
+            box.style.display = "block";
+
+        }
+        else {
+
+            box.innerHTML = `
+                <div style="
+                    padding: 1rem;
+                    text-align: center;
+                    color: #94a3b8;">
+                    
+                    <i class="fas fa-search"></i>
+                    No matching patients
+                    
+                </div>
+            `;
+
+            box.style.display = "block";
+        }
+
+
+        /*
+         * Filter the table while typing
+         */
+
+        filterTable(query);
+    }
+
+
+    /*
+     * ============================================
+     * FILTER TABLE
+     * ============================================
+     */
+
+    function filterTable(query) {
+
+        query = query.trim().toLowerCase();
+
+        var visibleRows = 0;
+
+
+        allRows.forEach(function (row) {
+
+            var name =
+                row.getAttribute("data-name") || "";
+
+            var idNumber =
+                row.getAttribute("data-idnumber") || "";
+
+            var email =
+                row.getAttribute("data-email") || "";
+
+            var phone =
+                row.getAttribute("data-phone") || "";
+
+
+            var matches =
+                name.includes(query) ||
+                idNumber.includes(query) ||
+                email.includes(query) ||
+                phone.includes(query);
+
+
+            if (matches) {
+
+                row.style.display = "";
+                visibleRows++;
+
+            }
+            else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+
+        var noResults =
+            document.getElementById("noResults");
+
+
+        if (noResults) {
+
+            noResults.style.display =
+                visibleRows === 0
+                    ? "block"
+                    : "none";
+
+        }
+    }
+
+
+    /*
+     * ============================================
+     * SEARCH BUTTON
+     * ============================================
+     */
+
+    function runSearch() {
+
+        var input =
+            document.getElementById("patientSearch");
+
+        var box =
+            document.getElementById("suggestionsBox");
+
+
+        if (!input) {
+            return;
+        }
+
+
+        if (box) {
+            box.style.display = "none";
+        }
+
+
+        filterTable(input.value);
+    }
+
+
+    /*
+     * ============================================
+     * NO RESULTS
+     * ============================================
+     */
+
+    function updateNoResults() {
+
+        var visibleRows =
+            allRows.filter(function (row) {
+
+                return row.style.display !== "none";
+
+            }).length;
+
+
+        var noResults =
+            document.getElementById("noResults");
+
+
+        if (noResults) {
+
+            noResults.style.display =
+                visibleRows === 0
+                    ? "block"
+                    : "none";
+
+        }
+    }
+
+
+    /*
+     * ============================================
+     * CLOSE SUGGESTIONS WHEN CLICKING OUTSIDE
+     * ============================================
+     */
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            var search =
+                document.getElementById("patientSearch");
+
+            var box =
+                document.getElementById("suggestionsBox");
+
+
+            if (!search || !box) {
+                return;
+            }
+
+
+            if (
+                event.target !== search &&
+                !box.contains(event.target)
+            ) {
+
+                box.style.display = "none";
+
+            }
+
+        }
+    );
+
+
+    /*
+     * ============================================
+     * ENTER KEY
+     * ============================================
+     */
+
+    var searchInput =
+        document.getElementById("patientSearch");
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key === "Enter") {
+
+                    event.preventDefault();
+
+                    runSearch();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ============================================
+     * HTML ESCAPING
+     * Prevents patient information from being
+     * inserted as raw HTML into suggestions.
+     * ============================================
+     */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
 </script>

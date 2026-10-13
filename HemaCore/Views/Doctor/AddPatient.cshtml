@@ -1,68 +1,97 @@
 ﻿@model HemaCore.ViewModels.DoctorViewModels.AddPatientViewModel
 
 @{
-    ViewData["Title"] = "Add Patient";
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewBag.Title = "Add New Patient";
 }
+
+<link rel="stylesheet" href="~/css/doctor.css" />
 
 <style>
     .add-patient-page {
-        padding: 10px 5px 30px;
+        padding: 5px 5px 30px;
+        animation: fadeInUp 0.5s ease;
     }
 
     .page-header {
-        margin-bottom: 25px;
+        margin-bottom: 2rem;
     }
 
-        .page-header h1 {
-            margin: 0;
-            color: #1f5068;
-            font-size: 28px;
-            font-weight: 700;
-        }
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-        .page-header p {
-            margin: 6px 0 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
+    .page-header h1 i {
+        -webkit-text-fill-color: #667eea;
+    }
+
+    .page-header p {
+        margin: 6px 0 0;
+        color: #718096;
+        font-size: 14px;
+    }
 
     .form-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+    }
+
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        margin-bottom: 20px;
-        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        flex-shrink: 0;
     }
 
-    .card-header {
-        padding: 18px 22px;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f8fafb;
+    .step-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
     }
 
-        .card-header h2 {
-            margin: 0;
-            color: #1f5068;
-            font-size: 18px;
-            font-weight: 650;
-        }
-
-        .card-header p {
-            margin: 5px 0 0;
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-    .card-body {
-        padding: 24px 22px;
+    .step-subtitle {
+        color: #718096;
+        font-size: 0.85rem;
+        margin: 0.25rem 0 0;
     }
 
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+        gap: 1.5rem;
     }
 
     .form-group {
@@ -70,155 +99,227 @@
         flex-direction: column;
     }
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
 
-        .form-group label {
-            color: #374151;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 7px;
-        }
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-group label i {
+        color: #667eea;
+        width: 20px;
+    }
 
     .form-control {
         width: 100%;
-        min-height: 42px;
-        border: 1px solid #d1d5db;
-        border-radius: 7px;
-        padding: 9px 12px;
-        font-size: 14px;
-        color: #374151;
-        background: #fff;
-        outline: none;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        background: white;
         box-sizing: border-box;
+        transition: all 0.3s ease;
     }
 
-        .form-control:focus {
-            border-color: #61a5c2;
-            box-shadow: 0 0 0 3px rgba(97, 165, 194, 0.12);
-        }
+    .form-control:hover {
+        border-color: #cbd5e0;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
 
     textarea.form-control {
-        min-height: 90px;
+        min-height: 85px;
         resize: vertical;
     }
 
     .validation {
-        color: #dc2626;
-        font-size: 12px;
-        margin-top: 5px;
+        color: #dc3545;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+    }
+
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #ebf8ff;
+        color: #3182ce;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
     }
 
     .history-section {
-        margin-top: 5px;
+        margin-bottom: 1rem;
     }
 
     .history-title {
-        color: #1f5068;
-        font-size: 15px;
-        font-weight: 650;
-        margin-bottom: 12px;
+        color: #2d3748;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
     }
 
     .options-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: 0.75rem;
     }
 
     .option-item {
+        background: #f7fafc;
         border: 1px solid #e2e8f0;
-        border-radius: 7px;
-        padding: 11px 12px;
-        background: #fafcfd;
-        transition: 0.2s ease;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        transition: all 0.3s ease;
     }
 
-        .option-item:hover {
-            border-color: #b8dce8;
-            background: #f5fafc;
-        }
+    .option-item:hover {
+        background: #edf2f7;
+        border-color: #c3dafe;
+        transform: translateX(5px);
+    }
 
-        .option-item label {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #475569;
-            font-weight: 500;
-        }
+    .option-item label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        cursor: pointer;
+        color: #4a5568;
+        font-size: 0.88rem;
+        font-weight: 500;
+        margin: 0;
+    }
 
-        .option-item input {
-            accent-color: #2c7da0;
-            width: 16px;
-            height: 16px;
-        }
+    .option-item input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        accent-color: #667eea;
+        cursor: pointer;
+    }
 
     .empty-options {
         color: #9ca3af;
-        font-size: 13px;
-        padding: 10px 0;
+        background: #f8fafc;
+        border: 1px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .history-divider {
+        border: 0;
+        border-top: 1px solid #edf0f2;
+        margin: 1.5rem 0;
     }
 
     .form-actions {
         display: flex;
+        gap: 1rem;
         justify-content: flex-end;
-        gap: 10px;
-        margin-top: 25px;
+        margin-top: 2rem;
     }
 
-    .btn {
+    .btn-cancel {
+        background: white;
+        color: #718096;
+        border: 2px solid #e2e8f0;
+        padding: 0.7rem 1.8rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 7px;
-        min-height: 40px;
-        padding: 9px 17px;
-        border-radius: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        border: none;
+        gap: 0.5rem;
     }
 
-    .btn-primary {
-        background: #2c7da0;
+    .btn-cancel:hover {
+        background: #f7fafc;
+        border-color: #cbd5e0;
+        transform: translateY(-2px);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
         color: white;
+        border: none;
+        padding: 0.7rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
     }
 
-        .btn-primary:hover {
-            background: #1f5068;
-            color: white;
-        }
-
-    .btn-secondary {
-        background: #f3f4f6;
-        color: #475569;
-        border: 1px solid #dfe3e8;
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
     }
-
-        .btn-secondary:hover {
-            background: #e8ebee;
-            color: #1f5068;
-        }
 
     .info-box {
-        margin-top: 20px;
-        padding: 13px 15px;
-        background: #eef7fa;
-        border: 1px solid #d7ebf1;
-        border-radius: 7px;
-        color: #315c6e;
-        font-size: 13px;
+        margin-top: 1.5rem;
+        padding: 0.9rem 1rem;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 12px;
+        color: #2b6cb0;
+        font-size: 0.85rem;
         line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+    }
+
+    .success-message {
+        background: #c6f6d5;
+        color: #22543d;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #38a169;
+    }
+
+    .error-message {
+        background: #fed7d7;
+        color: #742a2a;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #e53e3e;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     @@media (max-width: 768px) {
         .form-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
         }
 
         .form-group.full-width {
@@ -233,19 +334,48 @@
             flex-direction: column-reverse;
         }
 
-        .btn {
+        .btn-cancel,
+        .btn-submit {
             width: 100%;
+            justify-content: center;
+        }
+
+        .form-card {
+            padding: 1.5rem;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
         }
     }
 </style>
-
 <div class="add-patient-page">
 
-    <div class="page-header">
-        <h1>Add Patient</h1>
-        <p>Capture the patient's personal information and medical history.</p>
-    </div>
+    @if (TempData["Success"] != null)
+    {
+        <div class="success-message">
+            <i class="fas fa-check-circle"></i>
+            @TempData["Success"]
+        </div>
+    }
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            @TempData["Error"]
+        </div>
+    }
+
+    @* <div class="page-header">
+        <h1>
+            <i class="fas fa-user-plus"></i>
+            Add New Patient
+        </h1>
+
+        <p>Register a new patient and capture their medical history.</p>
+    </div>
+ *@
     <form asp-controller="Doctor"
           asp-action="AddPatient"
           method="post">
@@ -257,252 +387,454 @@
              style="margin-bottom: 15px;">
         </div>
 
-        <!-- Personal Information -->
+        <!-- STEP 1: PERSONAL DETAILS -->
         <div class="form-card">
 
-            <div class="card-header">
-                <h2>Patient Information</h2>
-                <p>Enter the patient's basic personal and contact details.</p>
+            <div class="step-header">
+                <div class="step-number">1</div>
+
+                <div>
+                    <h3 class="step-title">Personal Details</h3>
+
+                    <p class="step-subtitle">
+                        Basic information about the patient
+                    </p>
+                </div>
             </div>
 
-            <div class="card-body">
+            <div class="form-grid">
 
-                <div class="form-grid">
+                <!-- FIRST NAME -->
+                <div class="form-group">
+                    <label asp-for="Name">
+                        <i class="fas fa-user"></i>
+                        First Name *
+                    </label>
 
-                    <div class="form-group">
-                        <label asp-for="Name"></label>
+                    <input asp-for="Name"
+                           class="form-control"
+                           placeholder="Enter first name" />
 
-                        <input asp-for="Name"
-                               class="form-control"
-                               placeholder="Enter patient's name" />
-
-                        <span asp-validation-for="Name"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Surname"></label>
-
-                        <input asp-for="Surname"
-                               class="form-control"
-                               placeholder="Enter patient's surname" />
-
-                        <span asp-validation-for="Surname"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="IDNumber"></label>
-
-                        <input asp-for="IDNumber"
-                               class="form-control"
-                               placeholder="Enter South African ID number" />
-
-                        <span asp-validation-for="IDNumber"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="DateOfBirth"></label>
-
-                        <input asp-for="DateOfBirth"
-                               type="date"
-                               class="form-control" />
-
-                        <span asp-validation-for="DateOfBirth"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="PhoneNumber"></label>
-
-                        <input asp-for="PhoneNumber"
-                               class="form-control"
-                               placeholder="+27XXXXXXXXX" />
-
-                        <span asp-validation-for="PhoneNumber"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Email"></label>
-
-                        <input asp-for="Email"
-                               type="email"
-                               class="form-control"
-                               placeholder="patient@example.com" />
-
-                        <span asp-validation-for="Email"
-                              class="validation"></span>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label asp-for="Address"></label>
-
-                        <textarea asp-for="Address"
-                                  class="form-control"
-                                  placeholder="Enter patient's address"></textarea>
-
-                        <span asp-validation-for="Address"
-                              class="validation"></span>
-                    </div>
-
+                    <span asp-validation-for="Name"
+                          class="validation"></span>
                 </div>
+
+                <!-- SURNAME -->
+                <div class="form-group">
+                    <label asp-for="Surname">
+                        <i class="fas fa-user"></i>
+                        Surname *
+                    </label>
+
+                    <input asp-for="Surname"
+                           class="form-control"
+                           placeholder="Enter surname" />
+
+                    <span asp-validation-for="Surname"
+                          class="validation"></span>
+                </div>
+
+                <!-- ID NUMBER -->
+                <div class="form-group">
+                    <label asp-for="IDNumber">
+                        <i class="fas fa-id-card"></i>
+                        ID Number *
+                    </label>
+
+                    <input asp-for="IDNumber"
+                           id="idNumber"
+                           class="form-control"
+                           placeholder="e.g. 9001011234567"
+                           maxlength="13"
+                           inputmode="numeric" />
+
+                    <span asp-validation-for="IDNumber"
+                          class="validation"></span>
+
+                    <small id="idError"
+                           style="color:#dc3545; display:none; margin-top:5px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Invalid ID number format.
+                    </small>
+                </div>
+
+                <!-- DATE OF BIRTH -->
+                <div class="form-group">
+                    <label asp-for="DateOfBirth">
+                        <i class="fas fa-calendar"></i>
+                        Date of Birth *
+                    </label>
+
+                    <input asp-for="DateOfBirth"
+                           id="dateOfBirth"
+                           type="date"
+                           class="form-control"
+                           readonly
+                           style="background:#f8f9fa; cursor:not-allowed;" />
+
+                    <span asp-validation-for="DateOfBirth"
+                          class="validation"></span>
+
+                    <small style="color:#718096; font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-info-circle"></i>
+                        Auto-filled from ID number.
+                    </small>
+                </div>
+
+                <!-- PHONE NUMBER -->
+                <div class="form-group">
+                    <label asp-for="PhoneNumber">
+                        <i class="fas fa-phone"></i>
+                        Phone Number *
+                    </label>
+
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           placeholder="+27XXXXXXXXX" />
+
+                    <span asp-validation-for="PhoneNumber"
+                          class="validation"></span>
+                </div>
+
+                <!-- GENDER -->
+                <div class="form-group">
+                    <label asp-for="Gender">
+                        <i class="fas fa-venus-mars"></i>
+                        Gender *
+                    </label>
+
+                    <select asp-for="Gender"
+                            class="form-control">
+
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+
+                    </select>
+
+                    <span asp-validation-for="Gender"
+                          class="validation"></span>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="form-group">
+                    <label asp-for="Email">
+                        <i class="fas fa-envelope"></i>
+                        Email Address *
+                    </label>
+
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control"
+                           placeholder="patient@example.com" />
+
+                    <span asp-validation-for="Email"
+                          class="validation"></span>
+                </div>
+
+                
+            <!-- STREET ADDRESS -->
+<div class="form-group full-width">
+    <label asp-for="StreetAddress">
+        <i class="fas fa-home"></i>
+        Street Address *
+    </label>
+
+    <input asp-for="StreetAddress"
+           class="form-control"
+           placeholder="e.g. 12 Main Road" />
+
+    <span asp-validation-for="StreetAddress"
+          class="validation"></span>
+</div>
+
+<!-- SUBURB -->
+<div class="form-group">
+    <label asp-for="Suburb">
+        <i class="fas fa-map-marker-alt"></i>
+        Suburb
+    </label>
+
+    <input asp-for="Suburb"
+           class="form-control"
+           placeholder="e.g. Walmer" />
+
+    <span asp-validation-for="Suburb"
+          class="validation"></span>
+</div>
+
+<!-- CITY -->
+<div class="form-group">
+    <label asp-for="City">
+        <i class="fas fa-city"></i>
+        City / Town *
+    </label>
+
+    <input asp-for="City"
+           class="form-control"
+           placeholder="e.g. Gqeberha" />
+
+    <span asp-validation-for="City"
+          class="validation"></span>
+</div>
+
+<!-- PROVINCE -->
+<div class="form-group">
+    <label asp-for="Province">
+        <i class="fas fa-map"></i>
+        Province *
+    </label>
+
+    <select asp-for="Province"
+            class="form-control">
+
+        <option value="">Select province</option>
+        <option value="Eastern Cape">Eastern Cape</option>
+        <option value="Free State">Free State</option>
+        <option value="Gauteng">Gauteng</option>
+        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+        <option value="Limpopo">Limpopo</option>
+        <option value="Mpumalanga">Mpumalanga</option>
+        <option value="Northern Cape">Northern Cape</option>
+        <option value="North West">North West</option>
+        <option value="Western Cape">Western Cape</option>
+
+    </select>
+
+    <span asp-validation-for="Province"
+          class="validation"></span>
+</div>
+
+<!-- POSTAL CODE -->
+<div class="form-group">
+    <label asp-for="PostalCode">
+        <i class="fas fa-mail-bulk"></i>
+        Postal Code *
+    </label>
+
+    <input asp-for="PostalCode"
+           class="form-control"
+           placeholder="e.g. 6070"
+           maxlength="4"
+           inputmode="numeric" />
+
+    <span asp-validation-for="PostalCode"
+          class="validation"></span>
+</div>
+        </div>
+
+        <!-- STEP 2: MEDICAL CONDITIONS -->
+        <div class="form-card">
+
+            <div class="step-header">
+                <div class="step-number">2</div>
+
+                <div>
+                    <h3 class="step-title">Medical Conditions</h3>
+
+                    <p class="step-subtitle">
+                        Chronic diseases and long-term health conditions
+                    </p>
+                </div>
+            </div>
+
+            <div class="info-badge">
+                <i class="fas fa-info-circle"></i>
+                Select any known chronic conditions the patient has.
+            </div>
+
+            <div class="history-section">
+
+                <div class="history-title">
+                    Known Conditions
+                </div>
+
+                @if (Model.AllConditions != null && Model.AllConditions.Any())
+                {
+                    <div class="options-grid">
+
+                        @for (int i = 0; i < Model.AllConditions.Count; i++)
+                        {
+                            <div class="option-item">
+
+                                <label>
+                                    <input type="checkbox"
+                                           name="SelectedConditionIds"
+                                           value="@Model.AllConditions[i].Id"
+                                           @(Model.AllConditions[i].IsSelected ? "checked" : "") />
+
+                                    @Model.AllConditions[i].Name
+                                </label>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-options">
+                        No conditions are currently available.
+                    </div>
+                }
 
             </div>
         </div>
 
-        <!-- Medical History -->
+        <!-- STEP 3: ALLERGIES -->
         <div class="form-card">
 
-            <div class="card-header">
-                <h2>Medical History</h2>
-                <p>Select any known conditions, allergies or medications.</p>
+            <div class="step-header">
+                <div class="step-number">3</div>
+
+                <div>
+                    <h3 class="step-title">Allergies</h3>
+
+                    <p class="step-subtitle">
+                        Medication, food, or environmental allergies
+                    </p>
+                </div>
             </div>
 
-            <div class="card-body">
+            <div class="info-badge"
+                 style="background:#fff5f5; color:#c53030;">
 
-                <!-- Conditions -->
-                <div class="history-section">
+                <i class="fas fa-exclamation-triangle"></i>
+                Critical information for patient safety.
 
-                    <div class="history-title">
-                        Known Conditions
+            </div>
+
+            <div class="history-section">
+
+                <div class="history-title">
+                    Known Allergies
+                </div>
+
+                @if (Model.AllAllergies != null && Model.AllAllergies.Any())
+                {
+                    <div class="options-grid">
+
+                        @for (int i = 0; i < Model.AllAllergies.Count; i++)
+                        {
+                            <div class="option-item">
+
+                                <label>
+                                    <input type="checkbox"
+                                           name="SelectedAllergyIds"
+                                           value="@Model.AllAllergies[i].Id"
+                                           @(Model.AllAllergies[i].IsSelected ? "checked" : "") />
+
+                                    @Model.AllAllergies[i].Name
+                                </label>
+
+                            </div>
+                        }
+
                     </div>
-
-                    @if (Model.AllConditions.Any())
-                    {
-                        <div class="options-grid">
-
-                            @for (int i = 0; i < Model.AllConditions.Count; i++)
-                            {
-                                <div class="option-item">
-
-                                    <label>
-                                        <input type="checkbox"
-                                               name="SelectedConditionIds"
-                                               value="@Model.AllConditions[i].Id"
-                                        @(Model.AllConditions[i].IsSelected ? "checked" : "") />
-
-                                        @Model.AllConditions[i].Name
-                                    </label>
-
-                                </div>
-                            }
-
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-options">
-                            No conditions are currently available.
-                        </div>
-                    }
-
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #edf0f2; margin: 25px 0;" />
-
-                <!-- Allergies -->
-                <div class="history-section">
-
-                    <div class="history-title">
-                        Allergies
+                }
+                else
+                {
+                    <div class="empty-options">
+                        No allergies are currently available.
                     </div>
-
-                    @if (Model.AllAllergies.Any())
-                    {
-                        <div class="options-grid">
-
-                            @for (int i = 0; i < Model.AllAllergies.Count; i++)
-                            {
-                                <div class="option-item">
-
-                                    <label>
-                                        <input type="checkbox"
-                                               name="SelectedAllergyIds"
-                                               value="@Model.AllAllergies[i].Id"
-                                        @(Model.AllAllergies[i].IsSelected ? "checked" : "") />
-
-                                        @Model.AllAllergies[i].Name
-                                    </label>
-
-                                </div>
-                            }
-
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-options">
-                            No allergies are currently available.
-                        </div>
-                    }
-
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #edf0f2; margin: 25px 0;" />
-
-                <!-- Medications -->
-                <div class="history-section">
-
-                    <div class="history-title">
-                        Current Medications
-                    </div>
-
-                    @if (Model.AllMedications.Any())
-                    {
-                        <div class="options-grid">
-
-                            @for (int i = 0; i < Model.AllMedications.Count; i++)
-                            {
-                                <div class="option-item">
-
-                                    <label>
-                                        <input type="checkbox"
-                                               name="SelectedMedicationIds"
-                                               value="@Model.AllMedications[i].Id"
-                                        @(Model.AllMedications[i].IsSelected ? "checked" : "") />
-
-                                        @Model.AllMedications[i].Name
-                                    </label>
-
-                                </div>
-                            }
-
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-options">
-                            No medications are currently available.
-                        </div>
-                    }
-
-                </div>
-
-                <div class="info-box">
-                    <i class="bi bi-info-circle"></i>
-                    The patient will receive their account details after registration.
-                    They will be required to change their password when they first log in.
-                </div>
+                }
 
             </div>
         </div>
 
-        <!-- Actions -->
+        <!-- STEP 4: MEDICATIONS -->
+        <div class="form-card">
+
+            <div class="step-header">
+                <div class="step-number">4</div>
+
+                <div>
+                    <h3 class="step-title">Current Medications</h3>
+
+                    <p class="step-subtitle">
+                        Prescription drugs and regular treatments
+                    </p>
+                </div>
+            </div>
+
+            <div class="info-badge"
+                 style="background:#f0fff4; color:#38a169;">
+
+                <i class="fas fa-pills"></i>
+                Select any medication currently taken by the patient.
+
+            </div>
+
+            <div class="history-section">
+
+                <div class="history-title">
+                    Current Medications
+                </div>
+
+                @if (Model.AllMedications != null && Model.AllMedications.Any())
+                {
+                    <div class="options-grid">
+
+                        @for (int i = 0; i < Model.AllMedications.Count; i++)
+                        {
+                            <div class="option-item">
+
+                                <label>
+                                    <input type="checkbox"
+                                           name="SelectedMedicationIds"
+                                           value="@Model.AllMedications[i].Id"
+                                           @(Model.AllMedications[i].IsSelected ? "checked" : "") />
+
+                                    @Model.AllMedications[i].Name
+                                </label>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-options">
+                        No medications are currently available.
+                    </div>
+                }
+
+            </div>
+
+            <div class="info-box">
+
+                <i class="fas fa-info-circle"></i>
+
+                <span>
+                    A temporary password will be generated automatically
+                    and sent to the patient's e-mail address. The patient
+                    must change the password when logging in for the first time.
+                </span>
+
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
         <div class="form-actions">
 
             <a asp-controller="Doctor"
                asp-action="ManagePatients"
-               class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
+               class="btn-cancel">
+
+                <i class="fas fa-times"></i>
                 Cancel
+
             </a>
 
             <button type="submit"
-                    class="btn btn-primary">
-                <i class="bi bi-person-plus"></i>
-                Add Patient
+                    class="btn-submit">
+
+                <i class="fas fa-user-plus"></i>
+                Register Patient
+
             </button>
 
         </div>
@@ -510,6 +842,75 @@
     </form>
 
 </div>
+
+<script>
+    // Automatically extract date of birth from a South African ID number.
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const idNumber = document.getElementById("idNumber");
+        const dateOfBirth = document.getElementById("dateOfBirth");
+        const idError = document.getElementById("idError");
+
+        if (!idNumber || !dateOfBirth) {
+            return;
+        }
+
+        idNumber.addEventListener("input", function () {
+
+            const value = this.value.trim();
+
+            if (value.length === 0) {
+                dateOfBirth.value = "";
+                idError.style.display = "none";
+                return;
+            }
+
+            if (!/^\d{13}$/.test(value)) {
+                dateOfBirth.value = "";
+
+                if (value.length === 13) {
+                    idError.style.display = "block";
+                } else {
+                    idError.style.display = "none";
+                }
+
+                return;
+            }
+
+            const yy = parseInt(value.substring(0, 2));
+            const mm = parseInt(value.substring(2, 4));
+            const dd = parseInt(value.substring(4, 6));
+
+            const currentYear = new Date().getFullYear();
+            const currentYY = currentYear % 100;
+
+            const fullYear =
+                yy > currentYY
+                    ? 1900 + yy
+                    : 2000 + yy;
+
+            const testDate = new Date(fullYear, mm - 1, dd);
+
+            if (
+                testDate.getFullYear() !== fullYear ||
+                testDate.getMonth() !== mm - 1 ||
+                testDate.getDate() !== dd
+            ) {
+                dateOfBirth.value = "";
+                idError.style.display = "block";
+                return;
+            }
+
+            const month = String(mm).padStart(2, "0");
+            const day = String(dd).padStart(2, "0");
+
+            dateOfBirth.value =
+                `${fullYear}-${month}-${day}`;
+
+            idError.style.display = "none";
+        });
+    });
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
