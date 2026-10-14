@@ -231,7 +231,7 @@ namespace HemaCore.Controllers
 
             return View(patient);
         }
-#endregion
+        #endregion
 
         #region Edit Profile
         // ---------------------------------------------------------------------
@@ -247,6 +247,25 @@ namespace HemaCore.Controllers
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
 
             if (patient == null) return RedirectToAction(nameof(CompleteProfile));
+
+            // Load categories with their items (active only, ordered alphabetically)
+            var conditionCategories = await _context.ConditionCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Conditions.Where(cond => cond.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var allergyCategories = await _context.AllergyCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Allergies.Where(a => a.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var medicationCategories = await _context.MedicationCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Medications.Where(m => m.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
             var vm = new EditPatientProfileViewModel
             {
@@ -275,17 +294,31 @@ namespace HemaCore.Controllers
                     .Where(pm => pm.PatientID == patient.PatientID)
                     .Select(pm => pm.MedicationId).ToListAsync(),
 
-                AvailableConditions = await _context.Conditions
-                    .Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync(),
-                AvailableAllergies = await _context.Allergies
-                    .Where(a => a.IsActive).OrderBy(a => a.Name).ToListAsync(),
-                AvailableMedications = await _context.Medications
-                    .Where(m => m.IsActive).OrderBy(m => m.Name).ToListAsync()
+                // Flattened lists for checkbox rendering
+                AvailableConditions = conditionCategories
+                    .SelectMany(c => c.Conditions)
+                    .OrderBy(c => c.Name)
+                    .ToList(),
+
+                AvailableAllergies = allergyCategories
+                    .SelectMany(c => c.Allergies)
+                    .OrderBy(a => a.Name)
+                    .ToList(),
+
+                AvailableMedications = medicationCategories
+                    .SelectMany(c => c.Medications)
+                    .OrderBy(m => m.Name)
+                    .ToList(),
+
+                // Categories for grouping in the view
+                ConditionCategories = conditionCategories,
+                AllergyCategories = allergyCategories,
+                MedicationCategories = medicationCategories
             };
 
             return View(vm);
         }
-#endregion
+        #endregion
 
         #region Edit Profile
         // ---------------------------------------------------------------------
@@ -626,7 +659,7 @@ namespace HemaCore.Controllers
 
         #region Consent
 
-        #region Consent
+        
 
         // ---------------------------------------------------------------------
         // Patient Consent (GET)
@@ -833,21 +866,30 @@ namespace HemaCore.Controllers
             // -------------------------------------------------------------
             selectedTestRequestIds ??= new List<int>();
 
-            var validTestRequestIds = await _context.TestRequests
-                .Where(r =>
-                    r.PatientID == patient.PatientID &&
-                    r.Status == "Completed" &&
-                    selectedTestRequestIds.Contains(r.TestRequestId))
-                .Select(r => r.TestRequestId)
-                .Distinct()
-                .ToListAsync();
+            var validTestRequestIds = new List<int>();
 
-            if (!validTestRequestIds.Any())
+            if (selectedTestRequestIds.Any())
             {
-                TempData["Error"] =
-                    "Please select at least one completed test request.";
+                validTestRequestIds = await _context.TestRequests
+                    .Where(r =>
+                        r.PatientID == patient.PatientID &&
+                        r.Status == "Completed" &&
+                        selectedTestRequestIds.Contains(r.TestRequestId))
+                    .Select(r => r.TestRequestId)
+                    .Distinct()
+                    .ToListAsync();
 
-                return RedirectToAction(nameof(Consent));
+                // If the patient submitted request IDs but none are valid,
+                // reject the request rather than silently creating consent
+                // without the requested test selections.
+                if (!validTestRequestIds.Any())
+                {
+                    TempData["Error"] =
+                        "The selected test requests are no longer available. " +
+                        "Please refresh the page and try again.";
+
+                    return RedirectToAction(nameof(Consent));
+                }
             }
 
             // -------------------------------------------------------------
@@ -1209,11 +1251,7 @@ namespace HemaCore.Controllers
         // Keep your existing RevokeConsent action here unchanged.
         // ---------------------------------------------------------------------
 
-        #endregion
-
-        // ---------------------------------------------------------------------
-        // Revoke Consent
-        // ---------------------------------------------------------------------
+        
 
         [HttpPost]
 [ValidateAntiForgeryToken]
@@ -1275,7 +1313,7 @@ public async Task<IActionResult> RevokeConsent(int consentId)
 
         #endregion
 
-        
+
         #region Reports
 
         [HttpGet]

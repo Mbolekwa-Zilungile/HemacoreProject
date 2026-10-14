@@ -11,225 +11,93 @@
 
         <!-- HEADER -->
         <div class="section-title d-flex align-items-center mb-2">
-
             <i class="fas fa-user-edit me-2"></i>
-
             <span>Edit Your Profile</span>
-
         </div>
 
         <p class="text-muted mb-4">
             Update your personal information and medical history.
         </p>
 
-
         @if (TempData["Success"] != null)
         {
             <div class="alert alert-success">
-
                 <i class="fas fa-check-circle me-2"></i>
-
                 @TempData["Success"]
-
             </div>
         }
 
-
-        <form asp-action="EditProfile"
-              method="post">
-
+        <form asp-action="EditProfile" method="post">
             @Html.AntiForgeryToken()
 
-            <div asp-validation-summary="All"
-                 class="alert alert-danger">
-            </div>
-
+            <div asp-validation-summary="All" class="alert alert-danger"></div>
 
             <!-- ACCOUNT -->
             <div class="mb-5">
-
                 <h5 class="fw-bold mb-3">
-
                     <i class="fas fa-user-lock me-2"></i>
-
                     Account Information
-
                 </h5>
-
                 <hr />
-
                 <div class="row">
-
                     <div class="col-md-12">
-
-                        <label asp-for="Email"
-                               class="form-label fw-semibold">
-
+                        <label asp-for="Email" class="form-label fw-semibold">
                             Email Address *
-
                         </label>
-
-                        <input asp-for="Email"
-                               type="email"
-                               class="form-control" />
-
-                        <span asp-validation-for="Email"
-                              class="text-danger">
-                        </span>
-
+                        <input asp-for="Email" type="email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-
                 </div>
-
             </div>
-
 
             <!-- PERSONAL -->
             <div class="mb-5">
-
                 <h5 class="fw-bold mb-3">
-
                     <i class="fas fa-user-circle me-2"></i>
-
                     Personal Information
-
                 </h5>
-
                 <hr />
-
                 <div class="row g-3">
-
                     <div class="col-md-6">
-
-                        <label asp-for="Name"
-                               class="form-label fw-semibold">
-
-                            First Name *
-
-                        </label>
-
-                        <input asp-for="Name"
-                               class="form-control" />
-
-                        <span asp-validation-for="Name"
-                              class="text-danger">
-                        </span>
-
+                        <label asp-for="Name" class="form-label fw-semibold">First Name *</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
-
                     <div class="col-md-6">
-
-                        <label asp-for="Surname"
-                               class="form-label fw-semibold">
-
-                            Last Name *
-
-                        </label>
-
-                        <input asp-for="Surname"
-                               class="form-control" />
-
-                        <span asp-validation-for="Surname"
-                              class="text-danger">
-                        </span>
-
+                        <label asp-for="Surname" class="form-label fw-semibold">Last Name *</label>
+                        <input asp-for="Surname" class="form-control" />
+                        <span asp-validation-for="Surname" class="text-danger"></span>
                     </div>
 
-
                     <div class="col-md-6">
-
-                        <label asp-for="IDNumber"
-                               class="form-label fw-semibold">
-
-                            ID Number *
-
-                        </label>
-
-                        <input asp-for="IDNumber"
-                               class="form-control" />
-
-                        <span asp-validation-for="IDNumber"
-                              class="text-danger">
-                        </span>
-
+                        <label asp-for="IDNumber" class="form-label fw-semibold">ID Number *</label>
+                        <input asp-for="IDNumber" class="form-control" />
+                        <span asp-validation-for="IDNumber" class="text-danger"></span>
                     </div>
 
-
                     <div class="col-md-6">
-
-                        <label asp-for="PhoneNumber"
-                               class="form-label fw-semibold">
-
-                            Phone Number *
-
-                        </label>
-
-                        <input asp-for="PhoneNumber"
-                               class="form-control"
-                               placeholder="+27XXXXXXXXX" />
-
-                        <span asp-validation-for="PhoneNumber"
-                              class="text-danger">
-                        </span>
-
+                        <label asp-for="PhoneNumber" class="form-label fw-semibold">Phone Number *</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+27XXXXXXXXX" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                     </div>
 
-
                     <div class="col-md-6">
-
-                        <label asp-for="DateOfBirth"
-                               class="form-label fw-semibold">
-
-                            Date of Birth
-
-                        </label>
-
-                        <input asp-for="DateOfBirth"
-                               type="date"
-                               class="form-control" />
-
+                        <label asp-for="DateOfBirth" class="form-label fw-semibold">Date of Birth</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
                     </div>
 
-
                     <div class="col-md-6">
-
-                        <label asp-for="Gender"
-                               class="form-label fw-semibold">
-
-                            Gender *
-
-                        </label>
-
-                        <select asp-for="Gender"
-                                class="form-select">
-
-                            <option value="">
-                                Select Gender
-                            </option>
-
-                            <option value="Male">
-                                Male
-                            </option>
-
-                            <option value="Female">
-                                Female
-                            </option>
-
-                            <option value="Other">
-                                Other
-                            </option>
-
-                            <option value="Prefer not to say">
-                                Prefer not to say
-                            </option>
-
+                        <label asp-for="Gender" class="form-label fw-semibold">Gender *</label>
+                        <select asp-for="Gender" class="form-select">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
                         </select>
-
                     </div>
 
-
-                    
                     <!-- RESIDENTIAL ADDRESS -->
                     <div class="col-12 mt-3">
                         <h6 class="fw-bold mb-3">
@@ -240,39 +108,25 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="StreetAddress" class="form-label fw-semibold">
-                            Street Address *
-                        </label>
-                        <input asp-for="StreetAddress"
-                               class="form-control"
-                               placeholder="Enter your street address" />
+                        <label asp-for="StreetAddress" class="form-label fw-semibold">Street Address *</label>
+                        <input asp-for="StreetAddress" class="form-control" placeholder="Enter your street address" />
                         <span asp-validation-for="StreetAddress" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Suburb" class="form-label fw-semibold">
-                            Suburb *
-                        </label>
-                        <input asp-for="Suburb"
-                               class="form-control"
-                               placeholder="Enter your suburb" />
+                        <label asp-for="Suburb" class="form-label fw-semibold">Suburb *</label>
+                        <input asp-for="Suburb" class="form-control" placeholder="Enter your suburb" />
                         <span asp-validation-for="Suburb" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="City" class="form-label fw-semibold">
-                            City *
-                        </label>
-                        <input asp-for="City"
-                               class="form-control"
-                               placeholder="Enter your city" />
+                        <label asp-for="City" class="form-label fw-semibold">City *</label>
+                        <input asp-for="City" class="form-control" placeholder="Enter your city" />
                         <span asp-validation-for="City" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Province" class="form-label fw-semibold">
-                            Province *
-                        </label>
+                        <label asp-for="Province" class="form-label fw-semibold">Province *</label>
                         <select asp-for="Province" class="form-select">
                             <option value="">-- Select Province --</option>
                             <option value="Eastern Cape">Eastern Cape</option>
@@ -289,472 +143,364 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="PostalCode" class="form-label fw-semibold">
-                            Postal Code *
-                        </label>
-                        <input asp-for="PostalCode"
-                               class="form-control"
-                               placeholder="Enter 4-digit postal code"
-                               maxlength="4" />
+                        <label asp-for="PostalCode" class="form-label fw-semibold">Postal Code *</label>
+                        <input asp-for="PostalCode" class="form-control" placeholder="Enter 4-digit postal code" maxlength="4" />
                         <span asp-validation-for="PostalCode" class="text-danger"></span>
                     </div>
-                   
-
                 </div>
-
             </div>
-
 
             <!-- CONDITIONS -->
             <div class="mb-5">
-
                 <h5 class="fw-bold mb-3">
-
                     <i class="fas fa-notes-medical me-2"></i>
-
                     Medical Conditions
-
                 </h5>
-
                 <hr />
-
                 <div class="row g-4">
-
                     <div class="col-md-7">
-
                         <div class="border rounded p-3">
-
-                            <input type="text"
-                                   id="conditionSearch"
-                                   class="form-control mb-3"
-                                   placeholder="Search conditions..."
-                                   onkeyup="filterOptions('condition')" />
-
-                            <div id="conditionsList"
-                                 style="max-height:250px; overflow-y:auto;">
-
-                                @foreach (var c in Model.AvailableConditions)
-                                {
-                                    var isChecked =
-                                    Model.SelectedConditionIds.Contains(c.Id);
-
-                                    <div class="option-item d-flex align-items-center gap-2 p-2"
-                                         data-name="@c.Name.ToLower()">
-
-                                        <input type="checkbox"
-                                               name="SelectedConditionIds"
-                                               value="@c.Id"
-                                               id="cond_@c.Id"
-                                               class="form-check-input"
-                                        @(isChecked ? "checked" : "") />
-
-                                        <label for="cond_@c.Id"
-                                               class="form-check-label">
-
-                                            @c.Name
-
-                                        </label>
-
-                                    </div>
-                                }
-
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-transparent">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text"
+                                       id="conditionSearch"
+                                       class="form-control"
+                                       placeholder="Search conditions..."
+                                       onkeyup="filterOptions('condition')" />
                             </div>
 
+                            <div id="conditionsList" style="max-height:300px; overflow-y:auto;">
+                                @if (Model.ConditionCategories.Any())
+                                {
+                                    foreach (var category in Model.ConditionCategories.OrderBy(c => c.Name))
+                                    {
+                                        var categoryConditions = category.Conditions
+                                            .Where(c => c.IsActive)
+                                            .OrderBy(c => c.Name)
+                                            .ToList();
+
+                                        if (categoryConditions.Any())
+                                        {
+                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
+                                                    <i class="fas fa-folder me-1"></i>
+                                                    @category.Name
+                                                </div>
+                                                @foreach (var c in categoryConditions)
+                                                {
+                                                    var isChecked = Model.SelectedConditionIds.Contains(c.Id);
+                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                         data-name="@c.Name.ToLower()"
+                                                         data-category="@category.Name.ToLower()">
+                                                        <input type="checkbox"
+                                                               name="SelectedConditionIds"
+                                                               value="@c.Id"
+                                                               id="cond_@c.Id"
+                                                               class="form-check-input"
+                                                        @(isChecked ? "checked" : "") />
+                                                        <label for="cond_@c.Id" class="form-check-label">
+                                                            @c.Name
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted text-center py-3">No conditions available.</p>
+                                }
+                            </div>
                         </div>
-
                     </div>
-
 
                     <div class="col-md-5">
-
                         <div class="border rounded p-3 h-100">
-
                             <h6 class="fw-bold">
-
                                 <i class="fas fa-check-circle me-2"></i>
-
                                 Selected Conditions
-
                             </h6>
-
                             <hr />
-
                             <div id="selectedConditionsList"></div>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
 
             <!-- ALLERGIES -->
             <div class="mb-5">
-
                 <h5 class="fw-bold mb-3">
-
                     <i class="fas fa-allergies me-2"></i>
-
                     Allergies
-
                 </h5>
-
                 <hr />
-
                 <div class="row g-4">
-
                     <div class="col-md-7">
-
                         <div class="border rounded p-3">
-
-                            <input type="text"
-                                   id="allergySearch"
-                                   class="form-control mb-3"
-                                   placeholder="Search allergies..."
-                                   onkeyup="filterOptions('allergy')" />
-
-                            <div id="allergiesList"
-                                 style="max-height:250px; overflow-y:auto;">
-
-                                @foreach (var a in Model.AvailableAllergies)
-                                {
-                                    var isChecked =
-                                    Model.SelectedAllergyIds.Contains(a.Id);
-
-                                    <div class="option-item d-flex align-items-center gap-2 p-2"
-                                         data-name="@a.Name.ToLower()">
-
-                                        <input type="checkbox"
-                                               name="SelectedAllergyIds"
-                                               value="@a.Id"
-                                               id="all_@a.Id"
-                                               class="form-check-input"
-                                        @(isChecked ? "checked" : "") />
-
-                                        <label for="all_@a.Id"
-                                               class="form-check-label">
-
-                                            @a.Name
-
-                                        </label>
-
-                                    </div>
-                                }
-
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-transparent">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text"
+                                       id="allergySearch"
+                                       class="form-control"
+                                       placeholder="Search allergies..."
+                                       onkeyup="filterOptions('allergy')" />
                             </div>
 
+                            <div id="allergiesList" style="max-height:300px; overflow-y:auto;">
+                                @if (Model.AllergyCategories.Any())
+                                {
+                                    foreach (var category in Model.AllergyCategories.OrderBy(c => c.Name))
+                                    {
+                                        var categoryAllergies = category.Allergies
+                                            .Where(a => a.IsActive)
+                                            .OrderBy(a => a.Name)
+                                            .ToList();
+
+                                        if (categoryAllergies.Any())
+                                        {
+                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
+                                                    <i class="fas fa-folder me-1"></i>
+                                                    @category.Name
+                                                </div>
+                                                @foreach (var a in categoryAllergies)
+                                                {
+                                                    var isChecked = Model.SelectedAllergyIds.Contains(a.Id);
+                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                         data-name="@a.Name.ToLower()"
+                                                         data-category="@category.Name.ToLower()">
+                                                        <input type="checkbox"
+                                                               name="SelectedAllergyIds"
+                                                               value="@a.Id"
+                                                               id="all_@a.Id"
+                                                               class="form-check-input"
+                                                        @(isChecked ? "checked" : "") />
+                                                        <label for="all_@a.Id" class="form-check-label">
+                                                            @a.Name
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted text-center py-3">No allergies available.</p>
+                                }
+                            </div>
                         </div>
-
                     </div>
-
 
                     <div class="col-md-5">
-
                         <div class="border rounded p-3 h-100">
-
                             <h6 class="fw-bold">
-
                                 <i class="fas fa-check-circle me-2"></i>
-
                                 Selected Allergies
-
                             </h6>
-
                             <hr />
-
                             <div id="selectedAllergiesList"></div>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
 
             <!-- MEDICATIONS -->
             <div class="mb-5">
-
                 <h5 class="fw-bold mb-3">
-
                     <i class="fas fa-pills me-2"></i>
-
                     Medications
-
                 </h5>
-
                 <hr />
-
                 <div class="row g-4">
-
                     <div class="col-md-7">
-
                         <div class="border rounded p-3">
-
-                            <input type="text"
-                                   id="medicationSearch"
-                                   class="form-control mb-3"
-                                   placeholder="Search medications..."
-                                   onkeyup="filterOptions('medication')" />
-
-                            <div id="medicationsList"
-                                 style="max-height:250px; overflow-y:auto;">
-
-                                @foreach (var m in Model.AvailableMedications)
-                                {
-                                    var isChecked =
-                                    Model.SelectedMedicationIds.Contains(m.Id);
-
-                                    <div class="option-item d-flex align-items-center gap-2 p-2"
-                                         data-name="@m.Name.ToLower()">
-
-                                        <input type="checkbox"
-                                               name="SelectedMedicationIds"
-                                               value="@m.Id"
-                                               id="med_@m.Id"
-                                               class="form-check-input"
-                                        @(isChecked ? "checked" : "") />
-
-                                        <label for="med_@m.Id"
-                                               class="form-check-label">
-
-                                            @m.Name
-
-                                        </label>
-
-                                    </div>
-                                }
-
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-transparent">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text"
+                                       id="medicationSearch"
+                                       class="form-control"
+                                       placeholder="Search medications..."
+                                       onkeyup="filterOptions('medication')" />
                             </div>
 
+                            <div id="medicationsList" style="max-height:300px; overflow-y:auto;">
+                                @if (Model.MedicationCategories.Any())
+                                {
+                                    foreach (var category in Model.MedicationCategories.OrderBy(c => c.Name))
+                                    {
+                                        var categoryMedications = category.Medications
+                                            .Where(m => m.IsActive)
+                                            .OrderBy(m => m.Name)
+                                            .ToList();
+
+                                        if (categoryMedications.Any())
+                                        {
+                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
+                                                    <i class="fas fa-folder me-1"></i>
+                                                    @category.Name
+                                                </div>
+                                                @foreach (var m in categoryMedications)
+                                                {
+                                                    var isChecked = Model.SelectedMedicationIds.Contains(m.Id);
+                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                         data-name="@m.Name.ToLower()"
+                                                         data-category="@category.Name.ToLower()">
+                                                        <input type="checkbox"
+                                                               name="SelectedMedicationIds"
+                                                               value="@m.Id"
+                                                               id="med_@m.Id"
+                                                               class="form-check-input"
+                                                        @(isChecked ? "checked" : "") />
+                                                        <label for="med_@m.Id" class="form-check-label">
+                                                            @m.Name
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted text-center py-3">No medications available.</p>
+                                }
+                            </div>
                         </div>
-
                     </div>
-
 
                     <div class="col-md-5">
-
                         <div class="border rounded p-3 h-100">
-
                             <h6 class="fw-bold">
-
                                 <i class="fas fa-check-circle me-2"></i>
-
                                 Selected Medications
-
                             </h6>
-
                             <hr />
-
                             <div id="selectedMedicationsList"></div>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
 
             <!-- ACTIONS -->
             <div class="d-flex justify-content-end gap-2">
-
-                <a asp-controller="Patient"
-                   asp-action="Dashboard"
-                   class="btn btn-secondary">
-
+                <a asp-controller="Patient" asp-action="Dashboard" class="btn btn-secondary">
                     <i class="fas fa-times me-2"></i>
-
                     Cancel
-
                 </a>
-
-                <button type="submit"
-                        class="btn btn-primary-custom">
-
+                <button type="submit" class="btn btn-primary-custom">
                     <i class="fas fa-save me-2"></i>
-
                     Save Changes
-
                 </button>
-
             </div>
-
         </form>
-
     </div>
-
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 
-<script>
+    <script>
+        // Filter options within a list (searches both item name and category name)
+        function filterOptions(type) {
+            const inputId = type === 'condition' ? 'conditionSearch'
+                          : type === 'allergy' ? 'allergySearch'
+                          : 'medicationSearch';
 
-    function filterOptions(type) {
+            const listId = type === 'condition' ? 'conditionsList'
+                         : type === 'allergy' ? 'allergiesList'
+                         : 'medicationsList';
 
-        const inputId =
-            type === 'condition'
-                ? 'conditionSearch'
-                : type === 'allergy'
-                    ? 'allergySearch'
-                    : 'medicationSearch';
+            const term = document.getElementById(inputId).value.toLowerCase().trim();
+            const groups = document.querySelectorAll('#' + listId + ' .category-group');
 
-        const listId =
-            type === 'condition'
-                ? 'conditionsList'
-                : type === 'allergy'
-                    ? 'allergiesList'
-                    : 'medicationsList';
+            groups.forEach(group => {
+                let visibleItems = 0;
+                const items = group.querySelectorAll('.option-item');
+                const categoryName = group.getAttribute('data-category') || '';
 
-        const term =
-            document.getElementById(inputId).value.toLowerCase();
-
-        document
-            .querySelectorAll('#' + listId + ' .option-item')
-            .forEach(item => {
-
-                const name =
-                    item.getAttribute('data-name') || '';
-
-                item.style.display =
-                    name.includes(term)
-                        ? 'flex'
-                        : 'none';
-
-            });
-
-    }
-
-
-    function initSelectedBadges() {
-
-        const mappings = [
-
-            {
-                checkboxes: 'input[name="SelectedConditionIds"]',
-                container: 'selectedConditionsList',
-                empty: 'No conditions selected'
-            },
-
-            {
-                checkboxes: 'input[name="SelectedAllergyIds"]',
-                container: 'selectedAllergiesList',
-                empty: 'No allergies selected'
-            },
-
-            {
-                checkboxes: 'input[name="SelectedMedicationIds"]',
-                container: 'selectedMedicationsList',
-                empty: 'No medications selected'
-            }
-
-        ];
-
-
-        mappings.forEach(map => {
-
-            document
-                .querySelectorAll(map.checkboxes)
-                .forEach(cb => {
-
-                    cb.addEventListener(
-                        'change',
-                        () => renderBadges(map)
-                    );
-
+                items.forEach(item => {
+                    const name = item.getAttribute('data-name') || '';
+                    // Match against item name OR category name
+                    const matches = term === '' || name.includes(term) || categoryName.includes(term);
+                    item.style.display = matches ? 'flex' : 'none';
+                    if (matches) visibleItems++;
                 });
 
-            renderBadges(map);
-
-        });
-
-    }
-
-
-    function renderBadges(map) {
-
-        const container =
-            document.getElementById(map.container);
-
-        const checked =
-            Array.from(
-                document.querySelectorAll(map.checkboxes)
-            ).filter(cb => cb.checked);
-
-
-        if (checked.length === 0) {
-
-            container.innerHTML =
-                `<div class="text-muted small">
-                    ${map.empty}
-                </div>`;
-
-            return;
-
+                // Show/hide the category header based on whether any items match
+                group.style.display = visibleItems > 0 ? 'block' : 'none';
+            });
         }
 
+        // Initialize selected badges
+        function initSelectedBadges() {
+            const mappings = [
+                {
+                    checkboxes: 'input[name="SelectedConditionIds"]',
+                    container: 'selectedConditionsList',
+                    empty: 'No conditions selected'
+                },
+                {
+                    checkboxes: 'input[name="SelectedAllergyIds"]',
+                    container: 'selectedAllergiesList',
+                    empty: 'No allergies selected'
+                },
+                {
+                    checkboxes: 'input[name="SelectedMedicationIds"]',
+                    container: 'selectedMedicationsList',
+                    empty: 'No medications selected'
+                }
+            ];
 
-        container.innerHTML =
-            checked.map(cb => {
+            mappings.forEach(map => {
+                document.querySelectorAll(map.checkboxes).forEach(cb => {
+                    cb.addEventListener('change', () => renderBadges(map));
+                });
+                renderBadges(map);
+            });
+        }
 
-                const label =
-                    document.querySelector(
-                        `label[for="${cb.id}"]`
-                    ).innerText;
+        function renderBadges(map) {
+            const container = document.getElementById(map.container);
+            const checked = Array.from(document.querySelectorAll(map.checkboxes))
+                .filter(cb => cb.checked);
 
+            if (checked.length === 0) {
+                container.innerHTML = `<div class="text-muted small">${map.empty}</div>`;
+                return;
+            }
 
+            container.innerHTML = checked.map(cb => {
+                const label = document.querySelector(`label[for="${cb.id}"]`).innerText;
                 return `
                     <span class="badge bg-primary me-1 mb-1">
                         ${label}
-
-                        <button
-                            type="button"
-                            class="btn btn-sm text-white p-0 ms-1"
-                            onclick="uncheckById('${cb.id}')">
-
+                        <button type="button"
+                                class="btn btn-sm text-white p-0 ms-1"
+                                onclick="uncheckById('${cb.id}')">
                             ×
-
                         </button>
-
                     </span>
                 `;
-
             }).join('');
-
-    }
-
-
-    function uncheckById(id) {
-
-        const cb =
-            document.getElementById(id);
-
-        if (cb) {
-
-            cb.checked = false;
-
-            cb.dispatchEvent(
-                new Event('change')
-            );
-
         }
 
-    }
+        function uncheckById(id) {
+            const cb = document.getElementById(id);
+            if (cb) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change'));
+            }
+        }
 
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        initSelectedBadges
-    );
-
-</script>
-
-
-@section Scripts {
-
-    <partial name="_ValidationScriptsPartial" />
-
+        document.addEventListener('DOMContentLoaded', initSelectedBadges);
+    </script>
 }

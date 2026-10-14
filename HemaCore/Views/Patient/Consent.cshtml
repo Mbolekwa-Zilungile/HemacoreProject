@@ -211,7 +211,6 @@
 
                     <!-- INFORMATION TO SHARE -->
                     <div class="share-heading">
-
                         <div>
                             <h3>
                                 <i class="fas fa-file-medical"></i>
@@ -219,11 +218,11 @@
                             </h3>
 
                             <p>
-                                Select one or more completed test requests that
-                                the selected doctor may access.
+                                Select completed test requests to share with the doctor,
+                                or leave them unselected to grant consent without
+                                specifying test requests.
                             </p>
                         </div>
-
                     </div>
 
                     <!-- COMPLETED TEST REQUESTS -->
@@ -314,6 +313,7 @@
 
                                 <span>
                                     You have no completed test requests available to share.
+                                    You can still grant consent to your selected doctor.
                                 </span>
                             </div>
                         }
@@ -322,7 +322,6 @@
 
                     <!-- PRIVACY NOTICE -->
                     <div class="privacy-notice">
-
                         <div class="privacy-icon">
                             <i class="fas fa-lock"></i>
                         </div>
@@ -333,27 +332,24 @@
                             </strong>
 
                             <p>
-                                Only the completed test requests you select will be
-                                included in this consent. Access automatically expires
-                                at the selected time. You can revoke active consent
+                                You can grant consent even if you have no completed
+                                test requests. If you select test requests, only those
+                                selected requests are linked to this consent. Consent
+                                expires at the selected time, and you can revoke it
                                 whenever you choose.
                             </p>
                         </div>
-
                     </div>
 
                     <!-- SUBMIT -->
                     <div class="consent-submit">
-
                         <button type="submit"
                                 class="grant-button"
-                            @((doctors.Any() && completedTestRequests.Any()) ? "" : "disabled")>
+                                disabled="@(!doctors.Any())">
 
                             <i class="fas fa-check"></i>
                             Grant Consent
-
                         </button>
-
                     </div>
 
                 </form>
