@@ -144,6 +144,10 @@ namespace HemaCore.Data
         public DbSet<Consent> Consents
             => Set<Consent>();
 
+        public DbSet<ConsentRequest> ConsentRequests
+            => Set<ConsentRequest>();
+
+
         public DbSet<ConsentTestRequest> ConsentTestAccesses
             => Set<ConsentTestRequest>();
 
@@ -398,6 +402,37 @@ namespace HemaCore.Data
                 .WithMany()
                 .HasForeignKey(h => h.LabTechnicianId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // =====================================================
+            // ConsentRequest - Patient
+            // =====================================================
+
+            modelbuilder.Entity<ConsentRequest>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientID)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // =====================================================
+            // ConsentRequest - Doctor
+            // =====================================================
+
+            modelbuilder.Entity<ConsentRequest>()
+                .HasOne(r => r.Doctor)
+                .WithMany()
+                .HasForeignKey(r => r.DoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Prevent duplicate pending requests for the same
+            // patient and doctor.
+            modelbuilder.Entity<ConsentRequest>()
+                .HasIndex(r => new
+                {
+                    r.PatientID,
+                    r.DoctorId,
+                    r.Status
+                });
+
         }
 
     }

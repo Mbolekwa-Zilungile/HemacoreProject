@@ -132,9 +132,16 @@ namespace HemaCore.Controllers
 
         private async Task<List<string>> GetMyConsentedUserIdsAsync(int doctorId)
         {
+            var now = DateTime.UtcNow;
+
             return await _context.Consents
-                .Where(c => c.DoctorId == doctorId && c.IsActive)
+                .Where(c =>
+                    c.DoctorId == doctorId &&
+                    c.IsActive &&
+                    c.RevokedAt == null &&
+                    (c.ExpiresAt == null || c.ExpiresAt > now))
                 .Select(c => c.PatientID)
+                .Distinct()
                 .ToListAsync();
         }
 
@@ -142,11 +149,14 @@ namespace HemaCore.Controllers
             int doctorId,
             string patientUserId)
         {
-            return await _context.Consents
-                .AnyAsync(c =>
-                    c.DoctorId == doctorId &&
-                    c.PatientID == patientUserId &&
-                    c.IsActive);
+            var now = DateTime.UtcNow;
+
+            return await _context.Consents.AnyAsync(c =>
+                c.DoctorId == doctorId &&
+                c.PatientID == patientUserId &&
+                c.IsActive &&
+                c.RevokedAt == null &&
+                (c.ExpiresAt == null || c.ExpiresAt > now));
         }
 
         private string GeneratePatientPassword()
@@ -273,6 +283,7 @@ namespace HemaCore.Controllers
 
         #region Create Test Request
 
+
         [HttpGet]
         public async Task<IActionResult> CreateTestRequest(int? patientId = null)
         {
@@ -291,16 +302,20 @@ namespace HemaCore.Controllers
                     .FirstOrDefaultAsync(p => p.PatientID == patientId.Value);
 
                 if (patient == null)
-                    return NotFound();
-
-                if (!await IsPatientConsentedAsync(
-                        doctor.DoctorId,
-                        patient.UserId))
                 {
-                    return Forbid();
+                    TempData["Error"] = "The selected patient could not be found.";
+                    return RedirectToAction(nameof(ManagePatients));
                 }
 
-                model.PatientId = patientId.Value;
+                if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
+                {
+                    TempData["Error"] =
+                        "You do not have active consent for this patient. Please request consent before creating a test request.";
+
+                    return RedirectToAction(nameof(ManagePatients));
+                }
+
+                model.PatientId = patient.PatientID;
             }
 
             return View(model);
@@ -321,18 +336,16 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                ModelState.AddModelError(
-                    nameof(model.PatientId),
-                    "Please select a valid patient.");
+                TempData["Error"] = "The selected patient could not be found.";
+                return RedirectToAction(nameof(ManagePatients));
             }
-            else
+
+            if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
             {
-                if (!await IsPatientConsentedAsync(
-                        doctor.DoctorId,
-                        patient.UserId))
-                {
-                    return Forbid();
-                }
+                TempData["Error"] =
+                    "You do not have active consent for this patient. Please request consent before creating a test request.";
+
+                return RedirectToAction(nameof(ManagePatients));
             }
 
             if (model.SelectedTestTypeIds == null ||
@@ -344,8 +357,7 @@ namespace HemaCore.Controllers
             }
 
             if (model.BarcodeNumbers == null ||
-                !model.BarcodeNumbers.Any(
-                    b => !string.IsNullOrWhiteSpace(b)))
+                !model.BarcodeNumbers.Any(b => !string.IsNullOrWhiteSpace(b)))
             {
                 ModelState.AddModelError(
                     "",
@@ -377,56 +389,53 @@ namespace HemaCore.Controllers
                         Status = "Submitted"
                     });
             }
+
             for (int i = 0; i < model.BarcodeNumbers.Count; i++)
             {
-                if (!string.IsNullOrWhiteSpace(model.BarcodeNumbers[i]))
+                if (string.IsNullOrWhiteSpace(model.BarcodeNumbers[i]))
+                    continue;
+
+                int sampleTypeId =
+                    model.SampleTypeIds != null &&
+                    i < model.SampleTypeIds.Count &&
+                    model.SampleTypeIds[i].HasValue
+                        ? model.SampleTypeIds[i]!.Value
+                        : 0;
+
+                if (sampleTypeId == 0)
                 {
-                    int sampleTypeId =
-                        model.SampleTypeIds != null &&
-                        i < model.SampleTypeIds.Count &&
-                        model.SampleTypeIds[i].HasValue
-                            ? model.SampleTypeIds[i]!.Value
-                            : 0;
+                    ModelState.AddModelError(
+                        "",
+                        "Please select a sample type for every sample you have added.");
 
-                    if (sampleTypeId == 0)
-                    {
-                        ModelState.AddModelError(
-                            "",
-                            "Please select a sample type for every sample you've added.");
-                        continue;
-                    }
-
-                    newRequest.Samples.Add(
-                        new Sample
-                        {
-                            Barcode = model.BarcodeNumbers[i],
-                            SampleTypeId = sampleTypeId
-                        });
+                    continue;
                 }
+
+                newRequest.Samples.Add(
+                    new Sample
+                    {
+                        Barcode = model.BarcodeNumbers[i],
+                        SampleTypeId = sampleTypeId
+                    });
             }
+
             if (!ModelState.IsValid)
             {
                 await LoadCreateTestRequestOptionsAsync(model);
                 return View(model);
             }
+
             _context.TestRequests.Add(newRequest);
 
             await _context.SaveChangesAsync();
 
-            // TODO:
-            // Add patient notification email when the
-            // appropriate IEmailService method is available.
-
-            TempData["Success"] =
-                "Test request submitted successfully.";
+            TempData["Success"] = "Test request submitted successfully.";
 
             return RedirectToAction(
                 nameof(RequestStatus),
-                new
-                {
-                    id = newRequest.TestRequestId
-                });
+                new { id = newRequest.TestRequestId });
         }
+
 
         #endregion
 
@@ -656,6 +665,7 @@ namespace HemaCore.Controllers
 
         #region Manage Patients
 
+
         [HttpGet]
         public async Task<IActionResult> ManagePatients()
         {
@@ -664,116 +674,256 @@ namespace HemaCore.Controllers
             if (doctor == null)
                 return Unauthorized();
 
-            var consentedUserIds =
-                await GetMyConsentedUserIdsAsync(
-                    doctor.DoctorId);
-
+            // Load ALL registered patients, regardless of consent.
             var patients = await _context.Patients
-                .Where(p =>
-                    consentedUserIds.Contains(p.UserId))
+                .AsNoTracking()
                 .OrderBy(p => p.Surname)
+                .ThenBy(p => p.Name)
                 .ToListAsync();
 
-            var patientIds =
-                patients.Select(p => p.PatientID).ToList();
+            var patientIds = patients
+                .Select(p => p.PatientID)
+                .ToList();
 
-            var userIds =
-                patients.Select(p => p.UserId).ToList();
+            var userIds = patients
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToList();
 
+            // Get email addresses for registered patients.
             var emails = await _context.Users
+                .AsNoTracking()
                 .Where(u => userIds.Contains(u.Id))
-                .ToDictionaryAsync(
-                    u => u.Id,
-                    u => u.Email);
+                .ToDictionaryAsync(u => u.Id, u => u.Email);
 
+            // Count test requests belonging to this doctor.
             var requestCounts = await _context.TestRequests
-     .Where(r =>
-         r.DoctorId == doctor.DoctorId &&
-         patientIds.Contains(r.PatientID))
-
-                 .GroupBy(r => r.PatientID)
-
+                .AsNoTracking()
+                .Where(r =>
+                    r.DoctorId == doctor.DoctorId &&
+                    patientIds.Contains(r.PatientID))
+                .GroupBy(r => r.PatientID)
                 .Select(g => new
                 {
                     PatientId = g.Key,
                     Count = g.Count()
                 })
+                .ToDictionaryAsync(x => x.PatientId, x => x.Count);
 
-                .ToDictionaryAsync(
-                    x => x.PatientId,
-                    x => x.Count);
+            // Determine which patients have active consent for this doctor.
+            var now = DateTime.UtcNow;
+
+            var consentedUserIds = await _context.Consents
+                .AsNoTracking()
+                .Where(c =>
+                    c.DoctorId == doctor.DoctorId &&
+                    c.IsActive &&
+                    c.RevokedAt == null &&
+                    (c.ExpiresAt == null || c.ExpiresAt > now))
+                .Select(c => c.PatientID)
+                .Distinct()
+                .ToListAsync();
+
+            // Only retrieve medical history for patients with valid consent.
+            var consentedPatientIds = patients
+                .Where(p => consentedUserIds.Contains(p.UserId))
+                .Select(p => p.PatientID)
+                .ToList();
 
             var conditions = await _context.PatientConditions
-                .Where(pc =>
-                    patientIds.Contains(pc.PatientID))
+                .AsNoTracking()
+                .Where(pc => consentedPatientIds.Contains(pc.PatientID))
                 .Include(pc => pc.Condition)
                 .ToListAsync();
 
             var allergies = await _context.PatientAllergies
-                .Where(pa =>
-                    patientIds.Contains(pa.PatientID))
+                .AsNoTracking()
+                .Where(pa => consentedPatientIds.Contains(pa.PatientID))
                 .Include(pa => pa.Allergy)
                 .ToListAsync();
 
             var medications = await _context.PatientMedications
-                .Where(pm =>
-                    patientIds.Contains(pm.PatientID))
+                .AsNoTracking()
+                .Where(pm => consentedPatientIds.Contains(pm.PatientID))
                 .Include(pm => pm.Medication)
                 .ToListAsync();
 
             var model = patients
-                .Select(p => new PatientListItemViewModel
+                .Select(p =>
                 {
-                    PatientId = p.PatientID,
+                    bool hasConsent = consentedUserIds.Contains(p.UserId);
 
-                    FullName =
-                        p.Name + " " + p.Surname,
+                    return new PatientListItemViewModel
+                    {
+                        PatientId = p.PatientID,
 
-                    IDNumber = p.IDNumber,
+                        FullName = p.Name + " " + p.Surname,
 
-                    PhoneNumber = p.PhoneNumber,
+                        IDNumber = p.IDNumber,
 
-                    Email =
-                        emails.ContainsKey(p.UserId)
-                            ? emails[p.UserId]
+                        PhoneNumber = p.PhoneNumber,
+
+                        Email = emails.TryGetValue(p.UserId, out var email)
+                            ? email ?? ""
                             : "",
 
-                    RequestCount =
-                        requestCounts.ContainsKey(
-                            p.PatientID)
-                            ? requestCounts[p.PatientID]
+                        RequestCount = requestCounts.TryGetValue(
+                            p.PatientID, out var count)
+                            ? count
                             : 0,
 
-                    Conditions =
-                        conditions
-                            .Where(c =>
-                                c.PatientID ==
-                                p.PatientID)
-                            .Select(c =>
-                                c.Condition.Name)
-                            .ToList(),
+                        // Do not expose medical history without active consent.
+                        Conditions = hasConsent
+                            ? conditions
+                                .Where(c => c.PatientID == p.PatientID)
+                                .Select(c => c.Condition.Name)
+                                .ToList()
+                            : new List<string>(),
 
-                    Allergies =
-                        allergies
-                            .Where(a =>
-                                a.PatientID ==
-                                p.PatientID)
-                            .Select(a =>
-                                a.Allergy.Name)
-                            .ToList(),
+                        Allergies = hasConsent
+                            ? allergies
+                                .Where(a => a.PatientID == p.PatientID)
+                                .Select(a => a.Allergy.Name)
+                                .ToList()
+                            : new List<string>(),
 
-                    Medications =
-                        medications
-                            .Where(m =>
-                                m.PatientID ==
-                                p.PatientID)
-                            .Select(m =>
-                                m.Medication.Name)
-                            .ToList()
+                        Medications = hasConsent
+                            ? medications
+                                .Where(m => m.PatientID == p.PatientID)
+                                .Select(m => m.Medication.Name)
+                                .ToList()
+                            : new List<string>()
+                    };
                 })
                 .ToList();
 
+            // Make consent information available to the view.
+            ViewBag.ConsentedUserIds = consentedUserIds;
+
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchPatientById(string? idNumber)
+        {
+            var doctor = await GetCurrentDoctorAsync();
+
+            if (doctor == null)
+                return Unauthorized();
+
+            // Require exactly 13 digits.
+            if (string.IsNullOrWhiteSpace(idNumber) ||
+                idNumber.Length != 13 ||
+                !idNumber.All(char.IsDigit))
+            {
+                return BadRequest(new
+                {
+                    found = false,
+                    hasConsent = false,
+                    message = "Please enter the full 13-digit ID number."
+                });
+            }
+
+            // Search all patients, not only the doctor's consented list.
+            var patient = await _context.Patients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.IDNumber == idNumber);
+
+            if (patient == null)
+            {
+                return NotFound(new
+                {
+                    found = false,
+                    hasConsent = false,
+                    message = "No patient was found with this ID number."
+                });
+            }
+
+            // Check consent separately. Finding a patient never grants consent.
+            var hasConsent = await _context.Consents
+                .AnyAsync(c =>
+                    c.DoctorId == doctor.DoctorId &&
+                    c.PatientID == patient.UserId &&
+                    c.IsActive &&
+                    c.RevokedAt == null &&
+                    (c.ExpiresAt == null ||
+                     c.ExpiresAt > DateTime.UtcNow));
+            if (!hasConsent)
+            {
+                return Ok(new
+                {
+                    found = true,
+                    hasConsent = false,
+                    patientId = patient.PatientID,
+                    message = "You do not have active consent for this patient. Please request consent from the patient."
+                });
+            }
+            return Ok(new
+            {
+                found = true,
+                hasConsent = true,
+                patientId = patient.PatientID,
+                message = "Active consent confirmed. You may access this patient's records according to your permissions."
+            });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestConsent(int patientId)
+        {
+            var doctor = await GetCurrentDoctorAsync();
+
+            if (doctor == null)
+                return Unauthorized();
+
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientID == patientId);
+
+            if (patient == null)
+            {
+                TempData["Error"] = "No patient was found.";
+                return RedirectToAction(nameof(ManagePatients));
+            }
+
+            // Do not request consent if valid consent already exists.
+            if (await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
+            {
+                TempData["Error"] =
+                    "This patient has already granted you active consent.";
+
+                return RedirectToAction(nameof(ManagePatients));
+            }
+
+            // Prevent multiple pending requests for the same patient and doctor.
+            var pendingRequest = await _context.ConsentRequests
+                .AnyAsync(r =>
+                    r.PatientID == patient.UserId &&
+                    r.DoctorId == doctor.DoctorId &&
+                    r.Status == "Pending");
+
+            if (pendingRequest)
+            {
+                TempData["Error"] =
+                    "You already have a pending consent request for this patient.";
+
+                return RedirectToAction(nameof(ManagePatients));
+            }
+
+            var request = new ConsentRequest
+            {
+                PatientID = patient.UserId,
+                DoctorId = doctor.DoctorId,
+                RequestedAt = DateTime.UtcNow,
+                Status = "Pending"
+            };
+
+            _context.ConsentRequests.Add(request);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                "Consent request sent to the patient. They must approve it before you can access their records.";
+
+            return RedirectToAction(nameof(ManagePatients));
         }
 
         [HttpGet]
@@ -785,36 +935,36 @@ namespace HemaCore.Controllers
                 return Unauthorized();
 
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(
-                    p => p.PatientID == id);
+                .FirstOrDefaultAsync(p => p.PatientID == id);
 
             if (patient == null)
-                return NotFound();
-
-            if (!await IsPatientConsentedAsync(
-                    doctor.DoctorId,
-                    patient.UserId))
             {
-                return Forbid();
+                TempData["Error"] = "The selected patient could not be found.";
+                return RedirectToAction(nameof(ManagePatients));
+            }
+
+            if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
+            {
+                TempData["Error"] =
+                    "You do not have active consent for this patient. Please request consent before viewing their medical history.";
+
+                return RedirectToAction(nameof(ManagePatients));
             }
 
             var conditions = await _context.PatientConditions
-                .Where(pc =>
-                    pc.PatientID == patient.PatientID)
+                .Where(pc => pc.PatientID == patient.PatientID)
                 .Include(pc => pc.Condition)
                 .Select(pc => pc.Condition.Name)
                 .ToListAsync();
 
             var allergies = await _context.PatientAllergies
-                .Where(pa =>
-                    pa.PatientID == patient.PatientID)
+                .Where(pa => pa.PatientID == patient.PatientID)
                 .Include(pa => pa.Allergy)
                 .Select(pa => pa.Allergy.Name)
                 .ToListAsync();
 
             var medications = await _context.PatientMedications
-                .Where(pm =>
-                    pm.PatientID == patient.PatientID)
+                .Where(pm => pm.PatientID == patient.PatientID)
                 .Include(pm => pm.Medication)
                 .Select(pm => pm.Medication.Name)
                 .ToListAsync();
@@ -822,30 +972,14 @@ namespace HemaCore.Controllers
             var model = new PatientDetailsViewModel
             {
                 PatientId = patient.PatientID,
-
-                FullName =
-                    patient.Name + " " +
-                    patient.Surname,
-
+                FullName = patient.Name + " " + patient.Surname,
                 IDNumber = patient.IDNumber,
-
-                DateOfBirth =
-                    patient.DateOfBirth,
-
-                PhoneNumber =
-                    patient.PhoneNumber,
-
-                Address =
-                    patient.Address,
-
-                Conditions =
-                    conditions,
-
-                Allergies =
-                    allergies,
-
-                Medications =
-                    medications
+                DateOfBirth = patient.DateOfBirth,
+                PhoneNumber = patient.PhoneNumber,
+                Address = patient.Address,
+                Conditions = conditions,
+                Allergies = allergies,
+                Medications = medications
             };
 
             return View(model);
@@ -1172,18 +1306,18 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            // ========================================================
-            // CREATE CONSENT
-            // ========================================================
+            //// ========================================================
+            //// CREATE CONSENT
+            //// ========================================================
 
-            _context.Consents.Add(
-                new Consent
-                {
-                    PatientID = user.Id,
-                    DoctorId = doctor.DoctorId,
-                    IsActive = true,
-                    GrantedAt = DateTime.UtcNow
-                });
+            //_context.Consents.Add(
+            //    new Consent
+            //    {
+            //        PatientID = user.Id,
+            //        DoctorId = doctor.DoctorId,
+            //        IsActive = true,
+            //        GrantedAt = DateTime.UtcNow
+            //    });
 
             // ========================================================
             // SAVE MEDICAL CONDITIONS
@@ -1261,9 +1395,9 @@ namespace HemaCore.Controllers
 
         #region Edit Patient History
 
+
         [HttpGet]
-        public async Task<IActionResult> EditPatientHistory(
-            int id)
+        public async Task<IActionResult> EditPatientHistory(int id)
         {
             var doctor = await GetCurrentDoctorAsync();
 
@@ -1271,56 +1405,42 @@ namespace HemaCore.Controllers
                 return Unauthorized();
 
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(
-                    p => p.PatientID == id);
+                .FirstOrDefaultAsync(p => p.PatientID == id);
 
             if (patient == null)
-                return NotFound();
-
-            if (!await IsPatientConsentedAsync(
-                    doctor.DoctorId,
-                    patient.UserId))
             {
-                return Forbid();
+                TempData["Error"] = "The selected patient could not be found.";
+                return RedirectToAction(nameof(ManagePatients));
             }
 
-            var selectedConditionIds =
-                await _context.PatientConditions
-                    .Where(pc =>
-                        pc.PatientID ==
-                        patient.PatientID)
-                    .Select(pc =>
-                        pc.ConditionId)
-                    .ToListAsync();
+            if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
+            {
+                TempData["Error"] =
+                    "You do not have active consent for this patient. Please request consent before editing their medical history.";
 
-            var selectedAllergyIds =
-                await _context.PatientAllergies
-                    .Where(pa =>
-                        pa.PatientID ==
-                        patient.PatientID)
-                    .Select(pa =>
-                        pa.AllergyId)
-                    .ToListAsync();
+                return RedirectToAction(nameof(ManagePatients));
+            }
 
-            var selectedMedicationIds =
-                await _context.PatientMedications
-                    .Where(pm =>
-                        pm.PatientID ==
-                        patient.PatientID)
-                    .Select(pm =>
-                        pm.MedicationId)
-                    .ToListAsync();
+            var selectedConditionIds = await _context.PatientConditions
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .Select(pc => pc.ConditionId)
+                .ToListAsync();
 
-            var model =
-                new EditPatientHistoryViewModel
-                {
-                    PatientId =
-                        patient.PatientID,
+            var selectedAllergyIds = await _context.PatientAllergies
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .Select(pa => pa.AllergyId)
+                .ToListAsync();
 
-                    PatientName =
-                        patient.Name + " " +
-                        patient.Surname
-                };
+            var selectedMedicationIds = await _context.PatientMedications
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .Select(pm => pm.MedicationId)
+                .ToListAsync();
+
+            var model = new EditPatientHistoryViewModel
+            {
+                PatientId = patient.PatientID,
+                PatientName = patient.Name + " " + patient.Surname
+            };
 
             await LoadHistoryOptionsAsync(
                 model.AllConditions,
@@ -1344,103 +1464,98 @@ namespace HemaCore.Controllers
                 return Unauthorized();
 
             var patient = await _context.Patients
-                .FirstOrDefaultAsync(
-                    p => p.PatientID ==
-                         model.PatientId);
+                .FirstOrDefaultAsync(p => p.PatientID == model.PatientId);
 
             if (patient == null)
-                return NotFound();
-
-            if (!await IsPatientConsentedAsync(
-                    doctor.DoctorId,
-                    patient.UserId))
             {
-                return Forbid();
+                TempData["Error"] = "The selected patient could not be found.";
+                return RedirectToAction(nameof(ManagePatients));
             }
 
-            var existingConditions =
-                await _context.PatientConditions
-                    .Where(pc =>
-                        pc.PatientID ==
-                        patient.PatientID)
-                    .ToListAsync();
+            if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
+            {
+                TempData["Error"] =
+                    "You do not have active consent for this patient. Please request consent before editing their medical history.";
 
-            var existingAllergies =
-                await _context.PatientAllergies
-                    .Where(pa =>
-                        pa.PatientID ==
-                        patient.PatientID)
-                    .ToListAsync();
+                return RedirectToAction(nameof(ManagePatients));
+            }
 
-            var existingMedications =
-                await _context.PatientMedications
-                    .Where(pm =>
-                        pm.PatientID ==
-                        patient.PatientID)
-                    .ToListAsync();
+            if (!ModelState.IsValid)
+            {
+                var selectedConditionIds = model.SelectedConditionIds ?? new List<int>();
+                var selectedAllergyIds = model.SelectedAllergyIds ?? new List<int>();
+                var selectedMedicationIds = model.SelectedMedicationIds ?? new List<int>();
 
-            _context.PatientConditions
-                .RemoveRange(existingConditions);
+                model.AllConditions.Clear();
+                model.AllAllergies.Clear();
+                model.AllMedications.Clear();
 
-            _context.PatientAllergies
-                .RemoveRange(existingAllergies);
+                await LoadHistoryOptionsAsync(
+                    model.AllConditions,
+                    model.AllAllergies,
+                    model.AllMedications,
+                    selectedConditionIds,
+                    selectedAllergyIds,
+                    selectedMedicationIds);
 
-            _context.PatientMedications
-                .RemoveRange(existingMedications);
+                model.PatientName = patient.Name + " " + patient.Surname;
 
-            foreach (var conditionId in
-                     model.SelectedConditionIds)
+                return View(model);
+            }
+
+            var existingConditions = await _context.PatientConditions
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            var existingAllergies = await _context.PatientAllergies
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            var existingMedications = await _context.PatientMedications
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            _context.PatientConditions.RemoveRange(existingConditions);
+            _context.PatientAllergies.RemoveRange(existingAllergies);
+            _context.PatientMedications.RemoveRange(existingMedications);
+
+            foreach (var conditionId in model.SelectedConditionIds ?? new List<int>())
             {
                 _context.PatientConditions.Add(
                     new PatientCondition
                     {
-                        PatientID =
-                            patient.PatientID,
-
-                        ConditionId =
-                            conditionId
+                        PatientID = patient.PatientID,
+                        ConditionId = conditionId
                     });
             }
 
-            foreach (var allergyId in
-                     model.SelectedAllergyIds)
+            foreach (var allergyId in model.SelectedAllergyIds ?? new List<int>())
             {
                 _context.PatientAllergies.Add(
                     new PatientAllergy
                     {
-                        PatientID =
-                            patient.PatientID,
-
-                        AllergyId =
-                            allergyId
+                        PatientID = patient.PatientID,
+                        AllergyId = allergyId
                     });
             }
 
-            foreach (var medicationId in
-                     model.SelectedMedicationIds)
+            foreach (var medicationId in model.SelectedMedicationIds ?? new List<int>())
             {
                 _context.PatientMedications.Add(
                     new PatientMedication
                     {
-                        PatientID =
-                            patient.PatientID,
-
-                        MedicationId =
-                            medicationId
+                        PatientID = patient.PatientID,
+                        MedicationId = medicationId
                     });
             }
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                "Patient history updated.";
+            TempData["Success"] = "Patient medical history updated successfully.";
 
             return RedirectToAction(
                 nameof(PatientDetails),
-                new
-                {
-                    id = patient.PatientID
-                });
+                new { id = patient.PatientID });
         }
 
         #endregion

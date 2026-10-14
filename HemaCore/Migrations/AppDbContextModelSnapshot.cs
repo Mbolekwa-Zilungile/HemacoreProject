@@ -303,6 +303,40 @@ namespace HemaCore.Migrations
                     b.ToTable("ConsentMedications");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PatientID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientID", "DoctorId", "Status");
+
+                    b.ToTable("ConsentRequests");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -1440,6 +1474,25 @@ namespace HemaCore.Migrations
                     b.Navigation("Consent");
 
                     b.Navigation("Medication");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.ConsentRequest", b =>
+                {
+                    b.HasOne("HemaCore.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>

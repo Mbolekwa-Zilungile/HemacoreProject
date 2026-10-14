@@ -101,6 +101,13 @@
                         <span class="menu-text">My Reports</span>
                     </a>
                 </li>
+                <li class="section-label">ACCOUNT</li>
+                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Profile" ? "active" : "")">
+                    <a asp-controller="Doctor" asp-action="Profile">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="menu-text">My Profile</span>
+                    </a>
+                </li>
 
             </ul>
 

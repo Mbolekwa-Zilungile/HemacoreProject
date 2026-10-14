@@ -896,6 +896,298 @@ namespace HemaCore.Controllers
         }
 
 
+        // =============================================================
+        // DOCTOR CONSENT REQUESTS - PATIENT SIDE
+        // =============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ConsentRequests()
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+                return RedirectToAction(nameof(CompleteProfile));
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            // Load requests sent to this patient by doctors.
+            var requests = await _context.ConsentRequests
+                .Include(r => r.Doctor)
+                    .ThenInclude(d => d.User)
+                .Where(r => r.PatientID == user.Id)
+                .OrderByDescending(r => r.RequestedAt)
+                .ToListAsync();
+
+            // Only completed test requests belonging to this patient
+            // can be selected for sharing.
+            var completedTestRequests = await _context.TestRequests
+                .Include(r => r.Doctor)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestType)
+                .Where(r =>
+                    r.PatientID == patient.PatientID &&
+                    r.Status == "Completed")
+                .OrderByDescending(r => r.RequestDate)
+                .ToListAsync();
+
+            // Deactivate expired consent before displaying requests.
+            var now = DateTime.UtcNow;
+
+            var expiredConsents = await _context.Consents
+                .Where(c =>
+                    c.PatientID == user.Id &&
+                    c.IsActive &&
+                    c.ExpiresAt.HasValue &&
+                    c.ExpiresAt.Value <= now)
+                .ToListAsync();
+
+            foreach (var consent in expiredConsents)
+                consent.IsActive = false;
+
+            if (expiredConsents.Count > 0)
+                await _context.SaveChangesAsync();
+
+            ViewBag.CompletedTestRequests = completedTestRequests;
+
+            return View(requests);
+        }
+
+
+        // =============================================================
+        // PATIENT APPROVES A DOCTOR'S CONSENT REQUEST
+        // =============================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveConsentRequest(
+            int requestId,
+            List<int>? selectedTestRequestIds,
+            string consentDuration,
+            DateTime? customExpiry)
+        {
+            var patient = await GetCurrentPatientAsync();
+
+            if (patient == null)
+                return RedirectToAction(nameof(CompleteProfile));
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var request = await _context.ConsentRequests
+                .Include(r => r.Doctor)
+                    .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(r =>
+                    r.Id == requestId &&
+                    r.PatientID == user.Id &&
+                    r.Status == "Pending");
+
+            if (request == null)
+            {
+                TempData["Error"] =
+                    "This request could not be found or has already been answered.";
+
+                return RedirectToAction(nameof(ConsentRequests));
+            }
+
+            if (!request.Doctor.IsActive)
+            {
+                TempData["Error"] =
+                    "This doctor is no longer active. Consent was not granted.";
+
+                return RedirectToAction(nameof(ConsentRequests));
+            }
+
+            var now = DateTime.UtcNow;
+
+            // Prevent a second active consent for the same doctor.
+            var existingConsents = await _context.Consents
+                .Where(c =>
+                    c.PatientID == user.Id &&
+                    c.DoctorId == request.DoctorId &&
+                    c.IsActive)
+                .ToListAsync();
+
+            foreach (var existing in existingConsents)
+            {
+                if (existing.ExpiresAt.HasValue &&
+                    existing.ExpiresAt.Value <= now)
+                {
+                    existing.IsActive = false;
+                }
+                else
+                {
+                    TempData["Error"] =
+                        "You already have active consent with this doctor. " +
+                        "Revoke the existing consent before granting another.";
+
+                    return RedirectToAction(nameof(ConsentRequests));
+                }
+            }
+
+            // Determine the consent expiry.
+            DateTime expiresAt;
+
+            switch (consentDuration)
+            {
+                case "2Days":
+                    expiresAt = now.AddDays(2);
+                    break;
+
+                case "7Days":
+                    expiresAt = now.AddDays(7);
+                    break;
+
+                case "30Days":
+                    expiresAt = now.AddDays(30);
+                    break;
+
+                case "Custom":
+                    if (!customExpiry.HasValue)
+                    {
+                        TempData["Error"] =
+                            "Please select a custom expiry date and time.";
+
+                        return RedirectToAction(nameof(ConsentRequests));
+                    }
+
+                    // datetime-local values are normally received as
+                    // unspecified/local time. Convert them to UTC.
+                    var localExpiry = DateTime.SpecifyKind(
+                        customExpiry.Value,
+                        DateTimeKind.Local);
+
+                    if (localExpiry < DateTime.Now.AddDays(2))
+                    {
+                        TempData["Error"] =
+                            "Custom consent must last at least 2 days.";
+
+                        return RedirectToAction(nameof(ConsentRequests));
+                    }
+
+                    expiresAt = localExpiry.ToUniversalTime();
+                    break;
+
+                default:
+                    TempData["Error"] =
+                        "Please select a valid consent duration.";
+
+                    return RedirectToAction(nameof(ConsentRequests));
+            }
+
+            // Validate that at least one selected test request is
+            // completed and belongs to the logged-in patient.
+            selectedTestRequestIds ??= new List<int>();
+
+            var validTestRequestIds = await _context.TestRequests
+                .Where(r =>
+                    r.PatientID == patient.PatientID &&
+                    r.Status == "Completed" &&
+                    selectedTestRequestIds.Contains(r.TestRequestId))
+                .Select(r => r.TestRequestId)
+                .Distinct()
+                .ToListAsync();
+
+            //if (!validTestRequestIds.Any())
+            //{
+            //    TempData["Error"] =
+            //        "Select at least one completed test request to share.";
+
+            //    return RedirectToAction(nameof(ConsentRequests));
+            //}
+
+            // Create consent only after the patient approves.
+            var consent = new Consent
+            {
+                PatientID = user.Id,
+                DoctorId = request.DoctorId,
+                IsActive = true,
+                GrantedAt = now,
+                ExpiresAt = expiresAt,
+                RevokedAt = null
+            };
+
+            _context.Consents.Add(consent);
+
+            foreach (var testRequestId in validTestRequestIds)
+            {
+                consent.TestAccesses.Add(new ConsentTestRequest
+                {
+                    TestRequestId = testRequestId
+                });
+            }
+
+            request.Status = "Approved";
+            request.RespondedAt = now;
+
+            await _context.SaveChangesAsync();
+
+            // Notify the doctor that the patient approved the request.
+            var doctorEmail = request.Doctor.User?.Email;
+
+            if (!string.IsNullOrWhiteSpace(doctorEmail))
+            {
+                var sharedTestRequests = validTestRequestIds
+                    .Select(id => "Test Request #" + id)
+                    .ToList();
+
+                await _emailService.SendConsentGrantedEmailAsync(
+                    doctorEmail,
+                    request.Doctor.Name,
+                    patient.Name,
+                    patient.Surname,
+                    sharedTestRequests);
+            }
+
+            TempData["Success"] =
+                $"Consent approved until {expiresAt.ToLocalTime():dd MMM yyyy HH:mm}.";
+
+            return RedirectToAction(nameof(ConsentRequests));
+        }
+
+
+        // =============================================================
+        // PATIENT REJECTS A DOCTOR'S CONSENT REQUEST
+        // =============================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectConsentRequest(int requestId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var request = await _context.ConsentRequests
+                .FirstOrDefaultAsync(r =>
+                    r.Id == requestId &&
+                    r.PatientID == user.Id &&
+                    r.Status == "Pending");
+
+            if (request == null)
+            {
+                TempData["Error"] =
+                    "This request could not be found or has already been answered.";
+
+                return RedirectToAction(nameof(ConsentRequests));
+            }
+
+            request.Status = "Rejected";
+            request.RespondedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                "The doctor's consent request has been rejected. No access was granted.";
+
+            return RedirectToAction(nameof(ConsentRequests));
+        }
+
         // ---------------------------------------------------------------------
         // Revoke Consent
         // Keep your existing RevokeConsent action here unchanged.

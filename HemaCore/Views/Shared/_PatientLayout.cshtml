@@ -130,7 +130,12 @@
                     </a>
 
                 </li>
-
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ConsentRequests" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="ConsentRequests">
+                        <i class="fas fa-user-check"></i>
+                        <span class="menu-text">Consent Requests</span>
+                    </a>
+                </li>
 
                 <!-- PROFILE -->
                 <li class="section-label">

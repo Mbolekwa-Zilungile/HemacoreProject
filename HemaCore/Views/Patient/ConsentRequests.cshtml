@@ -1,0 +1,1105 @@
+﻿@model IEnumerable<HemaCore.Models.ConsentRequest>
+@using HemaCore.Models
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Consent Requests";
+    ViewBag.Title = "Consent Requests";
+
+    var requests = Model?.ToList() ?? new List<ConsentRequest>();
+
+    var completedTestRequests =
+        ViewBag.CompletedTestRequests as IEnumerable<TestRequest>
+        ?? new List<TestRequest>();
+
+    var pendingCount = requests.Count(r => r.Status == "Pending");
+    var approvedCount = requests.Count(r => r.Status == "Approved");
+    var rejectedCount = requests.Count(r => r.Status == "Rejected");
+
+    var customExpiryMin = DateTime.Now.AddDays(2)
+        .ToString("yyyy-MM-ddTHH:mm");
+}
+
+<style>
+    .cr-page {
+        padding: 24px;
+        color: #243447;
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .cr-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 28px;
+        margin-bottom: 25px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2c7da0, #1f5068);
+        color: white;
+        box-shadow: 0 5px 18px rgba(31, 80, 104, .15);
+    }
+
+    .cr-eyebrow {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: .85;
+    }
+
+    .cr-header h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .cr-header p {
+        max-width: 650px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .cr-header-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 76px;
+        height: 76px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, .16);
+        font-size: 32px;
+    }
+
+    .cr-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px 18px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .cr-alert-success {
+        color: #176342;
+        background: #eaf8f0;
+        border: 1px solid #b9e7cc;
+    }
+
+    .cr-alert-error {
+        color: #9b2c2c;
+        background: #fff0f0;
+        border: 1px solid #f2c2c2;
+    }
+
+    .cr-alert-info {
+        color: #245c78;
+        background: #edf7fc;
+        border: 1px solid #c9e5f2;
+    }
+
+    .cr-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .cr-summary-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #e5edf2;
+        border-radius: 13px;
+        box-shadow: 0 3px 12px rgba(31, 80, 104, .04);
+    }
+
+    .cr-summary-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        font-size: 20px;
+    }
+
+    .cr-icon-blue {
+        color: #2c7da0;
+        background: #e8f4fa;
+    }
+
+    .cr-icon-purple {
+        color: #7754b8;
+        background: #f1ebfc;
+    }
+
+    .cr-icon-green {
+        color: #25865b;
+        background: #e8f7ef;
+    }
+
+    .cr-summary-number {
+        display: block;
+        color: #243447;
+        font-size: 25px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .cr-summary-label {
+        display: block;
+        margin-top: 5px;
+        color: #728196;
+        font-size: 13px;
+    }
+
+    .cr-section-title {
+        margin: 0 0 6px;
+        color: #243447;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .cr-section-description {
+        margin: 0 0 20px;
+        color: #748195;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .cr-request-list {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .cr-request-card {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e2eaf0;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(31, 80, 104, .045);
+    }
+
+    .cr-request-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 22px;
+        background: #f8fbfd;
+        border-bottom: 1px solid #e8eef3;
+    }
+
+    .cr-doctor-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .cr-doctor-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        color: #2c7da0;
+        background: #e6f3f9;
+        font-size: 22px;
+    }
+
+    .cr-doctor-info h3 {
+        margin: 0 0 7px;
+        color: #243447;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .cr-request-date {
+        color: #778597;
+        font-size: 13px;
+    }
+
+    .cr-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex-shrink: 0;
+        padding: 7px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .cr-status-pending {
+        color: #986500;
+        background: #fff3d6;
+    }
+
+    .cr-status-approved {
+        color: #187346;
+        background: #e3f6eb;
+    }
+
+    .cr-status-rejected {
+        color: #a52c37;
+        background: #fde9eb;
+    }
+
+    .cr-request-body {
+        padding: 24px;
+    }
+
+    .cr-form-section {
+        margin-bottom: 24px;
+    }
+
+        .cr-form-section h4 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 8px;
+            color: #243447;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+            .cr-form-section h4 i {
+                color: #2c7da0;
+            }
+
+    .cr-help-text {
+        margin: 0 0 16px;
+        color: #748195;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .cr-test-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .cr-test-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px;
+        border: 1px solid #e2eaf0;
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+    }
+
+        .cr-test-option:hover {
+            border-color: #83bad2;
+            background: #f8fcfe;
+        }
+
+        .cr-test-option input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            accent-color: #2c7da0;
+            cursor: pointer;
+        }
+
+    .cr-test-title {
+        display: block;
+        margin-bottom: 4px;
+        color: #2b4053;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .cr-test-names {
+        display: block;
+        color: #778597;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .cr-form-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .cr-field label {
+        display: block;
+        margin-bottom: 8px;
+        color: #34495e;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .cr-field select,
+    .cr-field input[type="datetime-local"] {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        color: #34495e;
+        background: #fff;
+        border: 1px solid #d7e1e9;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+        .cr-field select:focus,
+        .cr-field input:focus {
+            outline: none;
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44, 125, 160, .12);
+        }
+
+    .cr-custom-expiry {
+        display: none;
+        margin-top: 16px;
+    }
+
+        .cr-custom-expiry.show {
+            display: block;
+        }
+
+    .cr-privacy-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 15px;
+        margin-top: 22px;
+        color: #52677b;
+        background: #f1f8fc;
+        border: 1px solid #d8eaf4;
+        border-radius: 9px;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+        .cr-privacy-note i {
+            margin-top: 3px;
+            color: #2c7da0;
+            font-size: 17px;
+        }
+
+    .cr-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 22px;
+        padding-top: 20px;
+        border-top: 1px solid #edf1f5;
+    }
+
+    .cr-button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 43px;
+        padding: 11px 18px;
+        border: 0;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background .2s, transform .2s;
+    }
+
+        .cr-button:hover {
+            transform: translateY(-1px);
+        }
+
+    .cr-button-primary {
+        color: #fff;
+        background: #2c7da0;
+    }
+
+        .cr-button-primary:hover {
+            color: #fff;
+            background: #1f6685;
+        }
+
+    .cr-button-danger {
+        color: #b02a37;
+        background: #fff;
+        border: 1px solid #edc5c9;
+    }
+
+        .cr-button-danger:hover {
+            background: #fff0f1;
+        }
+
+    .cr-history-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        color: #53677a;
+        background: #f8fafc;
+        border-radius: 9px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+        .cr-history-message i {
+            margin-top: 3px;
+            font-size: 18px;
+        }
+
+        .cr-history-message.approved i {
+            color: #25865b;
+        }
+
+        .cr-history-message.rejected i {
+            color: #b02a37;
+        }
+
+    .cr-empty-card {
+        padding: 45px 25px;
+        text-align: center;
+        background: #fff;
+        border: 1px solid #e2eaf0;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(31, 80, 104, .045);
+    }
+
+    .cr-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        color: #2c7da0;
+        background: #eaf5fa;
+        font-size: 32px;
+    }
+
+    .cr-empty-card h3 {
+        margin: 0 0 10px;
+        color: #243447;
+        font-size: 21px;
+        font-weight: 700;
+    }
+
+    .cr-empty-card p {
+        max-width: 480px;
+        margin: 0 auto 20px;
+        color: #748195;
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .cr-empty-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        color: #2c7da0;
+        background: #f0f8fc;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .cr-bottom-help {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 25px;
+    }
+
+    .cr-help-card {
+        padding: 21px;
+        background: #fff;
+        border: 1px solid #e2eaf0;
+        border-radius: 12px;
+    }
+
+        .cr-help-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 12px;
+            color: #2b4053;
+            font-size: 15px;
+        }
+
+            .cr-help-card h4 i {
+                color: #2c7da0;
+                font-size: 18px;
+            }
+
+        .cr-help-card p {
+            margin: 0;
+            color: #748195;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+    .cr-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .cr-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        color: #617185;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .cr-step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 25px;
+        height: 25px;
+        flex-shrink: 0;
+        color: #2c7da0;
+        background: #eaf5fa;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 850px) {
+        .cr-summary {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .cr-bottom-help,
+        .cr-form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .cr-page {
+            padding: 14px;
+        }
+
+        .cr-header {
+            padding: 22px;
+        }
+
+            .cr-header h1 {
+                font-size: 23px;
+            }
+
+        .cr-header-icon {
+            width: 55px;
+            height: 55px;
+            font-size: 23px;
+        }
+
+        .cr-request-top {
+            flex-direction: column;
+        }
+
+        .cr-request-body {
+            padding: 17px;
+        }
+
+        .cr-actions {
+            flex-direction: column;
+        }
+
+        .cr-button {
+            width: 100%;
+        }
+
+        .cr-empty-card {
+            padding: 35px 18px;
+        }
+    }
+</style>
+
+<div class="cr-page">
+
+    <div class="cr-header">
+        <div>
+            <span class="cr-eyebrow">Patient Portal</span>
+            <h1>Consent Requests</h1>
+            <p>
+                Review requests from doctors who need permission to access
+                your selected medical test results. You decide what to share
+                and how long access should last.
+            </p>
+        </div>
+
+        <div class="cr-header-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="cr-alert cr-alert-success" role="status">
+            <i class="fas fa-check-circle"></i>
+            <div>@TempData["Success"]</div>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="cr-alert cr-alert-error" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <div>@TempData["Error"]</div>
+        </div>
+    }
+
+    <div class="cr-summary">
+        <div class="cr-summary-card">
+            <div class="cr-summary-icon cr-icon-blue">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <div>
+                <span class="cr-summary-number">@pendingCount</span>
+                <span class="cr-summary-label">Pending requests</span>
+            </div>
+        </div>
+
+        <div class="cr-summary-card">
+            <div class="cr-summary-icon cr-icon-green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <span class="cr-summary-number">@approvedCount</span>
+                <span class="cr-summary-label">Approved requests</span>
+            </div>
+        </div>
+
+        <div class="cr-summary-card">
+            <div class="cr-summary-icon cr-icon-purple">
+                <i class="fas fa-history"></i>
+            </div>
+            <div>
+                <span class="cr-summary-number">@rejectedCount</span>
+                <span class="cr-summary-label">Rejected requests</span>
+            </div>
+        </div>
+    </div>
+
+    <section>
+        <h2 class="cr-section-title">Your requests</h2>
+        <p class="cr-section-description">
+            Requests sent by doctors will appear here. Review each request
+            and decide whether to approve or reject it.
+        </p>
+
+        @if (!requests.Any())
+        {
+            <div class="cr-empty-card">
+                <div class="cr-empty-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+
+                <h3>No consent requests yet</h3>
+
+                <p>
+                    When a doctor requests permission to access your medical
+                    information, the request will appear here. You can review
+                    it and choose whether to approve or reject it.
+                </p>
+
+                <span class="cr-empty-tag">
+                    <i class="fas fa-shield-alt"></i>
+                    Your medical information stays under your control
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="cr-request-list">
+                @foreach (var request in requests)
+                {
+                    var doctorName = request.Doctor != null
+                        ? $"Dr. {request.Doctor.Name} {request.Doctor.Surname}"
+                        : "Doctor details unavailable";
+
+                    var statusClass = request.Status == "Pending"
+                        ? "cr-status-pending"
+                        : request.Status == "Approved"
+                            ? "cr-status-approved"
+                            : request.Status == "Rejected"
+                                ? "cr-status-rejected"
+                                : "cr-status-pending";
+
+                    var statusIcon = request.Status == "Pending"
+                        ? "fa-clock"
+                        : request.Status == "Approved"
+                            ? "fa-check-circle"
+                            : request.Status == "Rejected"
+                                ? "fa-times-circle"
+                                : "fa-info-circle";
+
+                    <article class="cr-request-card">
+                        <div class="cr-request-top">
+                            <div class="cr-doctor-info">
+                                <div class="cr-doctor-icon">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+
+                                <div>
+                                    <h3>@doctorName</h3>
+                                    <div class="cr-request-date">
+                                        <i class="far fa-calendar-alt"></i>
+                                        Requested on
+                                        @(request.RequestedAt.ToLocalTime()
+                                            .ToString("dd MMM yyyy, HH:mm"))
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="cr-status @statusClass">
+                                <i class="fas @statusIcon"></i>
+                                @request.Status
+                            </span>
+                        </div>
+
+                        <div class="cr-request-body">
+                            @if (request.Status == "Pending")
+                            {
+                                <form asp-controller="Patient"
+                                      asp-action="ApproveConsentRequest"
+                                      method="post"
+                                      class="cr-approve-form">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="requestId"
+                                           value="@request.Id" />
+
+                                    @if (completedTestRequests.Any())
+                                    {
+                                        <div class="cr-form-section">
+                                            <h4>
+                                                <i class="fas fa-file-medical"></i>
+                                                Select test results to share
+                                            </h4>
+
+                                            <p class="cr-help-text">
+                                                Select the completed test requests
+                                                you want to share. Selecting tests
+                                                is optional.
+                                            </p>
+
+                                            <div class="cr-test-list">
+                                                @foreach (var testRequest in completedTestRequests)
+                                                {
+                                                    var testNames = testRequest
+                                                        .TestRequestTestTypes?
+                                                        .Select(t => t.TestType?.TestTypeName)
+                                                        .Where(name => !string.IsNullOrWhiteSpace(name))
+                                                        .ToList()
+                                                        ?? new List<string?>();
+
+                                                    var checkboxId =
+                                                        $"test-{request.Id}-{testRequest.TestRequestId}";
+
+                                                    <label class="cr-test-option"
+                                                           for="@checkboxId">
+
+                                                        <input type="checkbox"
+                                                               name="selectedTestRequestIds"
+                                                               value="@testRequest.TestRequestId"
+                                                               id="@checkboxId" />
+
+                                                        <span>
+                                                            <span class="cr-test-title">
+                                                                Test Request #@testRequest.TestRequestId
+                                                            </span>
+
+                                                            <span class="cr-test-names">
+                                                                @if (testNames.Any())
+                                                                {
+                                                                    @string.Join(", ", testNames)
+                                                                }
+                                                                else
+                                                                {
+                                                                    <text>Test details unavailable</text>
+                                                                }
+
+                                                                <br />
+                                                                <i class="far fa-calendar-alt"></i>
+                                                                Completed request:
+                                                                @(testRequest.RequestDate.ToLocalTime()
+                                                                    .ToString("dd MMM yyyy"))
+                                                            </span>
+                                                        </span>
+                                                    </label>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="cr-alert cr-alert-info">
+                                            <i class="fas fa-info-circle"></i>
+                                            <div>
+                                                <strong>No completed test requests available.</strong>
+                                                You can still submit your consent
+                                                decision. Approval should only grant
+                                                access permitted by your consent
+                                                settings.
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="cr-form-section">
+                                        <h4>
+                                            <i class="fas fa-hourglass-half"></i>
+                                            Set consent duration
+                                        </h4>
+
+                                        <p class="cr-help-text">
+                                            Choose how long the consent should
+                                            remain active.
+                                        </p>
+
+                                        <div class="cr-form-row">
+                                            <div class="cr-field">
+                                                <label for="consentDuration-@request.Id">
+                                                    Consent duration
+                                                </label>
+
+                                                <select name="consentDuration"
+                                                        id="consentDuration-@request.Id"
+                                                        class="cr-duration-select"
+                                                        data-request-id="@request.Id"
+                                                        required>
+                                                    <option value="">Select duration</option>
+                                                    <option value="2Days">2 days</option>
+                                                    <option value="7Days">7 days</option>
+                                                    <option value="30Days">30 days</option>
+                                                    <option value="Custom">Custom expiry</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="cr-field cr-custom-expiry"
+                                                 id="customExpiryContainer-@request.Id">
+
+                                                <label for="customExpiry-@request.Id">
+                                                    Custom expiry date and time
+                                                </label>
+
+                                                <input type="datetime-local"
+                                                       name="customExpiry"
+                                                       id="customExpiry-@request.Id"
+                                                       min="@customExpiryMin" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="cr-privacy-note">
+                                        <i class="fas fa-lock"></i>
+                                        <div>
+                                            <strong>Your privacy matters.</strong>
+                                            Review the request and duration
+                                            carefully before approving. Only
+                                            access permitted by the application's
+                                            consent rules should be granted.
+                                        </div>
+                                    </div>
+
+                                    <div class="cr-actions">
+                                        <button type="submit"
+                                                class="cr-button cr-button-primary">
+                                            <i class="fas fa-check"></i>
+                                            Approve Request
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <form asp-controller="Patient"
+                                      asp-action="RejectConsentRequest"
+                                      method="post"
+                                      onsubmit="return confirm('Are you sure you want to reject this consent request? No access will be granted through this request.');">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="requestId"
+                                           value="@request.Id" />
+
+                                    <div class="cr-actions">
+                                        <button type="submit"
+                                                class="cr-button cr-button-danger">
+                                            <i class="fas fa-times"></i>
+                                            Reject Request
+                                        </button>
+                                    </div>
+                                </form>
+                            }
+                            else if (request.Status == "Approved")
+                            {
+                                <div class="cr-history-message approved">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <strong>Request approved</strong>
+                                        <br />
+                                        You approved this request. Review the
+                                        active consent and permitted access on
+                                        your existing Consent page.
+                                    </div>
+                                </div>
+                            }
+                            else if (request.Status == "Rejected")
+                            {
+                                <div class="cr-history-message rejected">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <div>
+                                        <strong>Request rejected</strong>
+                                        <br />
+                                        You rejected this request. No access
+                                        was granted through this request.
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="cr-history-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div>
+                                        This request has the status:
+                                        <strong>@request.Status</strong>.
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="cr-bottom-help">
+        <div class="cr-help-card">
+            <h4>
+                <i class="fas fa-question-circle"></i>
+                How consent requests work
+            </h4>
+
+            <div class="cr-steps">
+                <div class="cr-step">
+                    <span class="cr-step-number">1</span>
+                    <span>Review the doctor's name and request date.</span>
+                </div>
+
+                <div class="cr-step">
+                    <span class="cr-step-number">2</span>
+                    <span>Select any completed test requests you want to share, if available.</span>
+                </div>
+
+                <div class="cr-step">
+                    <span class="cr-step-number">3</span>
+                    <span>Choose how long consent should remain active.</span>
+                </div>
+
+                <div class="cr-step">
+                    <span class="cr-step-number">4</span>
+                    <span>Approve the request or reject it if you do not wish to share.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cr-help-card">
+            <h4>
+                <i class="fas fa-user-shield"></i>
+                Protecting your medical information
+            </h4>
+
+            <p>
+                You decide whether to grant access. Review every request
+                carefully and choose an expiry period that suits you.
+                Rejecting a request does not grant access through that
+                request. You can review your consent on the existing
+                Consent page.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".cr-duration-select").forEach(function (select) {
+            const requestId = select.dataset.requestId;
+
+            const container = document.getElementById(
+                "customExpiryContainer-" + requestId
+            );
+
+            const expiryInput = document.getElementById(
+                "customExpiry-" + requestId
+            );
+
+            function updateCustomExpiry() {
+                const isCustom = select.value === "Custom";
+
+                if (container) {
+                    container.classList.toggle("show", isCustom);
+                }
+
+                if (expiryInput) {
+                    expiryInput.required = isCustom;
+                }
+            }
+
+            select.addEventListener("change", updateCustomExpiry);
+            updateCustomExpiry();
+        });
+
+        document.querySelectorAll(".cr-approve-form").forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                const duration = form.querySelector(
+                    'select[name="consentDuration"]'
+                );
+
+                if (!duration || !duration.value) {
+                    event.preventDefault();
+                    alert("Please select a consent duration.");
+                    return;
+                }
+
+                if (duration.value === "Custom") {
+                    const expiry = form.querySelector(
+                        'input[name="customExpiry"]'
+                    );
+
+                    if (!expiry || !expiry.value) {
+                        event.preventDefault();
+                        alert("Please select a custom expiry date and time.");
+                    }
+                }
+            });
+        });
+    });
+</script>
