@@ -231,7 +231,7 @@ namespace HemaCore.Controllers
 
             return View(patient);
         }
-#endregion
+        #endregion
 
         #region Edit Profile
         // ---------------------------------------------------------------------
@@ -247,6 +247,25 @@ namespace HemaCore.Controllers
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
 
             if (patient == null) return RedirectToAction(nameof(CompleteProfile));
+
+            // Load categories with their items (active only, ordered alphabetically)
+            var conditionCategories = await _context.ConditionCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Conditions.Where(cond => cond.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var allergyCategories = await _context.AllergyCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Allergies.Where(a => a.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var medicationCategories = await _context.MedicationCategories
+                .Where(c => c.IsActive)
+                .Include(c => c.Medications.Where(m => m.IsActive))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
             var vm = new EditPatientProfileViewModel
             {
@@ -275,17 +294,31 @@ namespace HemaCore.Controllers
                     .Where(pm => pm.PatientID == patient.PatientID)
                     .Select(pm => pm.MedicationId).ToListAsync(),
 
-                AvailableConditions = await _context.Conditions
-                    .Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync(),
-                AvailableAllergies = await _context.Allergies
-                    .Where(a => a.IsActive).OrderBy(a => a.Name).ToListAsync(),
-                AvailableMedications = await _context.Medications
-                    .Where(m => m.IsActive).OrderBy(m => m.Name).ToListAsync()
+                // Flattened lists for checkbox rendering
+                AvailableConditions = conditionCategories
+                    .SelectMany(c => c.Conditions)
+                    .OrderBy(c => c.Name)
+                    .ToList(),
+
+                AvailableAllergies = allergyCategories
+                    .SelectMany(c => c.Allergies)
+                    .OrderBy(a => a.Name)
+                    .ToList(),
+
+                AvailableMedications = medicationCategories
+                    .SelectMany(c => c.Medications)
+                    .OrderBy(m => m.Name)
+                    .ToList(),
+
+                // Categories for grouping in the view
+                ConditionCategories = conditionCategories,
+                AllergyCategories = allergyCategories,
+                MedicationCategories = medicationCategories
             };
 
             return View(vm);
         }
-#endregion
+        #endregion
 
         #region Edit Profile
         // ---------------------------------------------------------------------

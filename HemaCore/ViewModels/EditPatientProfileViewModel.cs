@@ -48,5 +48,9 @@ namespace HemaCore.ViewModels.Patient
         public List<Condition> AvailableConditions { get; set; } = new();
         public List<Allergy> AvailableAllergies { get; set; } = new();
         public List<Medication> AvailableMedications { get; set; } = new();
+
+        public List<ConditionCategory> ConditionCategories { get; set; } = new();
+        public List<AllergyCategory> AllergyCategories { get; set; } = new();
+        public List<MedicationCategory> MedicationCategories { get; set; } = new();
     }
 }
