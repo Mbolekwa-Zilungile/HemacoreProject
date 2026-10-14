@@ -1,0 +1,528 @@
+﻿@model List<HemaCore.Models.Doctor>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+<!-- =========================================================
+     ALERT MESSAGES
+     ========================================================= -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+
+<div class="content-card">
+
+
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <i class="fas fa-user-md me-2"></i>
+
+            <span>
+                Inactive Doctors (@(Model?.Count ?? 0))
+            </span>
+
+        </div>
+
+        <a asp-action="AddDoctor"
+           class="btn btn-primary-custom btn-sm">
+
+            + Add Doctor
+
+        </a>
+
+    </div>
+
+
+   
+  <div class="search-toolbar">
+
+    <!-- Search -->
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+
+        <input type="text"
+               id="searchBox"
+               class="search-input"
+               placeholder="Search..."
+               autocomplete="off" />
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-box">
+        <label for="statusFilter" class="filter-label">
+            <i class="fas fa-filter me-1"></i>
+           
+        </label>
+
+        <div class="select-wrapper">
+            <select id="statusFilter"
+                    class="filter-select"
+                    onchange="if (this.value) window.location.href = this.value;">
+
+                <option value="@Url.Action("Doctors", "Manager")"
+                        selected="@(ViewBag.FilterTitle == "Active Doctors")">
+                    Active Doctors
+                </option>
+
+                <option value="@Url.Action("InactiveDoctors", "Manager")"
+                        selected="@(ViewBag.FilterTitle == "Inactive Doctors")">
+                    Inactive Doctors
+                </option>
+
+            </select>
+
+            <i class="fas fa-chevron-down dropdown-icon"></i>
+        </div>
+    </div>
+
+</div>
+
+
+
+    <div class="card shadow-sm">
+
+        <div class="card-body p-0">
+
+            <table class="modern-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            HPCSA Number
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="doctorTable">
+
+                    @if (Model == null || !Model.Any())
+                    {
+                        <tr>
+
+                            <td colspan="5"
+                                class="text-center text-muted py-3">
+
+                                No inactive doctors available.
+
+                            </td>
+
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var doctor in Model)
+                        {
+                            <tr>
+
+                                <!-- NAME -->
+
+                                <td class="fw-semibold blue-text">
+
+                                    Dr @doctor.Surname.ToUpper()
+                                    @doctor.Name.ToUpper()
+
+                                </td>
+
+
+                                <!-- EMAIL -->
+
+                                <td>
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        doctor.User?.Email))
+                                    {
+                                        <a href="mailto:@doctor.User.Email">
+                                            @doctor.User.Email
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            No email
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- HPCSA -->
+
+                                <td>
+
+                                    @doctor.HPCSANumber
+
+                                </td>
+
+
+                                <!-- PHONE -->
+
+                                <td>
+
+                                    @doctor.PhoneNumber
+
+                                </td>
+
+                                
+                                <td>
+                                    @if (doctor.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+
+                                <td>
+
+                                    <a asp-action="EditDoctor"
+                                       asp-route-id="@doctor.DoctorId"
+                                       class="btn btn-sm btn-outline-primary me-1">
+
+                                        <i class="fas fa-edit me-1"></i>
+
+                                    </a>
+
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-success activate-doctor-btn"
+                                            data-id="@doctor.DoctorId"
+                                            data-name="Dr @doctor.Name @doctor.Surname">
+
+                                        <i class="fas fa-check-circle"></i>
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     REACTIVATE DOCTOR MODAL
+     ========================================================= -->
+
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle">
+
+    <div class="delete-box">
+
+        <!-- ICON -->
+        <div class="activate-icon">
+            <i class="fas fa-user-check"></i>
+        </div>
+
+        <!-- TITLE -->
+        <h3 id="deleteModalTitle">
+            Reactivate Doctor?
+        </h3>
+
+        <!-- MESSAGE -->
+        <p>
+            Are you sure you want to reactivate
+            <strong id="deleteDoctorName"></strong>?
+        </p>
+
+        <!-- WARNING -->
+        <span class="delete-warning activate-warning">
+            <i class="fas fa-check-circle"></i>
+            <span class="activate-text">
+                This doctor will be active again and can resume their duties.
+            </span>
+        </span>
+
+        <!-- BUTTONS -->
+        <div class="delete-buttons">
+
+            <!-- CANCEL -->
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <!-- REACTIVATE FORM -->
+            <form asp-action="ActivateDoctor"
+                  method="post"
+                  id="deleteForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="deleteDoctorId" />
+
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="btn btn-success">
+
+                    <i class="fas fa-user-check me-1"></i>
+                    Yes, Reactivate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
+
+        const modal = document.getElementById("deleteModal");
+        const doctorIdInput = document.getElementById("deleteDoctorId");
+        const doctorName = document.getElementById("deleteDoctorName");
+        const cancelButton = document.getElementById("cancelDeleteBtn");
+        const deleteForm = document.getElementById("deleteForm");
+        const confirmButton = document.getElementById("confirmDeleteBtn");
+
+        // =====================================================
+        // OPEN REACTIVATION MODAL
+        // =====================================================
+
+        document.addEventListener("click", function (event) {
+
+            const button = event.target.closest(".activate-doctor-btn");
+
+            if (!button) {
+                return;
+            }
+
+            const id = button.getAttribute("data-id");
+            const name = button.getAttribute("data-name");
+
+            // Set the selected doctor's details
+            doctorIdInput.value = id;
+            doctorName.textContent = name;
+
+            // Open modal
+            modal.classList.add("show");
+            document.body.classList.add("modal-open");
+
+        });
+
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+            document.body.classList.remove("modal-open");
+
+            // Reset selected doctor
+            doctorIdInput.value = "";
+            doctorName.textContent = "";
+
+            // Reset submit button
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = `
+                <i class="fas fa-user-check me-1"></i>
+                Yes, Reactivate
+            `;
+
+        }
+
+        // =====================================================
+        // CANCEL REACTIVATION
+        // =====================================================
+
+        cancelButton.addEventListener("click", function () {
+            closeModal();
+        });
+
+        // =====================================================
+        // CLICK OUTSIDE MODAL
+        // =====================================================
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+                closeModal();
+            }
+
+        });
+
+        // =====================================================
+        // CLOSE MODAL WITH ESCAPE
+        // =====================================================
+
+        document.addEventListener("keydown", function (event) {
+
+            if (
+                event.key === "Escape" &&
+                modal.classList.contains("show")
+            ) {
+                closeModal();
+            }
+
+        });
+
+        // =====================================================
+        // PREVENT DOUBLE FORM SUBMISSION
+        // =====================================================
+
+        deleteForm.addEventListener("submit", function (event) {
+
+            // Ensure a doctor has been selected
+            if (!doctorIdInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+
+            confirmButton.innerHTML = `
+                <i class="fas fa-spinner fa-spin me-1"></i>
+                Activating...
+            `;
+
+            // Allow the form to submit to ActivateDoctor
+        });
+
+    });
+
+     const searchBox = document.getElementById("searchBox");
+        const doctorTable = document.getElementById("doctorTable");
+
+        searchBox.addEventListener("input", function () {
+
+            const searchValue = searchBox.value
+                .trim()
+                .toLowerCase();
+
+            const rows = doctorTable.querySelectorAll("tr");
+            let visibleCount = 0;
+
+            rows.forEach(function (row) {
+
+                // Skip the empty-state row if it exists
+                if (row.querySelectorAll("td").length < 6) {
+                    return;
+                }
+
+                const doctorName = row.cells[0].textContent.toLowerCase();
+                const email = row.cells[1].textContent.toLowerCase();
+                const hpcsa = row.cells[2].textContent.toLowerCase();
+                const phone = row.cells[3].textContent.toLowerCase();
+                const status = row.cells[4].textContent.toLowerCase();
+
+                const matches =
+                    doctorName.includes(searchValue) ||
+                    email.includes(searchValue) ||
+                    hpcsa.includes(searchValue) ||
+                    phone.includes(searchValue) ||
+                    status.includes(searchValue);
+
+                row.style.display = matches ? "" : "none";
+
+                if (matches) {
+                    visibleCount++;
+                }
+
+            });
+
+            // Show a message when no doctors match
+            let noResultsRow = document.getElementById("noSearchResults");
+
+            if (visibleCount === 0 && searchValue !== "") {
+
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement("tr");
+                    noResultsRow.id = "noSearchResults";
+
+                    noResultsRow.innerHTML = `
+                        <td colspan="6"
+                            class="text-center text-muted py-3">
+                            No doctors match your search.
+                        </td>
+                    `;
+
+                    doctorTable.appendChild(noResultsRow);
+                }
+
+                noResultsRow.style.display = "";
+
+            } else if (noResultsRow) {
+
+                noResultsRow.remove();
+
+            }
+
+        });
+</script>

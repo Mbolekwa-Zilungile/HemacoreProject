@@ -82,8 +82,10 @@
                 </li>
 
                 <li class="section-label">USER MANAGEMENT</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Doctors" ? "active" : "")">
-                    <a asp-controller="Manager" asp-action="ActiveDoctors">
+               <li class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Doctors" ||
+              ViewContext.RouteData.Values["action"]?.ToString() == "InactiveDoctors")
+              ? "active" : "")">
+                    <a asp-controller="Manager" asp-action="Doctors">
                         <i class="fas fa-user-doctor"></i>
                         <span class="menu-text">Doctors</span>
                     </a>

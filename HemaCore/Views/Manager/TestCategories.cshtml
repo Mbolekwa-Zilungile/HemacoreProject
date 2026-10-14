@@ -43,7 +43,7 @@
             <i class="fas fa-folder me-2"></i>
 
             <span>
-                Test Categories (@(Model?.Count ?? 0))
+                Active Test Categories (@(Model?.Count ?? 0))
             </span>
 
         </div>
@@ -61,21 +61,48 @@
 
 
 
-    <!-- =====================================================
-         SEARCH
-         ===================================================== -->
+     <div class="search-toolbar">
 
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Search test categories..."
-           autocomplete="off" />
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
 
+                <input type="text"
+                       id="searchBox"
+                       class="search-input"
+                       placeholder="Search..."
+                       autocomplete="off" />
+            </div>
 
+ 
+           
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
 
-    <!-- =====================================================
-         TABLE
-         ===================================================== -->
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("TestCategories", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "TestCategories")">
+                        Active Categories
+                    </option>
+
+                    <option value="@Url.Action("InactiveTestCategories", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveTestCategories")">
+                        Inactive Categories
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+        </div>
+
 
     <table class="modern-table">
 
@@ -96,6 +123,10 @@
                 </th>
 
                 <th>
+                    Status
+                </th>
+
+                <th>
                     Actions
                 </th>
 
@@ -110,7 +141,7 @@
             {
                 <tr>
 
-                    <td colspan="4"
+                    <td colspan="5"
                         class="text-center text-muted">
 
                         No test categories available.
@@ -151,7 +182,16 @@
 
                         </td>
 
-                        
+                        <td>
+                                @if (category.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                         </td>
                        
                       
                         <td>
@@ -291,335 +331,224 @@
      ========================================================= -->
 
 <script>
-
     document.addEventListener("DOMContentLoaded", function () {
 
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
 
-        /* =====================================================
-           ELEMENTS
-           ===================================================== */
+        const modal = document.getElementById("deleteModal");
+        const categoryIdInput = document.getElementById("deleteSampleTypeId");
+        const categoryName = document.getElementById("deleteSampleName");
+        const cancelButton = document.getElementById("cancelDeleteBtn");
+        const deleteForm = document.getElementById("deleteForm");
+        const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+        const searchBox = document.getElementById("searchBox");
+        const categoryTable = document.getElementById("categoryTable");
 
-        const modal =
-            document.getElementById("deleteModal");
-
-        const categoryIdInput =
-            document.getElementById("deleteSampleTypeId");
-
-        const categoryName =
-            document.getElementById("deleteSampleName");
-
-        const cancelButton =
-            document.getElementById("cancelDeleteBtn");
-
-        const deleteForm =
-            document.getElementById("deleteForm");
-
-
-
-        /* =====================================================
-           OPEN MODAL
-           ===================================================== */
+        // =====================================================
+        // OPEN DEACTIVATE MODAL
+        // =====================================================
 
         document.addEventListener("click", function (event) {
 
-            const button =
-                event.target.closest(".deactivate-category-btn");
+            const button = event.target.closest(".deactivate-category-btn");
 
+            if (!button) return;
 
-            if (!button) {
-                return;
-            }
-
-
-            event.preventDefault();
-
-
-            const id =
-                button.getAttribute("data-id");
-
-
-            const name =
-                button.getAttribute("data-name");
-
-
-            /*
-             * Set category ID
-             */
+            const id = button.getAttribute("data-id");
+            const name = button.getAttribute("data-name");
 
             categoryIdInput.value = id;
-
-
-            /*
-             * Set category name
-             */
-
             categoryName.textContent = name;
 
-
-            /*
-             * Show modal
-             */
-
             modal.classList.add("show");
-
-
-            /*
-             * Prevent background scrolling
-             */
-
             document.body.classList.add("modal-open");
-
         });
 
-
-
-        /* =====================================================
-           CLOSE MODAL
-           ===================================================== */
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
 
         function closeModal() {
-
             modal.classList.remove("show");
-
             document.body.classList.remove("modal-open");
 
             categoryIdInput.value = "";
-
             categoryName.textContent = "";
-
         }
 
+        cancelButton.addEventListener("click", closeModal);
 
-
-        /* =====================================================
-           CANCEL
-           ===================================================== */
-
-        cancelButton.addEventListener("click", function () {
-
-            closeModal();
-
-        });
-
-
-
-        /* =====================================================
-           CLICK OUTSIDE MODAL
-           ===================================================== */
-
+        // Click outside modal
         modal.addEventListener("click", function (event) {
-
             if (event.target === modal) {
-
                 closeModal();
-
             }
-
         });
 
-
-
-        /* =====================================================
-           ESCAPE
-           ===================================================== */
-
+        // Close using Escape key
         document.addEventListener("keydown", function (event) {
-
-            if (event.key === "Escape") {
-
-                if (modal.classList.contains("show")) {
-
-                    closeModal();
-
-                }
-
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeModal();
             }
-
         });
 
-
-
-        /* =====================================================
-           PREVENT DOUBLE SUBMIT
-           ===================================================== */
+        // =====================================================
+        // PREVENT DOUBLE FORM SUBMISSION
+        // =====================================================
 
         deleteForm.addEventListener("submit", function () {
 
-            const button =
-                document.getElementById("confirmDeleteBtn");
+            confirmDeleteBtn.disabled = true;
 
-
-            button.disabled = true;
-
-
-            button.innerHTML = `
-
+            confirmDeleteBtn.innerHTML = `
                 <i class="fas fa-spinner fa-spin me-1"></i>
-
                 Deactivating...
-
             `;
-
         });
 
+        // =====================================================
+        // HTML ESCAPING
+        // =====================================================
 
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = value ?? "";
+            return div.innerHTML;
+        }
 
-        /* =====================================================
-           LIVE SEARCH
-           ===================================================== */
+        // =====================================================
+        // LIVE SEARCH
+        // =====================================================
 
-        document
-            .getElementById("searchBox")
-            .addEventListener("keyup", function () {
+        let searchTimeout;
 
-                let term = this.value;
+        searchBox.addEventListener("input", function () {
 
+            const term = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(function () {
 
                 fetch(
-                    '/Manager/SearchCategoriesLive?term='
-                    + encodeURIComponent(term)
+                    '/Manager/SearchCategoriesLive?term=' +
+                    encodeURIComponent(term),
+                    {
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    }
                 )
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Unable to search categories.");
+                    }
 
-                .then(response => response.json())
-
+                    return response.json();
+                })
                 .then(data => {
 
                     let rows = "";
 
-
-                    /* -----------------------------------------
-                       NO RESULTS
-                       ----------------------------------------- */
-
-                    if (!data || data.length === 0) {
+                    // No search results
+                    if (!Array.isArray(data) || data.length === 0) {
 
                         rows = `
-
                             <tr>
-
-                                <td colspan="4"
-                                    class="text-center text-muted">
-
-                                    No results found.
-
+                                <td colspan="5"
+                                    class="text-center text-muted py-3">
+                                    No categories found.
                                 </td>
-
                             </tr>
-
                         `;
 
-                    }
-
-
-                    /* -----------------------------------------
-                       RESULTS
-                       ----------------------------------------- */
-
-                    else {
+                    } else {
 
                         data.forEach(item => {
 
-                            const categoryName =
-                                escapeHtml(
-                                    item.categoryName ?? ""
-                                );
+                            // Support common JSON property casing
+                            const id =
+                                item.categoryId ?? item.categoryID;
 
+                            const name = escapeHtml(
+                                item.categoryName ?? ""
+                            );
 
-                            const categoryDescription =
-                                escapeHtml(
-                                    item.categoryDescription ?? ""
-                                );
+                            const description = escapeHtml(
+                                item.categoryDescription ?? ""
+                            );
 
+                            const isActive =
+                                item.isActive ?? item.IsActive ?? false;
+
+                            const testTypeCount =
+                                item.testTypeCount ??
+                                item.TestTypeCount ?? 0;
+
+                            // Status badge
+                            const status = isActive
+                                ? '<span class="badge bg-success">Active</span>'
+                                : '<span class="badge bg-danger">Inactive</span>';
 
                             rows += `
-
                                 <tr>
-
                                     <td class="fw-semibold blue-text">
-
-                                        ${categoryName}
-
+                                        ${name}
                                     </td>
 
-
                                     <td>
-
-                                        ${categoryDescription}
-
+                                        ${description}
                                     </td>
 
-
                                     <td>
-
-                                        0
-
+                                        ${testTypeCount}
                                     </td>
 
+                                    <td>
+                                        ${status}
+                                    </td>
 
                                     <td>
-
-                                        <a href="/Manager/EditCategory/${item.categoryID}"
-                                           class="btn btn-sm btn-primary me-1">
-
-                                            Edit
-
+                                        <a href="/Manager/EditCategory/${encodeURIComponent(id)}"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit category">
+                                            <i class="fas fa-edit"></i>
                                         </a>
 
-
                                         <button type="button"
-                                                class="btn btn-sm btn-danger deactivate-category-btn"
-                                                data-id="${item.categoryID}"
-                                                data-name="${categoryName}">
-
-                                            Deactivate
-
+                                                class="btn btn-sm btn-outline-danger deactivate-category-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${name}"
+                                                title="Deactivate category">
+                                            <i class="fas fa-ban"></i>
                                         </button>
-
                                     </td>
-
                                 </tr>
-
                             `;
-
                         });
-
                     }
 
-
-                    document
-                        .getElementById("categoryTable")
-                        .innerHTML = rows;
+                    categoryTable.innerHTML = rows;
 
                 })
-
                 .catch(error => {
+                    console.error("Search failed:", error);
 
-                    console.error(
-                        "Search failed:",
-                        error
-                    );
-
+                    categoryTable.innerHTML = `
+                        <tr>
+                            <td colspan="5"
+                                class="text-center text-danger py-3">
+                                Unable to load categories. Please try again.
+                            </td>
+                        </tr>
+                    `;
                 });
 
-            });
+            }, 250);
 
-
-
-        /* =====================================================
-           ESCAPE HTML
-           ===================================================== */
-
-        function escapeHtml(value) {
-
-            const div =
-                document.createElement("div");
-
-            div.textContent = value;
-
-            return div.innerHTML;
-
-        }
+        });
 
     });
-
 </script>
