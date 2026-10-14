@@ -227,28 +227,71 @@
 
 
                     <!-- ADDRESS -->
+                   
                     <div class="col-12">
-
-                        <label asp-for="Address"
-                               class="form-label fw-semibold">
-
-                            Residential Address
-
-                        </label>
-
-                        <input asp-for="Address"
-                               class="form-control"
-                               placeholder="Enter your address" />
-
-                        <span asp-validation-for="Address"
-                              class="text-danger">
-                        </span>
-
+                        <h5 class="fw-bold mb-3">Residential Address</h5>
                     </div>
 
-                </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StreetAddress" class="form-label fw-semibold">
+                            Street Address
+                        </label>
+                        <input asp-for="StreetAddress"
+                               class="form-control"
+                               placeholder="Enter your street address" />
+                        <span asp-validation-for="StreetAddress" class="text-danger"></span>
+                    </div>
 
-            </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Suburb" class="form-label fw-semibold">
+                            Suburb
+                        </label>
+                        <input asp-for="Suburb"
+                               class="form-control"
+                               placeholder="Enter your suburb" />
+                        <span asp-validation-for="Suburb" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="City" class="form-label fw-semibold">
+                            City
+                        </label>
+                        <input asp-for="City"
+                               class="form-control"
+                               placeholder="Enter your city" />
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Province" class="form-label fw-semibold">
+                            Province
+                        </label>
+                        <select asp-for="Province" class="form-select">
+                            <option value="">-- Select Province --</option>
+                            <option value="Eastern Cape">Eastern Cape</option>
+                            <option value="Free State">Free State</option>
+                            <option value="Gauteng">Gauteng</option>
+                            <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                            <option value="Limpopo">Limpopo</option>
+                            <option value="Mpumalanga">Mpumalanga</option>
+                            <option value="Northern Cape">Northern Cape</option>
+                            <option value="North West">North West</option>
+                            <option value="Western Cape">Western Cape</option>
+                        </select>
+                        <span asp-validation-for="Province" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PostalCode" class="form-label fw-semibold">
+                            Postal Code
+                        </label>
+                        <input asp-for="PostalCode"
+                               class="form-control"
+                               placeholder="Enter 4-digit postal code"
+                               maxlength="4" />
+                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                    </div>
+                  
 
 
             <!-- CONDITIONS -->

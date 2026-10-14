@@ -51,7 +51,11 @@ namespace HemaCore.Controllers
                      IDNumber = p.IDNumber,
                      DateOfBirth = p.DateOfBirth,
                      PhoneNumber = p.PhoneNumber,
-                     Address = p.Address
+                     Address = p.StreetAddress + ", " +
+                      p.Suburb + ", " +
+                      p.City + ", " +
+                      p.Province + ", " +
+                      p.PostalCode
                  })
                  .ToListAsync();
 
@@ -976,7 +980,10 @@ namespace HemaCore.Controllers
                 IDNumber = patient.IDNumber,
                 DateOfBirth = patient.DateOfBirth,
                 PhoneNumber = patient.PhoneNumber,
-                Address = patient.Address,
+
+                Address = $"{patient.StreetAddress}, {patient.Suburb}, " +
+              $"{patient.City}, {patient.Province}, {patient.PostalCode}",
+
                 Conditions = conditions,
                 Allergies = allergies,
                 Medications = medications
@@ -1298,7 +1305,13 @@ namespace HemaCore.Controllers
                 DateOfBirth = model.DateOfBirth,
                 PhoneNumber = model.PhoneNumber.Trim(),
                 Gender = model.Gender.Trim(),
-                Address = fullAddress,          // CHANGED
+
+                StreetAddress = model.StreetAddress.Trim(),
+                Suburb = model.Suburb.Trim(),
+                City = model.City.Trim(),
+                Province = model.Province.Trim(),
+                PostalCode = model.PostalCode.Trim(),
+
                 UserId = user.Id
             };
 

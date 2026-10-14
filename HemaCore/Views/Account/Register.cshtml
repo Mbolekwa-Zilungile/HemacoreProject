@@ -309,24 +309,112 @@
 
 
                     <!-- ADDRESS -->
-
+                    <!-- STREET ADDRESS -->
                     <div class="form-group">
-
                         <label>
-                            <i class="fas fa-home"></i>
-                            Address
+                            <i class="fas fa-road"></i>
+                            Street Address
                         </label>
 
                         <div class="input-wrapper">
-
                             <i class="fas fa-home input-icon"></i>
-
-                            <input asp-for="Address"
-                                   placeholder="Your home address" />
-
+                            <input asp-for="StreetAddress"
+                                   placeholder="e.g. 24 Main Road"
+                                   maxlength="150"
+                                   autocomplete="address-line1" />
                         </div>
 
+                        <span asp-validation-for="StreetAddress"
+                              class="text-danger"></span>
                     </div>
+
+                    <!-- SUBURB -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Suburb
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-map-marker-alt input-icon"></i>
+                            <input asp-for="Suburb"
+                                   placeholder="e.g. Summerstrand"
+                                   maxlength="100"
+                                   autocomplete="address-level3" />
+                        </div>
+
+                        <span asp-validation-for="Suburb"
+                              class="text-danger"></span>
+                    </div>
+
+                    <!-- CITY -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-city"></i>
+                            City / Town
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-city input-icon"></i>
+                            <input asp-for="City"
+                                   placeholder="e.g. Gqeberha"
+                                   maxlength="100"
+                                   autocomplete="address-level2" />
+                        </div>
+
+                        <span asp-validation-for="City"
+                              class="text-danger"></span>
+                    </div>
+
+                    <!-- PROVINCE -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map"></i>
+                            Province
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-map input-icon"></i>
+
+                            <select asp-for="Province"
+                                    autocomplete="address-level1">
+                                <option value="">Select your province</option>
+                                <option value="Eastern Cape">Eastern Cape</option>
+                                <option value="Free State">Free State</option>
+                                <option value="Gauteng">Gauteng</option>
+                                <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                <option value="Limpopo">Limpopo</option>
+                                <option value="Mpumalanga">Mpumalanga</option>
+                                <option value="Northern Cape">Northern Cape</option>
+                                <option value="North West">North West</option>
+                                <option value="Western Cape">Western Cape</option>
+                            </select>
+                        </div>
+
+                        <span asp-validation-for="Province"
+                              class="text-danger"></span>
+                    </div>
+
+                    <!-- POSTAL CODE -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-mail-bulk"></i>
+                            Postal Code
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-mail-bulk input-icon"></i>
+                            <input asp-for="PostalCode"
+                                   placeholder="e.g. 6001"
+                                   maxlength="4"
+                                   inputmode="numeric"
+                                   autocomplete="postal-code" />
+                        </div>
+
+                        <span asp-validation-for="PostalCode"
+                              class="text-danger"></span>
+                    </div>
+
 
 
                     <!-- EMAIL -->

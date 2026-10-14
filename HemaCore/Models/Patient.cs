@@ -26,7 +26,24 @@ namespace HemaCore.Models
 
         public DateTime DateOfBirth { get; set; }
 
-        public string Address { get; set; }
+        [Required]
+        [StringLength(150)]
+        public string StreetAddress { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Suburb { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string City { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Province { get; set; }
+        [Required]
+        [RegularExpression(@"^\d{4}$", ErrorMessage = "Postal code must contain 4 digits")]
+        public string PostalCode { get; set; }
 
         [Required]
         public string UserId { get; set; }

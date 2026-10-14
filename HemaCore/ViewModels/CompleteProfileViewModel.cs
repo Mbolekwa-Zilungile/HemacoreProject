@@ -15,7 +15,26 @@ namespace HemaCore.ViewModels.Patient
         public string PhoneNumber { get; set; } = "";
 
         [Required] public DateTime DateOfBirth { get; set; }
-        public string? Address { get; set; }
+        [Required(ErrorMessage = "Street address is required")]
+        [StringLength(150)]
+        [Display(Name = "Street Address")]
+        public string StreetAddress { get; set; } = "";
+
+        [Required(ErrorMessage = "Suburb is required")]
+        [StringLength(100)]
+        public string Suburb { get; set; } = "";
+
+        [Required(ErrorMessage = "City or town is required")]
+        [StringLength(100)]
+        public string City { get; set; } = "";
+
+        [Required(ErrorMessage = "Please select a province")]
+        public string Province { get; set; } = "";
+
+        [Required(ErrorMessage = "Postal code is required")]
+        [RegularExpression(@"^\d{4}$", ErrorMessage = "Postal code must contain 4 digits")]
+        [Display(Name = "Postal Code")]
+        public string PostalCode { get; set; } = "";
 
         // Selected reference-data IDs
         public List<int> SelectedConditionIds { get; set; } = new();

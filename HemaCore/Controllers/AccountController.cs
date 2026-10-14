@@ -114,7 +114,11 @@ namespace HemaCore.Controllers
                 IDNumber = model.IDNumber,
                 DateOfBirth = model.DateOfBirth,
                 PhoneNumber = model.PhoneNumber,
-                Address = model.Address,
+                StreetAddress = model.StreetAddress,
+                Suburb = model.Suburb,
+                City = model.City,
+                Province = model.Province,
+                PostalCode = model.PostalCode,
                 Gender = model.Gender,
                 UserId = user.Id
             };

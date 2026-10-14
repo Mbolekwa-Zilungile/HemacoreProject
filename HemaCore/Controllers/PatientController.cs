@@ -83,7 +83,11 @@ namespace HemaCore.Controllers
                 vm.Gender = existing.Gender;
                 vm.PhoneNumber = existing.PhoneNumber;
                 vm.DateOfBirth = existing.DateOfBirth;
-                vm.Address = existing.Address;
+                vm.StreetAddress = existing.StreetAddress;
+                vm.Suburb = existing.Suburb;
+                vm.City = existing.City;
+                vm.Province = existing.Province;
+                vm.PostalCode = existing.PostalCode;
 
                 vm.SelectedConditionIds = await _context.PatientConditions
                     .Where(pc => pc.PatientID == existing.PatientID)
@@ -139,7 +143,11 @@ namespace HemaCore.Controllers
             patient.Gender = model.Gender;
             patient.PhoneNumber = model.PhoneNumber;
             patient.DateOfBirth = model.DateOfBirth;
-            patient.Address = model.Address ?? "";
+            patient.StreetAddress = model.StreetAddress;
+            patient.Suburb = model.Suburb;
+            patient.City = model.City;
+            patient.Province = model.Province;
+            patient.PostalCode = model.PostalCode;
 
             await _context.SaveChangesAsync();  // ensures PatientID is set
 
@@ -249,7 +257,11 @@ namespace HemaCore.Controllers
                 PhoneNumber = patient.PhoneNumber,
                 Gender = patient.Gender,
                 DateOfBirth = patient.DateOfBirth,
-                Address = patient.Address,
+                StreetAddress = patient.StreetAddress,
+                Suburb = patient.Suburb,
+                City = patient.City,
+                Province = patient.Province,
+                PostalCode = patient.PostalCode,
 
                 SelectedConditionIds = await _context.PatientConditions
                     .Where(pc => pc.PatientID == patient.PatientID)
@@ -309,7 +321,11 @@ namespace HemaCore.Controllers
             patient.PhoneNumber = model.PhoneNumber;
             patient.Gender = model.Gender;
             patient.DateOfBirth = model.DateOfBirth;
-            patient.Address = model.Address ?? "";
+            patient.StreetAddress = model.StreetAddress;
+            patient.Suburb = model.Suburb;
+            patient.City = model.City;
+            patient.Province = model.Province;
+            patient.PostalCode = model.PostalCode;
 
             // Update Identity email if changed
             if (user.Email != model.Email)
