@@ -626,7 +626,7 @@ namespace HemaCore.Controllers
 
         #region Consent
 
-        #region Consent
+        
 
         // ---------------------------------------------------------------------
         // Patient Consent (GET)
@@ -833,21 +833,30 @@ namespace HemaCore.Controllers
             // -------------------------------------------------------------
             selectedTestRequestIds ??= new List<int>();
 
-            var validTestRequestIds = await _context.TestRequests
-                .Where(r =>
-                    r.PatientID == patient.PatientID &&
-                    r.Status == "Completed" &&
-                    selectedTestRequestIds.Contains(r.TestRequestId))
-                .Select(r => r.TestRequestId)
-                .Distinct()
-                .ToListAsync();
+            var validTestRequestIds = new List<int>();
 
-            if (!validTestRequestIds.Any())
+            if (selectedTestRequestIds.Any())
             {
-                TempData["Error"] =
-                    "Please select at least one completed test request.";
+                validTestRequestIds = await _context.TestRequests
+                    .Where(r =>
+                        r.PatientID == patient.PatientID &&
+                        r.Status == "Completed" &&
+                        selectedTestRequestIds.Contains(r.TestRequestId))
+                    .Select(r => r.TestRequestId)
+                    .Distinct()
+                    .ToListAsync();
 
-                return RedirectToAction(nameof(Consent));
+                // If the patient submitted request IDs but none are valid,
+                // reject the request rather than silently creating consent
+                // without the requested test selections.
+                if (!validTestRequestIds.Any())
+                {
+                    TempData["Error"] =
+                        "The selected test requests are no longer available. " +
+                        "Please refresh the page and try again.";
+
+                    return RedirectToAction(nameof(Consent));
+                }
             }
 
             // -------------------------------------------------------------
@@ -1209,11 +1218,7 @@ namespace HemaCore.Controllers
         // Keep your existing RevokeConsent action here unchanged.
         // ---------------------------------------------------------------------
 
-        #endregion
-
-        // ---------------------------------------------------------------------
-        // Revoke Consent
-        // ---------------------------------------------------------------------
+        
 
         [HttpPost]
 [ValidateAntiForgeryToken]
@@ -1275,7 +1280,7 @@ public async Task<IActionResult> RevokeConsent(int consentId)
 
         #endregion
 
-        
+
         #region Reports
 
         [HttpGet]
