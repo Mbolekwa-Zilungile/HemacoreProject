@@ -6,500 +6,716 @@
 }
 
 <style>
+    :root {
+        --hc-bg: #f6f7f9;
+        --hc-surface: #ffffff;
+        --hc-surface-hover: #f7fafb;
+        --hc-border: #e4e7ec;
+        --hc-text: #101828;
+        --hc-text-2: #475467;
+        --hc-text-3: #667085;
+        --hc-brand: #3f8499;
+        --hc-brand-soft: #e8f2f5;
+        --hc-brand-ring: rgba(63, 132, 153, .35);
+        --hc-danger: #c0392b;
+        --hc-danger-soft: #fdeceb;
+        --hc-warn: #b7791f;
+        --hc-warn-soft: #fdf3dc;
+        --hc-radius: 12px;
+        --hc-radius-sm: 8px;
+    }
+
+    @@media (prefers-color-scheme: dark) {
+        :root {
+            --hc-bg: #0f1419;
+            --hc-surface: #171d25;
+            --hc-surface-hover: #1c242e;
+            --hc-border: #2a3441;
+            --hc-text: #f2f4f7;
+            --hc-text-2: #b6bfcc;
+            --hc-text-3: #8d98a8;
+            --hc-brand: #6fb3c7;
+            --hc-brand-soft: #1b2f37;
+            --hc-brand-ring: rgba(111, 179, 199, .45);
+            --hc-danger: #f08a7e;
+            --hc-danger-soft: #3a1f1d;
+            --hc-warn: #e8b960;
+            --hc-warn-soft: #382d16;
+        }
+    }
+
     body {
-        background: #f5f6f8;
-        color: #1d2939;
+        background: var(--hc-bg);
+        color: var(--hc-text);
     }
 
-    .dashboard-container {
-        max-width: 1600px;
+    .hc-dashboard {
+        max-width: 1400px;
         margin: 0 auto;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* HEADER */
+    /* ---------- Header ---------- */
 
-    .dashboard-header {
+    .hc-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 30px;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 28px;
     }
 
-    .page-title {
-        font-size: 25px;
+    .hc-title {
+        font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
         font-weight: 700;
-        letter-spacing: -0.5px;
-        margin-bottom: 6px;
-        color: #1d2939;
+        letter-spacing: -.02em;
+        margin: 0 0 4px;
     }
 
-    .page-subtitle {
-        font-size: 14px;
-        color: #667085;
+    .hc-subtitle {
+        color: var(--hc-text-3);
+        font-size: .9rem;
         margin: 0;
     }
 
-    .date-box {
+    .hc-clock {
         text-align: right;
-        color: #667085;
-        font-size: 13px;
+        color: var(--hc-text-3);
+        font-size: .8rem;
+        font-variant-numeric: tabular-nums;
         white-space: nowrap;
     }
 
-        .date-box .date {
-            color: #344054;
+        .hc-clock strong {
+            display: block;
+            color: var(--hc-text-2);
+            font-size: .875rem;
             font-weight: 600;
-            margin-bottom: 4px;
         }
 
-    /* SECTION HEADINGS */
+    /* ---------- Sections ---------- */
 
-    .section-heading {
-        margin-bottom: 16px;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1d2939;
-        margin-bottom: 5px;
-    }
-
-    .section-subtitle {
-        font-size: 12px;
-        color: #667085;
-        margin: 0;
-    }
-
-    /* WORKFLOW CARDS */
-
-    .workflow-card {
-        display: block;
-        height: 100%;
-        padding: 20px;
-        background: #ffffff;
-        border: 1px solid #eaecf0;
-        border-radius: 10px;
-        text-decoration: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-    }
-
-        .workflow-card:hover {
-            border-color: #75AABA;
-            box-shadow: 0 5px 16px rgba(16, 24, 40, 0.06);
-            transform: translateY(-2px);
-        }
-
-        .workflow-card:focus-visible,
-        .workspace-link:focus-visible {
-            outline: 3px solid rgba(117, 170, 186, 0.45);
-            outline-offset: 3px;
-        }
-
-    .workflow-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 22px;
-    }
-
-    .workflow-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 9px;
-        background: #edf5f7;
-        color: #4f899a;
-        font-size: 17px;
-    }
-
-    .workflow-arrow {
-        color: #98a2b3;
-        font-size: 13px;
-        transition: color 0.2s ease, transform 0.2s ease;
-    }
-
-    .workflow-card:hover .workflow-arrow {
-        color: #4f899a;
-        transform: translate(2px, -2px);
-    }
-
-    .workflow-count {
-        color: #1d2939;
-        font-size: 30px;
-        font-weight: 700;
-        line-height: 1.2;
-        margin-bottom: 7px;
-    }
-
-    .workflow-label {
-        color: #344054;
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .workflow-description {
-        color: #98a2b3;
-        font-size: 12px;
-        line-height: 1.5;
-        margin: 0;
-    }
-
-    /* WORKSPACE */
-
-    .workspace-section {
+    .hc-section {
         margin-top: 32px;
     }
 
-    .workspace-panel {
-        background: #ffffff;
-        border: 1px solid #eaecf0;
-        border-radius: 10px;
+    .hc-section-head {
+        margin-bottom: 12px;
+    }
+
+    .hc-section-title {
+        font-size: 1rem;
+        font-weight: 650;
+        margin: 0 0 2px;
+    }
+
+    .hc-section-sub {
+        color: var(--hc-text-3);
+        font-size: .8rem;
+        margin: 0;
+    }
+
+    /* ---------- Shared link behaviour ---------- */
+
+    .hc-tile,
+    .hc-stage,
+    .hc-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .hc-tile:focus-visible,
+        .hc-stage:focus-visible,
+        .hc-link:focus-visible {
+            outline: 3px solid var(--hc-brand-ring);
+            outline-offset: -3px;
+        }
+
+    .hc-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: var(--hc-radius-sm);
+        background: var(--hc-brand-soft);
+        color: var(--hc-brand);
+        font-size: .95rem;
+    }
+
+    .hc-count {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -.02em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .hc-label {
+        font-size: .875rem;
+        font-weight: 600;
+        color: var(--hc-text);
+    }
+
+    .hc-desc {
+        font-size: .78rem;
+        line-height: 1.45;
+        color: var(--hc-text-3);
+        margin: 0;
+    }
+
+    /* ---------- Needs attention (the focal block) ---------- */
+
+    .hc-attention {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .hc-tile {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 14px;
+        row-gap: 2px;
+        align-items: center;
+        padding: 18px 20px;
+        background: var(--hc-surface);
+        border: 1px solid var(--hc-border);
+        border-left: 4px solid var(--hc-border);
+        border-radius: var(--hc-radius);
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+
+        .hc-tile:hover {
+            background: var(--hc-surface-hover);
+        }
+
+        .hc-tile .hc-count {
+            grid-row: 1 / span 3;
+            min-width: 2.2ch;
+            text-align: center;
+        }
+
+        .hc-tile.is-danger {
+            border-left-color: var(--hc-danger);
+        }
+
+            .hc-tile.is-danger .hc-count,
+            .hc-tile.is-danger .hc-icon {
+                color: var(--hc-danger);
+            }
+
+            .hc-tile.is-danger .hc-icon {
+                background: var(--hc-danger-soft);
+            }
+
+        .hc-tile.is-warn {
+            border-left-color: var(--hc-warn);
+        }
+
+            .hc-tile.is-warn .hc-count,
+            .hc-tile.is-warn .hc-icon {
+                color: var(--hc-warn);
+            }
+
+            .hc-tile.is-warn .hc-icon {
+                background: var(--hc-warn-soft);
+            }
+
+        .hc-tile .hc-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    /* ---------- Workflow stages ---------- */
+
+    .hc-pipeline {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        background: var(--hc-surface);
+        border: 1px solid var(--hc-border);
+        border-radius: var(--hc-radius);
         overflow: hidden;
     }
 
-    .workspace-link {
+    .hc-stage {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 20px;
+        transition: background-color .15s ease;
+    }
+
+        .hc-stage + .hc-stage {
+            border-left: 1px solid var(--hc-border);
+        }
+
+        .hc-stage:hover {
+            background: var(--hc-surface-hover);
+        }
+
+    .hc-stage-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+        .hc-stage-top .fa-arrow-right {
+            color: var(--hc-text-3);
+            font-size: .75rem;
+            transition: transform .15s ease, color .15s ease;
+        }
+
+    .hc-stage:hover .fa-arrow-right {
+        color: var(--hc-brand);
+        transform: translateX(3px);
+    }
+
+    /* ---------- Filters ---------- */
+
+    .hc-filters {
+        background: var(--hc-surface);
+        border: 1px solid var(--hc-border);
+        border-radius: var(--hc-radius);
+        padding: 20px;
+    }
+
+    .hc-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .hc-field label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--hc-text-2);
+        margin-bottom: 6px;
+    }
+
+    .hc-input {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: .875rem;
+        color: var(--hc-text);
+        background: var(--hc-surface);
+        border: 1px solid var(--hc-border);
+        border-radius: var(--hc-radius-sm);
+    }
+
+        .hc-input::placeholder {
+            color: var(--hc-text-3);
+        }
+
+        .hc-input:focus {
+            outline: none;
+            border-color: var(--hc-brand);
+            box-shadow: 0 0 0 3px var(--hc-brand-ring);
+        }
+
+    .hc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .hc-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 8px 18px;
+        font: inherit;
+        font-size: .875rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: var(--hc-radius-sm);
+        cursor: pointer;
+    }
+
+        .hc-btn:focus-visible {
+            outline: 3px solid var(--hc-brand-ring);
+            outline-offset: 2px;
+        }
+
+    .hc-btn-primary {
+        background: var(--hc-brand);
+        border: 1px solid var(--hc-brand);
+        color: #fff;
+    }
+
+        .hc-btn-primary:hover {
+            filter: brightness(.93);
+            color: #fff;
+        }
+
+    .hc-btn-ghost {
+        background: transparent;
+        border: 1px solid var(--hc-border);
+        color: var(--hc-text-2);
+    }
+
+        .hc-btn-ghost:hover {
+            background: var(--hc-surface-hover);
+            color: var(--hc-text);
+        }
+
+    /* ---------- Workspace ---------- */
+
+    .hc-workspace {
+        background: var(--hc-surface);
+        border: 1px solid var(--hc-border);
+        border-radius: var(--hc-radius);
+        overflow: hidden;
+    }
+
+    .hc-link {
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 17px 20px;
-        color: inherit;
-        text-decoration: none;
-        transition: background 0.2s ease;
+        padding: 16px 20px;
+        transition: background-color .15s ease;
     }
 
-        .workspace-link + .workspace-link {
-            border-top: 1px solid #eaecf0;
+        .hc-link + .hc-link {
+            border-top: 1px solid var(--hc-border);
         }
 
-        .workspace-link:hover {
-            background: #f8fbfc;
-            color: inherit;
+        .hc-link:hover {
+            background: var(--hc-surface-hover);
         }
 
-    .workspace-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        flex-shrink: 0;
-        background: #f2f4f7;
-        color: #475467;
-        border-radius: 8px;
-        font-size: 15px;
-    }
+        .hc-link .hc-icon {
+            background: var(--hc-bg);
+            color: var(--hc-text-2);
+        }
 
-    .workspace-text {
+    .hc-link-text {
         flex: 1;
         min-width: 0;
     }
 
-    .workspace-label {
-        color: #344054;
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 4px;
+    .hc-link .fa-chevron-right {
+        color: var(--hc-text-3);
+        font-size: .75rem;
     }
 
-    .workspace-description {
-        color: #667085;
-        font-size: 12px;
-        margin: 0;
-        line-height: 1.5;
-    }
+    /* ---------- Responsive ---------- */
 
-    .workspace-arrow {
-        color: #98a2b3;
-        font-size: 13px;
-    }
+    @@media (max-width: 1199px) {
+        .hc-pipeline {
+            grid-template-columns: repeat(2, 1fr);
+        }
 
-    /* RESPONSIVE */
+        .hc-stage + .hc-stage {
+            border-left: 0;
+        }
+
+        .hc-stage:nth-child(even) {
+            border-left: 1px solid var(--hc-border);
+        }
+
+        .hc-stage:nth-child(n + 3) {
+            border-top: 1px solid var(--hc-border);
+        }
+
+        .hc-filter-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
     @@media (max-width: 767px) {
-        .dashboard-container {
+        .hc-dashboard {
             padding-left: 16px !important;
             padding-right: 16px !important;
         }
 
-        .dashboard-header {
+        .hc-header {
+            flex-direction: column;
             align-items: flex-start;
         }
 
-        .page-title {
-            font-size: 21px;
+        .hc-clock {
+            text-align: left;
         }
 
-        .date-box {
-            font-size: 11px;
+        .hc-attention,
+        .hc-pipeline,
+        .hc-filter-grid {
+            grid-template-columns: 1fr;
         }
 
-        .workflow-card {
-            padding: 16px;
+        .hc-stage:nth-child(even) {
+            border-left: 0;
         }
 
-        .workflow-count {
-            font-size: 26px;
+        .hc-stage:nth-child(n + 2) {
+            border-top: 1px solid var(--hc-border);
         }
     }
 
-    @@media (max-width: 420px) {
-        .dashboard-header {
-            flex-direction: column;
-            gap: 12px;
+    @@media (prefers-reduced-motion: reduce) {
+        .hc-tile,
+        .hc-stage,
+        .hc-link,
+        .hc-stage-top .fa-arrow-right {
+            transition: none;
         }
 
-        .date-box {
-            text-align: left;
-        }
+            .hc-stage:hover .fa-arrow-right {
+                transform: none;
+            }
     }
 </style>
 
-<div class="container-fluid dashboard-container px-4 py-4">
+<div class="container-fluid hc-dashboard px-4 py-4">
 
-    <!-- PAGE HEADER -->
+    <!-- HEADER -->
 
-    <div class="dashboard-header">
+    <header class="hc-header">
         <div>
-            <h1 class="page-title">
-                Welcome, @Model.TechnicianName
-            </h1>
-
-            <p class="page-subtitle">
-                Here's your laboratory workflow at a glance.
-            </p>
+            <h1 class="hc-title">Welcome, @Model.TechnicianName</h1>
+            <p class="hc-subtitle">Here's your laboratory workflow at a glance.</p>
         </div>
 
-        <div class="date-box">
-            <div class="date">
-                <i class="far fa-calendar me-1"></i>
-                @DateTime.Now.ToString("dd MMMM yyyy")
-            </div>
-
-            <div>
-                <i class="far fa-clock me-1"></i>
-                @DateTime.Now.ToString("HH:mm")
-            </div>
+        <div class="hc-clock">
+            <strong><i class="far fa-calendar me-1"></i>@DateTime.Now.ToString("dd MMMM yyyy")</strong>
+            <span><i class="far fa-clock me-1"></i>@DateTime.Now.ToString("HH:mm")</span>
         </div>
-    </div>
+    </header>
 
-    <!-- WORKFLOW OVERVIEW -->
+    <!-- NEEDS ATTENTION -->
 
-    <div class="section-heading">
-        <h2 class="section-title">Workflow Overview</h2>
-        <p class="section-subtitle">
-            Select a stage to view the items requiring attention.
-        </p>
-    </div>
-
-    <div class="row g-3">
-
-        <!-- RECEIVE SAMPLES -->
-
-        <div class="col-xl-3 col-md-6">
-            <a asp-controller="LabTechnician"
-               asp-action="ReceiveSample"
-               class="workflow-card">
-
-                <div class="workflow-top">
-                    <div class="workflow-icon">
-                        <i class="fas fa-vial"></i>
-                    </div>
-
-                    <i class="fas fa-arrow-up-right-from-square workflow-arrow"></i>
-                </div>
-
-                <div class="workflow-count">
-                    @Model.SamplesAwaitingReceipt
-                </div>
-
-                <div class="workflow-label">
-                    Samples to Receive
-                </div>
-
-                <p class="workflow-description">
-                    Samples awaiting receipt and registration.
-                </p>
-            </a>
+    <section class="hc-section" style="margin-top:0" aria-labelledby="attention-title">
+        <div class="hc-section-head">
+            <h2 id="attention-title" class="hc-section-title">Needs attention</h2>
+            <p class="hc-section-sub">Tests that are urgent or running out of time.</p>
         </div>
 
-        <!-- PROCESS TESTS -->
+        <div class="hc-attention">
 
-        <div class="col-xl-3 col-md-6">
             <a asp-controller="LabTechnician"
                asp-action="ProcessTests"
-               class="workflow-card">
-
-                <div class="workflow-top">
-                    <div class="workflow-icon">
-                        <i class="fas fa-microscope"></i>
-                    </div>
-
-                    <i class="fas fa-arrow-up-right-from-square workflow-arrow"></i>
-                </div>
-
-                <div class="workflow-count">
-                    @Model.TestsAwaitingProcessing
-                </div>
-
-                <div class="workflow-label">
-                    Tests to Process
-                </div>
-
-                <p class="workflow-description">
-                    Tests ready for processing or currently in progress.
-                </p>
+               asp-route-dueStatus="Overdue"
+               class="hc-tile @(Model.OverdueTests > 0 ? "is-danger" : "")">
+                <span class="hc-count">@Model.OverdueTests</span>
+                <span class="hc-label">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    Overdue tests
+                </span>
+                <p class="hc-desc">Past their expected completion time.</p>
             </a>
-        </div>
 
-        <!-- VERIFY RESULTS -->
-
-        <div class="col-xl-3 col-md-6">
             <a asp-controller="LabTechnician"
-               asp-action="VerifyResults"
-               class="workflow-card">
-
-                <div class="workflow-top">
-                    <div class="workflow-icon">
-                        <i class="fas fa-shield-halved"></i>
-                    </div>
-
-                    <i class="fas fa-arrow-up-right-from-square workflow-arrow"></i>
-                </div>
-
-                <div class="workflow-count">
-                    @Model.WaitingVerification
-                </div>
-
-                <div class="workflow-label">
-                    Awaiting Verification
-                </div>
-
-                <p class="workflow-description">
-                    Results waiting for verification.
-                </p>
+               asp-action="ProcessTests"
+               asp-route-urgency="STAT"
+               class="hc-tile @(Model.UrgentTests > 0 ? "is-danger" : "")">
+                <span class="hc-count">@Model.UrgentTests</span>
+                <span class="hc-label">
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
+                    Urgent tests (STAT)
+                </span>
+                <p class="hc-desc">Marked STAT and needing immediate attention.</p>
             </a>
-        </div>
 
-        <!-- REVIEW RESULTS -->
-
-        <div class="col-xl-3 col-md-6">
             <a asp-controller="LabTechnician"
-               asp-action="ReviewResults"
-               class="workflow-card">
-
-                <div class="workflow-top">
-                    <div class="workflow-icon">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-
-                    <i class="fas fa-arrow-up-right-from-square workflow-arrow"></i>
-                </div>
-
-                <div class="workflow-count">
-                    @Model.WaitingReview
-                </div>
-
-                <div class="workflow-label">
-                    Awaiting Review
-                </div>
-
-                <p class="workflow-description">
-                    Verified results waiting for review.
-                </p>
+               asp-action="ProcessTests"
+               asp-route-dueStatus="Nearing"
+               class="hc-tile @(Model.NearingTurnaround > 0 ? "is-warn" : "")">
+                <span class="hc-count">@Model.NearingTurnaround</span>
+                <span class="hc-label">
+                    <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                    Nearing turnaround limit
+                </span>
+                <p class="hc-desc">Approaching their expected completion deadline.</p>
             </a>
+
+        </div>
+    </section>
+
+    <!-- WORKFLOW -->
+
+    <section class="hc-section" aria-labelledby="workflow-title">
+        <div class="hc-section-head">
+            <h2 id="workflow-title" class="hc-section-title">Lab workflow</h2>
+            <p class="hc-section-sub">Follow a sample from receipt through to review.</p>
         </div>
 
-    </div>
+        <div class="hc-pipeline">
+
+            <a asp-controller="LabTechnician" asp-action="ReceiveSample" class="hc-stage">
+                <div class="hc-stage-top">
+                    <span class="hc-icon"><i class="fas fa-vial" aria-hidden="true"></i></span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </div>
+                <div class="hc-count">@Model.SamplesAwaitingReceipt</div>
+                <div class="hc-label">Samples to receive</div>
+                <p class="hc-desc">Requests awaiting sample receipt and registration.</p>
+            </a>
+
+            <a asp-controller="LabTechnician" asp-action="ProcessTests" class="hc-stage">
+                <div class="hc-stage-top">
+                    <span class="hc-icon"><i class="fas fa-list-check" aria-hidden="true"></i></span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </div>
+                <div class="hc-count">@Model.WaitingToBeSelected</div>
+                <div class="hc-label">Waiting to be selected</div>
+                <p class="hc-desc">Eligible tests awaiting selection by a technician.</p>
+            </a>
+
+            <a asp-controller="LabTechnician" asp-action="ProcessTests" class="hc-stage">
+                <div class="hc-stage-top">
+                    <span class="hc-icon"><i class="fas fa-microscope" aria-hidden="true"></i></span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </div>
+                <div class="hc-count">@Model.MySelectedTests</div>
+                <div class="hc-label">Selected by me</div>
+                <p class="hc-desc">Tests you selected and are responsible for processing.</p>
+            </a>
+
+            <a asp-controller="LabTechnician" asp-action="VerifyResults" class="hc-stage">
+                <div class="hc-stage-top">
+                    <span class="hc-icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </div>
+                <div class="hc-count">@Model.WaitingVerification</div>
+                <div class="hc-label">Awaiting verification</div>
+                <p class="hc-desc">Completed results awaiting a second technician's verification.</p>
+            </a>
+
+            <a asp-controller="LabTechnician" asp-action="ReviewResults" class="hc-stage">
+                <div class="hc-stage-top">
+                    <span class="hc-icon"><i class="fas fa-clipboard-check" aria-hidden="true"></i></span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </div>
+                <div class="hc-count">@Model.WaitingReview</div>
+                <div class="hc-label">Awaiting review</div>
+                <p class="hc-desc">Results returned for correction after verification.</p>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- FIND TESTS -->
+
+    <section class="hc-section" aria-labelledby="filters-title">
+        <div class="hc-section-head">
+            <h2 id="filters-title" class="hc-section-title">Find tests</h2>
+            <p class="hc-section-sub">Filter your workload by urgency, category, due time or request number.</p>
+        </div>
+
+        <div class="hc-filters">
+            <form asp-controller="LabTechnician" asp-action="ProcessTests" method="get">
+
+                <div class="hc-filter-grid">
+
+                    <div class="hc-field">
+                        <label for="urgencyFilter">Urgency</label>
+                        <select id="urgencyFilter" name="urgency" class="hc-input">
+                            <option value="">All urgencies</option>
+                            <option value="Routine">Routine</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="STAT">STAT</option>
+                        </select>
+                    </div>
+
+                    <div class="hc-field">
+                        <label for="categoryFilter">Test category</label>
+                        <select id="categoryFilter" name="category" class="hc-input">
+                            <option value="">All categories</option>
+                            @if (ViewBag.TestCategories != null)
+                            {
+                                foreach (var category in ViewBag.TestCategories)
+                                {
+                                    <option value="@category.CategoryName">@category.CategoryName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="hc-field">
+                        <label for="dueStatusFilter">Due time</label>
+                        <select id="dueStatusFilter" name="dueStatus" class="hc-input">
+                            <option value="">All due times</option>
+                            <option value="Nearing">Nearing deadline</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+
+                    <div class="hc-field">
+                        <label for="requestNumberFilter">Request number</label>
+                        <input id="requestNumberFilter"
+                               name="requestNumber"
+                               type="number"
+                               min="1"
+                               inputmode="numeric"
+                               class="hc-input"
+                               placeholder="Enter request number" />
+                    </div>
+
+                </div>
+
+                <div class="hc-actions">
+                    <button type="submit" class="hc-btn hc-btn-primary">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        Apply filters
+                    </button>
+
+                    <a asp-controller="LabTechnician" asp-action="ProcessTests" class="hc-btn hc-btn-ghost">
+                        Clear filters
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </section>
 
     <!-- MY WORKSPACE -->
 
-    <div class="workspace-section">
-
-        <div class="section-heading">
-            <h2 class="section-title">My Workspace</h2>
-
-            <p class="section-subtitle">
-                Access your completed work, reports and account settings.
-            </p>
+    <section class="hc-section" aria-labelledby="workspace-title">
+        <div class="hc-section-head">
+            <h2 id="workspace-title" class="hc-section-title">My workspace</h2>
+            <p class="hc-section-sub">Access completed work, reports and account settings.</p>
         </div>
 
-        <div class="workspace-panel">
+        <div class="hc-workspace">
 
-            <!-- COMPLETED TESTS -->
-
-            <a asp-controller="LabTechnician"
-               asp-action="MyCompletedTests"
-               class="workspace-link">
-
-                <div class="workspace-icon">
-                    <i class="fas fa-circle-check"></i>
+            <a asp-controller="LabTechnician" asp-action="MyCompletedTests" class="hc-link">
+                <span class="hc-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
+                <div class="hc-link-text">
+                    <div class="hc-label">My completed tests</div>
+                    <p class="hc-desc">View tests you have completed.</p>
                 </div>
-
-                <div class="workspace-text">
-                    <div class="workspace-label">
-                        My Completed Tests
-                    </div>
-
-                    <p class="workspace-description">
-                        View tests you have completed.
-                    </p>
-                </div>
-
-                <i class="fas fa-chevron-right workspace-arrow"></i>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </a>
 
-            <!-- REPORTS -->
-
-            <a asp-controller="LabTechnician"
-               asp-action="Reports"
-               class="workspace-link">
-
-                <div class="workspace-icon">
-                    <i class="fas fa-file-lines"></i>
+            <a asp-controller="LabTechnician" asp-action="Reports" class="hc-link">
+                <span class="hc-icon"><i class="fas fa-file-lines" aria-hidden="true"></i></span>
+                <div class="hc-link-text">
+                    <div class="hc-label">Reports</div>
+                    <p class="hc-desc">Generate and access laboratory reports.</p>
                 </div>
-
-                <div class="workspace-text">
-                    <div class="workspace-label">
-                        Reports
-                    </div>
-
-                    <p class="workspace-description">
-                        Access available laboratory reports.
-                    </p>
-                </div>
-
-                <i class="fas fa-chevron-right workspace-arrow"></i>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </a>
 
-            <!-- MY ACCOUNT -->
-
-            <a asp-controller="LabTechnician"
-               asp-action="TechnicianProfile"
-               class="workspace-link">
-
-                <div class="workspace-icon">
-                    <i class="fas fa-user-gear"></i>
+            <a asp-controller="LabTechnician" asp-action="TechnicianProfile" class="hc-link">
+                <span class="hc-icon"><i class="fas fa-user-gear" aria-hidden="true"></i></span>
+                <div class="hc-link-text">
+                    <div class="hc-label">My account</div>
+                    <p class="hc-desc">Manage your profile and password.</p>
                 </div>
-
-                <div class="workspace-text">
-                    <div class="workspace-label">
-                        My Account
-                    </div>
-
-                    <p class="workspace-description">
-                        Manage your profile and password.
-                    </p>
-                </div>
-
-                <i class="fas fa-chevron-right workspace-arrow"></i>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </a>
 
         </div>
-    </div>
+    </section>
 
 </div>

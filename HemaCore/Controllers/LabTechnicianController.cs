@@ -265,11 +265,10 @@ namespace HemaCore.Controllers
                     .ToListAsync();
 
             var query = _context.TestRequestTestTypes
-                .Include(t => t.TestRequest)
-                    .ThenInclude(r => r.Patient)
-                .Include(t => t.TestType)
-                    .ThenInclude(tt => tt.Category)
-                .Where(t =>
+     .Include(t => t.TestRequest)
+     .Include(t => t.TestType)
+         .ThenInclude(tt => tt.Category)
+                 .Where(t =>
                     (
                         // New tests the technician is qualified to perform
                         (
@@ -429,70 +428,74 @@ namespace HemaCore.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> CaptureTestResult(int id)
+     
+[HttpGet]
+public async Task<IActionResult> CaptureTestResult(int id)
         {
-            var test =
-                await _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Patient)
-
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Doctor)
-
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Samples)
-                            .ThenInclude(s => s.SampleType)
-
-                    .Include(t => t.TestType)
-                        .ThenInclude(tt => tt.Category)
-
-                    .Include(t => t.LabTechnician)
-
-                    .FirstOrDefaultAsync(t =>
-                        t.TestRequestTestTypeId == id);
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Doctor)
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Samples)
+                        .ThenInclude(s => s.SampleType)
+                .Include(t => t.TestType)
+                    .ThenInclude(tt => tt.Category)
+                .Include(t => t.LabTechnician)
+                .FirstOrDefaultAsync(t =>
+                    t.TestRequestTestTypeId == id);
 
             if (test == null)
             {
                 return NotFound();
             }
 
-            var patientId =
-                test.TestRequest.Patient.PatientID;
+            var patientId = await _context.TestRequests
+                .Where(r => r.TestRequestId == test.TestRequestId)
+                .Select(r => r.PatientID)
+                .FirstOrDefaultAsync();
 
-            var conditions =
-                await _context.PatientConditions
-                    .Include(x => x.Condition)
-                    .Where(x =>
-                        x.PatientID == patientId)
-                    .ToListAsync();
+            var patient = await _context.Patients
+                .Where(p => p.PatientID == patientId)
+                .Select(p => new
+                {
+                    p.PatientID,
+                    p.Name,
+                    p.Surname,
+                    p.Gender,
+                    p.IDNumber,
+                    p.DateOfBirth,
+                    p.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
 
-            var allergies =
-                await _context.PatientAllergies
-                    .Include(x => x.Allergy)
-                    .Where(x =>
-                        x.PatientID == patientId)
-                    .ToListAsync();
+            if (patient == null)
+            {
+                return NotFound("Patient record not found.");
+            }
 
-            var medications =
-                await _context.PatientMedications
-                    .Include(x => x.Medication)
-                    .Where(x =>
-                        x.PatientID == patientId)
-                    .ToListAsync();
+            ViewBag.Patient = patient;
 
-            ViewBag.PatientConditions =
-                conditions;
+            var conditions = await _context.PatientConditions
+                .Include(x => x.Condition)
+                .Where(x => x.PatientID == patientId)
+                .ToListAsync();
 
-            ViewBag.PatientAllergies =
-                allergies;
+            var allergies = await _context.PatientAllergies
+                .Include(x => x.Allergy)
+                .Where(x => x.PatientID == patientId)
+                .ToListAsync();
 
-            ViewBag.PatientMedications =
-                medications;
+            var medications = await _context.PatientMedications
+                .Include(x => x.Medication)
+                .Where(x => x.PatientID == patientId)
+                .ToListAsync();
+
+            ViewBag.PatientConditions = conditions;
+            ViewBag.PatientAllergies = allergies;
+            ViewBag.PatientMedications = medications;
 
             return View(test);
         }
-
 
 
 
@@ -1267,151 +1270,127 @@ public async Task<IActionResult> CompleteReview(
         // ==========================================
 
         public async Task<IActionResult> Reports(
-            DateTime? fromDate,
-            DateTime? toDate,
-            string testType,
-            string status,
-            string urgency)
+    DateTime? fromDate,
+    DateTime? toDate,
+    string testType,
+    string status,
+    string urgency)
         {
-            var query =
-                _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Patient)
-                    .Include(t => t.TestType)
-                    .Include(t => t.TestResult)
-                    .Include(t => t.LabTechnician)
-                    .AsQueryable();
+            var query = _context.TestRequestTestTypes
+                .AsNoTracking()
+                .AsQueryable();
 
             if (fromDate.HasValue)
             {
                 query = query.Where(t =>
                     t.CompletionDateTime.HasValue &&
-                    t.CompletionDateTime.Value.Date >=
-                        fromDate.Value.Date);
+                    t.CompletionDateTime.Value.Date >= fromDate.Value.Date);
             }
 
             if (toDate.HasValue)
             {
                 query = query.Where(t =>
                     t.CompletionDateTime.HasValue &&
-                    t.CompletionDateTime.Value.Date <=
-                        toDate.Value.Date);
+                    t.CompletionDateTime.Value.Date <= toDate.Value.Date);
             }
 
             if (!string.IsNullOrEmpty(testType))
             {
                 query = query.Where(t =>
-                    t.TestType.TestTypeName ==
-                    testType);
+                    t.TestType.TestTypeName == testType);
             }
 
             if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(t =>
-                    t.Status ==
-                    status);
+                query = query.Where(t => t.Status == status);
             }
 
             if (!string.IsNullOrEmpty(urgency))
             {
                 query = query.Where(t =>
-                    t.TestRequest.Urgency ==
-                    urgency);
+                    t.TestRequest.Urgency == urgency);
             }
 
-            var tests =
-                await query.ToListAsync();
-
-            var report =
-                new LabTechnicianReportViewModel
+            var tests = await query
+                .Select(t => new
                 {
-                    FromDate =
-                        fromDate,
+                    t.TestRequestId,
 
-                    ToDate =
-                        toDate,
+                    PatientName =
+                        ((string?)t.TestRequest.Patient.Name ?? "") +
+                        " " +
+                        ((string?)t.TestRequest.Patient.Surname ?? ""),
 
-                    TestType =
-                        testType,
+                    TestTypeName =
+                        (string?)t.TestType.TestTypeName,
 
-                    Status =
-                        status,
+                    TechnicianName =
+                        ((string?)t.LabTechnician.Name ?? "") +
+                        " " +
+                        ((string?)t.LabTechnician.Surname ?? ""),
 
-                    Urgency =
-                        urgency,
+                    Urgency = (string?)t.TestRequest.Urgency,
+                    Status = (string?)t.Status,
 
-                    TotalTests =
-                        tests.Count,
+                    ResultValue = (string?)t.TestResult.ResultValue,
+                    IsAbnormal = (bool?)t.TestResult.IsAbnormal,
 
-                    CompletedTests =
-                        tests.Count(t =>
-                            t.Status ==
-                            "Completed"),
+                    t.StartDateTime,
+                    t.CompletionDateTime
+                })
+                .ToListAsync();
 
-                    InProgressTests =
-                        tests.Count(t =>
-                            t.Status ==
-                            "InProgress"),
+            var report = new LabTechnicianReportViewModel
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                TestType = testType,
+                Status = status,
+                Urgency = urgency,
 
-                    AbnormalResults =
-                        tests.Count(t =>
-                            t.TestResult != null &&
-                            t.TestResult.IsAbnormal)
-                };
+                TotalTests = tests.Count,
 
-            report.Tests =
-                tests.Select(t =>
+                CompletedTests = tests.Count(t =>
+                    t.Status == "Completed"),
+
+                InProgressTests = tests.Count(t =>
+                    t.Status == "InProgress"),
+
+                AbnormalResults = tests.Count(t =>
+                    t.IsAbnormal == true),
+
+                Tests = tests.Select(t =>
                     new LabTechnicianReportItemViewModel
                     {
-                        TestRequestId =
-                            t.TestRequestId,
+                        TestRequestId = t.TestRequestId,
 
-                        PatientName =
-                            (t.TestRequest?.Patient?.Name ?? "") +
-                            " " +
-                            (t.TestRequest?.Patient?.Surname ?? ""),
+                        PatientName = t.PatientName.Trim(),
 
-                        TestTypeName =
-                            t.TestType?.TestTypeName ??
-                            "N/A",
+                        TestTypeName = t.TestTypeName ?? "N/A",
 
-                        TechnicianName =
-                            (t.LabTechnician?.Name ?? "") +
-                            " " +
-                            (t.LabTechnician?.Surname ?? ""),
+                        TechnicianName = t.TechnicianName.Trim(),
 
-                        Urgency =
-                            t.TestRequest?.Urgency ??
-                            "N/A",
+                        Urgency = t.Urgency ?? "N/A",
 
-                        Status =
-                            t.Status ??
-                            "N/A",
+                        Status = t.Status ?? "N/A",
 
-                        ResultValue =
-                            t.TestResult?.ResultValue ??
-                            "N/A",
+                        ResultValue = t.ResultValue ?? "N/A",
 
-                        IsAbnormal =
-                            t.TestResult?.IsAbnormal ??
-                            false,
+                        IsAbnormal = t.IsAbnormal ?? false,
 
-                        StartDateTime =
-                            t.StartDateTime,
+                        StartDateTime = t.StartDateTime,
 
-                        CompletionDateTime =
-                            t.CompletionDateTime,
+                        CompletionDateTime = t.CompletionDateTime,
 
                         TurnaroundMinutes =
                             t.StartDateTime.HasValue &&
                             t.CompletionDateTime.HasValue
-                                ? (
-                                    t.CompletionDateTime.Value -
-                                    t.StartDateTime.Value
-                                  ).TotalMinutes
+                                ? (t.CompletionDateTime.Value -
+                                   t.StartDateTime.Value).TotalMinutes
                                 : null
                     })
-                    .ToList();
+                    .ToList()
+            };
 
             return View(report);
         }
@@ -1727,53 +1706,48 @@ public async Task<IActionResult> CompleteReview(
         // MY COMPLETED TESTS
         // ==========================================
 
-        public async Task<IActionResult> MyCompletedTests()
+  
+public async Task<IActionResult> MyCompletedTests()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var completedTests =
-                await _context.TestRequestTestTypes
-                    .Include(t =>
-                        t.TestRequest)
-                        .ThenInclude(r =>
-                            r.Patient)
-                    .Include(t =>
-                        t.TestType)
-                    .Where(t =>
-                        t.LabTechnicianId ==
-                            technician.LabTechnicianId &&
-                        (
-                            t.Status ==
-                                "Completed" ||
-                            t.Status ==
-                                "Verified"
-                        ))
-                    .OrderByDescending(t =>
-                        t.CompletionDateTime)
-                    .ToListAsync();
+            var completedTests = await _context.TestRequestTestTypes
+                .Where(t =>
+                    t.LabTechnicianId == technician.LabTechnicianId &&
+                    (t.Status == "Completed" || t.Status == "Verified"))
+                .OrderByDescending(t => t.CompletionDateTime)
+                .ToListAsync();
+
+            foreach (var test in completedTests)
+            {
+                // Load the request without loading the full Patient entity.
+                test.TestRequest = await _context.TestRequests
+                    .FirstOrDefaultAsync(r =>
+                        r.TestRequestId == test.TestRequestId);
+
+                // Load the test type separately.
+                test.TestType = await _context.TestTypes
+                    .FirstOrDefaultAsync(tt =>
+                        tt.TestTypeId == test.TestTypeId);
+            }
 
             return View(completedTests);
         }
-        
+
+ 
 public async Task<IActionResult> CompletedTestDetails(int id)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -1792,9 +1766,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             }
 
             var test = await _context.TestRequestTestTypes
-                .Include(t => t.TestRequest)
-                    .ThenInclude(r => r.Patient)
-                .Include(t => t.TestType)
                 .FirstOrDefaultAsync(t =>
                     t.TestRequestTestTypeId == id &&
                     t.LabTechnicianId == technician.LabTechnicianId &&
@@ -1803,6 +1774,19 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             if (test == null)
             {
                 return NotFound("Completed test not found.");
+            }
+
+            test.TestRequest = await _context.TestRequests
+                .FirstOrDefaultAsync(r =>
+                    r.TestRequestId == test.TestRequestId);
+
+            test.TestType = await _context.TestTypes
+                .FirstOrDefaultAsync(t =>
+                    t.TestTypeId == test.TestTypeId);
+
+            if (test.TestRequest == null || test.TestType == null)
+            {
+                return NotFound("The associated request or test type could not be found.");
             }
 
             return View(test);
