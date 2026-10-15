@@ -1,5 +1,4 @@
-﻿ 
-@model HemaCore.ViewModels.DoctorViewModels.RequestStatusViewModel
+﻿@model HemaCore.ViewModels.DoctorViewModels.RequestStatusViewModel
 
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
@@ -14,28 +13,50 @@
         "Released"
     };
 
-    var currentStatus = Model.Status ?? "";
-    var currentIndex = 0;
+    var currentStatus = (Model.Status ?? "").Trim();
 
-    if (currentStatus.Equals("Samples Received", StringComparison.OrdinalIgnoreCase) ||
-        currentStatus.Equals("Sample(s) received", StringComparison.OrdinalIgnoreCase))
+    // Normalize status values so that "InProgress" and "In Progress"
+    // are treated as the same status.
+    string NormalizeStatus(string? status)
     {
-        currentIndex = 1;
+        return (status ?? "")
+            .Trim()
+            .Replace(" ", "")
+            .Replace("(", "")
+            .Replace(")", "")
+            .ToLowerInvariant();
     }
-    else if (currentStatus.Equals("In Progress", StringComparison.OrdinalIgnoreCase) ||
-             currentStatus.Equals("In progress", StringComparison.OrdinalIgnoreCase))
+
+    var normalizedStatus = NormalizeStatus(currentStatus);
+
+    bool IsStatus(string? status, params string[] acceptedStatuses)
     {
-        currentIndex = 2;
+        var normalized = NormalizeStatus(status);
+
+        return acceptedStatuses.Any(s =>
+            normalized == NormalizeStatus(s));
     }
-    else if (currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+
+    // Determine the current progress step.
+    var currentIndex = normalizedStatus switch
     {
-        currentIndex = 3;
-    }
-    else if (currentStatus.Equals("Released by doctor", StringComparison.OrdinalIgnoreCase) ||
-             currentStatus.Equals("Released By Doctor", StringComparison.OrdinalIgnoreCase))
-    {
-        currentIndex = 4;
-    }
+        "submitted" => 0,
+
+        "samplesreceived" => 1,
+        "samplereceived" => 1,
+
+        "inprogress" => 2,
+
+        "completed" => 3,
+
+        "releasedbydoctor" => 4,
+        "released" => 4,
+
+        _ => 0
+    };
+
+    // Cancelled requests should not appear to be progressing.
+    var isCancelled = IsStatus(currentStatus, "Cancelled");
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
@@ -49,59 +70,62 @@
             Test Request #@Model.TestRequestId
         </h2>
 
-        <p>
-            Track the progress of this test request
-        </p>
+        <p>Track the progress of this test request</p>
     </div>
-
 
     <!-- PROGRESS BAR -->
     <div class="request-progress-card">
 
-        <div class="progress-steps">
+        @if (isCancelled)
+        {
+            <div class="cancelled-notice">
+                <i class="fas fa-times-circle"></i>
+                This test request has been cancelled.
+            </div>
+        }
+        else
+        {
+            <div class="progress-steps">
 
-            @for (int i = 0; i < statuses.Length; i++)
-            {
-                var isCompleted = i <= currentIndex;
+                @for (int i = 0; i < statuses.Length; i++)
+                {
+                    var isCompleted = i <= currentIndex;
 
-                <div class="progress-step">
+                    <div class="progress-step">
 
-                    @if (i < statuses.Length - 1)
-                    {
-                        <div class="progress-line @(i < currentIndex ? "completed" : "")"></div>
-                    }
-
-                    <div class="progress-circle @(isCompleted ? "completed" : "")">
-
-                        @if (isCompleted)
+                        @if (i < statuses.Length - 1)
                         {
-                            <i class="fas fa-check"></i>
-                        }
-                        else
-                        {
-                            <span>@(i + 1)</span>
+                            <div class="progress-line @(i < currentIndex ? "completed" : "")"></div>
                         }
 
+                        <div class="progress-circle @(isCompleted ? "completed" : "")">
+                            @if (isCompleted)
+                            {
+                                <i class="fas fa-check"></i>
+                            }
+                            else
+                            {
+                                <span>@(i + 1)</span>
+                            }
+                        </div>
+
+                        <div class="progress-label @(isCompleted ? "completed" : "")">
+                            @statuses[i]
+                        </div>
+
                     </div>
+                }
 
-                    <div class="progress-label @(isCompleted ? "completed" : "")">
-                        @statuses[i]
-                    </div>
-
-                </div>
-            }
-
-        </div>
+            </div>
+        }
 
     </div>
-
 
     <!-- REQUEST INFORMATION -->
     <div class="info-grid">
 
         <!-- PATIENT -->
         <div class="info-card">
-
             <label>
                 <i class="fas fa-user"></i>
                 Patient Name
@@ -110,13 +134,10 @@
             <div class="info-value">
                 @Model.PatientName
             </div>
-
         </div>
-
 
         <!-- REQUEST DATE -->
         <div class="info-card">
-
             <label>
                 <i class="fas fa-calendar"></i>
                 Request Date
@@ -125,53 +146,37 @@
             <div class="info-value">
                 @Model.RequestDate
             </div>
-
         </div>
-
 
         <!-- URGENCY -->
         <div class="info-card">
-
             <label>
                 <i class="fas fa-flag"></i>
                 Urgency
             </label>
 
             <div class="info-value">
-
-                @if (Model.Urgency?.Equals("Routine", StringComparison.OrdinalIgnoreCase) == true)
+                @if (IsStatus(Model.Urgency, "Routine"))
                 {
-                    <span class="badge badge-routine">
-                        Routine
-                    </span>
+                    <span class="badge badge-routine">Routine</span>
                 }
-                else if (Model.Urgency?.Equals("Urgent", StringComparison.OrdinalIgnoreCase) == true)
+                else if (IsStatus(Model.Urgency, "Urgent"))
                 {
-                    <span class="badge badge-urgent">
-                        Urgent
-                    </span>
+                    <span class="badge badge-urgent">Urgent</span>
                 }
-                else if (Model.Urgency?.Equals("STAT", StringComparison.OrdinalIgnoreCase) == true)
+                else if (IsStatus(Model.Urgency, "STAT"))
                 {
-                    <span class="badge badge-stat">
-                        STAT
-                    </span>
+                    <span class="badge badge-stat">STAT</span>
                 }
                 else
                 {
-                    <span class="badge badge-routine">
-                        @Model.Urgency
-                    </span>
+                    <span class="badge badge-routine">@Model.Urgency</span>
                 }
-
             </div>
-
         </div>
-
 
         <!-- CURRENT STATUS -->
         <div class="info-card">
-
             <label>
                 <i class="fas fa-info-circle"></i>
                 Current Status
@@ -179,137 +184,99 @@
 
             <div class="info-value">
 
-                @if (currentStatus.Equals("Submitted", StringComparison.OrdinalIgnoreCase))
+                @if (IsStatus(currentStatus, "Submitted"))
                 {
-                    <span class="badge badge-submitted">
-                        Submitted
-                    </span>
+                    <span class="badge badge-submitted">Submitted</span>
                 }
-                else if (currentStatus.Equals("Samples Received", StringComparison.OrdinalIgnoreCase) ||
-                         currentStatus.Equals("Sample(s) received", StringComparison.OrdinalIgnoreCase))
+                else if (IsStatus(currentStatus, "SamplesReceived", "Sample(s) received", "SampleReceived"))
                 {
-                    <span class="badge badge-samplesreceived">
-                        Samples Received
-                    </span>
+                    <span class="badge badge-samplesreceived">Samples Received</span>
                 }
-                else if (currentStatus.Equals("In Progress", StringComparison.OrdinalIgnoreCase) ||
-                         currentStatus.Equals("In progress", StringComparison.OrdinalIgnoreCase))
+                else if (IsStatus(currentStatus, "InProgress"))
                 {
-                    <span class="badge badge-inprogress">
-                        In Progress
-                    </span>
+                    <span class="badge badge-inprogress">In Progress</span>
                 }
-                else if (currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                else if (IsStatus(currentStatus, "Completed"))
                 {
-                    <span class="badge badge-completed">
-                        Completed
-                    </span>
+                    <span class="badge badge-completed">Completed</span>
                 }
-                else if (currentStatus.Equals("Released by doctor", StringComparison.OrdinalIgnoreCase) ||
-                         currentStatus.Equals("Released By Doctor", StringComparison.OrdinalIgnoreCase))
+                else if (IsStatus(currentStatus, "Released by doctor", "Released"))
                 {
-                    <span class="badge badge-releasedbydoctor">
-                        Released
-                    </span>
+                    <span class="badge badge-releasedbydoctor">Released</span>
                 }
-                else if (currentStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                else if (isCancelled)
                 {
-                    <span class="badge badge-cancelled">
-                        Cancelled
-                    </span>
+                    <span class="badge badge-cancelled">Cancelled</span>
                 }
                 else
                 {
                     <span class="badge badge-submitted">
-                        @Model.Status
+                        @(string.IsNullOrWhiteSpace(currentStatus) ? "Unknown" : currentStatus)
                     </span>
                 }
 
             </div>
-
         </div>
 
     </div>
 
-
     <!-- REQUESTED TESTS -->
     <div class="section-title">
-
         <i class="fas fa-microscope"></i>
         Requested Tests
-
     </div>
 
     @if (Model.TestItems != null && Model.TestItems.Any())
     {
         <div class="table-responsive">
-
             <table class="modern-table">
-
                 <thead>
-
                     <tr>
                         <th>Test Name</th>
                         <th>Status</th>
                     </tr>
-
                 </thead>
 
                 <tbody>
-
                     @foreach (var item in Model.TestItems)
                     {
                         <tr>
-
                             <td>
-                                <strong>
-                                    @item.TestTypeName
-                                </strong>
+                                <strong>@item.TestTypeName</strong>
                             </td>
 
                             <td>
-
-                                @if (item.Status?.Equals("Submitted", StringComparison.OrdinalIgnoreCase) == true)
+                                @if (IsStatus(item.Status, "Submitted"))
                                 {
-                                    <span class="badge badge-submitted">
-                                        Submitted
-                                    </span>
+                                    <span class="badge badge-submitted">Submitted</span>
                                 }
-                                else if (item.Status?.Equals("In Progress", StringComparison.OrdinalIgnoreCase) == true ||
-                                         item.Status?.Equals("In progress", StringComparison.OrdinalIgnoreCase) == true)
+                                else if (IsStatus(item.Status, "InProgress"))
                                 {
-                                    <span class="badge badge-inprogress">
-                                        In Progress
-                                    </span>
+                                    <span class="badge badge-inprogress">In Progress</span>
                                 }
-                                else if (item.Status?.Equals("Completed", StringComparison.OrdinalIgnoreCase) == true)
+                                else if (IsStatus(item.Status, "Completed"))
                                 {
-                                    <span class="badge badge-completed">
-                                        Completed
-                                    </span>
+                                    <span class="badge badge-completed">Completed - Awaiting Verification</span>
                                 }
-                                else if (item.Status?.Equals("Verified", StringComparison.OrdinalIgnoreCase) == true)
+                                else if (IsStatus(item.Status, "Verified"))
                                 {
-                                    <span class="badge badge-releasedbydoctor">
-                                        Verified
-                                    </span>
+                                    <span class="badge badge-verified">Verified</span>
+                                }
+                                else if (IsStatus(item.Status, "To Be Reviewed"))
+                                {
+                                    <span class="badge badge-review">To Be Reviewed</span>
                                 }
                                 else
                                 {
                                     <span class="badge badge-submitted">
-                                        @item.Status
+                                        @(string.IsNullOrWhiteSpace(item.Status) ? "Unknown" : item.Status)
                                     </span>
                                 }
-
                             </td>
-
                         </tr>
                     }
-
                 </tbody>
-
             </table>
-
         </div>
     }
     else
@@ -319,36 +286,27 @@
         </p>
     }
 
-
     <!-- SAMPLES -->
     <div class="section-title samples-title">
-
         <i class="fas fa-vial"></i>
         Samples Collected
-
     </div>
 
     @if (Model.Samples != null && Model.Samples.Any())
     {
         <div class="table-responsive">
-
             <table class="modern-table">
-
                 <thead>
-
                     <tr>
                         <th>Barcode</th>
                         <th>Sample Type</th>
                     </tr>
-
                 </thead>
 
                 <tbody>
-
                     @foreach (var sample in Model.Samples)
                     {
                         <tr>
-
                             <td>
                                 <strong>
                                     <i class="fas fa-barcode barcode-icon"></i>
@@ -356,17 +314,11 @@
                                 </strong>
                             </td>
 
-                            <td>
-                                @sample.SampleTypeName
-                            </td>
-
+                            <td>@sample.SampleTypeName</td>
                         </tr>
                     }
-
                 </tbody>
-
             </table>
-
         </div>
     }
     else
@@ -376,14 +328,11 @@
         </p>
     }
 
-
     <!-- VIEW RESULTS -->
-    @if (currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
-         currentStatus.Equals("Released by doctor", StringComparison.OrdinalIgnoreCase) ||
-         currentStatus.Equals("Released By Doctor", StringComparison.OrdinalIgnoreCase))
+    @if (!isCancelled &&
+         IsStatus(currentStatus, "Completed", "Released by doctor", "Released"))
     {
         <div class="results-button-container">
-
             <a asp-controller="Doctor"
                asp-action="Results"
                asp-route-id="@Model.TestRequestId"
@@ -391,25 +340,19 @@
 
                 <i class="fas fa-file-medical-alt"></i>
                 View Full Results
-
             </a>
-
         </div>
     }
 
-
     <!-- CANCEL REQUEST -->
-    @if (currentStatus.Equals("Submitted", StringComparison.OrdinalIgnoreCase) ||
-         currentStatus.Equals("Samples Received", StringComparison.OrdinalIgnoreCase) ||
-         currentStatus.Equals("Sample(s) received", StringComparison.OrdinalIgnoreCase))
+    @if (!isCancelled &&
+         IsStatus(currentStatus, "Submitted", "SamplesReceived", "Sample(s) received", "SampleReceived"))
     {
         <div class="cancel-card">
 
             <div class="section-title cancel-title">
-
                 <i class="fas fa-times-circle"></i>
                 Cancel Request
-
             </div>
 
             <p class="cancel-description">
@@ -428,12 +371,9 @@
                        value="@Model.TestRequestId" />
 
                 <div class="form-group">
-
                     <label for="reason">
-
                         <i class="fas fa-comment-alt"></i>
                         Reason for Cancellation
-
                     </label>
 
                     <textarea id="reason"
@@ -441,83 +381,63 @@
                               rows="3"
                               placeholder="Enter the reason for cancelling this request..."
                               required></textarea>
-
                 </div>
 
                 <div class="cancel-button-container">
-
-                    <button type="submit"
-                            class="cancel-button">
-
+                    <button type="submit" class="cancel-button">
                         <i class="fas fa-times"></i>
                         Cancel This Request
-
                     </button>
-
                 </div>
 
             </form>
-
         </div>
     }
 
-
     <!-- BACK BUTTON -->
     <div class="back-button-container">
-
         <a asp-action="MyRequests"
            asp-controller="Doctor"
            class="btn-outline-custom">
 
             <i class="fas fa-arrow-left"></i>
             Back to My Requests
-
         </a>
-
     </div>
 
 </div>
 
-
 <style>
-
     .fade-in {
         animation: fadeInUp 0.5s ease;
     }
 
-    /* ================================
-       PAGE HEADER
-       ================================ */
-
+    /* PAGE HEADER */
     .page-header {
         margin-bottom: 2rem;
     }
 
-    .page-header h2 {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+        .page-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    .page-header h2 i {
-        -webkit-text-fill-color: #667eea;
-    }
+            .page-header h2 i {
+                -webkit-text-fill-color: #667eea;
+            }
 
-    .page-header p {
-        margin: 6px 0 0;
-        color: #718096;
-        font-size: 14px;
-    }
+        .page-header p {
+            margin: 6px 0 0;
+            color: #718096;
+            font-size: 14px;
+        }
 
-
-    /* ================================
-       PROGRESS CARD
-       ================================ */
-
+    /* PROGRESS CARD */
     .request-progress-card {
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
         border-radius: 24px;
@@ -528,10 +448,10 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .request-progress-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-    }
+        .request-progress-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+        }
 
     .progress-steps {
         display: flex;
@@ -558,9 +478,9 @@
         z-index: 0;
     }
 
-    .progress-line.completed {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    }
+        .progress-line.completed {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
 
     .progress-circle {
         width: 36px;
@@ -577,9 +497,9 @@
         position: relative;
     }
 
-    .progress-circle.completed {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+        .progress-circle.completed {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
 
     .progress-label {
         margin-top: 0.5rem;
@@ -589,15 +509,20 @@
         text-align: center;
     }
 
-    .progress-label.completed {
-        color: #667eea;
+        .progress-label.completed {
+            color: #667eea;
+        }
+
+    .cancelled-notice {
+        padding: 1rem;
+        border-radius: 12px;
+        background: #fed7d7;
+        color: #c53030;
+        font-weight: 600;
+        text-align: center;
     }
 
-
-    /* ================================
-       INFORMATION CARDS
-       ================================ */
-
+    /* INFORMATION CARDS */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -614,34 +539,30 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .info-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-    }
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+        }
 
-    .info-card label {
-        display: block;
-        color: #718096;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
+        .info-card label {
+            display: block;
+            color: #718096;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
 
-    .info-card label i {
-        color: #667eea;
-        margin-right: 0.35rem;
-    }
+            .info-card label i {
+                color: #667eea;
+                margin-right: 0.35rem;
+            }
 
     .info-value {
         font-weight: 600;
         color: #2d3748;
     }
 
-
-    /* ================================
-       TABLES
-       ================================ */
-
+    /* TABLES */
     .modern-table {
         width: 100%;
         border-collapse: collapse;
@@ -652,39 +573,35 @@
         margin-bottom: 1rem;
     }
 
-    .modern-table thead th {
-        background: #f7fafc;
-        color: #667eea;
-        font-weight: 600;
-        padding: 14px 16px;
-        text-align: left;
-        border-bottom: 2px solid #e9ecef;
-    }
+        .modern-table thead th {
+            background: #f7fafc;
+            color: #667eea;
+            font-weight: 600;
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 2px solid #e9ecef;
+        }
 
-    .modern-table tbody td {
-        padding: 14px 16px;
-        border-bottom: 1px solid #eef1f3;
-        color: #2d3748;
-    }
+        .modern-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef1f3;
+            color: #2d3748;
+        }
 
-    .modern-table tbody tr:last-child td {
-        border-bottom: none;
-    }
+        .modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
 
-    .modern-table tbody tr:hover {
-        background: #f0f4ff;
-    }
+        .modern-table tbody tr:hover {
+            background: #f0f4ff;
+        }
 
     .barcode-icon {
         color: #667eea;
         margin-right: 0.4rem;
     }
 
-
-    /* ================================
-       SECTION TITLES
-       ================================ */
-
+    /* SECTION TITLES */
     .section-title {
         margin-top: 1.5rem;
         margin-bottom: 0.75rem;
@@ -696,9 +613,9 @@
         gap: 0.5rem;
     }
 
-    .section-title i {
-        color: #667eea;
-    }
+        .section-title i {
+            color: #667eea;
+        }
 
     .samples-title {
         margin-top: 1.5rem;
@@ -709,11 +626,7 @@
         margin-bottom: 1.5rem;
     }
 
-
-    /* ================================
-       BADGES
-       ================================ */
-
+    /* BADGES */
     .badge {
         display: inline-block;
         padding: 6px 12px;
@@ -757,9 +670,15 @@
         color: #276749;
     }
 
-    .badge-releasedbydoctor {
+    .badge-releasedbydoctor,
+    .badge-verified {
         background: #c6f6d5;
         color: #276749;
+    }
+
+    .badge-review {
+        background: #feebc8;
+        color: #975a16;
     }
 
     .badge-cancelled {
@@ -767,11 +686,7 @@
         color: #c53030;
     }
 
-
-    /* ================================
-       RESULTS BUTTON
-       ================================ */
-
+    /* RESULTS BUTTON */
     .results-button-container {
         margin-top: 1rem;
         margin-bottom: 1.5rem;
@@ -790,18 +705,14 @@
         transition: all 0.3s ease;
     }
 
-    .btn-primary-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        color: white;
-        text-decoration: none;
-    }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
+        }
 
-
-    /* ================================
-       CANCEL REQUEST
-       ================================ */
-
+    /* CANCEL REQUEST */
     .cancel-card {
         background: linear-gradient(135deg, #ffffff 0%, #fff8f8 100%);
         border-radius: 24px;
@@ -817,9 +728,9 @@
         color: #e53e3e;
     }
 
-    .cancel-title i {
-        color: #e53e3e;
-    }
+        .cancel-title i {
+            color: #e53e3e;
+        }
 
     .cancel-description {
         color: #718096;
@@ -831,17 +742,17 @@
         margin-bottom: 1rem;
     }
 
-    .cancel-card .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #2d3748;
-    }
+        .cancel-card .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
 
-    .cancel-card .form-group label i {
-        margin-right: 0.35rem;
-        color: #e53e3e;
-    }
+            .cancel-card .form-group label i {
+                margin-right: 0.35rem;
+                color: #e53e3e;
+            }
 
     .cancel-card textarea {
         width: 100%;
@@ -854,15 +765,15 @@
         transition: all 0.3s ease;
     }
 
-    .cancel-card textarea:hover {
-        border-color: #cbd5e0;
-    }
+        .cancel-card textarea:hover {
+            border-color: #cbd5e0;
+        }
 
-    .cancel-card textarea:focus {
-        outline: none;
-        border-color: #e53e3e;
-        box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-    }
+        .cancel-card textarea:focus {
+            outline: none;
+            border-color: #e53e3e;
+            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+        }
 
     .cancel-button-container {
         display: flex;
@@ -880,16 +791,12 @@
         transition: all 0.3s ease;
     }
 
-    .cancel-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
-    }
+        .cancel-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
+        }
 
-
-    /* ================================
-       BACK BUTTON
-       ================================ */
-
+    /* BACK BUTTON */
     .back-button-container {
         margin-top: 1.5rem;
         margin-bottom: 1rem;
@@ -909,24 +816,21 @@
         transition: all 0.3s ease;
     }
 
-    .btn-outline-custom:hover {
-        background: #f7fafc;
-        border-color: #cbd5e0;
-        color: #4a5568;
-        transform: translateY(-2px);
-        text-decoration: none;
-    }
+        .btn-outline-custom:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            color: #4a5568;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
 
-
-    /* ================================
-       ANIMATION + MOBILE
-       ================================ */
-
+    /* ANIMATION AND MOBILE */
     @@keyframes fadeInUp {
         from {
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -934,7 +838,6 @@
     }
 
     @@media (max-width: 768px) {
-
         .info-grid {
             grid-template-columns: 1fr;
         }
@@ -968,5 +871,4 @@
             width: 100%;
         }
     }
-
 </style>
