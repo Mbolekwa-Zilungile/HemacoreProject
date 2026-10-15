@@ -1,0 +1,157 @@
+﻿@model IEnumerable<HemaCore.Models.TestRequestItem>
+
+@{
+    ViewData["Title"] = "My Tests";
+    Layout = "_LabTechnicianLayout";
+
+    string Duration(double minutes)
+    {
+        var d = TimeSpan.FromMinutes(minutes);
+        return d.TotalHours >= 1
+            ? $"{(int)d.TotalHours} h {d.Minutes} min"
+            : $"{d.Minutes} min";
+    }
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    @if (TempData["ResultSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["ResultSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="section-title d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-list-check me-2"></i>
+            <span>My Tests</span>
+            <span class="badge blue-badge ms-2">
+                @(Model?.Count() ?? 0)
+            </span>
+        </div>
+
+        <a asp-action="ProcessTests" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-plus me-1"></i>
+            Find more tests
+        </a>
+    </div>
+
+    <p class="text-muted mb-3">
+        These are the tests you have chosen to perform. Start a test when you are
+        ready, or continue one you have already started.
+    </p>
+
+    <div class="table-responsive">
+        <table class="modern-table">
+
+            <thead>
+                <tr>
+                    <th>Request Number</th>
+                    <th>Patient</th>
+                    <th>Test Type</th>
+                    <th>Category</th>
+                    <th>Urgency</th>
+                    <th>Turnaround</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-list-check fa-2x mb-2"></i>
+                            <div class="fw-semibold">
+                                You have not added any tests yet.
+                            </div>
+                            <small>
+                                Go to Select &amp; Process Tests, view a test's details and add it to My Tests.
+                            </small>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var test in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold blue-text">
+                                #@test.TestRequestId
+                            </td>
+
+                            <td>
+                                @test.TestRequest?.Patient?.Name
+                                @test.TestRequest?.Patient?.Surname
+                            </td>
+
+                            <td>@test.TestType?.TestTypeName</td>
+
+                            <td>@test.TestType?.Category?.CategoryName</td>
+
+                            <td>@test.TestRequest?.Urgency</td>
+
+                            <td>
+                                @if (test.TestType != null)
+                                {
+                                    @Duration(test.TestType.TurnAroundTime)
+                                }
+                            </td>
+
+                            <td>
+                                @if (test.Status == "InProgress")
+                                {
+                                    <span class="badge bg-primary">In Progress</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Not started</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (test.Status == "InProgress")
+                                {
+                                    <a asp-action="CaptureTestResult"
+                                       asp-route-id="@test.TestRequestTestTypeId"
+                                       class="btn btn-sm btn-success">
+                                        <i class="fas fa-arrow-right me-1"></i>
+                                        Continue Test
+                                    </a>
+                                }
+                                else
+                                {
+                                    <form asp-action="StartProcessing"
+                                          asp-route-id="@test.TestRequestTestTypeId"
+                                          method="post">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-play me-1"></i>
+                                            Start Processing
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+
+        </table>
+    </div>
+
+</div>

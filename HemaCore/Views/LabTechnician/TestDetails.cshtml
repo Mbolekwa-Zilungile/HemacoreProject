@@ -1,0 +1,407 @@
+﻿@model HemaCore.Models.TestRequestItem
+@using HemaCore.Models
+
+@{
+    ViewData["Title"] = "Test Details";
+    Layout = "_LabTechnicianLayout";
+
+    var consumables = ViewBag.Consumables as List<TestTypeConsumable> ?? new List<TestTypeConsumable>();
+    var now = (DateTime)ViewBag.Now;
+    var shiftEnd = (DateTime)ViewBag.ShiftEnd;
+    var expectedFinish = (DateTime)ViewBag.ExpectedFinish;
+    bool fitsShift = (bool)ViewBag.FitsShift;
+    bool hasShortage = (bool)ViewBag.HasShortage;
+
+    var duration = TimeSpan.FromMinutes(Model.TestType.TurnAroundTime);
+    string durationText = duration.TotalHours >= 1
+        ? $"{(int)duration.TotalHours} h {duration.Minutes} min"
+        : $"{duration.Minutes} min";
+
+    bool shiftOver = now >= shiftEnd;
+    var overBy = expectedFinish - shiftEnd;
+    string overByText = overBy.TotalHours >= 1
+        ? $"{(int)overBy.TotalHours} h {overBy.Minutes} min"
+        : $"{overBy.Minutes} min";
+}
+
+<style>
+    .details-page {
+        padding-bottom: 40px;
+    }
+
+    .page-hero {
+        background: linear-gradient(135deg, #75AABA 0%, #5f9aaa 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        box-shadow: 0 6px 18px rgba(70, 120, 140, 0.18);
+    }
+
+        .page-hero h2 {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .page-hero p {
+            margin-bottom: 0;
+            opacity: .9;
+        }
+
+    .back-btn {
+        background: rgba(255,255,255,.15);
+        border: 1px solid rgba(255,255,255,.45);
+        color: white;
+        border-radius: 8px;
+        padding: 9px 16px;
+    }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,.25);
+            color: white;
+        }
+
+    .info-card {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 3px 14px rgba(0,0,0,.07);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 17px 22px;
+        background: #f7fafb;
+        border-bottom: 1px solid #e8eef0;
+        color: #315967;
+        font-weight: 600;
+    }
+
+        .info-card-header i {
+            color: #75AABA;
+            font-size: 17px;
+        }
+
+    .info-card-body {
+        padding: 22px;
+    }
+
+    .info-item {
+        padding: 12px 15px;
+        background: #f9fbfc;
+        border-radius: 9px;
+        height: 100%;
+        border: 1px solid #edf2f4;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 12px;
+        color: #7a8b92;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #263b43;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .time-big {
+        font-size: 28px;
+        font-weight: 700;
+        color: #263b43;
+        line-height: 1.1;
+    }
+
+    .time-note {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        .time-note.ok {
+            background: #e8f5ee;
+            color: #1f6b43;
+        }
+
+        .time-note.warn {
+            background: #fdf3dc;
+            color: #8a5a0d;
+        }
+
+    .stock-table {
+        margin-bottom: 0;
+    }
+
+        .stock-table thead th {
+            background: #f3f7f8;
+            color: #58717a;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            border-bottom: 1px solid #dfe8eb;
+            padding: 13px 15px;
+        }
+
+        .stock-table tbody td {
+            padding: 14px 15px;
+            vertical-align: middle;
+            color: #40545b;
+        }
+
+    .stock-badge {
+        display: inline-block;
+        padding: 4px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .stock-badge.ok {
+            background: #e8f5ee;
+            color: #1f6b43;
+        }
+
+        .stock-badge.low {
+            background: #fdf3dc;
+            color: #8a5a0d;
+        }
+
+        .stock-badge.out {
+            background: #fbe3de;
+            color: #9b3b2c;
+        }
+
+    .decision-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 22px;
+    }
+
+    @@media (max-width: 768px) {
+        .page-hero {
+            padding: 22px 18px;
+        }
+
+        .info-card-body {
+            padding: 16px;
+        }
+    }
+</style>
+
+<div class="container mt-4 details-page">
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="page-hero">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+            <div>
+                <h2>@Model.TestType.TestTypeName</h2>
+                <p>Check the time it takes and the stock available, then decide whether to add this test to My Tests.</p>
+            </div>
+
+            <a asp-action="ProcessTests" class="btn back-btn">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
+    </div>
+
+    <!-- TEST -->
+    <div class="info-card">
+        <div class="info-card-header">
+            <i class="fas fa-microscope"></i>
+            <span>Test</span>
+        </div>
+
+        <div class="info-card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="info-item">
+                        <span class="info-label">Request number</span>
+                        <span class="info-value">#@Model.TestRequestId</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="info-item">
+                        <span class="info-label">Test</span>
+                        <span class="info-value">@Model.TestType.TestTypeName</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="info-item">
+                        <span class="info-label">Category</span>
+                        <span class="info-value">@(Model.TestType.Category?.CategoryName ?? "Not specified")</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="info-item">
+                        <span class="info-label">Urgency</span>
+                        <span class="info-value">@Model.TestRequest.Urgency</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TURNAROUND TIME -->
+    <div class="info-card">
+        <div class="info-card-header">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Turnaround time</span>
+        </div>
+
+        <div class="info-card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="info-item">
+                        <span class="info-label">This test takes</span>
+                        <span class="time-big">@durationText</span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="info-item">
+                        <span class="info-label">If you start now, it finishes at</span>
+                        <span class="time-big">@expectedFinish.ToString("HH:mm")</span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="info-item">
+                        <span class="info-label">Your shift ends at</span>
+                        <span class="time-big">@shiftEnd.ToString("HH:mm")</span>
+                    </div>
+                </div>
+            </div>
+
+            @if (shiftOver)
+            {
+                <div class="time-note warn">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Your shift has already ended. This test would finish at @expectedFinish.ToString("HH:mm").
+                </div>
+            }
+            else if (fitsShift)
+            {
+                <div class="time-note ok">
+                    <i class="fas fa-check-circle me-2"></i>
+                    This test fits within your shift.
+                </div>
+            }
+            else
+            {
+                <div class="time-note warn">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This test would finish @overByText after your shift ends.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- CONSUMABLES -->
+    <div class="info-card">
+        <div class="info-card-header">
+            <i class="fas fa-boxes-stacked"></i>
+            <span>Consumables needed</span>
+        </div>
+
+        <div class="info-card-body">
+            @if (!consumables.Any())
+            {
+                <p class="text-muted mb-0">No consumables are recorded for this test.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table stock-table">
+                        <thead>
+                            <tr>
+                                <th>Consumable</th>
+                                <th>Needed</th>
+                                <th>In stock</th>
+                                <th>Availability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in consumables)
+                            {
+                                bool enough = item.Consumable.QuantityInHand >= item.QuantityNeeded;
+                                bool low = enough && item.Consumable.QuantityInHand <= item.Consumable.ReorderLevel;
+
+                                <tr>
+                                    <td>@item.Consumable.ConsumableName</td>
+                                    <td>@item.QuantityNeeded</td>
+                                    <td>@item.Consumable.QuantityInHand</td>
+                                    <td>
+                                        @if (!enough)
+                                        {
+                                            <span class="stock-badge out">Not enough stock</span>
+                                        }
+                                        else if (low)
+                                        {
+                                            <span class="stock-badge low">Low stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="stock-badge ok">In stock</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- DECISION -->
+    <div class="info-card">
+        <div class="decision-bar">
+            @if (hasShortage)
+            {
+                <button type="button" class="btn btn-primary" disabled>
+                    <i class="fas fa-plus me-2"></i>Add to My Tests
+                </button>
+
+                <span class="text-danger">
+                    <i class="fas fa-ban me-1"></i>
+                    You cannot add this test because some consumables are out of stock.
+                </span>
+            }
+            else
+            {
+                <form asp-action="AddToMyTests" asp-route-id="@Model.TestRequestTestTypeId" method="post">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add to My Tests
+                    </button>
+                </form>
+            }
+
+            <a asp-action="ProcessTests" class="btn btn-light border">Choose a different test</a>
+        </div>
+    </div>
+
+</div>

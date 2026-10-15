@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<HemaCore.Models.TestRequestItem>
+﻿@model IEnumerable<HemaCore.Models.TestRequestItem>
 
 @{
     ViewData["Title"] = "Select & Process Tests";
@@ -10,6 +9,24 @@
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <div class="content-card">
+    
+    @if (ViewBag.DebugCounts != null)
+    {
+        <div class="alert alert-info">
+            <strong>Temporary diagnostic counts</strong>
+
+            <ul class="mb-0">
+                @foreach (var item in
+                    (Dictionary<string, int>)ViewBag.DebugCounts)
+                {
+                    <li>
+                        @item.Key: @item.Value
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+   
 
     @if (TempData["ResultSuccess"] != null)
     {
@@ -37,10 +54,16 @@
                 @(Model?.Count() ?? 0)
             </span>
         </div>
+
+        <a asp-action="MyTests" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-list-check me-1"></i>
+            My Tests
+        </a>
     </div>
 
     <p class="text-muted mb-3">
-        Start an eligible test or continue a test you have already started.
+        View the details of an eligible test, including how long it takes and
+        whether the consumables are in stock, then add it to My Tests.
     </p>
 
     @{
@@ -50,8 +73,6 @@
     }
 
     <form method="get" asp-action="ProcessTests" class="row g-2 mb-3">
-
-        
     </form>
 
     <div class="table-responsive">
@@ -80,7 +101,7 @@
                             </div>
                             <small>
                                 Eligible tests appear after their required samples have been received.
-                                Tests you have already started remain available here.
+                                Tests you add to My Tests are removed from this list.
                             </small>
                         </td>
                     </tr>
@@ -127,26 +148,12 @@
                             </td>
 
                             <td>
-                                @if (test.Status == "InProgress")
-                                {
-                                    <a asp-action="CaptureTestResult"
-                                       asp-route-id="@test.TestRequestTestTypeId"
-                                       class="btn btn-sm btn-success">
-                                        <i class="fas fa-arrow-right me-1"></i>
-                                        Continue Test
-                                    </a>
-                                }
-                                else if (test.Status == "Submitted")
-                                {
-                                    <form asp-action="StartProcessing"
-                                          asp-route-id="@test.TestRequestTestTypeId"
-                                          method="post">
-                                        <button type="submit" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-play me-1"></i>
-                                            Start Processing
-                                        </button>
-                                    </form>
-                                }
+                                <a asp-action="TestDetails"
+                                   asp-route-id="@test.TestRequestTestTypeId"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye me-1"></i>
+                                    View Details
+                                </a>
                             </td>
                         </tr>
                     }
