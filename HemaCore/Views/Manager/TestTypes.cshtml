@@ -52,20 +52,47 @@
     </div>
 
 
-    <!-- =====================================================
-         SEARCH
-         ===================================================== -->
+    <div class="search-toolbar">
 
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Type to search test type..."
-           autocomplete="off" />
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
 
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search..."
+                   autocomplete="off" />
+        </div>
 
-    <!-- =====================================================
-         TABLE
-         ===================================================== -->
+ 
+           
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("TestTypes", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "TestTypes")">
+                        Active Test types
+                    </option>
+
+                    <option value="@Url.Action("InactiveTestTypes", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveTestTypes")">
+                        Inactive Test type
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+    </div>
 
     <div class="card shadow-sm">
 
@@ -91,6 +118,9 @@
                                 Turnaround Time
                             </th>
 
+                            <th>
+                                Status
+                            </th>
                             <th class="text-center">
                                 Actions
                             </th>
@@ -139,7 +169,16 @@
 
                                     </td>
 
-
+                                    <td>
+                                        @if (test.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
                                     <td class="text-center">
 
                                         <!-- DETAILS -->

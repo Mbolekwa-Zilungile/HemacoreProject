@@ -1,0 +1,607 @@
+﻿@model List<HemaCore.Models.TestType>
+
+@{
+    ViewData["Title"] = "Inactive Test Types";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- PAGE HEADER -->
+
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-microscope me-2"></i>
+
+            <span>
+                Inactive Test Types (@(Model?.Count ?? 0))
+            </span>
+        </div>
+
+        <a asp-action="AddTestType"
+           asp-controller="Manager"
+           class="btn btn-primary-custom btn-sm">
+            + Add Test Type
+        </a>
+
+    </div>
+
+    <!-- SEARCH AND FILTER -->
+
+    <div class="search-toolbar">
+
+        <div class="search-box">
+
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search test types..."
+                   autocomplete="off" />
+
+        </div>
+
+        <div class="filter-box">
+
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("TestTypes", "Manager")">
+                        Active Test Types
+                    </option>
+
+                    <option value="@Url.Action("InactiveTestTypes", "Manager")"
+                            selected>
+                        Inactive Test Types
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TEST TYPES -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="modern-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Category</th>
+                            <th>Turnaround Time</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="TestTypeTable">
+
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var test in Model)
+                            {
+                                <tr>
+
+                                    <td class="fw-semibold">
+                                        @test.TestTypeName
+                                    </td>
+
+                                    <td>
+                                        @if (test.Category != null)
+                                        {
+                                            <span class="fw-semibold">
+                                                @test.Category.CategoryName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Not assigned
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            @test.TurnAroundTime min
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (test.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <!-- DETAILS -->
+
+                                        <a asp-action="TestTypeDetails"
+                                           asp-controller="Manager"
+                                           asp-route-id="@test.TestTypeId"
+                                           class="btn btn-sm btn-outline-info me-1"
+                                           title="View details">
+
+                                            <i class="fas fa-eye"></i>
+
+                                        </a>
+
+                                        <!-- EDIT -->
+
+                                        <a asp-action="EditTestType"
+                                           asp-controller="Manager"
+                                           asp-route-id="@test.TestTypeId"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit test type">
+
+                                            <i class="fas fa-edit"></i>
+
+                                        </a>
+
+                                        <!-- ACTIVATE -->
+                                        @if (!test.IsActive)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success activate-test-btn"
+                                                    data-id="@test.TestTypeId"
+                                                    data-name="@test.TestTypeName"
+                                                    title="Activate test type">
+
+                                                <i class="fas fa-check-circle"></i>
+
+                                            </button>
+                                        }
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center text-muted py-3">
+                                    No inactive test types available.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =====================================================
+     ACTIVATE TEST TYPE CONFIRMATION MODAL
+     ===================================================== -->
+
+<div id="activateModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="activateModalTitle">
+
+    <div class="delete-box">
+
+        <div class="activate-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h3 id="activateModalTitle">
+            Activate Test Type?
+        </h3>
+
+        <p>
+            Are you sure you want to activate
+            <strong id="activateTestName"></strong>?
+        </p>
+
+        <span class="delete-warning activate-warning">
+
+            <i class="fas fa-check-circle"></i>
+
+            <span class="activate-text">
+                This test type will become active and available for use again.
+            </span>
+
+        </span>
+
+        <div class="delete-buttons">
+
+            <!-- CANCEL -->
+
+            <button type="button"
+                    id="cancelActivateBtn"
+                    class="cancel-btn">
+
+                Cancel
+
+            </button>
+
+            <!-- ACTIVATE FORM -->
+
+            <form asp-action="ActivateTestType"
+                  asp-controller="Manager"
+                  method="post"
+                  id="activateForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="activateTestTypeId" />
+
+                <button type="submit"
+                        id="confirmActivateBtn"
+                        class="btn btn-success">
+
+                    <i class="fas fa-check-circle me-1"></i>
+
+                    Yes, Activate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =====================================================
+     LIVE SEARCH AND MODAL SCRIPT
+     ===================================================== -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal = document.getElementById("activateModal");
+        const testIdInput = document.getElementById("activateTestTypeId");
+        const testNameElement = document.getElementById("activateTestName");
+        const cancelButton = document.getElementById("cancelActivateBtn");
+        const activateForm = document.getElementById("activateForm");
+        const confirmButton = document.getElementById("confirmActivateBtn");
+        const searchBox = document.getElementById("searchBox");
+        const tableBody = document.getElementById("TestTypeTable");
+
+        let searchTimeout;
+
+        // =====================================================
+        // OPEN ACTIVATE MODAL
+        // =====================================================
+
+        document.addEventListener("click", function (event) {
+
+            const button = event.target.closest(".activate-test-btn");
+
+            if (!button) return;
+
+            testIdInput.value = button.dataset.id || "";
+            testNameElement.textContent = button.dataset.name || "";
+
+            modal.classList.add("show");
+            document.body.classList.add("modal-open");
+
+        });
+
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+            document.body.classList.remove("modal-open");
+
+            testIdInput.value = "";
+            testNameElement.textContent = "";
+
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = `
+                <i class="fas fa-check-circle me-1"></i>
+                Yes, Activate
+            `;
+        }
+
+        cancelButton.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+                closeModal();
+            }
+
+        });
+
+        document.addEventListener("keydown", function (event) {
+
+            if (
+                event.key === "Escape" &&
+                modal.classList.contains("show")
+            ) {
+                closeModal();
+            }
+
+        });
+
+        // =====================================================
+        // PREVENT DOUBLE ACTIVATION
+        // =====================================================
+
+        activateForm.addEventListener("submit", function (event) {
+
+            if (!testIdInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+
+            confirmButton.innerHTML = `
+                <i class="fas fa-spinner fa-spin me-1"></i>
+                Activating...
+            `;
+
+        });
+
+        // =====================================================
+        // HTML ESCAPING
+        // =====================================================
+
+        function escapeHtml(value) {
+
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+
+            return element.innerHTML;
+        }
+
+        // =====================================================
+        // LIVE SEARCH - INACTIVE TEST TYPES
+        // =====================================================
+
+        if (searchBox && tableBody) {
+
+            const originalRows = Array.from(tableBody.children);
+
+            searchBox.addEventListener("input", function () {
+
+                const term = this.value.trim();
+
+                clearTimeout(searchTimeout);
+
+                searchTimeout = setTimeout(function () {
+
+                    // Restore the original rows when search is cleared.
+
+                    if (term === "") {
+                        tableBody.replaceChildren(...originalRows);
+                        return;
+                    }
+
+                    fetch(
+                        '@Url.Action("SearchTestTypesLive", "Manager")?term=' +
+                        encodeURIComponent(term),
+                        {
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
+                        }
+                    )
+                    .then(response => {
+
+                        if (!response.ok) {
+                            throw new Error("Unable to search test types.");
+                        }
+
+                        return response.json();
+
+                    })
+                    .then(data => {
+
+                        let rows = "";
+
+                        if (!Array.isArray(data) || data.length === 0) {
+
+                            tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="5"
+                                        class="text-center text-muted py-3">
+                                        No test types found.
+                                    </td>
+                                </tr>
+                            `;
+
+                            return;
+                        }
+
+                        // Keep only inactive test types on this page.
+
+                        const inactiveTests = data.filter(test =>
+                            !(test.isActive ?? test.IsActive ?? false)
+                        );
+
+                        if (inactiveTests.length === 0) {
+
+                            tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="5"
+                                        class="text-center text-muted py-3">
+                                        No inactive test types found.
+                                    </td>
+                                </tr>
+                            `;
+
+                            return;
+                        }
+
+                        inactiveTests.forEach(test => {
+
+                            const id =
+                                test.testTypeID ??
+                                test.testTypeId ??
+                                test.TestTypeId ??
+                                test.TestTypeID;
+
+                            const rawName =
+                                test.name ??
+                                test.testTypeName ??
+                                test.TestTypeName ??
+                                "";
+
+                            const rawCategory =
+                                test.category ??
+                                test.categoryName ??
+                                test.CategoryName ??
+                                "";
+
+                            const rawTurnaround =
+                                test.turnaround ??
+                                test.turnAroundTime ??
+                                test.TurnAroundTime ??
+                                "";
+
+                            const name = escapeHtml(rawName);
+                            const category = escapeHtml(rawCategory);
+                            const turnaround = escapeHtml(rawTurnaround);
+                            const safeId = encodeURIComponent(id ?? "");
+
+                            rows += `
+                                <tr>
+
+                                    <td class="fw-semibold">
+                                        ${name}
+                                    </td>
+
+                                    <td>
+                                        ${
+                                            category
+                                                ? `<span class="fw-semibold">${category}</span>`
+                                                : '<span class="text-muted">Not assigned</span>'
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            ${turnaround} min
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            Inactive
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <a href="/Manager/TestTypeDetails/${safeId}"
+                                           class="btn btn-sm btn-outline-info me-1"
+                                           title="View details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <a href="/Manager/EditTestType/${safeId}"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit test type">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success activate-test-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${name}"
+                                                title="Activate test type">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            `;
+                        });
+
+                        tableBody.innerHTML = rows;
+
+                    })
+                    .catch(error => {
+
+                        console.error("Test type search failed:", error);
+
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center text-danger py-3">
+                                    Unable to load test types. Please try again.
+                                </td>
+                            </tr>
+                        `;
+
+                    });
+
+                }, 250);
+
+            });
+
+        }
+
+    });
+</script>

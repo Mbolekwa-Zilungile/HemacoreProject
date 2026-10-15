@@ -49,7 +49,7 @@
             <i class="fas fa-industry me-2"></i>
 
             <span>
-                Suppliers (@(Model?.Count ?? 0))
+                Active Suppliers (@(Model?.Count ?? 0))
             </span>
 
         </div>
@@ -68,16 +68,47 @@
 
 
 
-    <!-- =====================================================
-         SEARCH
-         ===================================================== -->
+    <div class="search-toolbar">
 
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Type to search suppliers..."
-           autocomplete="off" />
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
 
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search..."
+                   autocomplete="off" />
+        </div>
+
+ 
+           
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("Suppliers", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "Suppliers")">
+                        Active Suppliers
+                    </option>
+
+                    <option value="@Url.Action("InactiveSuppliers", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveSuppliers")">
+                        Inactive Suppliers
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+    </div>
 
 
     <!-- =====================================================
@@ -110,6 +141,9 @@
                             Consumables
                         </th>
 
+                        <th>
+                            Status
+                        </th>
                         <th>
                             Actions
                         </th>
@@ -186,9 +220,16 @@
                                     @total
 
                                 </td>
-
-
-                                <!-- ACTIONS -->
+                                <td>
+                                    @if (supplier.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
 
                                 <td>
 

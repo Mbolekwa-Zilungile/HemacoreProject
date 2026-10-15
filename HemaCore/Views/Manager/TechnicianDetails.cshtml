@@ -1,0 +1,210 @@
+﻿@model HemaCore.Models.LabTechnician
+
+@{
+    ViewData["Title"] = "Technician Details";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-user-cog me-2"></i>
+            <span>Lab Technician Details</span>
+        </div>
+
+        <a asp-action="Technicians"
+           asp-controller="Manager"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back to Technicians
+        </a>
+    </div>
+
+    <!-- ALERT MESSAGES -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3"
+             role="alert">
+            @TempData["Success"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3"
+             role="alert">
+            @TempData["Error"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+    <!-- PERSONAL INFORMATION -->
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+
+            <h5 class="mb-4">
+                <i class="fas fa-id-card me-2"></i>
+                Personal Information
+            </h5>
+
+            <div class="row g-4">
+
+                <!-- FULL NAME -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        Full Name
+                    </label>
+
+                    <div class="fw-semibold">
+                        @Model.Surname?.ToUpper() @Model.Name?.ToUpper()
+                    </div>
+                </div>
+
+                <!-- ID NUMBER -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        ID Number
+                    </label>
+
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.IDNumber)
+                            ? "Not provided"
+                            : Model.IDNumber)
+                    </div>
+                </div>
+
+                <!-- EMPLOYEE NUMBER -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        Employee Number
+                    </label>
+
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.EmployeeNumber)
+                            ? "Not provided"
+                            : Model.EmployeeNumber)
+                    </div>
+                </div>
+
+                <!-- PHONE NUMBER -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        Phone Number
+                    </label>
+
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                            ? "Not provided"
+                            : Model.PhoneNumber)
+                    </div>
+                </div>
+
+                <!-- EMAIL ADDRESS -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        Email Address
+                    </label>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.User?.Email))
+                    {
+                        <div class="fw-semibold">
+                            <a href="mailto:@Model.User.Email">
+                                @Model.User.Email
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fw-semibold">
+                            Not provided
+                        </div>
+                    }
+                </div>
+
+                <!-- ASSIGNED TEST COUNT -->
+                <div class="col-md-6">
+                    <label class="text-muted small d-block mb-1">
+                        Assigned Test Types
+                    </label>
+
+                    <div class="fw-semibold">
+                        @(Model.TechnicianTests?.Count() ?? 0)
+                    </div>
+                </div>
+
+            </div>
+
+            <hr class="my-4" />
+
+            <!-- ASSIGNED TEST TYPES -->
+            <h5 class="mb-3">
+                <i class="fas fa-microscope me-2"></i>
+                Assigned Test Types
+            </h5>
+
+            @if (Model.TechnicianTests != null &&
+                 Model.TechnicianTests.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var assignment in Model.TechnicianTests)
+                    {
+                        <span class="badge bg-info text-dark p-2">
+                            <i class="fas fa-vial me-1"></i>
+                            @(assignment.TestType?.TestTypeName
+                                ?? "Unknown Test Type")
+                        </span>
+                    }
+                </div>
+
+                <p class="text-muted mt-3 mb-0">
+                    Total assigned test types:
+                    <strong>@Model.TechnicianTests.Count()</strong>
+                </p>
+            }
+            else
+            {
+                <div class="alert alert-light border mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No test types have been assigned to this technician.
+                </div>
+            }
+
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex flex-wrap gap-2 mt-4">
+
+                <a asp-action="EditTechnician"
+                   asp-controller="Manager"
+                   asp-route-id="@Model.LabTechnicianId"
+                   class="btn btn-primary-custom btn-sm">
+                    <i class="fas fa-edit me-1"></i>
+                    Edit Technician
+                </a>
+
+                <a asp-action="Technicians"
+                   asp-controller="Manager"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to List
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>

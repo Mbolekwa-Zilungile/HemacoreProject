@@ -272,12 +272,47 @@ namespace HemaCore.Controllers
             category.IsActive = false;
             _context.SaveChanges();
 
-            TempData["Success"] = $"{category.CategoryName} deleted successfully.";
+            TempData["Success"] = $"{category.CategoryName} is deactivated successfully.";
 
             return RedirectToAction("TestCategories");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateCategory(int id)
+        {
+            var category = await _context.TestCategories
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
 
+            if (category == null)
+            {
+                TempData["Error"] = "Test category not found.";
+                return RedirectToAction("InactiveCategories");
+            }
+
+            category.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{category.CategoryName} is reactivated successfully.";
+
+            return RedirectToAction("InactiveTestCategories");
+        }
+
+        public async Task<IActionResult> CategoryDetails(int id)
+        {
+            var category = await _context.TestCategories
+                .Include(c => c.TestTypes)
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
+
+            if (category == null)
+            {
+                TempData["Error"] = "Test category not found.";
+                return RedirectToAction("TestCategories");
+            }
+
+            return View(category);
+        }
         #endregion
 
         #region TestTypes
@@ -292,7 +327,16 @@ namespace HemaCore.Controllers
 
             return View(testtype);
         }
+        public async Task<IActionResult> InactiveTestTypes()
+        {
+            var testtype = await _context.TestTypes
+                .Include(t => t.Category)
+                .Where(c => !c.IsActive)
+                .OrderBy(t => t.TestTypeName)
+                .ToListAsync();
 
+            return View(testtype);
+        }
 
         [HttpGet]
         public async Task<IActionResult> AddTestType()
@@ -1066,6 +1110,38 @@ namespace HemaCore.Controllers
             return RedirectToAction("TestTypes");
         }
 
+        public async Task<IActionResult> ActivateTestType(int id)
+        {
+            var testType = await _context.TestTypes
+                .Include(t => t.TechnicianTestType)
+                .Include(t => t.TestTypeConsumables)
+                .FirstOrDefaultAsync(t => t.TestTypeId == id);
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+            bool hasTechnicians = testType.TechnicianTestType.Any();
+
+            bool hasConsumables = testType.TestTypeConsumables.Any();
+
+            if (hasTechnicians)
+            {
+                TempData["Error"] =
+                    $"Cannot delete {testType.TestTypeName} because it is linked to technicians.";
+
+                return RedirectToAction("TestTypes");
+            }
+
+
+            testType.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{testType.TestTypeName} activated successfully.";
+
+            return RedirectToAction("InactiveTestTypes");
+        }
 
         #endregion
 
@@ -1075,6 +1151,15 @@ namespace HemaCore.Controllers
         {
             var sampletype = await _context.SampleTypes
                 .Where(c => c.IsActive)
+                .OrderBy(t => t.SampleName)
+                .ToListAsync();
+            return View(sampletype);
+        }
+
+        public async Task<IActionResult> InactiveSampleTypes()
+        {
+            var sampletype = await _context.SampleTypes
+                .Where(c => !c.IsActive)
                 .OrderBy(t => t.SampleName)
                 .ToListAsync();
             return View(sampletype);
@@ -1161,7 +1246,7 @@ namespace HemaCore.Controllers
        
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteSampletype(int id)
+        public async Task<IActionResult> DeactivateSampleType(int id)
         {
             var sample = await _context.SampleTypes
                 .FirstOrDefaultAsync(s => s.SampleTypeId == id);
@@ -1193,7 +1278,26 @@ namespace HemaCore.Controllers
             return RedirectToAction("SampleTypes");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateSampletype(int id)
+        {
+            var sample = await _context.SampleTypes
+                .FirstOrDefaultAsync(s => s.SampleTypeId == id);
 
+            if (sample == null)
+            {
+                return NotFound();
+            }
+
+            sample.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{sample.SampleName} activated successfully.";
+
+            return RedirectToAction("InactiveSampleTypes");
+        }
         #endregion
 
         #region Consumable
@@ -1203,6 +1307,16 @@ namespace HemaCore.Controllers
             var consumables = await _context.Consumables
                 .Include(c => c.Supplier)
                 .Where(c => c.IsActive)
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
+            return View(consumables);
+        }
+
+        public async Task<IActionResult> InactiveConsumables()
+        {
+            var consumables = await _context.Consumables
+                .Include(c => c.Supplier)
+                .Where(c => !c.IsActive)
                 .OrderBy(c => c.ConsumableName)
                 .ToListAsync();
             return View(consumables);
@@ -1423,6 +1537,30 @@ namespace HemaCore.Controllers
 
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ActivateConsumable(int id)
+        {
+            // Find the consumable in the database
+            var consumable = _context.Consumables
+            .FirstOrDefault(c => c.ConsumableId == id);
+
+            if (consumable == null)
+            {
+                return NotFound();
+            }
+
+   
+            consumable.IsActive = true;
+
+            // Save the change to the database
+            _context.SaveChanges();
+
+            TempData["Success"] = $"{consumable.ConsumableName} deleted successfully.";
+
+            return RedirectToAction("InactiveConsumables");
+
+        }
         #endregion
 
         #region Supplier
@@ -1446,6 +1584,24 @@ namespace HemaCore.Controllers
             return View(suppliers);
         }
 
+        public async Task<IActionResult> InactiveSuppliers()
+        {
+            var suppliers = await _context.Suppliers
+                .Where(s => !s.IsActive)
+                .OrderBy(s => s.SupplierName)
+                .ToListAsync();
+
+            ViewBag.SupplierCount = suppliers.Count;
+
+            ViewBag.SupplierConsumableCount = await _context.Consumables
+                .GroupBy(c => c.SupplierId)
+                .ToDictionaryAsync(
+                    g => g.Key,
+                    g => g.Count()
+                );
+
+            return View(suppliers);
+        }
         public IActionResult AddSupplier()
         {
             return View();
@@ -1603,6 +1759,28 @@ namespace HemaCore.Controllers
             return RedirectToAction("Suppliers");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateSupplier(int id)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+
+            supplier.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"{supplier.SupplierName} has been activated successfully.";
+
+            return RedirectToAction("Suppliers");
+        }
 
         #endregion
 
@@ -2429,7 +2607,22 @@ namespace HemaCore.Controllers
             return View(technicians);
         }
 
+        public async Task<IActionResult> TechnicianDetails(int id)
+        {
+            var technician = await _context.LabTechnicians
+                .Include(t => t.User)
+                .Include(t => t.TechnicianTests)
+                    .ThenInclude(tt => tt.TestType)
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == id);
 
+            if (technician == null)
+            {
+                TempData["Error"] = "Lab technician not found.";
+                return RedirectToAction(nameof(LabTechnician));
+            }
+
+            return View(technician);
+        }
         // GET: Manager/AddTechnician
         [HttpGet]
         public async Task<IActionResult> AddTechnician()

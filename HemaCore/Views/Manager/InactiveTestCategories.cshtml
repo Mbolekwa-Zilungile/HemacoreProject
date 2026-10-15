@@ -4,14 +4,9 @@
     Layout = "_ManagerLayout";
 }
 
-<!-- CSS -->
 <link rel="stylesheet" href="~/css/doctor.css" />
 <link rel="stylesheet" href="~/css/delete.css" />
 
-
-<!-- =========================================================
-     ALERT MESSAGES
-     ========================================================= -->
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">
@@ -27,15 +22,9 @@
 }
 
 
-
-<!-- =========================================================
-     MAIN CONTENT
-     ========================================================= -->
-
 <div class="content-card">
 
 
-    <!-- HEADER -->
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
@@ -48,8 +37,6 @@
 
         </div>
 
-
-        <!-- ADD CATEGORY -->
         <a asp-action="AddCategory"
            class="btn btn-primary-custom btn-sm">
 
@@ -144,7 +131,7 @@
                     <td colspan="5"
                         class="text-center text-muted">
 
-                        No test categories available.
+                        No inactive test categories available.
 
                     </td>
 
@@ -206,15 +193,17 @@
                             </a>
 
 
-                            <!-- DEACTIVATE -->
+                            <!-- ACTIVATE -->
                             <button type="button"
-                                    class="btn btn-sm btn-outline-danger deactivate-category-btn"
+                                    class="btn btn-sm btn-outline-success activate-category-btn"
                                     data-id="@category.CategoryId"
-                                    data-name="@category.CategoryName">
+                                    data-name="@category.CategoryName"
+                                    title="Reactivate category">
 
-                                <i class="fas fa-ban"></i>
+                                <i class="fas fa-check-circle"></i>
 
                             </button>
+
 
                         </td>
 
@@ -234,6 +223,7 @@
      DEACTIVATE MODAL
      ========================================================= -->
 
+<!-- REACTIVATE CATEGORY MODAL -->
 <div id="deleteModal"
      class="delete-overlay"
      role="dialog"
@@ -242,77 +232,51 @@
 
     <div class="delete-box">
 
-
-        <!-- ICON -->
-        <div class="delete-icon">
-
-            <i class="fas fa-exclamation-triangle"></i>
-
+        <div class="activate-icon">
+            <i class="fas fa-check-circle"></i>
         </div>
 
-
-        <!-- TITLE -->
         <h3 id="deleteModalTitle">
-
-            Are you sure?
-
+            Reactivate Test Category?
         </h3>
 
-
-        <!-- MESSAGE -->
         <p>
-
-            Are you sure you want to deactivate
-
-            <strong id="deleteSampleName"></strong>?
-
+            Are you sure you want to reactivate
+            <strong id="deleteCategoryName"></strong>?
         </p>
 
-
-        <!-- WARNING -->
-        <span class="delete-warning">
-
-            <i class="fas fa-info-circle"></i>
-
-            This category will no longer be active.
-
+        <span class="delete-warning activate-warning">
+            <i class="fas fa-check-circle"></i>
+            <span class="activate-text">
+                This category will become active and available for use again.
+            </span>
         </span>
 
-
         <div class="delete-buttons">
-
 
             <button type="button"
                     id="cancelDeleteBtn"
                     class="cancel-btn">
-
                 Cancel
-
             </button>
 
-
-            <!-- DEACTIVATE FORM -->
-            <form asp-action="DeleteCategory"
+            <form asp-action="ActivateCategory"
+                  asp-controller="Manager"
                   method="post"
                   id="deleteForm">
 
                 @Html.AntiForgeryToken()
 
-
-                <!-- CATEGORY ID -->
                 <input type="hidden"
                        name="id"
-                       id="deleteSampleTypeId" />
+                       id="deleteCategoryId" />
 
-
-                <!-- CONFIRM -->
                 <button type="submit"
                         id="confirmDeleteBtn"
-                        class="confirm-delete-btn">
+                        class="btn btn-success">
 
-                    <i class="fas fa-ban me-1"></i>
-
-                    Yes, Deactivate
+                    <i class="fas fa-check-circle me-1"></i>
+                    Yes, Reactivate
 
                 </button>
 
@@ -321,14 +285,10 @@
         </div>
 
     </div>
-
 </div>
 
 
 
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -338,32 +298,30 @@
         // =====================================================
 
         const modal = document.getElementById("deleteModal");
-        const categoryIdInput = document.getElementById("deleteSampleTypeId");
-        const categoryName = document.getElementById("deleteSampleName");
+        const categoryIdInput = document.getElementById("deleteCategoryId");
+        const categoryName = document.getElementById("deleteCategoryName");
         const cancelButton = document.getElementById("cancelDeleteBtn");
         const deleteForm = document.getElementById("deleteForm");
-        const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+        const confirmButton = document.getElementById("confirmDeleteBtn");
         const searchBox = document.getElementById("searchBox");
         const categoryTable = document.getElementById("categoryTable");
 
         // =====================================================
-        // OPEN DEACTIVATE MODAL
+        // OPEN REACTIVATE CATEGORY MODAL
         // =====================================================
 
         document.addEventListener("click", function (event) {
 
-            const button = event.target.closest(".deactivate-category-btn");
+            const button = event.target.closest(".activate-category-btn");
 
             if (!button) return;
 
-            const id = button.getAttribute("data-id");
-            const name = button.getAttribute("data-name");
-
-            categoryIdInput.value = id;
-            categoryName.textContent = name;
+            categoryIdInput.value = button.dataset.id || "";
+            categoryName.textContent = button.dataset.name || "";
 
             modal.classList.add("show");
             document.body.classList.add("modal-open");
+
         });
 
         // =====================================================
@@ -371,41 +329,60 @@
         // =====================================================
 
         function closeModal() {
+
             modal.classList.remove("show");
             document.body.classList.remove("modal-open");
 
             categoryIdInput.value = "";
             categoryName.textContent = "";
+
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = `
+                <i class="fas fa-check-circle me-1"></i>
+                Yes, Reactivate
+            `;
         }
 
         cancelButton.addEventListener("click", closeModal);
 
         // Click outside modal
         modal.addEventListener("click", function (event) {
+
             if (event.target === modal) {
                 closeModal();
             }
+
         });
 
-        // Close using Escape key
+        // Escape key
         document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && modal.classList.contains("show")) {
+
+            if (
+                event.key === "Escape" &&
+                modal.classList.contains("show")
+            ) {
                 closeModal();
             }
+
         });
 
         // =====================================================
         // PREVENT DOUBLE FORM SUBMISSION
         // =====================================================
 
-        deleteForm.addEventListener("submit", function () {
+        deleteForm.addEventListener("submit", function (event) {
 
-            confirmDeleteBtn.disabled = true;
+            if (!categoryIdInput.value) {
+                event.preventDefault();
+                return;
+            }
 
-            confirmDeleteBtn.innerHTML = `
+            confirmButton.disabled = true;
+            confirmButton.innerHTML = `
                 <i class="fas fa-spinner fa-spin me-1"></i>
-                Deactivating...
+                Reactivating...
             `;
+
         });
 
         // =====================================================
@@ -413,110 +390,112 @@
         // =====================================================
 
         function escapeHtml(value) {
-            const div = document.createElement("div");
-            div.textContent = value ?? "";
-            return div.innerHTML;
+
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+
+            return element.innerHTML;
         }
 
         // =====================================================
-        // LIVE SEARCH
+        // LIVE SEARCH - INACTIVE CATEGORIES
         // =====================================================
 
         let searchTimeout;
 
-        searchBox.addEventListener("input", function () {
+        if (searchBox && categoryTable) {
 
-            const term = this.value.trim();
+            // Preserve the initial server-rendered rows
+            const originalRows = Array.from(categoryTable.children);
 
-            clearTimeout(searchTimeout);
+            searchBox.addEventListener("input", function () {
 
-            searchTimeout = setTimeout(function () {
+                const term = this.value.trim();
 
-                fetch(
-                    '/Manager/SearchCategoriesLive?term=' +
-                    encodeURIComponent(term),
-                    {
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
+                clearTimeout(searchTimeout);
+
+                searchTimeout = setTimeout(function () {
+
+                    // Restore original rows when search is cleared
+                    if (term === "") {
+                        categoryTable.replaceChildren(...originalRows);
+                        return;
+                    }
+
+                    fetch(
+                        '/Manager/SearchCategoriesLive?term=' +
+                        encodeURIComponent(term),
+                        {
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
                         }
-                    }
-                )
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Unable to search categories.");
-                    }
+                    )
+                    .then(response => {
 
-                    return response.json();
-                })
-                .then(data => {
+                        if (!response.ok) {
+                            throw new Error("Unable to search categories.");
+                        }
 
-                    let rows = "";
+                        return response.json();
 
-                    // No search results
-                    if (!Array.isArray(data) || data.length === 0) {
+                    })
+                    .then(data => {
 
-                        rows = `
-                            <tr>
-                                <td colspan="5"
-                                    class="text-center text-muted py-3">
-                                    No categories found.
-                                </td>
-                            </tr>
-                        `;
+                        let rows = "";
 
-                    } else {
+                        if (!Array.isArray(data) || data.length === 0) {
 
-                        data.forEach(item => {
-
-                            // Support common JSON property casing
-                            const id =
-                                item.categoryId ?? item.categoryID;
-
-                            const name = escapeHtml(
-                                item.categoryName ?? ""
-                            );
-
-                            const description = escapeHtml(
-                                item.categoryDescription ?? ""
-                            );
-
-                            const isActive =
-                                item.isActive ?? item.IsActive ?? false;
-
-                            const testTypeCount =
-                                item.testTypeCount ??
-                                item.TestTypeCount ?? 0;
-
-                            // Status badge
-                            const status = isActive
-                                ? '<span class="badge bg-success">Active</span>'
-                                : '<span class="badge bg-danger">Inactive</span>';
-
-                            rows += `
+                            rows = `
                                 <tr>
-                                    <td class="fw-semibold blue-text">
-                                        ${name}
+                                    <td colspan="5"
+                                        class="text-center text-muted py-3">
+                                        No categories found.
                                     </td>
+                                </tr>
+                            `;
 
-                                    <td>
-                                        ${description}
-                                    </td>
+                        } else {
 
-                                    <td>
-                                        ${testTypeCount}
-                                    </td>
+                            data.forEach(item => {
 
-                                    <td>
-                                        ${status}
-                                    </td>
+                                const id =
+                                    item.categoryId ??
+                                    item.categoryID ??
+                                    item.CategoryId ??
+                                    item.CategoryID;
 
-                                    <td>
-                                        <a href="/Manager/EditCategory/${encodeURIComponent(id)}"
-                                           class="btn btn-sm btn-outline-primary me-1"
-                                           title="Edit category">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                const rawName =
+                                    item.categoryName ??
+                                    item.CategoryName ??
+                                    "";
 
+                                const rawDescription =
+                                    item.categoryDescription ??
+                                    item.CategoryDescription ??
+                                    "";
+
+                                const name = escapeHtml(rawName);
+                                const description = escapeHtml(rawDescription);
+
+                                const isActive =
+                                    item.isActive ??
+                                    item.IsActive ??
+                                    false;
+
+                                const testTypeCount =
+                                    item.testTypeCount ??
+                                    item.TestTypeCount ??
+                                    0;
+
+                                const status = isActive
+                                    ? '<span class="badge bg-success">Active</span>'
+                                    : '<span class="badge bg-danger">Inactive</span>';
+
+                                // Inactive categories show Reactivate.
+                                // Active categories show Deactivate.
+                                const actionButton = isActive
+                                    ? `
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-danger deactivate-category-btn"
                                                 data-id="${escapeHtml(id)}"
@@ -524,31 +503,71 @@
                                                 title="Deactivate category">
                                             <i class="fas fa-ban"></i>
                                         </button>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    }
+                                      `
+                                    : `
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success activate-category-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${name}"
+                                                title="Reactivate category">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                      `;
 
-                    categoryTable.innerHTML = rows;
+                                rows += `
+                                    <tr>
+                                        <td class="fw-semibold blue-text">
+                                            ${name}
+                                        </td>
 
-                })
-                .catch(error => {
-                    console.error("Search failed:", error);
+                                        <td>
+                                            ${description}
+                                        </td>
 
-                    categoryTable.innerHTML = `
-                        <tr>
-                            <td colspan="5"
-                                class="text-center text-danger py-3">
-                                Unable to load categories. Please try again.
-                            </td>
-                        </tr>
-                    `;
-                });
+                                        <td>
+                                            ${escapeHtml(testTypeCount)}
+                                        </td>
 
-            }, 250);
+                                        <td>
+                                            ${status}
+                                        </td>
 
-        });
+                                        <td>
+                                            <a href="/Manager/EditCategory/${encodeURIComponent(id ?? "")}"
+                                               class="btn btn-sm btn-outline-primary me-1"
+                                               title="Edit category">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            ${actionButton}
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                        }
+
+                        categoryTable.innerHTML = rows;
+
+                    })
+                    .catch(error => {
+
+                        console.error("Category search failed:", error);
+
+                        categoryTable.innerHTML = `
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center text-danger py-3">
+                                    Unable to load categories. Please try again.
+                                </td>
+                            </tr>
+                        `;
+
+                    });
+
+                }, 250);
+
+            });
+        }
 
     });
 </script>

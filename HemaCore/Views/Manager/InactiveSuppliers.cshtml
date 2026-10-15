@@ -1,0 +1,578 @@
+﻿@model List<HemaCore.Models.Supplier>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+<!-- ALERT MESSAGES -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-industry me-2"></i>
+
+            <span>
+                Inactive Suppliers (@(Model?.Count ?? 0))
+            </span>
+        </div>
+
+        <a asp-action="AddSupplier"
+           asp-controller="Manager"
+           class="btn btn-primary-custom btn-sm">
+            + Add Supplier
+        </a>
+
+    </div>
+
+    <!-- SEARCH AND STATUS FILTER -->
+
+    <div class="search-toolbar">
+
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search suppliers..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("Suppliers", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "Suppliers")">
+                        Active Suppliers
+                    </option>
+
+                    <option value="@Url.Action("InactiveSuppliers", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveSuppliers")">
+                        Inactive Suppliers
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SUPPLIERS TABLE -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Consumables</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="supplierTable">
+
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6"
+                                    class="text-center text-muted py-3">
+                                    No inactive suppliers available.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var supplier in Model)
+                            {
+                                int total = 0;
+
+                                if (ViewBag.SupplierConsumableCount != null &&
+                                    ViewBag.SupplierConsumableCount.ContainsKey(
+                                        supplier.SupplierId))
+                                {
+                                    total = ViewBag.SupplierConsumableCount[
+                                        supplier.SupplierId];
+                                }
+
+                                <tr>
+
+                                    <td class="fw-semibold blue-text">
+                                        @supplier.SupplierName
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(supplier.ContactPerson))
+                                        {
+                                            @supplier.ContactPerson
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not provided</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(supplier.Email))
+                                        {
+                                            @supplier.Email
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not provided</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            @total
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (supplier.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <div class="d-flex justify-content-center gap-2">
+
+                                            <a asp-action="EditSupplier"
+                                               asp-controller="Manager"
+                                               asp-route-id="@supplier.SupplierId"
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Edit supplier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success activate-supplier-btn"
+                                                    data-id="@supplier.SupplierId"
+                                                    data-name="@supplier.SupplierName"
+                                                    title="Activate supplier">
+
+                                                <i class="fas fa-check-circle"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ACTIVATE SUPPLIER MODAL -->
+
+<div id="activateModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="activateModalTitle">
+
+    <div class="delete-box">
+
+        <div class="activate-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h3 id="activateModalTitle">
+            Activate Supplier?
+        </h3>
+
+        <p>
+            Are you sure you want to activate
+            <strong id="activateSupplierName"></strong>?
+        </p>
+
+        <span class="delete-warning activate-warning">
+            <i class="fas fa-info-circle"></i>
+            <span class="activate-text">
+            This supplier will become active and available for use again.
+            </span>
+        </span>
+
+        <div class="delete-buttons">
+
+            <button type="button"
+                    id="cancelActivateBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <form asp-action="ActivateSupplier"
+                  asp-controller="Manager"
+                  method="post"
+                  id="activateForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="activateSupplierId" />
+
+                <button type="submit"
+                        id="confirmActivateBtn"
+                        class="btn btn-success">
+
+                    <i class="fas fa-check-circle me-1"></i>
+                    Yes, Activate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal = document.getElementById("activateModal");
+        const supplierIdInput = document.getElementById("activateSupplierId");
+        const supplierName = document.getElementById("activateSupplierName");
+        const cancelButton = document.getElementById("cancelActivateBtn");
+        const confirmButton = document.getElementById("confirmActivateBtn");
+        const activateForm = document.getElementById("activateForm");
+        const searchBox = document.getElementById("searchBox");
+        const supplierTable = document.getElementById("supplierTable");
+
+        let searchTimeout;
+        let searchRequest = null;
+
+        // OPEN ACTIVATION MODAL
+
+        document.addEventListener("click", function (event) {
+
+            const button = event.target.closest(".activate-supplier-btn");
+
+            if (!button) {
+                return;
+            }
+
+            supplierIdInput.value = button.dataset.id || "";
+            supplierName.textContent = button.dataset.name || "";
+
+            modal.classList.add("show");
+            document.body.classList.add("modal-open");
+
+        });
+
+        // CLOSE MODAL
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+            document.body.classList.remove("modal-open");
+
+            supplierIdInput.value = "";
+            supplierName.textContent = "";
+
+            confirmButton.disabled = false;
+            confirmButton.innerHTML =
+                '<i class="fas fa-check-circle me-1"></i> Yes, Activate';
+
+        }
+
+        cancelButton.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+                closeModal();
+            }
+
+        });
+
+        document.addEventListener("keydown", function (event) {
+
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeModal();
+            }
+
+        });
+
+        // PREVENT EMPTY ID AND DOUBLE SUBMISSION
+
+        activateForm.addEventListener("submit", function (event) {
+
+            if (!supplierIdInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i> Activating...';
+
+        });
+
+        // HTML ESCAPING
+
+        function escapeHtml(value) {
+
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+
+            return element.innerHTML;
+
+        }
+
+        // LIVE SEARCH
+
+        searchBox.addEventListener("input", function () {
+
+            const term = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (searchRequest) {
+                searchRequest.abort();
+                searchRequest = null;
+            }
+
+            searchTimeout = setTimeout(function () {
+
+                const url =
+                    '@Url.Action("SearchSupplierLive", "Manager")'
+                    + '?term=' + encodeURIComponent(term);
+
+                searchRequest = new AbortController();
+
+                fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    signal: searchRequest.signal
+                })
+                .then(function (response) {
+
+                    if (!response.ok) {
+                        throw new Error("Supplier search failed.");
+                    }
+
+                    return response.json();
+
+                })
+                .then(function (data) {
+
+                    let rows = "";
+
+                    if (!Array.isArray(data) || data.length === 0) {
+
+                        supplierTable.innerHTML = `
+                            <tr>
+                                <td colspan="6"
+                                    class="text-center text-muted py-3">
+                                    No suppliers found.
+                                </td>
+                            </tr>
+                        `;
+
+                        return;
+
+                    }
+
+                    data.forEach(function (item) {
+
+                        const id =
+                            item.supplierId ??
+                            item.supplierID ??
+                            item.SupplierId ??
+                            item.SupplierID;
+
+                        const rawName =
+                            item.name ??
+                            item.supplierName ??
+                            item.SupplierName ??
+                            "";
+
+                        const rawContact =
+                            item.contactPerson ??
+                            item.ContactPerson ??
+                            "";
+
+                        const rawEmail =
+                            item.email ??
+                            item.Email ??
+                            "";
+
+                        const total =
+                            item.totalConsumables ??
+                            item.TotalConsumables ??
+                            0;
+
+                        const name = escapeHtml(rawName);
+                        const contact = escapeHtml(rawContact);
+                        const email = escapeHtml(rawEmail);
+
+                        const isActive =
+                            item.isActive ??
+                            item.IsActive ??
+                            false;
+
+                        const statusBadge = isActive
+                            ? '<span class="badge bg-success">Active</span>'
+                            : '<span class="badge bg-danger">Inactive</span>';
+
+                        // This view is for inactive suppliers.
+                        // Only show the activation action for inactive records.
+
+                        const activateButton = !isActive
+                            ? `
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success activate-supplier-btn"
+                                        data-id="${escapeHtml(id)}"
+                                        data-name="${name}"
+                                        title="Activate supplier">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                              `
+                            : "";
+
+                        rows += `
+                            <tr>
+                                <td class="fw-semibold blue-text">
+                                    ${name}
+                                </td>
+
+                                <td>
+                                    ${contact || '<span class="text-muted">Not provided</span>'}
+                                </td>
+
+                                <td>
+                                    ${email || '<span class="text-muted">Not provided</span>'}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        ${escapeHtml(total)}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    ${statusBadge}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="/Manager/EditSupplier/${encodeURIComponent(id ?? "")}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit supplier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        ${activateButton}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+
+                    });
+
+                    supplierTable.innerHTML = rows;
+
+                })
+                .catch(function (error) {
+
+                    if (error.name === "AbortError") {
+                        return;
+                    }
+
+                    console.error("Supplier search failed:", error);
+
+                    supplierTable.innerHTML = `
+                        <tr>
+                            <td colspan="6"
+                                class="text-center text-danger py-3">
+                                Search failed. Please try again.
+                            </td>
+                        </tr>
+                    `;
+
+                })
+                .finally(function () {
+                    searchRequest = null;
+                });
+
+            }, 250);
+
+        });
+
+    });
+</script>

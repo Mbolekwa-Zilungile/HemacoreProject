@@ -1,0 +1,437 @@
+﻿@model List<HemaCore.Models.SampleType>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-vial me-2"></i>
+            <span>
+                Inactive Sample Types (@(Model?.Count ?? 0))
+            </span>
+        </div>
+
+        <a asp-action="AddSampleType"
+           class="btn btn-primary-custom btn-sm">
+            + Add Sample Type
+        </a>
+
+    </div>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="search-toolbar">
+
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("SampleTypes", "Manager")">
+                        Active Sample Types
+                    </option>
+
+                    <option value="@Url.Action("InactiveSampleTypes", "Manager")"
+                            selected>
+                        Inactive Sample Types
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SAMPLE TYPES TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>Sample Type Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="sampleTypeTable">
+
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var sample in Model)
+                            {
+                                <tr>
+
+                                    <td class="fw-semibold">
+                                        @sample.SampleName
+                                    </td>
+
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(sample.Description)
+                                            ? "No description available"
+                                            : sample.Description)
+                                    </td>
+
+                                    <td>
+                                        @if (sample.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <a asp-action="EditSampleType"
+                                           asp-route-id="@sample.SampleTypeId"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit sample type">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success activate-sample-btn"
+                                                data-id="@sample.SampleTypeId"
+                                                data-name="@sample.SampleName"
+                                                title="Activate sample type">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4"
+                                    class="text-center text-muted py-3">
+                                    No inactive sample types available.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ACTIVATE CONFIRMATION MODAL -->
+<div id="activateModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="activateModalTitle">
+
+    <div class="delete-box">
+
+        <div class="activate-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h3 id="activateModalTitle">
+            Activate Sample Type?
+        </h3>
+
+        <p>
+            Are you sure you want to activate
+            <strong id="activateSampleName"></strong>?
+        </p>
+
+        <span class="delete-warning activate-warning">
+            <i class="fas fa-info-circle"></i>
+            <span class="activate-text">
+            This sample type will become available for use again.
+            </span>
+        </span>
+
+        <div class="delete-buttons">
+
+            <button type="button"
+                    id="cancelActivateBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <form asp-action="ActivateSampleType"
+                  asp-controller="Manager"
+                  method="post"
+                  id="activateForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="activateSampleTypeId" />
+
+                <button type="submit"
+                        id="confirmActivateBtn"
+                        class="btn btn-success">
+
+                    <i class="fas fa-check-circle me-1"></i>
+                    Yes, Activate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+    const modal = $("#activateModal");
+    const sampleIdInput = $("#activateSampleTypeId");
+    const sampleNameElement = $("#activateSampleName");
+    const confirmButton = $("#confirmActivateBtn");
+
+    // OPEN ACTIVATION MODAL
+    $(document).on("click", ".activate-sample-btn", function () {
+
+    sampleIdInput.val($(this).attr("data-id"));
+    sampleNameElement.text($(this).attr("data-name"));
+
+    modal.addClass("show");
+    $("body").addClass("modal-open");
+
+    });
+
+    // CLOSE MODAL
+    function closeActivateModal() {
+
+    modal.removeClass("show");
+    $("body").removeClass("modal-open");
+
+    sampleIdInput.val("");
+    sampleNameElement.text("");
+
+    confirmButton.prop("disabled", false)
+    .html('<i class="fas fa-check-circle me-1"></i> Yes, Activate');
+    }
+
+    $("#cancelActivateBtn").on("click", closeActivateModal);
+
+    modal.on("click", function (event) {
+    if (event.target === this) {
+    closeActivateModal();
+    }
+    });
+
+    $(document).on("keydown", function (event) {
+    if (event.key === "Escape" && modal.hasClass("show")) {
+    closeActivateModal();
+    }
+    });
+
+    // PREVENT DOUBLE SUBMISSION
+    $("#activateForm").on("submit", function (event) {
+
+    if (!sampleIdInput.val()) {
+    event.preventDefault();
+    return;
+    }
+
+    confirmButton.prop("disabled", true)
+    .html('<i class="fas fa-spinner fa-spin me-1"></i> Activating...');
+    });
+
+    // ESCAPE HTML
+    function escapeHtml(value) {
+    return $("<div>").text(value ?? "").html();
+    }
+
+    // LIVE SEARCH
+    let searchTimeout;
+
+    $("#searchBox").on("input", function () {
+
+    const term = $(this).val().trim();
+
+    clearTimeout(searchTimeout);
+
+    searchTimeout = setTimeout(function () {
+
+    $.ajax({
+    url: '@Url.Action("SearchSampleTypesLive", "Manager")',
+    type: "GET",
+    data: { term: term },
+
+    success: function (data) {
+
+    const tableBody = $("#sampleTypeTable");
+    tableBody.empty();
+
+    if (!Array.isArray(data) || data.length === 0) {
+
+    tableBody.html(`
+    <tr>
+    <td colspan="4"
+    class="text-center text-muted py-3">
+    No sample types found.
+    </td>
+    </tr>
+    `);
+
+    return;
+    }
+
+    $.each(data, function (index, sample) {
+
+    const id =
+    sample.sampleTypeId ??
+    sample.SampleTypeId;
+
+    const name =
+    sample.sampleName ??
+    sample.SampleName ??
+    "";
+
+    const description =
+    sample.description ??
+    sample.Description ??
+    "";
+
+    const isActive =
+    sample.isActive ??
+    sample.IsActive ??
+    false;
+
+    const safeName = escapeHtml(name);
+    const safeDescription = escapeHtml(description);
+    const safeId = encodeURIComponent(id ?? "");
+
+    // This page is for inactive sample types.
+    // Do not show active results here.
+    if (isActive) {
+    return;
+    }
+
+    const row = `
+    <tr>
+    <td class="fw-semibold">
+    ${safeName}
+    </td>
+
+    <td>
+    ${safeDescription || "No description available"}
+    </td>
+
+    <td>
+    <span class="badge bg-danger">
+    Inactive
+    </span>
+    </td>
+
+    <td class="text-center">
+    <a href="/Manager/EditSampleType/${safeId}"
+    class="btn btn-sm btn-outline-primary me-1"
+    title="Edit sample type">
+    <i class="fas fa-edit"></i>
+    </a>
+
+    <button type="button"
+    class="btn btn-sm btn-outline-success activate-sample-btn"
+    data-id="${escapeHtml(id)}"
+    data-name="${safeName}"
+    title="Activate sample type">
+    <i class="fas fa-check-circle"></i>
+    </button>
+    </td>
+    </tr>
+    `;
+
+    tableBody.append(row);
+
+    });
+
+    if (tableBody.children().length === 0) {
+    tableBody.html(`
+    <tr>
+    <td colspan="4"
+    class="text-center text-muted py-3">
+    No inactive sample types found.
+    </td>
+    </tr>
+    `);
+    }
+    },
+
+    error: function () {
+    $("#sampleTypeTable").html(`
+    <tr>
+    <td colspan="4"
+    class="text-center text-danger py-3">
+    Search failed. Please try again.
+    </td>
+    </tr>
+    `);
+    }
+    });
+
+    }, 250);
+
+    });
+
+    });
+</script>
