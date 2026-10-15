@@ -36,7 +36,7 @@
         <i class="fas fa-box me-2"></i>
 
         <span>
-            Consumables (@(Model?.Count ?? 0))
+            Active Consumables (@(Model?.Count ?? 0))
         </span>
 
     </div>
@@ -50,15 +50,48 @@
 
 </div>
 
-<!-- =====================================================
-     SEARCH
-     ===================================================== -->
 
-<input type="text"
-       id="searchBox"
-       class="form-control mb-3"
-       placeholder="Type to search consumables..."
-       autocomplete="off" />
+ <div class="search-toolbar">
+
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+
+                <input type="text"
+                       id="searchBox"
+                       class="search-input"
+                       placeholder="Search..."
+                       autocomplete="off" />
+            </div>
+
+ 
+           
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("Consumables", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "Consumables")">
+                        Active Sample Types
+                    </option>
+
+                    <option value="@Url.Action("InactiveConsumables", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveConsumables")">
+                        Inactive Sample Types
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+ </div>
 
 <!-- =====================================================
      TABLE

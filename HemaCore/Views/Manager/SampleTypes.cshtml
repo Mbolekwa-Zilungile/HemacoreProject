@@ -1,12 +1,12 @@
 ﻿@model List<HemaCore.Models.SampleType>
 
 @{
+    ViewData["Title"] = "Active Sample Types";
     Layout = "_ManagerLayout";
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 <link rel="stylesheet" href="~/css/delete.css" />
-
 
 @if (TempData["Success"] != null)
 {
@@ -22,23 +22,24 @@
     </div>
 }
 
-
 <div class="content-card">
 
-    <!-- HEADER -->
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-
             <i class="fas fa-vial me-2"></i>
 
             <span>
-                Sample Types (@(Model?.Count ?? 0))
+                Active Sample Types (@(Model?.Count ?? 0))
             </span>
-
         </div>
 
         <a asp-action="AddSampleType"
+           asp-controller="Manager"
            class="btn btn-primary-custom btn-sm">
 
             + Add Sample Type
@@ -47,97 +48,170 @@
 
     </div>
 
+    <!-- =====================================================
+         SEARCH AND STATUS FILTER
+         ===================================================== -->
 
-    <!-- SEARCH -->
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Type to search sample type..."
-           autocomplete="off" />
+    <div class="search-toolbar">
 
+        <div class="search-box">
 
-    <!-- TABLE -->
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search sample types..."
+                   autocomplete="off" />
+
+        </div>
+
+        <div class="filter-box">
+
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("SampleTypes", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "SampleTypes")">
+
+                        Active Sample Types
+
+                    </option>
+
+                    <option value="@Url.Action("InactiveSampleTypes", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveSampleTypes")">
+
+                        Inactive Sample Types
+
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         SAMPLE TYPES TABLE
+         ===================================================== -->
+
     <div class="card shadow-sm">
 
         <div class="card-body p-0">
 
-            <table class="modern-table">
+            <div class="table-responsive">
 
-                <thead>
-                    <tr>
+                <table class="modern-table">
 
-                        <th>
-                            Sample Type Name
-                        </th>
+                    <thead>
 
-                        <th>
-                            Description
-                        </th>
+                        <tr>
+                            <th>Sample Type Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
 
-                        <th>
-                            Actions
-                        </th>
+                    </thead>
 
-                    </tr>
-                </thead>
+                    <tbody id="sampleTypeTable">
 
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var sample in Model)
+                            {
+                                <tr>
 
-                <tbody id="TestTypeTable">
+                                    <td class="fw-semibold">
+                                        @sample.SampleName
+                                    </td>
 
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var sample in Model)
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(sample.Description)
+                                            ? "No description"
+                                            : sample.Description)
+                                    </td>
+
+                                    <td>
+
+                                        @if (sample.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                Inactive
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <!-- EDIT -->
+
+                                        <a asp-action="EditSampleType"
+                                           asp-controller="Manager"
+                                           asp-route-id="@sample.SampleTypeId"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit sample type">
+
+                                            <i class="fas fa-edit"></i>
+
+                                        </a>
+
+                                        <!-- DEACTIVATE ACTIVE SAMPLE TYPES -->
+                                        @if (sample.IsActive)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger deactivate-sample-btn"
+                                                    data-id="@sample.SampleTypeId"
+                                                    data-name="@sample.SampleName"
+                                                    title="Deactivate sample type">
+
+                                                <i class="fas fa-ban"></i>
+
+                                            </button>
+                                        }
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
 
-                                <td class="fw-semibold">
-                                    @sample.SampleName
-                                </td>
+                                <td colspan="4"
+                                    class="text-center text-muted py-3">
 
-                                <td>
-                                    @sample.Description
-                                </td>
+                                    No sample types available.
 
-                                <td class="text-center">
-
-                                    <a asp-action="EditSampleType"
-                                       asp-route-id="@sample.SampleTypeId"
-                                       class="btn btn-sm btn-outline-primary me-1">
-
-                                        <i class="fas fa-edit me-1"></i>
-
-                                    </a>
-
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger deactivate-supplier-btn"
-                                            data-id="@sample.SampleTypeId"
-                                            data-name="@sample.SampleName">
-                                        <i class="fas fa-ban"></i>
-
-                                    </button>
-                           
                                 </td>
 
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
 
-                            <td colspan="3"
-                                class="text-center text-muted py-3">
+                    </tbody>
 
-                                No sample types available.
+                </table>
 
-                            </td>
-
-                        </tr>
-                    }
-
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
@@ -145,58 +219,56 @@
 
 </div>
 
-
-
-<!-- =========================================================
-     DELETE CONFIRMATION MODAL
-     ========================================================= -->
+<!-- =====================================================
+     DEACTIVATE CONFIRMATION MODAL
+     ===================================================== -->
 
 <div id="deleteModal"
      class="delete-overlay"
      role="dialog"
      aria-modal="true"
+     aria-hidden="true"
      aria-labelledby="deleteModalTitle">
 
     <div class="delete-box">
 
         <!-- ICON -->
+
         <div class="delete-icon">
 
             <i class="fas fa-exclamation-triangle"></i>
 
         </div>
 
-
         <!-- TITLE -->
+
         <h3 id="deleteModalTitle">
-            Are you sure?
+            Deactivate Sample Type?
         </h3>
 
-
         <!-- MESSAGE -->
+
         <p>
-
-            Are you sure you want to delete
-
+            Are you sure you want to deactivate
             <strong id="deleteSampleName"></strong>?
-
         </p>
 
-
         <!-- WARNING -->
+
         <span class="delete-warning">
 
             <i class="fas fa-info-circle"></i>
 
-            This action cannot be undone.
+            This sample type will become inactive and unavailable for normal use.
 
         </span>
 
-
         <!-- BUTTONS -->
+
         <div class="delete-buttons">
 
             <!-- CANCEL -->
+
             <button type="button"
                     id="cancelDeleteBtn"
                     class="cancel-btn">
@@ -205,9 +277,10 @@
 
             </button>
 
+            <!-- DEACTIVATE FORM -->
 
-            <!-- DELETE FORM -->
-            <form asp-action="DeleteSampleType"
+            <form asp-action="DeactivateSampleType"
+                  asp-controller="Manager"
                   method="post"
                   id="deleteForm">
 
@@ -218,11 +291,12 @@
                        id="deleteSampleTypeId" />
 
                 <button type="submit"
+                        id="confirmDeactivateBtn"
                         class="confirm-delete-btn">
 
-                    <i class="fas fa-trash-alt me-1"></i>
+                    <i class="fas fa-ban me-1"></i>
 
-                    Yes, Delete
+                    Yes, Deactivate
 
                 </button>
 
@@ -234,251 +308,308 @@
 
 </div>
 
-
-
-<!-- JQUERY -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!-- =====================================================
+     LIVE SEARCH AND MODAL SCRIPT
+     ===================================================== -->
 
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-    $(document).ready(function () {
+        const modal = document.getElementById("deleteModal");
+        const sampleIdInput = document.getElementById("deleteSampleTypeId");
+        const sampleNameElement = document.getElementById("deleteSampleName");
+        const cancelButton = document.getElementById("cancelDeleteBtn");
+        const deactivateForm = document.getElementById("deleteForm");
+        const confirmButton = document.getElementById("confirmDeactivateBtn");
+        const searchBox = document.getElementById("searchBox");
+        const tableBody = document.getElementById("sampleTypeTable");
 
+        let searchTimeout;
 
-    /* =====================================================
-    OPEN DELETE MODAL
-    ===================================================== */
+        // =====================================================
+        // OPEN DEACTIVATION MODAL
+        // =====================================================
 
-    $(document).on("click", ".delete-sample-btn", function () {
+        document.addEventListener("click", function (event) {
 
-    var id = $(this).attr("data-id");
-    var sampleName = $(this).attr("data-name");
+            const button = event.target.closest(".deactivate-sample-btn");
 
-    $("#deleteSampleTypeId").val(id);
+            if (!button) {
+                return;
+            }
 
-    $("#deleteSampleName").text(sampleName);
+            sampleIdInput.value = button.dataset.id || "";
+            sampleNameElement.textContent = button.dataset.name || "";
 
-    $("#deleteModal").addClass("show");
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden", "false");
 
-    $("body").addClass("modal-open");
+            document.body.classList.add("modal-open");
+
+        });
+
+        // =====================================================
+        // CLOSE MODAL
+        // =====================================================
+
+        function closeModal() {
+
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+
+            document.body.classList.remove("modal-open");
+
+            sampleIdInput.value = "";
+            sampleNameElement.textContent = "";
+
+            confirmButton.disabled = false;
+
+            confirmButton.innerHTML = `
+                <i class="fas fa-ban me-1"></i>
+                Yes, Deactivate
+            `;
+        }
+
+        cancelButton.addEventListener("click", closeModal);
+
+        // Close when clicking outside the modal box.
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+                closeModal();
+            }
+
+        });
+
+        // Close with Escape.
+
+        document.addEventListener("keydown", function (event) {
+
+            if (
+                event.key === "Escape" &&
+                modal.classList.contains("show")
+            ) {
+                closeModal();
+            }
+
+        });
+
+        // =====================================================
+        // PREVENT DOUBLE FORM SUBMISSION
+        // =====================================================
+
+        deactivateForm.addEventListener("submit", function (event) {
+
+            if (!sampleIdInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+
+            confirmButton.innerHTML = `
+                <i class="fas fa-spinner fa-spin me-1"></i>
+                Deactivating...
+            `;
+
+        });
+
+        // =====================================================
+        // HTML ESCAPING
+        // =====================================================
+
+        function escapeHtml(value) {
+
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+
+            return element.innerHTML;
+        }
+
+        // =====================================================
+        // LIVE SEARCH
+        // =====================================================
+
+        if (searchBox && tableBody) {
+
+            const originalRows = Array.from(tableBody.children);
+
+            searchBox.addEventListener("input", function () {
+
+                const term = this.value.trim();
+
+                clearTimeout(searchTimeout);
+
+                searchTimeout = setTimeout(function () {
+
+                    // Restore original server-rendered rows when cleared.
+
+                    if (term === "") {
+                        tableBody.replaceChildren(...originalRows);
+                        return;
+                    }
+
+                    fetch(
+                        '@Url.Action("SearchSampleTypesLive", "Manager")?term=' +
+                        encodeURIComponent(term),
+                        {
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
+                        }
+                    )
+                    .then(function (response) {
+
+                        if (!response.ok) {
+                            throw new Error("Unable to search sample types.");
+                        }
+
+                        return response.json();
+
+                    })
+                    .then(function (data) {
+
+                        if (!Array.isArray(data) || data.length === 0) {
+
+                            tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center text-muted py-3">
+                                        No sample types found.
+                                    </td>
+                                </tr>
+                            `;
+
+                            return;
+                        }
+
+                        // Normalize property names returned by the endpoint.
+
+                        const samples = data.map(function (sample) {
+
+                            return {
+                                id:
+                                    sample.sampleTypeId ??
+                                    sample.SampleTypeId ??
+                                    sample.sampleTypeID ??
+                                    sample.SampleTypeID,
+
+                                name:
+                                    sample.sampleName ??
+                                    sample.SampleName ??
+                                    "",
+
+                                description:
+                                    sample.description ??
+                                    sample.Description ??
+                                    "",
+
+                                isActive:
+                                    sample.isActive ??
+                                    sample.IsActive ??
+                                    false
+                            };
+
+                        });
+
+                        // This page shows active sample types only.
+
+                        const activeSamples = samples.filter(function (sample) {
+                            return sample.isActive;
+                        });
+
+                        if (activeSamples.length === 0) {
+
+                            tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center text-muted py-3">
+                                        No active sample types found.
+                                    </td>
+                                </tr>
+                            `;
+
+                            return;
+                        }
+
+                        let rows = "";
+
+                        activeSamples.forEach(function (sample) {
+
+                            const id = sample.id;
+                            const safeId = encodeURIComponent(id ?? "");
+                            const safeName = escapeHtml(sample.name);
+                            const safeDescription = escapeHtml(
+                                sample.description || "No description"
+                            );
+
+                            rows += `
+                                <tr>
+
+                                    <td class="fw-semibold">
+                                        ${safeName}
+                                    </td>
+
+                                    <td>
+                                        ${safeDescription}
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-success">
+                                            Active
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <a href="/Manager/EditSampleType/${safeId}"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit sample type">
+
+                                            <i class="fas fa-edit"></i>
+
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger deactivate-sample-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${safeName}"
+                                                title="Deactivate sample type">
+
+                                            <i class="fas fa-ban"></i>
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            `;
+                        });
+
+                        tableBody.innerHTML = rows;
+
+                    })
+                    .catch(function (error) {
+
+                        console.error("Sample type search failed:", error);
+
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4"
+                                    class="text-center text-danger py-3">
+                                    Search failed. Please try again.
+                                </td>
+                            </tr>
+                        `;
+
+                    });
+
+                }, 250);
+
+            });
+
+        }
 
     });
-
-
-    /* =====================================================
-    CLOSE DELETE MODAL
-    ===================================================== */
-
-    function closeDeleteModal() {
-
-    $("#deleteModal").removeClass("show");
-
-    $("body").removeClass("modal-open");
-
-    $("#deleteSampleTypeId").val("");
-
-    $("#deleteSampleName").text("");
-
-    }
-
-
-    /* =====================================================
-    CANCEL
-    ===================================================== */
-
-    $("#cancelDeleteBtn").on("click", function () {
-
-    closeDeleteModal();
-
-    });
-
-
-    /* =====================================================
-    CLICK OUTSIDE MODAL
-    ===================================================== */
-
-    $("#deleteModal").on("click", function (event) {
-
-    if (event.target === this) {
-
-    closeDeleteModal();
-
-    }
-
-    });
-
-
-    /* =====================================================
-    ESCAPE KEY
-    ===================================================== */
-
-    $(document).on("keydown", function (event) {
-
-    if (event.key === "Escape") {
-
-    if ($("#deleteModal").hasClass("show")) {
-
-    closeDeleteModal();
-
-    }
-
-    }
-
-    });
-
-
-    /* =====================================================
-    LIVE SEARCH
-    ===================================================== */
-
-    $("#searchBox").on("input", function () {
-
-    var term = $(this).val().trim();
-
-    $.ajax({
-
-    url: '@Url.Action("SearchSampleTypesLive", "Manager")',
-
-    type: "GET",
-
-    data: {
-    term: term
-    },
-
-    success: function (data) {
-
-    var tableBody = $("#TestTypeTable");
-
-    tableBody.empty();
-
-
-    if (!data || data.length === 0) {
-
-    tableBody.append(`
-
-    <tr>
-
-    <td colspan="3"
-    class="text-center text-muted py-3">
-
-    No sample types found
-
-    </td>
-
-    </tr>
-
-    `);
-
-    return;
-    }
-
-
-    $.each(data, function (index, sample) {
-
-    var sampleName =
-    sample.sampleName ?? "";
-
-    var description =
-    sample.description ?? "";
-
-    var sampleTypeId =
-    sample.sampleTypeId;
-
-
-    /*
-    * Escape HTML
-    */
-
-    var safeSampleName =
-    $("<div>").text(sampleName).html();
-
-    var safeDescription =
-    $("<div>").text(description).html();
-
-
-    var row = `
-
-    <tr>
-
-    <td class="fw-semibold">
-    ${safeSampleName}
-    </td>
-
-    <td>
-    ${safeDescription}
-    </td>
-
-    <td class="text-center">
-
-    <a href="/Manager/EditSampleType/${sampleTypeId}"
-    class="btn btn-sm btn-outline-primary me-1">
-
-    Edit
-
-    </a>
-
-
-    <button type="button"
-    class="btn btn-sm btn-outline-danger delete-sample-btn"
-    data-id="${sampleTypeId}"
-    data-name="${safeSampleName}">
-
-    Delete
-
-    </button>
-
-    </td>
-
-    </tr>
-
-    `;
-
-    tableBody.append(row);
-
-    });
-
-    },
-
-
-    error: function () {
-
-    $("#TestTypeTable").html(`
-
-    <tr>
-
-    <td colspan="3"
-    class="text-center text-danger py-3">
-
-    Search failed. Please try again.
-
-    </td>
-
-    </tr>
-
-    `);
-
-    }
-
-    });
-
-    });
-
-
-    /* =====================================================
-    PREVENT DOUBLE DELETE
-    ===================================================== */
-
-    $("#deleteForm").on("submit", function () {
-
-    $(".confirm-delete-btn")
-    .prop("disabled", true)
-    .html(`
-    <i class="fas fa-spinner fa-spin me-1"></i>
-    Deleting...
-    `);
-
-    });
-
-    });
-
 </script>

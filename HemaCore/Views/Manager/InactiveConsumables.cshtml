@@ -1,0 +1,543 @@
+﻿@model List<HemaCore.Models.Consumable>
+
+@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="content-card">
+
+    <!-- HEADER -->
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+            <i class="fas fa-box me-2"></i>
+
+            <span>
+                Inactive Consumables (@(Model?.Count ?? 0))
+            </span>
+        </div>
+
+        <a asp-action="AddConsumable"
+           class="btn btn-primary-custom btn-sm">
+            + Add Consumable
+        </a>
+
+    </div>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="search-toolbar">
+
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("Consumables", "Manager")">
+                        Active Consumables
+                    </option>
+
+                    <option value="@Url.Action("InactiveConsumables", "Manager")"
+                            selected>
+                        Inactive Consumables
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Supplier</th>
+                            <th>Reorder</th>
+                            <th>Quantity</th>
+                            <th>Stock Status</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="consumableTable">
+
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7"
+                                    class="text-center text-muted py-3">
+                                    No inactive consumables available.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                var status = item.Status.ToString();
+
+                                var badgeClass = status switch
+                                {
+                                    "OutOfStock" => "bg-danger",
+                                    "LowStock" => "bg-warning text-dark",
+                                    "InStock" => "bg-success",
+                                    _ => "bg-secondary"
+                                };
+
+                                <tr>
+
+                                    <td class="fw-semibold blue-text">
+                                        @item.ConsumableName
+                                    </td>
+
+                                    <td>
+                                        @if (item.Supplier != null &&
+                                             item.Supplier.IsActive)
+                                        {
+                                            @item.Supplier.SupplierName
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                No supplier
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @item.ReorderLevel
+                                    </td>
+
+                                    <td>
+                                        @item.QuantityInHand
+                                    </td>
+
+                                    <td>
+                                        <span class="badge @badgeClass">
+                                            @status
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="d-flex gap-2 flex-nowrap">
+
+                                            <a asp-action="AdjustStock"
+                                               asp-route-id="@item.ConsumableId"
+                                               class="btn btn-sm btn-outline-info"
+                                               title="Adjust stock">
+                                                Adjust
+                                            </a>
+
+                                            <a asp-action="EditConsumable"
+                                               asp-route-id="@item.ConsumableId"
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Edit consumable">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success activate-consumable-btn"
+                                                    data-id="@item.ConsumableId"
+                                                    data-name="@item.ConsumableName"
+                                                    title="Activate consumable">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ACTIVATE CONFIRMATION MODAL -->
+<div id="activateModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="activateModalTitle">
+
+    <div class="delete-box">
+
+        <div class="activate-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h3 id="activateModalTitle">
+            Activate Consumable?
+        </h3>
+
+        <p>
+            Are you sure you want to activate
+            <strong id="activateConsumableName"></strong>?
+        </p>
+
+        <span class="delete-warning activate-warning">
+            <i class="fas fa-info-circle"></i>
+            <span class="activate-text">
+            This consumable will become active and available for use again.
+            </span>
+        </span>
+
+        <div class="delete-buttons">
+
+            <button type="button"
+                    id="cancelActivateBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <form asp-action="ActivateConsumable"
+                  asp-controller="Manager"
+                  method="post"
+                  id="activateForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="activateConsumableId" />
+
+                <button type="submit"
+                        id="confirmActivateBtn"
+                        class="btn btn-success">
+
+                    <i class="fas fa-check-circle me-1"></i>
+                    Yes, Activate
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal = document.getElementById("activateModal");
+        const idInput = document.getElementById("activateConsumableId");
+        const nameElement = document.getElementById("activateConsumableName");
+        const cancelButton = document.getElementById("cancelActivateBtn");
+        const form = document.getElementById("activateForm");
+        const confirmButton = document.getElementById("confirmActivateBtn");
+        const searchBox = document.getElementById("searchBox");
+        const tableBody = document.getElementById("consumableTable");
+
+        // OPEN ACTIVATION MODAL
+        document.addEventListener("click", function (event) {
+
+            const button = event.target.closest(".activate-consumable-btn");
+
+            if (!button) return;
+
+            idInput.value = button.dataset.id || "";
+            nameElement.textContent = button.dataset.name || "";
+
+            modal.classList.add("show");
+            document.body.classList.add("modal-open");
+        });
+
+        // CLOSE MODAL
+        function closeModal() {
+
+            modal.classList.remove("show");
+            document.body.classList.remove("modal-open");
+
+            idInput.value = "";
+            nameElement.textContent = "";
+
+            confirmButton.disabled = false;
+            confirmButton.innerHTML =
+                '<i class="fas fa-check-circle me-1"></i> Yes, Activate';
+        }
+
+        cancelButton.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeModal();
+            }
+        });
+
+        // PREVENT DOUBLE SUBMISSION
+        form.addEventListener("submit", function (event) {
+
+            if (!idInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i> Activating...';
+        });
+
+        // HTML ESCAPING
+        function escapeHtml(value) {
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+            return element.innerHTML;
+        }
+
+        // LIVE SEARCH
+        let searchTimeout;
+
+        searchBox.addEventListener("input", function () {
+
+            const term = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(function () {
+
+                fetch(
+                    '@Url.Action("SearchConsumablesLive", "Manager")' +
+                    '?term=' + encodeURIComponent(term)
+                )
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Search request failed.");
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+
+                    tableBody.innerHTML = "";
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7"
+                                    class="text-center text-muted py-3">
+                                    No inactive consumables found.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    let rows = "";
+
+                    data.forEach(function (item) {
+
+                        const id =
+                            item.consumableId ??
+                            item.ConsumableId ??
+                            item.consumableid;
+
+                        const rawName =
+                            item.consumableName ??
+                            item.ConsumableName ??
+                            item.consumablename ??
+                            "";
+
+                        const rawSupplier =
+                            item.supplierName ??
+                            item.SupplierName ??
+                            item.suppliername ??
+                            "";
+
+                        const reorder =
+                            item.reorderLevel ??
+                            item.ReorderLevel ??
+                            item.reorderlevel ??
+                            0;
+
+                        const quantity =
+                            item.quantityInHand ??
+                            item.QuantityInHand ??
+                            item.quantityinhand ??
+                            0;
+
+                        const status =
+                            item.status ??
+                            item.Status ??
+                            "";
+
+                        const isActive =
+                            item.isActive ??
+                            item.IsActive ??
+                            false;
+
+                        // This view only displays inactive consumables.
+                        if (isActive) return;
+
+                        const name = escapeHtml(rawName);
+                        const supplier = escapeHtml(rawSupplier);
+                        const safeId = encodeURIComponent(id ?? "");
+
+                        let badgeClass = "bg-secondary";
+
+                        if (status === "OutOfStock") {
+                            badgeClass = "bg-danger";
+                        } else if (status === "LowStock") {
+                            badgeClass = "bg-warning text-dark";
+                        } else if (status === "InStock") {
+                            badgeClass = "bg-success";
+                        }
+
+                        const supplierDisplay = supplier
+                            ? supplier
+                            : '<span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>No supplier</span>';
+
+                        rows += `
+                            <tr>
+                                <td class="fw-semibold blue-text">
+                                    ${name}
+                                </td>
+
+                                <td>${supplierDisplay}</td>
+
+                                <td>${escapeHtml(reorder)}</td>
+
+                                <td>${escapeHtml(quantity)}</td>
+
+                                <td>
+                                    <span class="badge ${badgeClass}">
+                                        ${escapeHtml(status)}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-danger">Inactive</span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex gap-2 flex-nowrap">
+
+                                        <a href="/Manager/AdjustStock/${safeId}"
+                                           class="btn btn-sm btn-outline-info">
+                                            Adjust
+                                        </a>
+
+                                        <a href="/Manager/EditConsumable/${safeId}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit consumable">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success activate-consumable-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${name}"
+                                                title="Activate consumable">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tableBody.innerHTML = rows || `
+                        <tr>
+                            <td colspan="7"
+                                class="text-center text-muted py-3">
+                                No inactive consumables found.
+                            </td>
+                        </tr>
+                    `;
+                })
+                .catch(function (error) {
+
+                    console.error("Consumable search failed:", error);
+
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7"
+                                class="text-center text-danger py-3">
+                                Search failed. Please try again.
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            }, 250);
+        });
+
+    });
+</script>
