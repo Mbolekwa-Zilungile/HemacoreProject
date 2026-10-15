@@ -814,7 +814,7 @@ public async Task<IActionResult> SaveTestResult(
                 TempData["Error"] =
                     "This test is not currently being processed.";
 
-                return RedirectToAction(nameof(ProcessTests));
+                return RedirectToAction(nameof(MyTests));
             }
 
             if (string.IsNullOrWhiteSpace(resultValue))
@@ -902,7 +902,7 @@ public async Task<IActionResult> SaveTestResult(
             TempData["ResultSuccess"] =
                 "Results successfully processed.";
 
-            return RedirectToAction(nameof(ProcessTests));
+            return RedirectToAction(nameof(MyTests));
         }
 
         public async Task<IActionResult> VerifyResults()
