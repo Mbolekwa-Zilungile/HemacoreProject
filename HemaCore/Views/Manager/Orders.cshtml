@@ -4,44 +4,95 @@
     Layout = "_ManagerLayout";
 }
 
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+<!-- =========================================================
+     ALERT MESSAGES
+     ========================================================= -->
+
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show">
         @TempData["Success"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+
+<!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
 
 <div class="content-card">
 
     <!-- HEADER -->
+
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-shopping-cart"></i>
-            <span>Orders (@Model.Count)</span>
+            <i class="fas fa-shopping-cart me-2"></i>
 
-         
+            <span>
+                Orders (@(Model?.Count ?? 0))
+            </span>
         </div>
 
         <a asp-action="CreateOrder"
            class="btn btn-primary-custom btn-sm">
+
             + Add new order
+
         </a>
 
     </div>
 
+
     <!-- SEARCH -->
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Search by order number (e.g. ORD-2026-001)" />
+
+    <div class="search-toolbar">
+
+        <div class="search-box">
+
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search by order number..."
+                   autocomplete="off" />
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ORDERS TABLE
+         ===================================================== -->
 
     <div class="card shadow-sm">
+
         <div class="card-body p-0">
 
             <table class="modern-table">
+
                 <thead>
                     <tr>
                         <th>ORDER NO.</th>
@@ -49,122 +100,645 @@
                         <th>Date Ordered</th>
                         <th>Items</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
+
                 <tbody id="orderTableBody">
 
-                    @if (!Model.Any())
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
+                            <td colspan="6"
+                                class="text-center text-muted py-3">
+
                                 No orders available.
+
                             </td>
                         </tr>
                     }
                     else
                     {
-
-                        @foreach (var order in Model)
+                        foreach (var order in Model)
                         {
                             var itemCount = order.OrderItems?.Count ?? 0;
-                            var supplierName = order.Supplier?.SupplierName ?? "Unknown";
+
+                            var supplierName =
+                                order.Supplier?.SupplierName ?? "Unknown";
 
                             <tr>
-                                <td>@order.OrderNumber</td>
-                                <td>@supplierName</td>
-                                <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
-                                <td>@itemCount</td>
+
+                                <!-- ORDER NUMBER -->
+
+                                <td class="fw-semibold">
+                                    @order.OrderNumber
+                                </td>
+
+
+                                <!-- SUPPLIER -->
 
                                 <td>
-                                    @if (order.Status.ToString() == "Ordered")
+                                    @supplierName
+                                </td>
+
+
+                                <!-- DATE -->
+
+                                <td>
+                                    @order.OrderDate.ToString("yyyy-MM-dd")
+                                </td>
+
+
+                                <!-- ITEM COUNT -->
+
+                                <td>
+                                    @itemCount
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    @if (order.Status ==
+                                        HemaCore.Models.Enums.OrderStatus.Ordered)
                                     {
-                                        <span class="badge bg-warning">Ordered</span>
+                                        <span class="badge bg-warning text-dark">
+                                            Ordered
+                                        </span>
                                     }
-                                    else if (order.Status.ToString() == "Completed")
+                                    else if (order.Status ==
+                                        HemaCore.Models.Enums.OrderStatus.Completed)
                                     {
-                                        <span class="badge bg-success">Completed</span>
+                                        <span class="badge bg-success">
+                                            Completed
+                                        </span>
                                     }
-                                    else if (order.Status.ToString() == "Cancelled")
+                                    else if (order.Status ==
+                                        HemaCore.Models.Enums.OrderStatus.Cancelled)
                                     {
-                                        <span class="badge bg-danger">Cancelled</span>
+                                        <span class="badge bg-danger">
+                                            Cancelled
+                                        </span>
+                                    }
+                                    else if (order.Status ==
+                                        HemaCore.Models.Enums.OrderStatus.PartiallyCompleted)
+                                    {
+                                        <span class="badge bg-info text-dark">
+                                            Partially Completed
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-info">@order.Status</span>
+                                        <span class="badge bg-secondary">
+                                            @order.Status
+                                        </span>
                                     }
+
                                 </td>
 
+
+                                <!-- ACTIONS -->
+
                                 <td>
-                                    <a asp-action="OrderDetails" asp-route-id="@order.OrderId"
+
+                                    <!-- VIEW ORDER -->
+
+                                    <a asp-action="OrderDetails"
+                                       asp-route-id="@order.OrderId"
                                        class="btn btn-sm btn-outline-info me-1">
-                                        View / Manage
+
+
+                                        View/Manager
                                     </a>
+
+
+                                    <!-- CANCEL ORDER -->
+
+                                    @if (order.Status ==
+                                        HemaCore.Models.Enums.OrderStatus.Ordered)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger cancel-order-btn"
+                                                data-id="@order.OrderId"
+                                                data-name="@order.OrderNumber"
+                                                title="Cancel order"
+                                                aria-label="Cancel order @order.OrderNumber">
+ 
+                                            Cancel order
+                                        </button>
+                                    }
+
                                 </td>
+
                             </tr>
                         }
                     }
+
                 </tbody>
 
             </table>
 
         </div>
+
     </div>
+
 </div>
 
-<!-- AJAX SEARCH -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<!-- =========================================================
+     CANCEL ORDER CONFIRMATION MODAL
+     ========================================================= -->
+
+<div id="cancelOrderModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-hidden="true"
+     aria-labelledby="cancelOrderModalTitle">
+
+    <div class="delete-box">
+
+        <!-- ICON -->
+
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+
+        <!-- TITLE -->
+
+        <h3 id="cancelOrderModalTitle">
+            Are you sure?
+        </h3>
+
+
+        <!-- MESSAGE -->
+
+        <p>
+            Are you sure you want to cancel order
+
+            <strong id="cancelOrderNumber"></strong>?
+        </p>
+
+
+        <!-- WARNING -->
+
+        <span class="delete-warning">
+
+            <i class="fas fa-info-circle"></i>
+
+            Pending items in this order will be cancelled.
+
+        </span>
+
+
+        <!-- BUTTONS -->
+
+        <div class="delete-buttons">
+
+            <!-- KEEP ORDER -->
+
+            <button type="button"
+                    id="closeCancelOrderBtn"
+                    class="cancel-btn">
+
+                Keep Order
+
+            </button>
+
+
+            <!-- CONFIRM CANCELLATION -->
+
+            <form asp-action="CancelOrder"
+                  asp-controller="Manager"
+                  method="post"
+                  id="cancelOrderForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="orderId"
+                       id="cancelOrderId" />
+
+                <button type="submit"
+                        id="confirmCancelOrderBtn"
+                        class="confirm-delete-btn">
+
+                    <i class="fas fa-ban me-1"></i>
+
+                    Yes, Cancel Order
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
 
 <script>
-    $("#searchBox").on("keyup", function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-    var value = $(this).val();
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
 
-    $.ajax({
-    url: '/Manager/SearchOrders',
-    type: 'GET',
-    data: { term: value },
-    success: function (data) {
+    const modal = document.getElementById("cancelOrderModal");
 
-    var rows = "";
+    const orderIdInput =
+        document.getElementById("cancelOrderId");
 
-    data.forEach(function (o) {
+    const orderNumber =
+        document.getElementById("cancelOrderNumber");
 
-    let badge = "";
+    const closeButton =
+        document.getElementById("closeCancelOrderBtn");
 
-    if (o.status === "Ordered") {
-    badge = '<span class="badge bg-warning">Ordered</span>';
-    }
-    else if (o.status === "Completed") {
-    badge = '<span class="badge bg-success">Completed</span>';
-    }
-    else if (o.status === "Rejected") {
-    badge = '<span class="badge bg-danger">Rejected</span>';
-    }
-    else {
-    badge = '<span class="badge bg-secondary">' + o.status + '</span>';
-    }
+    const cancelForm =
+        document.getElementById("cancelOrderForm");
 
-    rows += `
-    <tr>
-    <td>${o.orderNumber}</td>
-    <td>${o.supplierName}</td>
-    <td>${o.orderDate}</td>
-    <td>${o.itemCount}</td>
-    <td>${badge}</td>
-    <td>
-    <a href="/Manager/OrderDetails/${o.orderID}"
-    class="btn btn-sm btn-primary">
-    View / Manage
-    </a>
-    </td>
-    </tr>
-    `;
+    const confirmButton =
+        document.getElementById("confirmCancelOrderBtn");
+
+    const searchBox =
+        document.getElementById("searchBox");
+
+    const orderTable =
+        document.getElementById("orderTableBody");
+
+    const originalConfirmButtonHtml =
+        confirmButton.innerHTML;
+
+
+    // =====================================================
+    // OPEN CANCEL MODAL
+    // Delegated click supports AJAX-generated buttons
+    // =====================================================
+
+    document.addEventListener("click", function (event) {
+
+        const button =
+            event.target.closest(".cancel-order-btn");
+
+        if (!button) {
+            return;
+        }
+
+        orderIdInput.value = button.dataset.id;
+
+        orderNumber.textContent =
+            button.dataset.name || "";
+
+        confirmButton.disabled = false;
+
+        confirmButton.innerHTML =
+            originalConfirmButtonHtml;
+
+        modal.classList.add("show");
+
+        modal.setAttribute("aria-hidden", "false");
+
+        document.body.classList.add("modal-open");
+
     });
 
-    $("#orderTableBody").html(rows);
+
+    // =====================================================
+    // CLOSE MODAL
+    // =====================================================
+
+    function closeModal() {
+
+        modal.classList.remove("show");
+
+        modal.setAttribute("aria-hidden", "true");
+
+        document.body.classList.remove("modal-open");
+
+        orderIdInput.value = "";
+
+        orderNumber.textContent = "";
+
+        confirmButton.disabled = false;
+
+        confirmButton.innerHTML =
+            originalConfirmButtonHtml;
+
     }
+
+
+    // =====================================================
+    // KEEP ORDER BUTTON
+    // =====================================================
+
+    closeButton.addEventListener("click", function () {
+
+        closeModal();
+
     });
+
+
+    // =====================================================
+    // CLICK OUTSIDE MODAL
+    // =====================================================
+
+    modal.addEventListener("click", function (event) {
+
+        if (event.target === modal) {
+
+            closeModal();
+
+        }
+
     });
+
+
+    // =====================================================
+    // ESCAPE KEY
+    // =====================================================
+
+    document.addEventListener("keydown", function (event) {
+
+        if (
+            event.key === "Escape" &&
+            modal.classList.contains("show")
+        ) {
+            closeModal();
+        }
+
+    });
+
+
+    // =====================================================
+    // PREVENT DOUBLE SUBMISSION
+    // =====================================================
+
+    cancelForm.addEventListener("submit", function (event) {
+
+        if (!orderIdInput.value) {
+
+            event.preventDefault();
+
+            return;
+        }
+
+        confirmButton.disabled = true;
+
+        confirmButton.innerHTML = `
+            <i class="fas fa-spinner fa-spin me-1"></i>
+            Cancelling...
+        `;
+
+    });
+
+
+    // =====================================================
+    // LIVE ORDER SEARCH
+    // =====================================================
+
+    let searchController = null;
+
+    searchBox.addEventListener("input", async function () {
+
+        const term = this.value.trim();
+
+        // Cancel any previous search request
+        if (searchController) {
+            searchController.abort();
+        }
+
+        searchController = new AbortController();
+
+        try {
+
+            const response = await fetch(
+                '@Url.Action("SearchOrders", "Manager")' +
+                '?term=' + encodeURIComponent(term),
+                {
+                    method: "GET",
+                    signal: searchController.signal
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Search request failed.");
+            }
+
+            const data = await response.json();
+
+            if (!data || data.length === 0) {
+
+                orderTable.innerHTML = `
+                    <tr>
+                        <td colspan="6"
+                            class="text-center text-muted py-3">
+                            No orders found.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+            let rows = "";
+
+            data.forEach(function (o) {
+
+                const id = Number(o.orderID);
+
+                const orderNo =
+                    escapeHtml(o.orderNumber);
+
+                const supplier =
+                    escapeHtml(o.supplierName);
+
+                const date =
+                    escapeHtml(o.orderDate);
+
+                const status =
+                    String(o.status ?? "");
+
+                const itemCount =
+                    Number(o.itemCount) || 0;
+
+
+                // =========================================
+                // STATUS BADGE
+                // =========================================
+
+                let badge = "";
+
+                if (status === "Ordered") {
+
+                    badge = `
+                        <span class="badge bg-warning text-dark">
+                            Ordered
+                        </span>
+                    `;
+
+                }
+                else if (status === "Completed") {
+
+                    badge = `
+                        <span class="badge bg-success">
+                            Completed
+                        </span>
+                    `;
+
+                }
+                else if (status === "Cancelled") {
+
+                    badge = `
+                        <span class="badge bg-danger">
+                            Cancelled
+                        </span>
+                    `;
+
+                }
+                else if (status === "PartiallyCompleted") {
+
+                    badge = `
+                        <span class="badge bg-info text-dark">
+                            Partially Completed
+                        </span>
+                    `;
+
+                }
+                else {
+
+                    badge = `
+                        <span class="badge bg-secondary">
+                            ${escapeHtml(status)}
+                        </span>
+                    `;
+
+                }
+
+
+                // =========================================
+                // CANCEL BUTTON
+                // Only for Ordered orders
+                // =========================================
+
+                let cancelButton = "";
+
+                if (
+                    status === "Ordered" &&
+                    Number.isSafeInteger(id) &&
+                    id > 0
+                ) {
+
+                    cancelButton = `
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger cancel-order-btn"
+                                data-id="${id}"
+                                data-name="${orderNo}"
+                                title="Cancel order"
+                                aria-label="Cancel order ${orderNo}">
+
+                            <i class="fas fa-ban"></i>
+
+                        </button>
+                    `;
+
+                }
+
+
+                // =========================================
+                // ORDER ROW
+                // =========================================
+
+                rows += `
+                    <tr>
+
+                        <td class="fw-semibold">
+                            ${orderNo}
+                        </td>
+
+                        <td>
+                            ${supplier}
+                        </td>
+
+                        <td>
+                            ${date}
+                        </td>
+
+                        <td>
+                            ${itemCount}
+                        </td>
+
+                        <td>
+                            ${badge}
+                        </td>
+
+                        <td>
+
+                            <a href="@Url.Action("OrderDetails", "Manager")?id=${id}"
+                               class="btn btn-sm btn-outline-info me-1"
+                               aria-label="View order ${orderNo}">
+
+                                <i class="fas fa-eye"></i>
+
+                            </a>
+
+                            ${cancelButton}
+
+                        </td>
+
+                    </tr>
+                `;
+
+            });
+
+            orderTable.innerHTML = rows;
+
+        }
+        catch (error) {
+
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            console.error("Order search failed:", error);
+
+            orderTable.innerHTML = `
+                <tr>
+                    <td colspan="6"
+                        class="text-center text-danger py-3">
+                        Search failed. Please try again.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    });
+
+
+    // =====================================================
+    // ESCAPE HTML
+    // =====================================================
+
+    function escapeHtml(value) {
+
+        const div = document.createElement("div");
+
+        div.textContent = String(value ?? "");
+
+        return div.innerHTML;
+
+    }
+
+});
 </script>

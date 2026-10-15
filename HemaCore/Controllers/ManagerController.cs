@@ -1143,6 +1143,90 @@ namespace HemaCore.Controllers
             return RedirectToAction("InactiveTestTypes");
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> AssignTechnicianToTestType(int testTypeId)
+        {
+            var testType = await _context.TestTypes
+                .FirstOrDefaultAsync(t => t.TestTypeId == testTypeId);
+
+            if (testType == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.TestTypeId = testType.TestTypeId;
+            ViewBag.TestTypeName = testType.TestTypeName;
+
+            ViewBag.Technicians = new SelectList(
+                await _context.LabTechnicians
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.Name)
+                    .ToListAsync(),
+                "LabTechnicianId",
+                "Name"
+            );
+
+            return View();
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignTechnicianToTestTypes(
+            int testTypeId,
+            int labTechnicianId)
+        {
+            var testTypeExists = await _context.TestTypes
+                .AnyAsync(t => t.TestTypeId == testTypeId);
+
+            if (!testTypeExists)
+            {
+                return NotFound();
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t =>
+                    t.LabTechnicianId == labTechnicianId &&
+                    t.IsActive);
+
+            if (technician == null)
+            {
+                TempData["Error"] = "Please select a valid active technician.";
+
+                return RedirectToAction(
+                    nameof(AssignTechnicianToTestType),
+                    new { testTypeId });
+            }
+
+            var alreadyAssigned = await _context.TechnicianTestTypes
+                .AnyAsync(x =>
+                    x.TestTypeId == testTypeId &&
+                    x.LabTechnicianId == labTechnicianId);
+
+            if (alreadyAssigned)
+            {
+                TempData["Error"] =
+                    "This technician is already assigned to this test type.";
+
+                return RedirectToAction(
+                    nameof(AssignTechnicianToTestType),
+                    new { testTypeId });
+            }
+
+            _context.TechnicianTestTypes.Add(new TechnicianTestType
+            {
+                TestTypeId = testTypeId,
+                LabTechnicianId = labTechnicianId
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Technician {technician.Name} {technician.Surname} assigned successfully.";
+
+            return RedirectToAction("TestTypeDetails", new { id = testTypeId });
+        }
         #endregion
 
         #region Sample Type
@@ -2169,6 +2253,57 @@ namespace HemaCore.Controllers
             );
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            // Prevent cancelling an already completed or cancelled order
+            if (order.Status == OrderStatus.Completed ||
+                order.Status == OrderStatus.Cancelled)
+            {
+                TempData["Error"] =
+                    "This order cannot be cancelled.";
+
+                return RedirectToAction(
+                    nameof(OrderDetails),
+                    new { id = orderId }
+                );
+            }
+
+            var now = DateTime.Now;
+
+            // Cancel all items that have not yet been received or cancelled
+            foreach (var item in order.OrderItems)
+            {
+                if (item.Status == OrderItemStatus.Pending)
+                {
+                    item.Status = OrderItemStatus.Cancelled;
+                    item.DateRejected = now;
+                    item.RejectReason = "Order cancelled.";
+                }
+            }
+
+            // Cancel the entire order
+            order.Status = OrderStatus.Cancelled;
+            order.DateCancelled = now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Order {order.OrderNumber} and its pending items have been cancelled successfully.";
+
+            return RedirectToAction(
+                nameof(Orders));
+        }
         #endregion
 
         #region Doctor
@@ -2598,6 +2733,22 @@ namespace HemaCore.Controllers
                 .Include(x => x.TechnicianTests)
                     .ThenInclude(tt => tt.TestType)
                 .Where(x => x.IsActive)
+                .OrderBy(x => x.Surname)
+                .ThenBy(x => x.Name)
+                .ToListAsync();
+
+            ViewBag.TechnicianCount = technicians.Count;
+
+            return View(technicians);
+        }
+
+        public async Task<IActionResult> InactiveLabTechnician()
+        {
+            var technicians = await _context.LabTechnicians
+                .Include(x => x.User)
+                .Include(x => x.TechnicianTests)
+                    .ThenInclude(tt => tt.TestType)
+                .Where(x => !x.IsActive)
                 .OrderBy(x => x.Surname)
                 .ThenBy(x => x.Name)
                 .ToListAsync();
@@ -3103,7 +3254,48 @@ namespace HemaCore.Controllers
                 return NotFound();
             }
 
-           
+            // Get test types assigned to this technician
+            var assignedTestTypes = await _context.TechnicianTestTypes
+                .Where(tt => tt.LabTechnicianId == id)
+                .Select(tt => new
+                {
+                    tt.TestTypeId,
+                    tt.TestType.TestTypeName
+                })
+                .ToListAsync();
+
+            // Find test types without another active technician
+            var testTypesNeedingReassignment = new List<string>();
+
+            foreach (var testType in assignedTestTypes)
+            {
+                var hasOtherActiveTechnician =
+                    await _context.TechnicianTestTypes
+                        .AnyAsync(tt =>
+                            tt.TestTypeId == testType.TestTypeId &&
+                            tt.LabTechnicianId != id &&
+                            tt.LabTechnician.IsActive);
+
+                if (!hasOtherActiveTechnician)
+                {
+                    testTypesNeedingReassignment.Add(
+                        testType.TestTypeName);
+                }
+            }
+
+            // Stop deactivation if reassignment is required
+            if (testTypesNeedingReassignment.Any())
+            {
+                TempData["Error"] =
+                    "This technician cannot be deactivated because the following test types " +
+                    "have no other active technician: " +
+                    string.Join(", ", testTypesNeedingReassignment) +
+                    ". Please reassign these test types first.";
+
+                return RedirectToAction(nameof(LabTechnician));
+            }
+
+            // Deactivate technician
             technician.IsActive = false;
 
             await _context.SaveChangesAsync();
@@ -3112,10 +3304,31 @@ namespace HemaCore.Controllers
                 $"Technician {technician.Name} {technician.Surname} has been deactivated successfully.";
 
             return RedirectToAction(nameof(LabTechnician));
-        }    
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivateTechnician(int id)
+        {
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == id);
+
+            if (technician == null)
+            {
+                return NotFound();
+            }
 
 
+            technician.IsActive = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Technician {technician.Name} {technician.Surname} has been activated successfully.";
+
+            return RedirectToAction(nameof(InactiveLabTechnician));
+        }
         #endregion
-}
+    }
 }
 

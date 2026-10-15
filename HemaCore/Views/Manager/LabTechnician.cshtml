@@ -5,14 +5,31 @@
     Layout = "_ManagerLayout";
 }
 
+<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
+
+<!-- ALERT MESSAGES -->
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show">
         @TempData["Success"]
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
     </div>
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
 
 <div class="content-card">
 
@@ -20,32 +37,75 @@
     <div class="section-title d-flex align-items-center justify-content-between">
 
         <div class="d-flex align-items-center">
-            <i class="fas fa-user-cog"></i>
+            <i class="fas fa-user-cog me-2"></i>
 
-            <span>Technicians (@ViewBag.TechnicianCount)</span>
+            <span>
+                Lab Technicians (@(ViewBag.TechnicianCount ?? Model?.Count ?? 0))
+            </span>
 
             <span class="badge blue-badge ms-2">
-                @Model.Count
+                @(Model?.Count ?? 0)
             </span>
         </div>
 
         <a asp-action="AddTechnician"
-               class="btn btn-primary-custom btn-sm">
+           asp-controller="Manager"
+           class="btn btn-primary-custom btn-sm">
             + Add Technician
         </a>
 
     </div>
 
-    <!-- SEARCH -->
-    <input type="text"
-           id="searchBox"
-           class="form-control mb-3"
-           placeholder="Type to search technicians..." />
+    <!-- SEARCH AND FILTER -->
+    <div class="search-toolbar">
 
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search technicians..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+
+                <select id="statusFilter"
+                        class="filter-select"
+                        onchange="if (this.value) window.location.href = this.value;">
+
+                    <option value="@Url.Action("LabTechnician", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "LabTechnician")">
+                        Active Technicians
+                    </option>
+
+                    <option value="@Url.Action("InactiveLabTechnician", "Manager")"
+                            selected="@(ViewContext.RouteData.Values["action"]?.ToString() == "InactiveLabTechnician")">
+                        Inactive Technicians
+                    </option>
+
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TECHNICIAN TABLE -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
 
             <table class="modern-table">
+
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -54,16 +114,19 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Assigned Test Types</th>
-                        <th>Action</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
                 <tbody id="technicianTable">
-                      @if (!Model.Any())
+
+                    @if (Model == null || !Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
-                                No lab technician available.
+                            <td colspan="8"
+                                class="text-center text-muted py-3">
+                                No lab technicians available.
                             </td>
                         </tr>
                     }
@@ -72,28 +135,43 @@
                         @foreach (var technician in Model)
                         {
                             <tr>
-                                <td>@technician.Surname.ToUpper() @technician.Name.ToUpper()</td>
+
+                                <td class="fw-semibold blue-text">
+                                    @((technician.Surname ?? "").ToUpper())
+                                    @((technician.Name ?? "").ToUpper())
+                                </td>
+
                                 <td>@technician.IDNumber</td>
+
                                 <td>@technician.EmployeeNumber</td>
 
                                 <td>
-                                    <a href="mailto:@technician.User.Email">
-                                        @technician.User.Email
-                                    </a>
+                                    @if (!string.IsNullOrWhiteSpace(technician.User?.Email))
+                                    {
+                                        <a href="mailto:@technician.User.Email">
+                                            @technician.User.Email
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No email</span>
+                                    }
                                 </td>
 
                                 <td>@technician.PhoneNumber</td>
 
                                 <td>
-                                    @if (technician.TechnicianTests != null &&
-                                                                                             technician.TechnicianTests.Any())
+                                    @if (technician.TechnicianTests?.Any() == true)
                                     {
                                         <ul class="mb-0 ps-3">
                                             @foreach (var assignment in technician.TechnicianTests)
                                             {
-                                                <li>
-                                                    @assignment.TestType.TestTypeName.ToUpper()
-                                                </li>
+                                                if (assignment.TestType != null)
+                                                {
+                                                    <li>
+                                                        @((assignment.TestType.TestTypeName ?? "").ToUpper())
+                                                    </li>
+                                                }
                                             }
                                         </ul>
                                     }
@@ -104,33 +182,53 @@
                                         </span>
                                     }
                                 </td>
-                                       <td>
+
+                                <td>
+                                    @if (technician.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+
+                                <td>
+
                                     <a asp-action="TechnicianDetails"
+                                       asp-controller="Manager"
                                        asp-route-id="@technician.LabTechnicianId"
-                                       class="btn btn-sm btn-outline-info me-1">
-
-                                        <i class="fas fa-eye me-1"></i>
+                                       class="btn btn-sm btn-outline-info me-1"
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
                                     </a>
-                                  <a asp-action="EditTechnician"
-                                   asp-route-id="@technician.LabTechnicianId"
-                                   class="btn btn-sm btn-outline-primary me-1">
 
-                                    <i class="fas fa-edit me-1"></i>
+                                    <a asp-action="EditTechnician"
+                                       asp-controller="Manager"
+                                       asp-route-id="@technician.LabTechnicianId"
+                                       class="btn btn-sm btn-outline-primary me-1"
+                                       title="Edit Technician">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
 
-                                   </a>
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger deactivate-doctor-btn"
-                                            data-id="@technician.LabTechnicianId"
-                                            data-name="Dr @technician.Name @technician.Surname">
+                                    @if (technician.IsActive)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger deactivate-technician-btn"
+                                                data-id="@technician.LabTechnicianId"
+                                                data-name="@($"{technician.Name} {technician.Surname}")"
+                                                title="Deactivate Technician">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    }
 
-                                        <i class="fas fa-ban"></i>
-
-                                    </button>
                                 </td>
 
                             </tr>
                         }
                     }
+
                 </tbody>
 
             </table>
@@ -139,102 +237,338 @@
     </div>
 </div>
 
+<!-- DEACTIVATION CONFIRMATION MODAL -->
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-hidden="true"
+     aria-labelledby="deleteModalTitle">
+
+    <div class="delete-box">
+
+        <!-- ICON -->
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <!-- TITLE -->
+        <h3 id="deleteModalTitle">
+            Are you sure?
+        </h3>
+
+        <!-- MESSAGE -->
+        <p>
+            Are you sure you want to deactivate
+            <strong id="deleteTechnicianName"></strong>?
+        </p>
+
+        <!-- WARNING -->
+        <span class="delete-warning">
+            <i class="fas fa-info-circle"></i>
+            This technician will no longer be active.
+        </span>
+
+        <!-- BUTTONS -->
+        <div class="delete-buttons">
+
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <form asp-action="DeleteTechnician"
+                  asp-controller="Manager"
+                  method="post"
+                  id="deleteForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="deleteTechnicianId" />
+
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="confirm-delete-btn">
+                    <i class="fas fa-ban me-1"></i>
+                    Yes, Deactivate
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ANTI-FORGERY TOKEN FOR LIVE SEARCH FORMS -->
+<form id="antiForgeryTokenForm" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
+
 <script>
-    const searchBox = document.getElementById("searchBox");
-    const tableBody = document.getElementById("technicianTable");
+    document.addEventListener("DOMContentLoaded", function () {
 
-    let debounceTimer;
+        const modal = document.getElementById("deleteModal");
+        const technicianIdInput = document.getElementById("deleteTechnicianId");
+        const technicianName = document.getElementById("deleteTechnicianName");
+        const cancelButton = document.getElementById("cancelDeleteBtn");
+        const deleteForm = document.getElementById("deleteForm");
+        const confirmButton = document.getElementById("confirmDeleteBtn");
 
-    searchBox.addEventListener("keyup", function () {
+        const searchBox = document.getElementById("searchBox");
+        const tableBody = document.getElementById("technicianTable");
 
-        clearTimeout(debounceTimer);
+        const tokenInput = document.querySelector(
+            '#antiForgeryTokenForm input[name="__RequestVerificationToken"]'
+        );
 
-        debounceTimer = setTimeout(() => {
+        const antiForgeryToken = tokenInput ? tokenInput.value : "";
 
-            let term = searchBox.value;
+        let debounceTimer;
+        let searchRequestNumber = 0;
 
-            fetch('/Manager/SearchTechniciansLive?term=' + encodeURIComponent(term))
-                .then(res => {
-                    if (!res.ok) throw new Error("Network response failed");
-                    return res.json();
-                })
-                .then(data => {
+        // =========================================
+        // OPEN DEACTIVATION MODAL
+        // =========================================
+        document.addEventListener("click", function (event) {
 
-                    let rows = "";
+            const button = event.target.closest(".deactivate-technician-btn");
 
-                    if (!data || data.length === 0) {
-                        rows = `
+            if (!button) return;
+
+            technicianIdInput.value = button.dataset.id || "";
+            technicianName.textContent = button.dataset.name || "this technician";
+
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+
+            cancelButton.focus();
+        });
+
+        // =========================================
+        // CLOSE MODAL
+        // =========================================
+        function closeModal() {
+
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
+
+            technicianIdInput.value = "";
+            technicianName.textContent = "";
+
+        }
+
+        cancelButton.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+
+            if (event.key === "Escape" && modal.classList.contains("show")) {
+                closeModal();
+            }
+
+        });
+
+        // =========================================
+        // PREVENT DOUBLE SUBMISSION
+        // =========================================
+        deleteForm.addEventListener("submit", function (event) {
+
+            if (!technicianIdInput.value) {
+                event.preventDefault();
+                return;
+            }
+
+            confirmButton.disabled = true;
+            cancelButton.disabled = true;
+
+            confirmButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i> Deactivating...';
+
+        });
+
+        // =========================================
+        // HTML ENCODING FOR SEARCH RESULTS
+        // =========================================
+        function escapeHtml(value) {
+
+            return String(value ?? "").replace(/[&<>"']/g, function (character) {
+                const entities = {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                };
+
+                return entities[character];
+            });
+
+        }
+
+        // =========================================
+        // LIVE SEARCH
+        // =========================================
+        searchBox.addEventListener("input", function () {
+
+            clearTimeout(debounceTimer);
+
+            const term = searchBox.value.trim();
+            const requestNumber = ++searchRequestNumber;
+
+            debounceTimer = setTimeout(async function () {
+
+                try {
+
+                    const response = await fetch(
+                        '@Url.Action("SearchTechniciansLive", "Manager")?term=' +
+                        encodeURIComponent(term)
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Failed to load technicians.");
+                    }
+
+                    const data = await response.json();
+
+                    // Ignore older requests that finish later.
+                    if (requestNumber !== searchRequestNumber) {
+                        return;
+                    }
+
+                    if (!Array.isArray(data) || data.length === 0) {
+
+                        tableBody.innerHTML = `
                             <tr>
-                                <td colspan="7" class="text-center text-muted">
+                                <td colspan="8"
+                                    class="text-center text-muted py-3">
                                     No technicians found.
                                 </td>
                             </tr>
                         `;
-                    } else {
 
-                        data.forEach(item => {
-
-                            let testTypes = "";
-
-                            if (item.testTypes && item.testTypes.length > 0) {
-                                testTypes = "<ul class='mb-0 ps-3'>";
-                                item.testTypes.forEach(t => {
-                                    testTypes += `<li>${t.testTypeName}</li>`;
-                                });
-                                testTypes += "</ul>";
-                            } else {
-                                testTypes = "<span class='text-muted'>No test types assigned</span>";
-                            }
-
-                            rows += `
-                                <tr>
-                                    <td>${item.surname || ""} ${item.name || ""}</td>
-
-                                    <td>${item.idNumber || ""}</td>
-
-                                    <td>${item.employeeNumber || ""}</td>
-
-                                    <td>
-                                        <a href="mailto:${item.email || ""}">
-                                            ${item.email || ""}
-                                        </a>
-                                    </td>
-
-                                    <td>${item.phoneNumber || ""}</td>
-
-                                    <td>${testTypes}</td>
-
-                                    <td>
-                                        <a href="/Manager/EditTechnician/${item.labTechnicianID}"
-                                           class="btn btn-sm btn-primary">
-                                            Edit
-                                        </a>
-
-                                        <a href="/Manager/DeleteTechnician/${item.labTechnicianID}"
-                                           class="btn btn-sm btn-danger">
-                                            Deactivate
-                                        </a>
-                                    </td>
-                                </tr>
-                            `;
-                        });
+                        return;
                     }
 
+                    let rows = "";
+
+                    data.forEach(function (item) {
+
+                        const id = item.labTechnicianId ?? item.labTechnicianID;
+                        const name = item.name ?? "";
+                        const surname = item.surname ?? "";
+                        const isActive = item.isActive === true;
+
+                        let testTypes = "";
+
+                        if (Array.isArray(item.testTypes) && item.testTypes.length > 0) {
+
+                            testTypes = "<ul class='mb-0 ps-3'>";
+
+                            item.testTypes.forEach(function (test) {
+                                testTypes += `<li>${escapeHtml(test.testTypeName)}</li>`;
+                            });
+
+                            testTypes += "</ul>";
+
+                        } else {
+
+                            testTypes =
+                                "<span class='text-muted'>No test types assigned</span>";
+
+                        }
+
+                        const deactivateButton = isActive ? `
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger deactivate-technician-btn"
+                                    data-id="${escapeHtml(id)}"
+                                    data-name="${escapeHtml(name + " " + surname)}"
+                                    title="Deactivate Technician">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        ` : "";
+
+                        rows += `
+                            <tr>
+                                <td class="fw-semibold blue-text">
+                                    ${escapeHtml(surname).toUpperCase()}
+                                    ${escapeHtml(name).toUpperCase()}
+                                </td>
+
+                                <td>${escapeHtml(item.idNumber)}</td>
+
+                                <td>${escapeHtml(item.employeeNumber)}</td>
+
+                                <td>
+                                    ${item.email
+                                        ? `<a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>`
+                                        : '<span class="text-muted">No email</span>'}
+                                </td>
+
+                                <td>${escapeHtml(item.phoneNumber)}</td>
+
+                                <td>${testTypes}</td>
+
+                                <td>
+                                    ${isActive
+                                        ? '<span class="badge bg-success">Active</span>'
+                                        : '<span class="badge bg-danger">Inactive</span>'}
+                                </td>
+
+                                <td>
+                                    <a href="/Manager/TechnicianDetails/${encodeURIComponent(id)}"
+                                       class="btn btn-sm btn-outline-info me-1"
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <a href="/Manager/EditTechnician/${encodeURIComponent(id)}"
+                                       class="btn btn-sm btn-outline-primary me-1"
+                                       title="Edit Technician">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    ${deactivateButton}
+                                </td>
+                            </tr>
+                        `;
+
+                    });
+
                     tableBody.innerHTML = rows;
-                })
-                .catch(err => {
-                    console.error("Search error:", err);A
+
+                } catch (error) {
+
+                    if (requestNumber !== searchRequestNumber) {
+                        return;
+                    }
+
+                    console.error("Technician search error:", error);
 
                     tableBody.innerHTML = `
                         <tr>
-                            <td colspan="7" class="text-center text-danger">
-                                Error loading technicians.
+                            <td colspan="8"
+                                class="text-center text-danger py-3">
+                                Error loading technicians. Please try again.
                             </td>
                         </tr>
                     `;
-                });
 
-        }, 300); // debounce delay (ms)
+                }
+
+            }, 300);
+
+        });
 
     });
 </script>

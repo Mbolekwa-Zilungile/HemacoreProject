@@ -1,0 +1,74 @@
+﻿@{
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <div class="section-title">
+        <i class="fas fa-user-plus me-2"></i>
+        Assign Technician
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <p>
+                <strong>Test Type:</strong>
+                @ViewBag.TestTypeName
+            </p>
+
+            <form asp-action="AssignTechnicianToTestType"
+                  asp-controller="Manager"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="testTypeId"
+                       value="@ViewBag.TestTypeId" />
+
+                <div class="mb-3">
+
+                    <label for="labTechnicianId"
+                           class="form-label">
+                        Select Technician
+                    </label>
+
+                    <select id="labTechnicianId"
+                            name="labTechnicianId"
+                            class="form-select"
+                            asp-items="ViewBag.Technicians"
+                            required>
+
+                        <option value="">
+                            -- Select Technician --
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary-custom">
+
+                    <i class="fas fa-save me-1"></i>
+                    Assign Technician
+
+                </button>
+
+                <a asp-action="TestTypeDetails"
+                   asp-route-id="@ViewBag.TestTypeId"
+                   class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
