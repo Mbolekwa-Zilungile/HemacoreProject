@@ -197,7 +197,22 @@
 
                 </li>
 
+                <!-- VERIFY RESULTS -->
 
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "VerifyResults" ? "active" : "")">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="MyTests">
+
+                        <i class="fas fa-check-double"></i>
+
+                        <span class="menu-text">
+                            Verify Results
+                        </span>
+
+                    </a>
+
+                </li>
 
                 <!-- MY COMPLETED TESTS -->
 
