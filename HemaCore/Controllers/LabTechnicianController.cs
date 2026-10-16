@@ -32,6 +32,7 @@ namespace HemaCore.Controllers
         // LAB TECHNICIAN DASHBOARD
         // ==========================================
 
+
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -48,45 +49,58 @@ namespace HemaCore.Controllers
             {
                 return View(new LabTechnicianDashboardViewModel
                 {
-                    TechnicianName = user.FullName,
-                    Workload = new List<LabTechnicianWorkloadViewModel>()
+                    TechnicianName = user.FullName
                 });
             }
 
+            var now = DateTime.Now;
+
+            // Tests assigned to the logged-in technician.
             var myTests = _context.TestRequestTestTypes
+                .Where(t => t.LabTechnicianId == technician.LabTechnicianId);
+
+            // Requests that still have samples waiting to be received.
+
+            var samplesAwaitingReceipt = await _context.TestRequests
+                .CountAsync(r =>
+                    r.Status == "Submitted" &&
+                    r.Samples.Any(s =>
+                        s.Status != "Received" &&
+                        s.Status != "Rejected" &&
+                        s.DateTimeReceived == null));
+
+            // Unassigned tests are available for processing only when
+            // the request has samples and every sample has been received.
+
+            var qualifiedTestTypeIds = await _context.TechnicianTestTypes
+                .Where(tt => tt.LabTechnicianId == technician.LabTechnicianId)
+                .Select(tt => tt.TestTypeId)
+                .ToListAsync();
+
+            var waitingToBeSelectedQuery = _context.TestRequestTestTypes
+                .Where(t =>
+                    t.LabTechnicianId == null &&
+                    t.Status == "Submitted" &&
+                    (t.TestRequest.Status == "Submitted" ||
+                     t.TestRequest.Status == "SamplesReceived" ||
+                     t.TestRequest.Status == "InProgress") &&
+                    qualifiedTestTypeIds.Contains(t.TestTypeId) &&
+                    _context.Samples.Any(s =>
+                        s.TestRequestId == t.TestRequestId &&
+                        s.SampleTypeId == t.TestType.SampleTypeId &&
+                        s.DateTimeReceived != null));
+
+            var waitingToBeSelected = await waitingToBeSelectedQuery.CountAsync();
+
+
+            // Retrieve assigned tests and their related patient and category.
+            var workload = await myTests
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Samples)
                 .Include(t => t.TestType)
-                .Where(t =>
-                    t.LabTechnicianId == technician.LabTechnicianId);
-
-            var dashboard = new LabTechnicianDashboardViewModel
-            {
-                TechnicianName = user.FullName,
-
-                SamplesAwaitingReceipt = await myTests
-                    .CountAsync(t =>
-                        t.Status != "Completed"),
-
-                TestsAwaitingProcessing = await _context.TestRequestTestTypes
-                    .CountAsync(t =>
-                        t.Status == "Submitted" &&
-                        t.LabTechnicianId == null),
-
-                WaitingVerification = await myTests
-                    .CountAsync(t =>
-                        t.Status == "Completed"),
-
-                WaitingReview = await _context.TestResultVerifications
-                    .CountAsync(v =>
-                        v.Status == "To Be Reviewed"),
-
-                UrgentTests = await myTests
-                    .CountAsync(t =>
-                        t.TestRequest.Urgency == "STAT")
-            };
-
-            dashboard.Workload = await myTests
+                    .ThenInclude(tt => tt.Category)
                 .Select(t => new LabTechnicianWorkloadViewModel
                 {
                     TestRequestId = t.TestRequestId,
@@ -95,32 +109,95 @@ namespace HemaCore.Controllers
                         t.TestRequest.Patient.Name + " " +
                         t.TestRequest.Patient.Surname,
 
-                    TestTypeName =
-                        t.TestType.TestTypeName,
+                    TestTypeName = t.TestType.TestTypeName,
 
-                    Urgency =
-                        t.TestRequest.Urgency,
+                    CategoryName = t.TestType.Category != null
+                        ? t.TestType.Category.CategoryName
+                        : "Uncategorised",
 
-                    Status =
-                        t.Status,
+                    Urgency = t.TestRequest.Urgency,
 
-                    DueTime =
-                        t.CompletionDateTime
+                    Status = t.Status,
+
+                    // Assumes TurnAroundTime is stored in hours.
+                    DueTime = t.StartDateTime.HasValue
+    ? t.StartDateTime.Value.AddHours(t.TestType.TurnAroundTime)
+    : (DateTime?)null
                 })
                 .ToListAsync();
 
-            dashboard.OverdueTests = dashboard.Workload
-                .Count(t =>
-                    t.DueTime.HasValue &&
-                    t.DueTime.Value < DateTime.Now &&
-                    t.Status != "Completed");
+            // Count tests that are currently being processed by this technician.
 
-            dashboard.NearingTurnaround = dashboard.Workload
-                .Count(t =>
-                    t.DueTime.HasValue &&
-                    t.DueTime.Value > DateTime.Now &&
-                    t.DueTime.Value <= DateTime.Now.AddHours(2) &&
-                    t.Status != "Completed");
+            var mySelectedTests = await myTests
+                .CountAsync(t =>
+                    t.Status == "InProgress" &&
+                    t.LabTechnicianId == technician.LabTechnicianId);
+
+
+
+            var waitingVerification = await _context.TestRequestTestTypes
+                .CountAsync(t =>
+                    t.Status == "Completed" &&
+                    t.TestResultId != null &&
+                    t.LabTechnicianId != technician.LabTechnicianId &&
+                    _context.TechnicianTestTypes.Any(tt =>
+                        tt.LabTechnicianId == technician.LabTechnicianId &&
+                        tt.TestTypeId == t.TestTypeId));
+
+
+            // Count results returned for review.
+            // This follows the existing verification status used in your project.
+            var waitingReview = await _context.TestResultVerifications
+                .CountAsync(v => v.Status == "To Be Reviewed");
+
+            // Only count unfinished tests for overdue and nearing-turnaround KPIs.
+            var unfinishedStatuses = new[]
+            {
+        "Submitted",
+        "In Progress",
+        "To Be Reviewed"
+    };
+
+            var overdueTests = workload.Count(t =>
+                t.DueTime.HasValue &&
+                t.DueTime.Value < now &&
+                unfinishedStatuses.Contains(t.Status));
+
+            var nearingTurnaround = workload.Count(t =>
+                t.DueTime.HasValue &&
+                t.DueTime.Value >= now &&
+                t.DueTime.Value <= now.AddHours(2) &&
+                unfinishedStatuses.Contains(t.Status));
+
+            // STAT tests that are not yet finished.
+            var urgentTests = workload.Count(t =>
+                t.Urgency == "STAT" &&
+                unfinishedStatuses.Contains(t.Status));
+
+            var dashboard = new LabTechnicianDashboardViewModel
+            {
+                TechnicianName = user.FullName,
+
+                SamplesAwaitingReceipt = samplesAwaitingReceipt,
+
+                TestsAwaitingProcessing = waitingToBeSelected,
+
+                WaitingToBeSelected = waitingToBeSelected,
+
+                MySelectedTests = mySelectedTests,
+
+                WaitingVerification = waitingVerification,
+
+                WaitingReview = waitingReview,
+
+                UrgentTests = urgentTests,
+
+                OverdueTests = overdueTests,
+
+                NearingTurnaround = nearingTurnaround,
+
+                Workload = workload
+            };
 
             return View(dashboard);
         }
@@ -131,6 +208,7 @@ namespace HemaCore.Controllers
         // ==========================================
 
 
+
         public async Task<IActionResult> ReceiveSample()
         {
             var testRequests = await _context.TestRequests
@@ -138,11 +216,14 @@ namespace HemaCore.Controllers
                 .Include(t => t.Doctor)
                 .Include(t => t.Samples)
                     .ThenInclude(s => s.SampleType)
+                .Include(t => t.Samples)
+                    .ThenInclude(s => s.LabTechnician)
                 .Where(t =>
                     t.Status == "Submitted" &&
                     t.Samples.Any(s =>
                         s.Status != "Received" &&
                         s.Status != "Rejected" &&
+                        s.Status != "Cancelled" &&
                         !s.DateTimeReceived.HasValue))
                 .ToListAsync();
 
@@ -150,17 +231,26 @@ namespace HemaCore.Controllers
         }
 
 
+
         // ==========================================
         // RECEIVE SAMPLE - DETAILS
         // ==========================================
 
-        public async Task<IActionResult> ReceiveSampleDetails(int id)
+       
+// ==========================================
+// RECEIVE SAMPLE - DETAILS
+// ==========================================
+
+[HttpGet]
+public async Task<IActionResult> ReceiveSampleDetails(int id)
         {
             var testRequest = await _context.TestRequests
                 .Include(t => t.Patient)
                 .Include(t => t.Doctor)
                 .Include(t => t.Samples)
                     .ThenInclude(s => s.SampleType)
+                .Include(t => t.Samples)
+                    .ThenInclude(s => s.LabTechnician)
                 .FirstOrDefaultAsync(t =>
                     t.TestRequestId == id);
 
@@ -171,6 +261,7 @@ namespace HemaCore.Controllers
 
             return View(testRequest);
         }
+
 
 
 
@@ -394,8 +485,7 @@ public async Task<IActionResult> ProcessTests(
             if (dueDate.HasValue)
             {
                 query = query.Where(t =>
-                    t.TestRequest.RequestDate
-                        .AddMinutes(t.TestType.TurnAroundTime)
+                   t.TestRequest.RequestDate.AddHours(t.TestType.TurnAroundTime)
                         .Date == dueDate.Value.Date);
             }
 
@@ -485,7 +575,7 @@ public async Task<IActionResult> ProcessTests(
 
             var now = DateTime.Now;
             var expectedFinish =
-                now.AddMinutes(test.TestType.TurnAroundTime);
+      now.AddHours(test.TestType.TurnAroundTime);
 
             ViewBag.Consumables = consumables;
             ViewBag.ExpectedFinish = expectedFinish;
@@ -659,8 +749,9 @@ public async Task<IActionResult> ProcessTests(
         // ======================================================================
 
 
-        [HttpGet]
-        public async Task<IActionResult> MyTests()
+      
+[HttpGet]
+public async Task<IActionResult> MyTests()
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -681,10 +772,8 @@ public async Task<IActionResult> ProcessTests(
                     .ThenInclude(tt => tt.Category)
                 .Where(t =>
                     t.LabTechnicianId == technician.LabTechnicianId &&
-                    (t.Status == "InProgress" ||
-                     t.Status == "To Be Reviewed"))
-                .OrderBy(t => t.Status == "To Be Reviewed" ? 0 : 1)
-                .ThenBy(t => t.TestRequestId)
+                    t.Status == "InProgress")
+                .OrderBy(t => t.TestRequestId)
                 .ToListAsync();
 
             return View(tests);
@@ -1345,90 +1434,109 @@ public async Task<IActionResult> VerifyResult(
         // REVIEW RESULT - DETAILS
         // ==========================================
 
-        public async Task<IActionResult> ReviewResultDetails(
-            int id)
+
+        // ==========================================
+        // REVIEW RESULT - DETAILS
+        // ==========================================
+
+
+        [HttpGet]
+        public async Task<IActionResult> ReviewResultDetails(int id)
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var verification =
-                await _context
-                    .TestResultVerifications
-                    .Include(v =>
-                        v.TestResult)
-                    .FirstOrDefaultAsync(v =>
-                        v.TestResultVerificationId ==
-                            id &&
-                        v.Status ==
-                            "To Be Reviewed");
+            // Find the review record using its verification ID.
+            var verification = await _context.TestResultVerifications
+                .Include(v => v.TestResult)
+                .FirstOrDefaultAsync(v =>
+                    v.TestResultVerificationId == id &&
+                    v.Status == "To Be Reviewed");
 
-            if (verification == null)
+            if (verification?.TestResult == null)
             {
-                return NotFound(
-                    "The review record could not be found.");
+                return NotFound("The review record could not be found.");
             }
 
-            if (verification.TestResult != null)
-            {
-                verification.TestResult
-                    .TestRequestTestType =
-                    await _context
-                        .TestRequestTestTypes
-                        .Include(t =>
-                            t.TestRequest)
-                            .ThenInclude(r =>
-                                r.Patient)
-                        .Include(t =>
-                            t.TestType)
-                        .Where(t =>
-                            t.TestResultId ==
-                                verification
-                                    .TestResult
-                                    .TestResultId &&
-                            t.LabTechnicianId ==
-                                technician
-                                    .LabTechnicianId &&
-                            t.Status ==
-                                "To Be Reviewed")
-                        .ToListAsync();
-            }
+            var result = verification.TestResult;
 
-            var test =
-                verification.TestResult?
-                    .TestRequestTestType
-                    .FirstOrDefault();
+            // Find the test assigned to the logged-in technician.
+            var test = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Doctor)
+                .Include(t => t.TestType)
+                .FirstOrDefaultAsync(t =>
+                    t.TestResultId == result.TestResultId &&
+                    t.LabTechnicianId == technician.LabTechnicianId &&
+                    t.Status == "To Be Reviewed");
 
             if (test == null)
             {
                 return NotFound(
-                    "The associated test could not be found.");
+                    "The associated test could not be found for this technician.");
             }
+
+            // Populate the result navigation collection for the view.
+            result.TestRequestTestType = new List<TestRequestItem> { test };
+
+            var patient = test.TestRequest?.Patient;
+
+            if (patient == null)
+            {
+                return NotFound("Patient information could not be found.");
+            }
+
+            // Patient medical conditions.
+            ViewBag.PatientConditions = await _context.PatientConditions
+                .Include(pc => pc.Condition)
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            // Patient allergies.
+            ViewBag.PatientAllergies = await _context.PatientAllergies
+                .Include(pa => pa.Allergy)
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            // Patient medications.
+            ViewBag.PatientMedications = await _context.PatientMedications
+                .Include(pm => pm.Medication)
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            // Test reference range and unit.
+            ViewBag.NormalRangeMin = test.TestType.NormalRangeMin;
+            ViewBag.NormalRangeMax = test.TestType.NormalRangeMax;
+            ViewBag.TestUnit = test.TestType.UnitOfMeasurement;
+
+            // History belongs to the test, not directly to the result.
+            ViewBag.TestResultHistory = await _context.TestResultHistories
+                .Include(h => h.LabTechnician)
+                    .ThenInclude(t => t.User)
+                .Where(h =>
+                    h.TestRequestTestTypeId == test.TestRequestTestTypeId)
+                .OrderByDescending(h => h.ActionDateTime)
+                .ToListAsync();
 
             return View(verification);
         }
 
 
-
-   
-[HttpPost]
+        [HttpPost]
 public async Task<IActionResult> CompleteReview(
     int id,
     string resultValue,
@@ -1692,314 +1800,448 @@ public async Task<IActionResult> CompleteReview(
         // EXPORT REPORT PDF
         // ==========================================
 
+
+        [HttpGet]
         public async Task<IActionResult> ExportReportPdf(
             DateTime? fromDate,
             DateTime? toDate,
-            string testType,
-            string status,
-            string urgency)
+            string? testType,
+            string? status,
+            string? urgency)
         {
-            var query =
-                _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Patient)
-                    .Include(t => t.TestType)
-                    .Include(t => t.TestResult)
-                    .Include(t => t.LabTechnician)
-                    .AsQueryable();
+            var generatedAt = DateTime.Now;
 
+            var query = _context.TestRequestTestTypes
+                .AsNoTracking()
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                .Include(t => t.TestResult)
+                .Include(t => t.LabTechnician)
+                .AsQueryable();
+
+            // The report date range is based on completion date.
             if (fromDate.HasValue)
             {
+                var start = fromDate.Value.Date;
+
                 query = query.Where(t =>
                     t.CompletionDateTime.HasValue &&
-                    t.CompletionDateTime.Value.Date >=
-                        fromDate.Value.Date);
+                    t.CompletionDateTime.Value >= start);
             }
 
             if (toDate.HasValue)
             {
+                var endExclusive = toDate.Value.Date.AddDays(1);
+
                 query = query.Where(t =>
                     t.CompletionDateTime.HasValue &&
-                    t.CompletionDateTime.Value.Date <=
-                        toDate.Value.Date);
+                    t.CompletionDateTime.Value < endExclusive);
             }
 
-            if (!string.IsNullOrEmpty(testType))
+            if (!string.IsNullOrWhiteSpace(testType))
             {
                 query = query.Where(t =>
-                    t.TestType.TestTypeName ==
-                    testType);
+                    t.TestType.TestTypeName == testType);
             }
 
-            if (!string.IsNullOrEmpty(status))
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(t => t.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(urgency))
             {
                 query = query.Where(t =>
-                    t.Status ==
-                    status);
+                    t.TestRequest.Urgency == urgency);
             }
 
-            if (!string.IsNullOrEmpty(urgency))
+            // Most recently completed tests appear first.
+            var tests = await query
+                .OrderByDescending(t => t.CompletionDateTime)
+                .ThenBy(t => t.TestRequestId)
+                .ToListAsync();
+
+            var reportTests = tests.Select(t =>
             {
-                query = query.Where(t =>
-                    t.TestRequest.Urgency ==
-                    urgency);
-            }
+                var turnaround =
+                    t.StartDateTime.HasValue &&
+                    t.CompletionDateTime.HasValue
+                        ? (double?)(
+                            t.CompletionDateTime.Value -
+                            t.StartDateTime.Value).TotalMinutes
+                        : null;
 
-            var tests =
-                await query.ToListAsync();
-
-            var reportTests =
-                tests.Select(t =>
-                    new LabTechnicianReportItemViewModel
-                    {
-                        TestRequestId =
-                            t.TestRequestId,
-
-                        PatientName =
-                            (t.TestRequest?.Patient?.Name ?? "") +
-                            " " +
-                            (t.TestRequest?.Patient?.Surname ?? ""),
-
-                        TestTypeName =
-                            t.TestType?.TestTypeName ??
-                            "N/A",
-
-                        TechnicianName =
-                            (t.LabTechnician?.Name ?? "") +
-                            " " +
-                            (t.LabTechnician?.Surname ?? ""),
-
-                        Urgency =
-                            t.TestRequest?.Urgency ??
-                            "N/A",
-
-                        Status =
-                            t.Status ??
-                            "N/A",
-
-                        ResultValue =
-                            t.TestResult?.ResultValue ??
-                            "N/A",
-
-                        IsAbnormal =
-                            t.TestResult?.IsAbnormal ??
-                            false,
-
-                        StartDateTime =
-                            t.StartDateTime,
-
-                        CompletionDateTime =
-                            t.CompletionDateTime,
-
-                        TurnaroundMinutes =
-                            t.StartDateTime.HasValue &&
-                            t.CompletionDateTime.HasValue
-                                ? (
-                                    t.CompletionDateTime.Value -
-                                    t.StartDateTime.Value
-                                  ).TotalMinutes
-                                : null
-                    })
-                    .ToList();
-
-            var totalTests =
-                reportTests.Count;
-
-            var completedTests =
-                reportTests.Count(t =>
-                    t.Status == "Completed");
-
-            var inProgressTests =
-                reportTests.Count(t =>
-                    t.Status == "InProgress");
-
-            var abnormalResults =
-                reportTests.Count(t =>
-                    t.IsAbnormal);
-
-            var document =
-                Document.Create(container =>
+                return new LabTechnicianReportItemViewModel
                 {
-                    container.Page(page =>
+                    TestRequestId = t.TestRequestId,
+
+                    PatientName = (
+                        (t.TestRequest?.Patient?.Name ?? "") + " " +
+                        (t.TestRequest?.Patient?.Surname ?? "")
+                    ).Trim(),
+
+                    TestTypeName =
+                        t.TestType?.TestTypeName ?? "N/A",
+
+                    TechnicianName = (
+                        (t.LabTechnician?.Name ?? "") + " " +
+                        (t.LabTechnician?.Surname ?? "")
+                    ).Trim(),
+
+                    Urgency =
+                        t.TestRequest?.Urgency ?? "N/A",
+
+                    Status =
+                        t.Status ?? "N/A",
+
+                    ResultValue =
+                        t.TestResult?.ResultValue ?? "N/A",
+
+                    IsAbnormal =
+                        t.TestResult?.IsAbnormal ?? false,
+
+                    StartDateTime = t.StartDateTime,
+                    CompletionDateTime = t.CompletionDateTime,
+                    TurnaroundMinutes = turnaround
+                };
+            }).ToList();
+
+            var totalTests = reportTests.Count;
+
+            var completedTests = reportTests.Count(t =>
+                t.Status == "Completed");
+
+            var inProgressTests = reportTests.Count(t =>
+                t.Status == "InProgress");
+
+            var abnormalResults = reportTests.Count(t =>
+                t.IsAbnormal);
+
+            var averageTurnaround = reportTests
+                .Where(t => t.TurnaroundMinutes.HasValue)
+                .Select(t => t.TurnaroundMinutes!.Value)
+                .DefaultIfEmpty()
+                .Average();
+
+            string FormatMinutes(double minutes)
+            {
+                var totalMinutes = (int)Math.Round(minutes);
+
+                if (totalMinutes < 60)
+                {
+                    return $"{totalMinutes} min";
+                }
+
+                return $"{totalMinutes / 60}h {totalMinutes % 60}min";
+            }
+
+            string FormatDate(DateTime? date)
+            {
+                return date.HasValue
+                    ? date.Value.ToString("dd MMM yyyy")
+                    : "All";
+            }
+
+            var document = Document.Create(documentContainer =>
+            {
+                documentContainer.Page(page =>
+                {
+                    // Landscape allows the report columns to remain readable.
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(30);
+                    page.DefaultTextStyle(style =>
+                        style.FontSize(9).FontColor("#263238"));
+
+                    // HEADER: appears on every page.
+                    page.Header().Column(header =>
                     {
-                        page.Size(PageSizes.A4);
-                        page.Margin(30);
-
-                        page.Header()
+                        header.Item()
                             .Text("HEMACORE")
-                            .FontSize(20)
-                            .Bold();
+                            .FontSize(19)
+                            .Bold()
+                            .FontColor("#263238");
 
-                        page.Content()
-                            .Column(column =>
+                        header.Item()
+                            .PaddingTop(3)
+                            .Text("LABORATORY INFORMATION SYSTEM")
+                            .FontSize(8)
+                            .FontColor("#52606D");
+
+                        header.Item()
+                            .PaddingTop(8)
+                            .LineHorizontal(1)
+                            .LineColor("#B8C2CC");
+                    });
+
+                    page.Content()
+                        .PaddingTop(12)
+                        .Column(column =>
+                        {
+                            column.Spacing(10);
+
+                            // REPORT TITLE
+                            column.Item().Text(
+                                "Lab Technician Test Processing Report")
+                                .FontSize(17)
+                                .Bold()
+                                .FontColor("#1F2933");
+
+                            column.Item().Text(
+                                $"Generated on {generatedAt:dd MMMM yyyy} " +
+                                $"at {generatedAt:HH:mm}")
+                                .FontSize(9);
+
+                            // REPORT CRITERIA
+                            column.Item()
+                                .Border(1)
+                                .BorderColor("#D9E0E5")
+                                .Background("#F5F7F9")
+                                .Padding(10)
+                                .Column(criteria =>
+                                {
+                                    criteria.Spacing(4);
+
+                                    criteria.Item().Text("REPORT CRITERIA")
+                                        .Bold()
+                                        .FontSize(10);
+
+                                    criteria.Item().Text(
+                                        $"Completion date range: " +
+                                        $"{FormatDate(fromDate)} to " +
+                                        $"{FormatDate(toDate)}");
+
+                                    criteria.Item().Text(
+                                        $"Test type: " +
+                                        $"{(string.IsNullOrWhiteSpace(testType) ? "All" : testType)}");
+
+                                    criteria.Item().Text(
+                                        $"Status: " +
+                                        $"{(string.IsNullOrWhiteSpace(status) ? "All" : status == "InProgress" ? "In progress" : status)}");
+
+                                    criteria.Item().Text(
+                                        $"Urgency: " +
+                                        $"{(string.IsNullOrWhiteSpace(urgency) ? "All" : urgency)}");
+                                });
+
+                            // SUMMARY
+                            column.Item()
+                                .PaddingTop(2)
+                                .Text("SUMMARY")
+                                .FontSize(11)
+                                .Bold();
+
+                            column.Item().Table(summary =>
                             {
-                                column.Spacing(10);
+                                summary.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn();
+                                    cols.RelativeColumn();
+                                    cols.RelativeColumn();
+                                    cols.RelativeColumn();
+                                    cols.RelativeColumn();
+                                });
 
-                                column.Item()
-                                    .Text(
-                                        "LAB TECHNICIAN TEST PROCESSING REPORT")
-                                    .FontSize(16)
-                                    .Bold();
-
-                                column.Item()
-                                    .Text(
-                                        $"Generated: {DateTime.Now:dd/MM/yyyy HH:mm}");
-
-                                column.Item()
-                                    .Text(
-                                        $"Date Range: " +
-                                        $"{(fromDate.HasValue ? fromDate.Value.ToString("dd/MM/yyyy") : "All")} - " +
-                                        $"{(toDate.HasValue ? toDate.Value.ToString("dd/MM/yyyy") : "All")}");
-
-                                column.Item()
-                                    .PaddingTop(10)
-                                    .Text("REPORT SUMMARY")
-                                    .FontSize(13)
-                                    .Bold();
-
-                                column.Item()
-                                    .Text(
-                                        $"Total Tests: {totalTests}");
-
-                                column.Item()
-                                    .Text(
-                                        $"Completed Tests: {completedTests}");
-
-                                column.Item()
-                                    .Text(
-                                        $"In Progress: {inProgressTests}");
-
-                                column.Item()
-                                    .Text(
-                                        $"Abnormal Results: {abnormalResults}");
-
-                                column.Item()
-                                    .PaddingTop(10)
-                                    .Text("FILTERS APPLIED")
-                                    .FontSize(13)
-                                    .Bold();
-
-                                column.Item()
-                                    .Text(
-                                        $"Test Type: {(string.IsNullOrEmpty(testType) ? "All" : testType)}");
-
-                                column.Item()
-                                    .Text(
-                                        $"Status: {(string.IsNullOrEmpty(status) ? "All" : status)}");
-
-                                column.Item()
-                                    .Text(
-                                        $"Urgency: {(string.IsNullOrEmpty(urgency) ? "All" : urgency)}");
-
-                                column.Item()
-                                    .PaddingTop(15)
-                                    .Table(table =>
-                                    {
-                                        table.ColumnsDefinition(
-                                            columns =>
-                                            {
-                                                columns.ConstantColumn(50);
-                                                columns.RelativeColumn(2);
-                                                columns.RelativeColumn(2);
-                                                columns.RelativeColumn(1.5f);
-                                                columns.RelativeColumn(1);
-                                                columns.RelativeColumn(1.5f);
-                                                columns.RelativeColumn(1.5f);
-                                            });
-
-                                        table.Header(header =>
+                                void SummaryCell(string label, string value)
+                                {
+                                    summary.Cell()
+                                        .Border(1)
+                                        .BorderColor("#D9E0E5")
+                                        .Padding(8)
+                                        .Column(cell =>
                                         {
-                                            header.Cell()
-                                                .Text("Request")
-                                                .Bold();
+                                            cell.Spacing(3);
 
-                                            header.Cell()
-                                                .Text("Patient")
-                                                .Bold();
+                                            cell.Item().Text(label)
+                                                .FontSize(8)
+                                                .FontColor("#52606D");
 
-                                            header.Cell()
-                                                .Text("Test")
-                                                .Bold();
-
-                                            header.Cell()
-                                                .Text("Technician")
-                                                .Bold();
-
-                                            header.Cell()
-                                                .Text("Urgency")
-                                                .Bold();
-
-                                            header.Cell()
-                                                .Text("Status")
-                                                .Bold();
-
-                                            header.Cell()
-                                                .Text("Result")
+                                            cell.Item().Text(value)
+                                                .FontSize(13)
                                                 .Bold();
                                         });
+                                }
 
-                                        foreach (var test in
-                                            reportTests)
+                                SummaryCell("Total tests",
+                                    totalTests.ToString());
+
+                                SummaryCell("Completed",
+                                    completedTests.ToString());
+
+                                SummaryCell("In progress",
+                                    inProgressTests.ToString());
+
+                                SummaryCell("Abnormal results",
+                                    abnormalResults.ToString());
+
+                                SummaryCell("Average turnaround",
+                                    reportTests.Any(t =>
+                                        t.TurnaroundMinutes.HasValue)
+                                            ? FormatMinutes(averageTurnaround)
+                                            : "N/A");
+                            });
+
+                            // DETAILED RECORDS
+                            column.Item()
+                                .PaddingTop(4)
+                                .Text("TEST DETAILS")
+                                .FontSize(11)
+                                .Bold();
+
+                            if (!reportTests.Any())
+                            {
+                                column.Item()
+                                    .Border(1)
+                                    .BorderColor("#D9E0E5")
+                                    .Padding(18)
+                                    .AlignCenter()
+                                    .Text(
+                                        "No records found for the selected criteria.")
+                                    .FontSize(10);
+                            }
+                            else
+                            {
+                                column.Item().Table(table =>
+                                {
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.ConstantColumn(52);
+                                        cols.RelativeColumn(1.5f);
+                                        cols.RelativeColumn(1.4f);
+                                        cols.RelativeColumn(1.4f);
+                                        cols.ConstantColumn(53);
+                                        cols.ConstantColumn(67);
+                                        cols.RelativeColumn(1.1f);
+                                        cols.ConstantColumn(73);
+                                        cols.ConstantColumn(75);
+                                    });
+
+                                    // QuestPDF repeats this header on new pages.
+                                    table.Header(header =>
+                                    {
+                                        string[] headings =
                                         {
-                                            table.Cell()
-                                                .Text(
-                                                    $"#{test.TestRequestId}");
+                                    "Request",
+                                    "Patient",
+                                    "Test type",
+                                    "Technician",
+                                    "Urgency",
+                                    "Status",
+                                    "Result",
+                                    "Completed",
+                                    "Turnaround"
+                                        };
 
-                                            table.Cell()
-                                                .Text(
-                                                    test.PatientName);
-
-                                            table.Cell()
-                                                .Text(
-                                                    test.TestTypeName);
-
-                                            table.Cell()
-                                                .Text(
-                                                    test.TechnicianName);
-
-                                            table.Cell()
-                                                .Text(
-                                                    test.Urgency);
-
-                                            table.Cell()
-                                                .Text(
-                                                    test.Status);
-
-                                            table.Cell()
-                                                .Text(
-                                                    test.ResultValue);
+                                        foreach (var heading in headings)
+                                        {
+                                            header.Cell()
+                                                .Background("#E9EDF1")
+                                                .BorderBottom(1)
+                                                .BorderColor("#B8C2CC")
+                                                .PaddingVertical(7)
+                                                .PaddingHorizontal(4)
+                                                .Text(heading)
+                                                .Bold()
+                                                .FontSize(8);
                                         }
                                     });
-                            });
 
-                        page.Footer()
-                            .AlignCenter()
-                            .Text(text =>
-                            {
-                                text.Span(
-                                    "HemaCore - Lab Technician Report | ");
+                                    foreach (var test in reportTests)
+                                    {
+                                        void DataCell(string value)
+                                        {
+                                            table.Cell()
+                                                .BorderBottom(0.5f)
+                                                .BorderColor("#E1E6EB")
+                                                .PaddingVertical(6)
+                                                .PaddingHorizontal(4)
+                                                .Text(string.IsNullOrWhiteSpace(value)
+                                                    ? "—"
+                                                    : value)
+                                                .FontSize(8);
+                                        }
 
-                                text.CurrentPageNumber();
-                            });
-                    });
+                                        DataCell($"#{test.TestRequestId}");
+                                        DataCell(test.PatientName);
+                                        DataCell(test.TestTypeName);
+                                        DataCell(test.TechnicianName);
+                                        DataCell(test.Urgency);
+
+                                        DataCell(test.Status == "InProgress"
+                                            ? "In progress"
+                                            : test.Status);
+
+                                        var resultText = test.ResultValue;
+
+                                        if (test.IsAbnormal &&
+                                            !string.IsNullOrWhiteSpace(resultText) &&
+                                            resultText != "N/A")
+                                        {
+                                            resultText += " (Abnormal)";
+                                        }
+
+                                        DataCell(resultText);
+
+                                        DataCell(test.CompletionDateTime.HasValue
+                                            ? test.CompletionDateTime.Value
+                                                .ToString("dd/MM/yy")
+                                            : "—");
+
+                                        DataCell(test.TurnaroundMinutes.HasValue
+                                            ? FormatMinutes(
+                                                test.TurnaroundMinutes.Value)
+                                            : "—");
+                                    }
+                                });
+                            }
+                        });
+
+                    // FOOTER: appears on every page.
+                    page.Footer()
+                        .PaddingTop(8)
+                        .BorderTop(1)
+                        .BorderColor("#D9E0E5")
+                        .Row(row =>
+                        {
+                            row.RelativeItem().Text(
+                                $"HemaCore | Generated {generatedAt:dd/MM/yyyy HH:mm}")
+                                .FontSize(8)
+                                .FontColor("#52606D");
+
+                            row.ConstantItem(100)
+                                .AlignRight()
+                                .Text(text =>
+                                {
+                                    text.Span("Page ")
+                                        .FontSize(8);
+
+                                    text.CurrentPageNumber()
+                                        .FontSize(8);
+
+                                    text.Span(" of ")
+                                        .FontSize(8);
+
+                                    text.TotalPages()
+                                        .FontSize(8);
+                                });
+                        });
                 });
+            });
 
-            var pdfBytes =
-                document.GeneratePdf();
+            var pdfBytes = document.GeneratePdf();
 
             return File(
                 pdfBytes,
                 "application/pdf",
-                $"LabTechnicianReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                $"HemaCore_LabTechnicianReport_{generatedAt:yyyyMMdd_HHmmss}.pdf");
         }
-
 
         // ==========================================
         // MY COMPLETED TESTS
         // ==========================================
 
-  
-public async Task<IActionResult> MyCompletedTests()
+
+        public async Task<IActionResult> MyCompletedTests()
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -2091,6 +2333,11 @@ public async Task<IActionResult> CompletedTestDetails(int id)
         // MY ACCOUNT - VIEW PROFILE
         // ==========================================
 
+
+        // ==========================================
+        // MY ACCOUNT - TECHNICIAN PROFILE
+        // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> TechnicianProfile()
         {
@@ -2101,10 +2348,21 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            var model = new ProfileViewModel
+            // Split the stored FullName into Name and Surname.
+            // The first word is treated as the name; the remaining
+            // words are treated as the surname.
+            var fullName = (user.FullName ?? "").Trim();
+            var nameParts = fullName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            var model = new LabTechnicianProfileViewModel
             {
+                Name = nameParts.Length > 0 ? nameParts[0] : "",
+                Surname = nameParts.Length > 1
+                    ? string.Join(" ", nameParts.Skip(1))
+                    : "",
                 Email = user.Email ?? "",
-                FullName = user.FullName ?? "",
                 PhoneNumber = user.PhoneNumber
             };
 
@@ -2113,7 +2371,7 @@ public async Task<IActionResult> CompletedTestDetails(int id)
 
 
         // ==========================================
-        // MY ACCOUNT - EDIT PROFILE
+        // MY ACCOUNT - EDIT PROFILE (GET)
         // ==========================================
 
         [HttpGet]
@@ -2126,10 +2384,18 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            var model = new ProfileViewModel
+            var fullName = (user.FullName ?? "").Trim();
+            var nameParts = fullName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            var model = new LabTechnicianProfileViewModel
             {
+                Name = nameParts.Length > 0 ? nameParts[0] : "",
+                Surname = nameParts.Length > 1
+                    ? string.Join(" ", nameParts.Skip(1))
+                    : "",
                 Email = user.Email ?? "",
-                FullName = user.FullName ?? "",
                 PhoneNumber = user.PhoneNumber
             };
 
@@ -2137,10 +2403,14 @@ public async Task<IActionResult> CompletedTestDetails(int id)
         }
 
 
+        // ==========================================
+        // MY ACCOUNT - EDIT PROFILE (POST)
+        // ==========================================
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditProfile(ProfileViewModel model)
+        public async Task<IActionResult> EditProfile(
+            LabTechnicianProfileViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -2154,22 +2424,26 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            // Check whether another user already has this email address.
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            // Check whether another user already uses this email.
+            var existingUser = await _userManager.FindByEmailAsync(
+                model.Email.Trim());
 
             if (existingUser != null && existingUser.Id != user.Id)
             {
-                ModelState.AddModelError(nameof(model.Email),
+                ModelState.AddModelError(
+                    nameof(model.Email),
                     "This email address is already in use.");
 
                 return View(model);
             }
 
-            // Update the Identity user.
-            user.FullName = model.FullName;
-            user.Email = model.Email;
-            user.UserName = model.Email;
-            user.PhoneNumber = model.PhoneNumber;
+            // Combine Name and Surname for the existing FullName field.
+            user.FullName =
+                $"{model.Name.Trim()} {model.Surname.Trim()}".Trim();
+
+            user.Email = model.Email.Trim();
+            user.UserName = model.Email.Trim();
+            user.PhoneNumber = model.PhoneNumber?.Trim();
 
             var identityResult = await _userManager.UpdateAsync(user);
 
@@ -2177,31 +2451,34 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             {
                 foreach (var error in identityResult.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description);
                 }
 
                 return View(model);
             }
 
-            // Find the technician record linked to this logged-in user.
+            // Update the linked LabTechnician record.
             var technician = await _context.LabTechnicians
                 .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
-            // Update the technician's phone number as well.
             if (technician != null)
             {
-                technician.PhoneNumber = model.PhoneNumber;
+                technician.PhoneNumber = model.PhoneNumber?.Trim();
 
                 await _context.SaveChangesAsync();
             }
 
-            TempData["SuccessMessage"] = "Your profile has been updated successfully.";
+            TempData["SuccessMessage"] =
+                "Your profile has been updated successfully.";
 
             return RedirectToAction(nameof(TechnicianProfile));
         }
 
+
         // ==========================================
-        // MY ACCOUNT - CHANGE PASSWORD
+        // MY ACCOUNT - CHANGE PASSWORD (GET)
         // ==========================================
 
         [HttpGet]
@@ -2210,6 +2487,10 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             return View(new ChangePasswordViewModel());
         }
 
+
+        // ==========================================
+        // MY ACCOUNT - CHANGE PASSWORD (POST)
+        // ==========================================
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -2228,6 +2509,8 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
+            // Identity checks the current password and enforces
+            // the configured password requirements.
             var result = await _userManager.ChangePasswordAsync(
                 user,
                 model.CurrentPassword,
@@ -2237,17 +2520,19 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             {
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError("", error.Description);
+                    ModelState.AddModelError(
+                        string.Empty,
+                        error.Description);
                 }
 
                 return View(model);
             }
 
-            TempData["AccountSuccess"] = "Your password was changed successfully.";
+            TempData["AccountSuccess"] =
+                "Your password was changed successfully.";
 
             return RedirectToAction(nameof(TechnicianProfile));
         }
-
 
 
         private void AddTestResultHistory(
@@ -2348,9 +2633,10 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 new { id = sample.TestRequestId });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectSample(int sampleId, string rejectionReason)
+      
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> RejectSample(int sampleId, string rejectionReason)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -2372,15 +2658,16 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             if (sample.Status == "Received" || sample.DateTimeReceived.HasValue)
             {
                 TempData["SampleError"] =
-                    "This sample has already been received and cannot be rejected through this action.";
+                    "This sample has already been received and cannot be cancelled.";
 
                 return RedirectToAction(nameof(ReceiveSampleDetails),
                     new { id = sample.TestRequestId });
             }
 
-            if (sample.Status == "Rejected")
+            if (sample.Status == "Cancelled")
             {
-                TempData["SampleError"] = "This sample has already been rejected.";
+                TempData["SampleError"] =
+                    "This sample has already been cancelled.";
 
                 return RedirectToAction(nameof(ReceiveSampleDetails),
                     new { id = sample.TestRequestId });
@@ -2390,7 +2677,8 @@ public async Task<IActionResult> CompletedTestDetails(int id)
 
             if (string.IsNullOrWhiteSpace(rejectionReason))
             {
-                TempData["SampleError"] = "A rejection reason is required.";
+                TempData["SampleError"] =
+                    "A cancellation reason is required.";
 
                 return RedirectToAction(nameof(ReceiveSampleDetails),
                     new { id = sample.TestRequestId });
@@ -2399,26 +2687,28 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             if (rejectionReason.Length > 1000)
             {
                 TempData["SampleError"] =
-                    "The rejection reason cannot exceed 1000 characters.";
+                    "The cancellation reason cannot exceed 1000 characters.";
 
                 return RedirectToAction(nameof(ReceiveSampleDetails),
                     new { id = sample.TestRequestId });
             }
 
-            sample.Status = "Rejected";
+            // Save the required status value.
+            sample.Status = "Cancelled";
+
+            // Keep the existing database columns for compatibility.
             sample.RejectionReason = rejectionReason;
             sample.RejectedDateTime = DateTime.Now;
             sample.RejectedByLabTechnicianId = technician.LabTechnicianId;
 
             await _context.SaveChangesAsync();
 
-            TempData["SampleError"] =
-                $"Sample {sample.Barcode} was rejected. The reason has been recorded.";
+            TempData["SampleReceivedSuccess"] =
+                $"Sample {sample.Barcode} was cancelled successfully. The reason has been recorded.";
 
             return RedirectToAction(nameof(ReceiveSampleDetails),
                 new { id = sample.TestRequestId });
         }
-
 
     }
     }

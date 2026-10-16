@@ -1,13 +1,12 @@
-﻿@model HemaCore.Models.TestRequest
+﻿
+@model HemaCore.Models.TestRequest
 @using Microsoft.EntityFrameworkCore
-
 @inject HemaCore.Data.AppDbContext Db
 
 @{
     ViewData["Title"] = "Receive Sample";
     Layout = "_LabTechnicianLayout";
 
-    // ----- Patient history (loaded here so no controller change is needed) -----
     var conditions = new List<string>();
     var allergies = new List<string>();
     var medications = new List<string>();
@@ -16,420 +15,630 @@
     {
         var patientId = Model.Patient.PatientID;
 
-        var conditionRows = await Db.PatientConditions
+        var patientConditions = await Db.PatientConditions
+            .Include(pc => pc.Condition)
             .Where(pc => pc.PatientID == patientId)
-            .Select(pc => new { ConditionName = pc.Condition.Name, pc.DiagnosedDate })
             .ToListAsync();
 
-        conditions = conditionRows
-            .Select(c => c.DiagnosedDate.HasValue
-                ? c.ConditionName + " (diagnosed " + c.DiagnosedDate.Value.ToString("dd/MM/yyyy") + ")"
-                : c.ConditionName)
+        conditions = patientConditions
+            .Where(pc => pc.Condition != null)
+            .Select(pc => pc.DiagnosedDate.HasValue
+                ? pc.Condition.Name + " (diagnosed " +
+                  pc.DiagnosedDate.Value.ToString("dd/MM/yyyy") + ")"
+                : pc.Condition.Name)
             .ToList();
 
-        var allergyRows = await Db.PatientAllergies
+        var patientAllergies = await Db.PatientAllergies
+            .Include(pa => pa.Allergy)
             .Where(pa => pa.PatientID == patientId)
-            .Select(pa => new { AllergyName = pa.Allergy.Name, pa.Severity })
             .ToListAsync();
 
-        allergies = allergyRows
-            .Select(a => string.IsNullOrWhiteSpace(a.Severity)
-                ? a.AllergyName
-                : a.AllergyName + " (" + a.Severity + ")")
+        allergies = patientAllergies
+            .Where(pa => pa.Allergy != null)
+            .Select(pa => string.IsNullOrWhiteSpace(pa.Severity)
+                ? pa.Allergy.Name
+                : pa.Allergy.Name + " (" + pa.Severity + ")")
             .ToList();
 
-        var medicationRows = await Db.PatientMedications
+        var patientMedications = await Db.PatientMedications
+            .Include(pm => pm.Medication)
             .Where(pm => pm.PatientID == patientId)
-            .Select(pm => new { MedicationName = pm.Medication.Name, pm.Dosage, pm.Frequency })
             .ToListAsync();
 
-        medications = medicationRows
-            .Select(m => string.Join(" - ", new[] { m.MedicationName, m.Dosage, m.Frequency }
-                .Where(x => !string.IsNullOrWhiteSpace(x))))
+        medications = patientMedications
+            .Where(pm => pm.Medication != null)
+            .Select(pm => string.Join(" - ",
+                new[]
+                {
+                    pm.Medication.Name,
+                    pm.Dosage,
+                    pm.Frequency
+                }.Where(value => !string.IsNullOrWhiteSpace(value))))
             .ToList();
     }
 }
 
 <style>
     .receive-page {
-        padding-bottom: 40px;
+        --lab-accent: #75AABA;
+        --lab-accent-dark: #477f90;
+        --lab-text: #263746;
+        --lab-muted: #77838e;
+        --lab-line: #e7ebef;
+        --lab-soft: #f7f9fb;
+        color: var(--lab-text);
+        padding-bottom: 36px;
+        font-size: 14px;
     }
 
-    .page-hero {
-        background: linear-gradient(135deg, #75AABA 0%, #5f9aaa 100%);
-        color: white;
-        border-radius: 16px;
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        box-shadow: 0 6px 18px rgba(70, 120, 140, 0.18);
+    .receive-page * {
+        box-sizing: border-box;
     }
 
-        .page-hero h2 {
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .page-hero p {
-            margin-bottom: 0;
-            opacity: 0.9;
-        }
-
-    .back-btn {
-        background: rgba(255,255,255,.15);
-        border: 1px solid rgba(255,255,255,.45);
-        color: white;
-        border-radius: 8px;
-        padding: 9px 16px;
+    .receive-page .page-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin: 8px 0 25px;
     }
 
-        .back-btn:hover {
-            background: rgba(255,255,255,.25);
-            color: white;
-        }
+    .receive-page .eyebrow {
+        color: var(--lab-muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        margin-bottom: 7px;
+    }
 
-    .info-card {
-        background: white;
-        border: none;
-        border-radius: 14px;
-        box-shadow: 0 3px 14px rgba(0,0,0,.07);
+    .receive-page .page-title {
+        font-size: 25px;
+        font-weight: 650;
+        letter-spacing: -.5px;
+        margin: 0;
+        color: var(--lab-text);
+    }
+
+    .receive-page .page-description {
+        color: var(--lab-muted);
+        margin: 7px 0 0;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .receive-page .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 13px;
+        border: 1px solid var(--lab-line);
+        border-radius: 7px;
+        color: #475563;
+        background: #fff;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .receive-page .back-link:hover {
+        background: var(--lab-soft);
+        border-color: #ccd5dc;
+        color: var(--lab-text);
+    }
+
+    .receive-page .request-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+        background: #fff;
+        border: 1px solid var(--lab-line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 25px;
+    }
+
+    .receive-page .request-field {
+        min-width: 0;
+    }
+
+    .receive-page .field-label {
+        display: block;
+        color: var(--lab-muted);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .55px;
+        margin-bottom: 7px;
+    }
+
+    .receive-page .field-value {
+        color: var(--lab-text);
+        font-weight: 600;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .receive-page .request-id {
+        color: var(--lab-accent-dark);
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+    .receive-page .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 5px;
+        padding: 5px 8px;
+        background: #eef5f7;
+        color: #477887;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .receive-page .status-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .receive-page .section {
+        background: #fff;
+        border: 1px solid var(--lab-line);
+        border-radius: 10px;
         margin-bottom: 20px;
         overflow: hidden;
     }
 
-    .info-card-header {
+    .receive-page .section-heading {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 17px 22px;
-        background: #f7fafb;
-        border-bottom: 1px solid #e8eef0;
-        color: #315967;
-        font-weight: 600;
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--lab-line);
     }
 
-        .info-card-header i {
-            color: #75AABA;
-            font-size: 17px;
-        }
-
-    .info-card-body {
-        padding: 22px;
+    .receive-page .section-icon {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        width: 31px;
+        height: 31px;
+        border-radius: 7px;
+        color: var(--lab-accent-dark);
+        background: #f0f6f8;
     }
 
-    .info-item {
-        padding: 12px 15px;
-        background: #f9fbfc;
-        border-radius: 9px;
-        height: 100%;
-        border: 1px solid #edf2f4;
+    .receive-page .section-title {
+        font-size: 14px;
+        font-weight: 650;
+        margin: 0;
+        color: var(--lab-text);
     }
 
-    .info-label {
-        display: block;
+    .receive-page .section-subtitle {
+        color: var(--lab-muted);
         font-size: 12px;
-        color: #7a8b92;
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        margin-bottom: 5px;
-        font-weight: 600;
+        margin: 4px 0 0;
     }
 
-    .info-value {
-        color: #263b43;
-        font-weight: 500;
-        font-size: 15px;
+    .receive-page .section-body {
+        padding: 20px;
     }
 
-    .request-number {
-        color: #4e91a6;
-        font-size: 18px;
-        font-weight: 700;
-    }
-
-    .status-badge,
-    .urgency-badge {
-        display: inline-block;
-        padding: 5px 11px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .status-badge {
-        background: #e9f1f4;
-        color: #477888;
-    }
-
-    .urgency-badge {
-        background: #fff3d9;
-        color: #9a6b17;
-    }
-
-    /* ---------- Patient clinical profile ---------- */
-
-    .patient-profile {
+    .receive-page .detail-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-top: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 28px;
     }
 
-    .profile-panel {
-        background: #f9fbfc;
-        border: 1px solid #edf2f4;
-        border-radius: 10px;
-        padding: 16px 18px;
+    .receive-page .detail-value {
+        color: var(--lab-text);
+        font-size: 13px;
+        font-weight: 550;
+        overflow-wrap: anywhere;
     }
 
-    .profile-panel-title {
+    .receive-page .patient-profile {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--lab-line);
+    }
+
+    .receive-page .profile-heading {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #315967;
-    }
-
-        .profile-panel-title i {
-            color: #75AABA;
-        }
-
-    .profile-panel-count {
-        margin-left: auto;
         font-size: 12px;
-        font-weight: 600;
-        color: #58717a;
-        background: #e9f1f4;
-        border-radius: 20px;
-        padding: 2px 9px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #50616e;
     }
 
-    .profile-panel.is-allergy {
-        background: #fff8f6;
-        border-color: #f3d9d3;
+    .receive-page .profile-heading i {
+        color: var(--lab-accent-dark);
     }
 
-        .profile-panel.is-allergy .profile-panel-title,
-        .profile-panel.is-allergy .profile-panel-title i {
-            color: #9b3b2c;
-        }
+    .receive-page .profile-heading .count {
+        color: var(--lab-muted);
+        font-weight: 500;
+    }
 
-        .profile-panel.is-allergy .profile-panel-count {
-            background: #fbe3de;
-            color: #9b3b2c;
-        }
+    .receive-page .profile-panel.allergy-panel {
+        border-left: 2px solid #d89b8f;
+        padding-left: 14px;
+    }
 
-    .profile-list {
+    .receive-page .allergy-panel .profile-heading,
+    .receive-page .allergy-panel .profile-heading i {
+        color: #a14c40;
+    }
+
+    .receive-page .profile-list {
         list-style: none;
-        margin: 0;
         padding: 0;
-    }
-
-        .profile-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 10px 0;
-            border-top: 1px solid #edf2f4;
-        }
-
-            .profile-list li:first-child {
-                border-top: 0;
-            }
-
-    .profile-panel.is-allergy .profile-list li {
-        border-top-color: #f3d9d3;
-    }
-
-        .profile-panel.is-allergy .profile-list li:first-child {
-            border-top: 0;
-        }
-
-    .profile-list-name {
-        font-weight: 600;
-        font-size: 14px;
-        color: #263b43;
-    }
-
-    .profile-list-meta {
-        font-size: 12.5px;
-        color: #7a8b92;
-    }
-
-    .profile-empty {
         margin: 0;
-        padding-top: 4px;
-        font-size: 13px;
-        color: #7a8b92;
     }
 
-    .severity-badge {
-        flex-shrink: 0;
-        padding: 3px 10px;
-        border-radius: 20px;
+    .receive-page .profile-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f2f4;
+        color: #455461;
         font-size: 12px;
-        font-weight: 600;
-        background: #fbe3de;
-        color: #9b3b2c;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
     }
 
-    /* ---------- Technician ---------- */
+    .receive-page .profile-list li:last-child {
+        border-bottom: 0;
+    }
 
-    .technician-box {
-        background: #eef7f9;
-        border: 1px solid #d6eaee;
-        border-radius: 10px;
-        padding: 16px 18px;
+    .receive-page .profile-empty {
+        color: var(--lab-muted);
+        font-size: 12px;
+        margin: 0;
+        padding: 5px 0;
+    }
+
+    .receive-page .technician-row {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
     }
 
-    .technician-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: #75AABA;
-        color: white;
+    .receive-page .technician-avatar {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #edf4f6;
+        color: var(--lab-accent-dark);
+        font-size: 15px;
+        flex-shrink: 0;
     }
 
-    .technician-label {
+    .receive-page .technician-label {
+        color: var(--lab-muted);
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+
+    .receive-page .technician-name {
+        color: var(--lab-text);
+        font-size: 13px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .receive-page .clinical-note {
+        color: #4a5966;
+        background: var(--lab-soft);
+        border-radius: 6px;
+        padding: 13px 15px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .receive-page .sample-count {
+        margin-left: auto;
+        color: var(--lab-muted);
         font-size: 12px;
-        color: #71858c;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .receive-page .table-responsive {
+        overflow-x: auto;
+    }
+
+    .receive-page .sample-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .receive-page .sample-table thead th {
+        background: #f8fafb;
+        color: #647380;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--lab-line);
+        white-space: nowrap;
+    }
+
+    .receive-page .sample-table tbody td {
+        padding: 17px 16px;
+        border-bottom: 1px solid #edf0f3;
+        vertical-align: top;
+        color: #455461;
+        font-size: 12px;
+    }
+
+    .receive-page .sample-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .receive-page .sample-table tbody tr:hover {
+        background: #fbfcfd;
+    }
+
+    .receive-page .barcode {
+        color: #344b5a;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .receive-page .barcode i {
+        color: var(--lab-accent-dark);
+        margin-right: 5px;
+    }
+
+    .receive-page .barcode-edit-btn {
+        border: 0;
+        background: transparent;
+        color: #7c8994;
+        padding: 3px 5px;
+        border-radius: 4px;
+    }
+
+    .receive-page .barcode-edit-btn:hover {
+        background: #edf3f5;
+        color: var(--lab-accent-dark);
+    }
+
+    .receive-page .sample-type {
+        display: inline-block;
+        background: #f0f5f7;
+        color: #536e7b;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .receive-page .sample-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .receive-page .sample-status.received {
+        background: #edf6f0;
+        color: #34734d;
+    }
+
+    .receive-page .sample-status.pending {
+        background: #f5f3e9;
+        color: #81703a;
+    }
+
+    .receive-page .sample-status.cancelled {
+        background: #fbefed;
+        color: #a4493c;
+    }
+
+    .receive-page .received-by {
+        margin-top: 10px;
+        padding-top: 9px;
+        border-top: 1px solid #edf0f3;
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        line-height: 1.5;
+    }
+
+    .receive-page .received-by i {
+        color: var(--lab-accent-dark);
+        margin-top: 2px;
+    }
+
+    .receive-page .received-by-label {
+        display: block;
+        color: var(--lab-muted);
+        font-size: 10px;
         margin-bottom: 2px;
     }
 
-    .technician-name {
-        font-weight: 600;
-        color: #294b57;
-    }
-
-    .clinical-note {
-        background: #f8fafb;
-        border-left: 4px solid #75AABA;
-        border-radius: 6px;
-        padding: 15px 18px;
-        color: #455960;
-        line-height: 1.6;
-        white-space: pre-wrap;
-    }
-
-    /* ---------- Sample table ---------- */
-
-    .sample-table {
-        margin-bottom: 0;
-    }
-
-        .sample-table thead th {
-            background: #f3f7f8;
-            color: #58717a;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            border-bottom: 1px solid #dfe8eb;
-            padding: 13px 15px;
-            white-space: nowrap;
-        }
-
-        .sample-table tbody td {
-            padding: 16px 15px;
-            vertical-align: middle;
-            border-color: #edf1f2;
-            color: #40545b;
-        }
-
-    .barcode {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #397c91;
-        font-weight: 600;
+    .receive-page .received-by-name {
+        color: #344b5a;
+        font-size: 12px;
+        font-weight: 650;
         overflow-wrap: anywhere;
     }
 
-    .barcode-display {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .barcode-edit-btn {
-        border: none;
-        background: transparent;
-        color: #6c8790;
-        padding: 5px 7px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-        .barcode-edit-btn:hover {
-            background: #edf4f6;
-            color: #397c91;
-        }
-
-    .barcode-edit-panel {
-        min-width: 220px;
-        max-width: 300px;
-    }
-
-    .sample-type {
-        display: inline-block;
-        background: #edf6f8;
-        color: #477d8c;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .reject-panel {
-        min-width: 230px;
-        background: #fffafa;
-        border: 1px solid #f0dada;
-        padding: 12px;
-        border-radius: 8px;
-    }
-
-    .rejection-reason {
-        color: #842029;
-        background: #f8d7da;
-        border-radius: 7px;
-        padding: 10px 12px;
-        margin-top: 8px;
-        white-space: normal;
-        overflow-wrap: anywhere;
-    }
-
-    .action-buttons {
+    .receive-page .sample-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 7px;
+        margin-top: 11px;
+    }
+
+    .receive-page .btn-lab-primary {
+        background: var(--lab-accent-dark);
+        border: 1px solid var(--lab-accent-dark);
+        color: #fff;
+        border-radius: 6px;
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        transition: background .18s ease;
+    }
+
+    .receive-page .btn-lab-primary:hover {
+        background: #386d7d;
+        border-color: #386d7d;
+        color: #fff;
+    }
+
+    .receive-page .btn-lab-cancel {
+        background: #fff;
+        border: 1px solid #e5c7c2;
+        color: #a14c40;
+        border-radius: 6px;
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .receive-page .btn-lab-cancel:hover {
+        background: #fbefed;
+        color: #8f392e;
+    }
+
+    .receive-page .cancel-panel {
+        background: #fcf9f8;
+        border: 1px solid #eee2df;
+        border-radius: 7px;
+        padding: 13px;
+        margin-top: 12px;
+        min-width: 220px;
+    }
+
+    .receive-page .cancel-panel .form-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #596673;
+    }
+
+    .receive-page .form-control,
+    .receive-page .form-select {
+        border-color: #dfe5ea;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .receive-page .form-control:focus,
+    .receive-page .form-select:focus {
+        border-color: var(--lab-accent);
+        box-shadow: 0 0 0 3px rgba(117, 170, 186, .14);
+    }
+
+    .receive-page .cancellation-note {
+        color: #94483d;
+        background: #fcf3f1;
+        border-radius: 5px;
+        padding: 9px 10px;
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    .receive-page .muted-text {
+        color: var(--lab-muted);
+        font-size: 12px;
+    }
+
+    .receive-page .empty-state {
+        padding: 30px 15px;
+        text-align: center;
+        color: var(--lab-muted);
+    }
+
+    .receive-page .empty-state i {
+        display: block;
+        font-size: 23px;
+        margin-bottom: 10px;
+        color: #aab6bf;
+    }
+
+    .receive-page .alert {
+        border-radius: 7px;
+        font-size: 13px;
     }
 
     @@media (max-width: 992px) {
-        .patient-profile {
+        .receive-page .patient-profile {
             grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .receive-page .request-strip {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
-    @@media (max-width: 768px) {
-        .page-hero {
-            padding: 22px 18px;
+    @@media (max-width: 576px) {
+        .receive-page.container {
+            padding-left: 12px;
+            padding-right: 12px;
         }
 
-        .info-card-body {
+        .receive-page .page-top {
+            align-items: flex-start;
+        }
+
+        .receive-page .page-title {
+            font-size: 21px;
+        }
+
+        .receive-page .page-description {
+            max-width: 260px;
+        }
+
+        .receive-page .back-link {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .receive-page .request-strip {
+            gap: 18px 12px;
             padding: 16px;
         }
 
-        .sample-table thead th,
-        .sample-table tbody td {
-            padding: 12px 10px;
+        .receive-page .section-heading {
+            padding: 14px 15px;
+        }
+
+        .receive-page .section-body {
+            padding: 16px;
+        }
+
+        .receive-page .detail-grid {
+            grid-template-columns: 1fr;
+            gap: 17px;
+        }
+
+        .receive-page .sample-count {
+            font-size: 11px;
         }
     }
 </style>
@@ -456,116 +665,108 @@
         </div>
     }
 
-    <div class="page-hero">
-        <div class="d-flex justify-content-between align-items-center gap-3">
+    <!-- PAGE HEADER -->
+    <div class="page-top">
+        <div>
+            <div class="eyebrow">Laboratory operations / Sample receiving</div>
+            <h1 class="page-title">Receive Patient Sample</h1>
+            <p class="page-description">
+                Review the request and patient details before recording sample receipt.
+            </p>
+        </div>
+
+        <a asp-action="ReceiveSample" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back
+        </a>
+    </div>
+
+    <!-- REQUEST SUMMARY -->
+    <div class="request-strip">
+        <div class="request-field">
+            <span class="field-label">Request number</span>
+            <div class="request-id">#@Model.TestRequestId</div>
+        </div>
+
+        <div class="request-field">
+            <span class="field-label">Request date</span>
+            <div class="field-value">
+                @Model.RequestDate.ToString("dd/MM/yyyy HH:mm")
+            </div>
+        </div>
+
+        <div class="request-field">
+            <span class="field-label">Urgency</span>
+            <div class="field-value">
+                @(string.IsNullOrWhiteSpace(Model.Urgency) ? "Not specified" : Model.Urgency)
+            </div>
+        </div>
+
+        <div class="request-field">
+            <span class="field-label">Request status</span>
             <div>
-                <div class="mb-2">
-                    <i class="fas fa-vial me-2"></i>
-                    LABORATORY SAMPLE RECEIVING
-                </div>
-                <h2>Receive Patient Sample</h2>
-                <p>Review the request, verify each barcode and confirm or reject each sample.</p>
-            </div>
-
-            <a asp-action="ReceiveSample" class="btn back-btn">
-                <i class="fas fa-arrow-left me-2"></i>Back
-            </a>
-        </div>
-    </div>
-
-    <!-- TEST REQUEST -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-file-medical"></i>
-            <span>Test Request Details</span>
-        </div>
-
-        <div class="info-card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Request Number</span>
-                        <span class="request-number">#@Model.TestRequestId</span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Request Date</span>
-                        <span class="info-value">
-                            @Model.RequestDate.ToString("dd/MM/yyyy HH:mm")
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Urgency</span>
-                        <span class="urgency-badge">@Model.Urgency</span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Request Status</span>
-                        <span class="status-badge">@Model.Status</span>
-                    </div>
-                </div>
+                <span class="status-pill">
+                    @(string.IsNullOrWhiteSpace(Model.Status) ? "Unknown" : Model.Status)
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- PATIENT INFORMATION (includes conditions, allergies, medications) -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-user"></i>
-            <span>Patient Information</span>
+    <!-- PATIENT INFORMATION -->
+    <section class="section">
+        <div class="section-heading">
+            <span class="section-icon"><i class="fas fa-user"></i></span>
+            <div>
+                <h2 class="section-title">Patient Information</h2>
+                <p class="section-subtitle">Patient identity and relevant medical history</p>
+            </div>
         </div>
 
-        <div class="info-card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">Patient Name</span>
-                        <span class="info-value">
-                            @Model.Patient?.Name @Model.Patient?.Surname
-                        </span>
+        <div class="section-body">
+            <div class="detail-grid">
+                <div>
+                    <span class="field-label">Patient name</span>
+                    <div class="detail-value">
+                        @(Model.Patient == null
+                            ? "Not available"
+                            : $"{Model.Patient.Name} {Model.Patient.Surname}")
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">ID Number</span>
-                        <span class="info-value">@Model.Patient?.IDNumber</span>
+                <div>
+                    <span class="field-label">ID number</span>
+                    <div class="detail-value">
+                        @(string.IsNullOrWhiteSpace(Model.Patient?.IDNumber)
+                            ? "Not available"
+                            : Model.Patient.IDNumber)
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">Date of Birth</span>
-                        <span class="info-value">
-                            @(Model.Patient == null
-                                ? "Not available"
-                                : Model.Patient.DateOfBirth.ToString("dd/MM/yyyy"))
-                        </span>
+                <div>
+                    <span class="field-label">Date of birth</span>
+                    <div class="detail-value">
+                        @(Model.Patient == null
+                            ? "Not available"
+                            : Model.Patient.DateOfBirth.ToString("dd/MM/yyyy"))
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">Contact Number</span>
-                        <span class="info-value">@Model.Patient?.PhoneNumber</span>
+                <div>
+                    <span class="field-label">Contact number</span>
+                    <div class="detail-value">
+                        @(string.IsNullOrWhiteSpace(Model.Patient?.PhoneNumber)
+                            ? "Not available"
+                            : Model.Patient.PhoneNumber)
                     </div>
                 </div>
             </div>
 
             <div class="patient-profile">
-
                 <div class="profile-panel">
-                    <div class="profile-panel-title">
+                    <div class="profile-heading">
                         <i class="fas fa-heartbeat"></i>
-                        <span>Medical conditions</span>
-                        <span class="profile-panel-count">@conditions.Count</span>
+                        Medical Conditions
+                        <span class="count">(@conditions.Count)</span>
                     </div>
 
                     @if (conditions.Any())
@@ -573,7 +774,7 @@
                         <ul class="profile-list">
                             @foreach (var item in conditions)
                             {
-                                <li><div class="profile-list-name">@item</div></li>
+                                <li>@item</li>
                             }
                         </ul>
                     }
@@ -583,11 +784,11 @@
                     }
                 </div>
 
-                <div class="profile-panel is-allergy">
-                    <div class="profile-panel-title">
+                <div class="profile-panel allergy-panel">
+                    <div class="profile-heading">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Allergies</span>
-                        <span class="profile-panel-count">@allergies.Count</span>
+                        Allergies
+                        <span class="count">(@allergies.Count)</span>
                     </div>
 
                     @if (allergies.Any())
@@ -595,7 +796,7 @@
                         <ul class="profile-list">
                             @foreach (var item in allergies)
                             {
-                                <li><div class="profile-list-name">@item</div></li>
+                                <li>@item</li>
                             }
                         </ul>
                     }
@@ -606,10 +807,10 @@
                 </div>
 
                 <div class="profile-panel">
-                    <div class="profile-panel-title">
+                    <div class="profile-heading">
                         <i class="fas fa-pills"></i>
-                        <span>Current medications</span>
-                        <span class="profile-panel-count">@medications.Count</span>
+                        Current Medications
+                        <span class="count">(@medications.Count)</span>
                     </div>
 
                     @if (medications.Any())
@@ -617,7 +818,7 @@
                         <ul class="profile-list">
                             @foreach (var item in medications)
                             {
-                                <li><div class="profile-list-name">@item</div></li>
+                                <li>@item</li>
                             }
                         </ul>
                     }
@@ -626,78 +827,86 @@
                         <p class="profile-empty">No medications recorded.</p>
                     }
                 </div>
-
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- REQUESTING DOCTOR -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-user-md"></i>
-            <span>Requesting Doctor</span>
-        </div>
-
-        <div class="info-card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">Doctor</span>
-                        <span class="info-value">
-                            @Model.Doctor?.Name @Model.Doctor?.Surname
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">HPCSA Number</span>
-                        <span class="info-value">
-                            @(string.IsNullOrWhiteSpace(Model.Doctor?.HPCSANumber)
-                                ? "Not provided"
-                                : Model.Doctor.HPCSANumber)
-                        </span>
-                    </div>
-                </div>
+    <section class="section">
+        <div class="section-heading">
+            <span class="section-icon"><i class="fas fa-user-md"></i></span>
+            <div>
+                <h2 class="section-title">Requesting Doctor</h2>
+                <p class="section-subtitle">Details of the referring medical practitioner</p>
             </div>
         </div>
-    </div>
 
-    <!-- RECEIVING TECHNICIAN -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-user-check"></i>
-            <span>Receiving Technician</span>
-        </div>
-
-        <div class="info-card-body">
-            <div class="technician-box">
-                <div class="technician-icon">
-                    <i class="fas fa-user-md"></i>
+        <div class="section-body">
+            <div class="detail-grid">
+                <div>
+                    <span class="field-label">Doctor</span>
+                    <div class="detail-value">
+                        @(Model.Doctor == null
+                            ? "Not available"
+                            : $"{Model.Doctor.Name} {Model.Doctor.Surname}")
+                    </div>
                 </div>
 
                 <div>
-                    <div class="technician-label">Currently logged-in technician</div>
-                    <div class="technician-name">@User.Identity?.Name</div>
+                    <span class="field-label">HPCSA number</span>
+                    <div class="detail-value">
+                        @(string.IsNullOrWhiteSpace(Model.Doctor?.HPCSANumber)
+                            ? "Not provided"
+                            : Model.Doctor.HPCSANumber)
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- CLINICAL INFORMATION -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-notes-medical"></i>
-            <span>Clinical Information</span>
+    <!-- CURRENTLY LOGGED-IN TECHNICIAN -->
+    <section class="section">
+        <div class="section-heading">
+            <span class="section-icon"><i class="fas fa-user-check"></i></span>
+            <div>
+                <h2 class="section-title">Current Technician</h2>
+                <p class="section-subtitle">Account currently handling this request</p>
+            </div>
         </div>
 
-        <div class="info-card-body">
-            <span class="info-label">Clinical Notes</span>
+        <div class="section-body">
+            <div class="technician-row">
+                <div class="technician-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <div class="technician-label">Logged-in account</div>
+                    <div class="technician-name">
+                        @(string.IsNullOrWhiteSpace(User.Identity?.Name)
+                            ? "Technician account"
+                            : User.Identity.Name)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <!-- CLINICAL INFORMATION -->
+    <section class="section">
+        <div class="section-heading">
+            <span class="section-icon"><i class="fas fa-notes-medical"></i></span>
+            <div>
+                <h2 class="section-title">Clinical Information</h2>
+                <p class="section-subtitle">Clinical notes supplied with the request</p>
+            </div>
+        </div>
+
+        <div class="section-body">
+            <span class="field-label">Clinical notes</span>
             <div class="clinical-note">
                 @if (string.IsNullOrWhiteSpace(Model.ClinicalNotes))
                 {
-                    <span class="text-muted">No clinical notes provided.</span>
+                    <span class="muted-text">No clinical notes provided.</span>
                 }
                 else
                 {
@@ -705,285 +914,312 @@
                 }
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- SAMPLE INFORMATION -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-vial"></i>
-            <span>Sample Information</span>
-
-            <span class="badge ms-auto"
-                  style="background:#e2f1f4;color:#4d8393;">
-                @(Model.Samples?.Count ?? 0) Sample(s)
+    <section class="section">
+        <div class="section-heading">
+            <span class="section-icon"><i class="fas fa-vial"></i></span>
+            <div>
+                <h2 class="section-title">Sample Information</h2>
+                <p class="section-subtitle">
+                    Review barcodes and record the receipt or cancellation of each sample
+                </p>
+            </div>
+            <span class="sample-count">
+                @(Model.Samples?.Count ?? 0) sample(s)
             </span>
         </div>
 
-        <div class="info-card-body">
-            @if (Model.Samples == null || !Model.Samples.Any())
-            {
-                <div class="alert alert-warning mb-0">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    No samples are associated with this test request.
-                </div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table sample-table">
-                        <thead>
+        @if (Model.Samples == null || !Model.Samples.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-vial"></i>
+                <div>No samples are associated with this test request.</div>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="sample-table">
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Sample type</th>
+                            <th>Received date &amp; time</th>
+                            <th>Status and actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sample in Model.Samples)
+                        {
+                            var sampleStatus = string.IsNullOrWhiteSpace(sample.Status)
+                                ? (sample.DateTimeReceived.HasValue ? "Received" : "Pending")
+                                : sample.Status;
+
+                            var isCancelled = sampleStatus == "Rejected" ||
+                                              sampleStatus == "Cancelled";
+
+                            var isReceived = sampleStatus == "Received" ||
+                                             sample.DateTimeReceived.HasValue;
+
+                            var canReceive = !isCancelled && !isReceived;
+
                             <tr>
-                                <th>Barcode</th>
-                                <th>Sample Type</th>
-                                <th>Received Date &amp; Time</th>
-                                <th>Sample Status / Action</th>
-                            </tr>
-                        </thead>
+                                <!-- BARCODE -->
+                                <td>
+                                    @if (canReceive)
+                                    {
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="barcode">
+                                                <i class="fas fa-barcode"></i>@sample.Barcode
+                                            </span>
 
-                        <tbody>
-                            @foreach (var sample in Model.Samples)
-                            {
-                                var sampleStatus = string.IsNullOrWhiteSpace(sample.Status)
-                                    ? (sample.DateTimeReceived.HasValue ? "Received" : "Pending")
-                                    : sample.Status;
+                                            <button type="button"
+                                                    class="barcode-edit-btn"
+                                                    title="Edit barcode"
+                                                    aria-label="Edit barcode"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#barcode-edit-@sample.SampleId">
+                                                <i class="fas fa-pen"></i>
+                                            </button>
+                                        </div>
 
-                                <tr>
-                                    <!-- BARCODE -->
-                                    <td>
-                                        @if (sampleStatus != "Received" &&
-                                             sampleStatus != "Rejected" &&
-                                             !sample.DateTimeReceived.HasValue)
+                                        <div class="collapse mt-2"
+                                             id="barcode-edit-@sample.SampleId">
+                                            <form asp-action="EditSampleBarcode" method="post">
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden" name="sampleId"
+                                                       value="@sample.SampleId" />
+
+                                                <label class="form-label small"
+                                                       for="barcode-value-@sample.SampleId">
+                                                    Correct barcode
+                                                </label>
+
+                                                <input type="text"
+                                                       id="barcode-value-@sample.SampleId"
+                                                       name="barcode"
+                                                       value="@sample.Barcode"
+                                                       class="form-control form-control-sm mb-2"
+                                                       maxlength="100"
+                                                       required />
+
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-lab-primary">
+                                                    Save barcode
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="barcode">
+                                            <i class="fas fa-barcode"></i>@sample.Barcode
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- SAMPLE TYPE -->
+                                <td>
+                                    <span class="sample-type">
+                                        @(sample.SampleType?.SampleName ?? "Not specified")
+                                    </span>
+                                </td>
+
+                                <!-- RECEIVED DATE AND TIME -->
+                                <td>
+                                    @if (sample.DateTimeReceived.HasValue)
+                                    {
+                                        <span>
+                                            @sample.DateTimeReceived.Value.ToString("dd/MM/yyyy")
+                                        </span>
+                                        <div class="muted-text">
+                                            @sample.DateTimeReceived.Value.ToString("HH:mm:ss")
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted-text">Not yet received</span>
+                                    }
+                                </td>
+
+                                <!-- STATUS, RECEIVING TECHNICIAN AND ACTIONS -->
+                                <td>
+                                    @if (isCancelled)
+                                    {
+                                        <span class="sample-status cancelled">
+                                            <i class="fas fa-times-circle"></i>
+                                            Cancelled
+                                        </span>
+
+                                        <div class="cancellation-note">
+                                            <strong>Reason:</strong>
+                                            @(string.IsNullOrWhiteSpace(sample.RejectionReason)
+                                                ? "No reason recorded."
+                                                : sample.RejectionReason)
+                                        </div>
+
+                                        @if (sample.RejectedDateTime.HasValue)
                                         {
-                                            <div class="barcode-display">
-                                                <span class="barcode">
-                                                    <i class="fas fa-barcode"></i>
-                                                    @sample.Barcode
+                                            <div class="muted-text mt-2">
+                                                Cancelled on
+                                                @sample.RejectedDateTime.Value.ToString("dd/MM/yyyy HH:mm")
+                                            </div>
+                                        }
+                                    }
+                                    else if (isReceived)
+                                    {
+                                        <span class="sample-status received">
+                                            <i class="fas fa-check-circle"></i>
+                                            Received
+                                        </span>
+
+                                        <div class="received-by">
+                                            <i class="fas fa-user-check"></i>
+                                            <div>
+                                                <span class="received-by-label">
+                                                    Received by
                                                 </span>
 
-                                                <button type="button"
-                                                        class="barcode-edit-btn"
-                                                        title="Edit barcode"
-                                                        aria-label="Edit barcode"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#barcode-edit-@sample.SampleId"
-                                                        aria-expanded="false">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </button>
-                                            </div>
-
-                                            <div class="collapse mt-2"
-                                                 id="barcode-edit-@sample.SampleId">
-                                                <div class="barcode-edit-panel">
-                                                    <form asp-action="EditSampleBarcode"
-                                                          method="post">
-                                                        @Html.AntiForgeryToken()
-
-                                                        <input type="hidden"
-                                                               name="sampleId"
-                                                               value="@sample.SampleId" />
-
-                                                        <label class="form-label small">
-                                                            Correct barcode
-                                                        </label>
-
-                                                        <input type="text"
-                                                               name="barcode"
-                                                               value="@sample.Barcode"
-                                                               class="form-control form-control-sm mb-2"
-                                                               maxlength="100"
-                                                               required />
-
-                                                        <div class="d-flex gap-2">
-                                                            <button type="submit"
-                                                                    class="btn btn-sm btn-primary">
-                                                                <i class="fas fa-check me-1"></i>
-                                                                Save
-                                                            </button>
-
-                                                            <button type="button"
-                                                                    class="btn btn-sm btn-light border"
-                                                                    data-bs-toggle="collapse"
-                                                                    data-bs-target="#barcode-edit-@sample.SampleId">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
+                                                <div class="received-by-name">
+                                                    @if (sample.LabTechnician != null)
+                                                    {
+                                                        @(sample.LabTechnician.Name + " " +
+                                                          sample.LabTechnician.Surname)
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="muted-text">
+                                                            Technician not recorded
+                                                        </span>
+                                                    }
                                                 </div>
                                             </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="barcode">
-                                                <i class="fas fa-barcode"></i>
-                                                @sample.Barcode
-                                            </span>
-                                        }
-                                    </td>
-
-                                    <!-- SAMPLE TYPE -->
-                                    <td>
-                                        <span class="sample-type">
-                                            <i class="fas fa-vial me-1"></i>
-                                            @(sample.SampleType?.SampleName ?? "Not specified")
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="sample-status pending">
+                                            <i class="fas fa-clock"></i>
+                                            Pending receipt
                                         </span>
-                                    </td>
 
-                                    <!-- RECEIVED DATE -->
-                                    <td>
-                                        @if (sample.DateTimeReceived.HasValue)
-                                        {
-                                            @sample.DateTimeReceived.Value.ToString("dd/MM/yyyy HH:mm:ss")
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Not yet received</span>
-                                        }
-                                    </td>
+                                        <div class="sample-actions">
+                                            <form asp-action="ConfirmReceiveSample" method="post">
+                                                @Html.AntiForgeryToken()
 
-                                    <!-- STATUS AND ACTIONS -->
-                                    <td>
-                                        @if (sampleStatus == "Rejected")
-                                        {
-                                            <span class="badge bg-danger">Rejected</span>
+                                                <input type="hidden" name="sampleId"
+                                                       value="@sample.SampleId" />
 
-                                            <div class="rejection-reason">
-                                                <strong>Reason:</strong>
-                                                @(string.IsNullOrWhiteSpace(sample.RejectionReason)
-                                                    ? "No reason recorded."
-                                                    : sample.RejectionReason)
-                                            </div>
+                                                <button type="submit"
+                                                        class="btn btn-lab-primary">
+                                                    <i class="fas fa-check me-1"></i>
+                                                    Confirm receipt
+                                                </button>
+                                            </form>
 
-                                            @if (sample.RejectedDateTime.HasValue)
-                                            {
-                                                <small class="text-muted d-block mt-2">
-                                                    Rejected on
-                                                    @sample.RejectedDateTime.Value.ToString("dd/MM/yyyy HH:mm")
-                                                </small>
-                                            }
-                                        }
-                                        else if (sampleStatus == "Received" ||
-                                                 sample.DateTimeReceived.HasValue)
-                                        {
-                                            <span class="badge bg-success">Received</span>
-                                        }
-                                        else
-                                        {
-                                            <div class="action-buttons">
-                                                <form asp-action="ConfirmReceiveSample"
-                                                      method="post">
+                                            <button type="button"
+                                                    class="btn btn-lab-cancel"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#cancel-@sample.SampleId">
+                                                <i class="fas fa-times me-1"></i>
+                                                Cancel sample
+                                            </button>
+                                        </div>
+
+                                        <div class="collapse"
+                                             id="cancel-@sample.SampleId">
+                                            <div class="cancel-panel">
+                                                <form asp-action="RejectSample"
+                                                      method="post"
+                                                      class="cancel-form"
+                                                      novalidate>
                                                     @Html.AntiForgeryToken()
 
-                                                    <input type="hidden"
-                                                           name="sampleId"
+                                                    <input type="hidden" name="sampleId"
                                                            value="@sample.SampleId" />
 
+                                                    <div class="mb-3">
+                                                        <label class="form-label"
+                                                               for="reason-@sample.SampleId">
+                                                            Reason for cancellation
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+
+                                                        <select id="reason-@sample.SampleId"
+                                                                name="rejectionReason"
+                                                                class="form-select form-select-sm cancel-reason"
+                                                                required>
+                                                            <option value="">Select a reason</option>
+                                                            <option value="Improper transport or storage">
+                                                                Improper transport or storage
+                                                            </option>
+                                                            <option value="Damaged or leaking container">
+                                                                Damaged or leaking container
+                                                            </option>
+                                                            <option value="Insufficient sample quantity">
+                                                                Insufficient sample quantity
+                                                            </option>
+                                                            <option value="Incorrect patient identification">
+                                                                Incorrect patient identification
+                                                            </option>
+                                                            <option value="Unsuitable sample type">
+                                                                Unsuitable sample type
+                                                            </option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+
+                                                        <div class="invalid-feedback">
+                                                            Select a reason before cancelling this sample.
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label"
+                                                               for="details-@sample.SampleId">
+                                                            Additional details
+                                                            <span class="details-hint text-muted">
+                                                                (optional)
+                                                            </span>
+                                                        </label>
+
+                                                        <textarea id="details-@sample.SampleId"
+                                                                  name="rejectionDetails"
+                                                                  class="form-control form-control-sm cancel-details"
+                                                                  maxlength="1000"
+                                                                  rows="2"
+                                                                  placeholder="Add details if needed"></textarea>
+
+                                                        <div class="invalid-feedback">
+                                                            Describe the reason when you select Other.
+                                                        </div>
+                                                    </div>
+
                                                     <button type="submit"
-                                                            class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-check-circle me-1"></i>
-                                                        Confirm Receipt
+                                                            class="btn btn-lab-cancel">
+                                                        Confirm cancellation
                                                     </button>
                                                 </form>
-
-                                                <button type="button"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#reject-@sample.SampleId"
-                                                        aria-expanded="false">
-                                                    <i class="fas fa-times-circle me-1"></i>
-                                                    Reject Sample
-                                                </button>
                                             </div>
-
-                                            <div class="collapse mt-3"
-                                                 id="reject-@sample.SampleId">
-                                                <div class="reject-panel">
-                                                    <form asp-action="RejectSample"
-                                                          method="post"
-                                                          class="reject-form"
-                                                          novalidate>
-                                                        @Html.AntiForgeryToken()
-
-                                                        <input type="hidden"
-                                                               name="sampleId"
-                                                               value="@sample.SampleId" />
-
-                                                        <div class="mb-2">
-                                                            <label class="form-label"
-                                                                   for="reason-@sample.SampleId">
-                                                                Reason for rejection
-                                                                <span class="text-danger">*</span>
-                                                            </label>
-
-                                                            <select id="reason-@sample.SampleId"
-                                                                    name="rejectionReason"
-                                                                    class="form-select form-select-sm reject-reason"
-                                                                    required>
-                                                                <option value="">Select a reason</option>
-                                                                <option value="Improper transport or storage">
-                                                                    Improper transport or storage
-                                                                </option>
-                                                                <option value="Damaged or leaking container">
-                                                                    Damaged or leaking container
-                                                                </option>
-                                                                <option value="Insufficient sample quantity">
-                                                                    Insufficient sample quantity
-                                                                </option>
-                                                                <option value="Incorrect patient identification">
-                                                                    Incorrect patient identification
-                                                                </option>
-                                                                <option value="Unsuitable sample type">
-                                                                    Unsuitable sample type
-                                                                </option>
-                                                                <option value="Other">Other</option>
-                                                            </select>
-                                                            <div class="invalid-feedback">
-                                                                Select a reason before rejecting this sample.
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <label class="form-label"
-                                                                   for="details-@sample.SampleId">
-                                                                Additional details
-                                                                <span class="reject-details-hint text-muted">(optional)</span>
-                                                            </label>
-
-                                                            <textarea id="details-@sample.SampleId"
-                                                                      name="rejectionDetails"
-                                                                      class="form-control form-control-sm reject-details"
-                                                                      maxlength="1000"
-                                                                      rows="2"
-                                                                      placeholder="Add details if needed"></textarea>
-                                                            <div class="invalid-feedback">
-                                                                Describe the reason when you select "Other".
-                                                            </div>
-                                                        </div>
-
-                                                        <button type="submit"
-                                                                class="btn btn-sm btn-danger">
-                                                            <i class="fas fa-times-circle me-1"></i>
-                                                            Confirm Rejection
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-    </div>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 </div>
 
 <script>
-    document.querySelectorAll('.reject-form').forEach(function (form) {
-        var reason = form.querySelector('.reject-reason');
-        var details = form.querySelector('.reject-details');
-        var hint = form.querySelector('.reject-details-hint');
+    document.querySelectorAll('.cancel-form').forEach(function (form) {
+        var reason = form.querySelector('.cancel-reason');
+        var details = form.querySelector('.cancel-details');
+        var hint = form.querySelector('.details-hint');
         var attempted = false;
 
         function isOther() {
@@ -1004,7 +1240,7 @@
             hint.textContent = isOther() ? '(required)' : '(optional)';
             details.required = isOther();
             details.placeholder = isOther()
-                ? 'Describe the reason for rejection'
+                ? 'Describe the reason for cancellation'
                 : 'Add details if needed';
 
             if (attempted) {
@@ -1020,7 +1256,10 @@
 
             if (!validate()) {
                 e.preventDefault();
-                (reason.classList.contains('is-invalid') ? reason : details).focus();
+
+                (reason.classList.contains('is-invalid')
+                    ? reason
+                    : details).focus();
             }
         });
     });

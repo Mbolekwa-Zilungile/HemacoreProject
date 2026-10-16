@@ -1,51 +1,203 @@
-﻿@model HemaCore.ViewModels.ProfileViewModel
+﻿
+@model HemaCore.ViewModels.LabTechnicianProfileViewModel
 
 @{
-    ViewData["Title"] = "My Account";
-    Layout = "~/Views/Shared/_LabTechnicianLayout.cshtml";
+    ViewData["Title"] = "My Profile";
+    Layout = "_LabTechnicianLayout";
 }
 
-<div class="container mt-4">
-    <h2>My Account</h2>
-    <p class="text-muted">View and manage your account details.</p>
+<div class="container-fluid px-4 py-4">
 
-    @if (TempData["AccountSuccess"] != null)
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-start gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">My Profile</h2>
+            <p class="text-muted mb-0">
+                View your personal and account information.
+            </p>
+        </div>
+
+        <a asp-action="EditProfile"
+           class="btn btn-dark px-4">
+            <i class="bi bi-pencil-square me-2"></i>
+            Edit Profile
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success">
-            @TempData["AccountSuccess"]
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Personal Information</h5>
+    @if (TempData["AccountSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @TempData["AccountSuccess"]
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center p-4">
+
+                    <div class="profile-avatar mx-auto mb-3">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <h5 class="fw-bold mb-1">
+                        @Model.Name @Model.Surname
+                    </h5>
+
+                    <p class="text-muted mb-3">
+                        Lab Technician
+                    </p>
+
+                    <span class="badge rounded-pill bg-light text-dark
+                                 border px-3 py-2">
+                        <i class="bi bi-person-check me-1"></i>
+                        Account Profile
+                    </span>
+
+                    <hr class="my-4" />
+
+                    <a asp-action="ChangePassword"
+                       class="btn btn-outline-dark w-100">
+                        <i class="bi bi-shield-lock me-2"></i>
+                        Change Password
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class="card-body">
-            <div class="mb-3">
-                <label asp-for="FullName" class="form-label"></label>
-                <input asp-for="FullName" class="form-control" readonly />
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        Personal Information
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <div class="profile-row">
+                        <div class="profile-label">Name</div>
+                        <div class="profile-value">
+                            @(string.IsNullOrWhiteSpace(Model.Name)
+                                ? "Not provided" : Model.Name)
+                        </div>
+                    </div>
+
+                    <div class="profile-row">
+                        <div class="profile-label">Surname</div>
+                        <div class="profile-value">
+                            @(string.IsNullOrWhiteSpace(Model.Surname)
+                                ? "Not provided" : Model.Surname)
+                        </div>
+                    </div>
+
+                    <div class="profile-row">
+                        <div class="profile-label">Email Address</div>
+                        <div class="profile-value">
+                            @(string.IsNullOrWhiteSpace(Model.Email)
+                                ? "Not provided" : Model.Email)
+                        </div>
+                    </div>
+
+                    <div class="profile-row">
+                        <div class="profile-label">Phone Number</div>
+                        <div class="profile-value">
+                            @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                                ? "Not provided" : Model.PhoneNumber)
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" readonly />
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-info-circle fs-4 text-secondary"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">
+                                Account Security
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Keep your contact information up to date.
+                                You can change your password whenever
+                                necessary.
+                            </p>
+
+                            <a asp-action="ChangePassword"
+                               class="text-dark fw-semibold text-decoration-none">
+                                Change your password
+                                <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label asp-for="PhoneNumber" class="form-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" readonly />
-            </div>
-
-            <a asp-action="EditProfile"
-               class="btn btn-primary">
-                Edit Profile
-            </a>
-
-            <a asp-action="ChangePassword"
-               class="btn btn-outline-secondary">
-                Change Password
-            </a>
         </div>
+
     </div>
 </div>
+
+<style>
+    .profile-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: #f1f3f5;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .profile-row {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 16px;
+        padding: 18px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .profile-row:last-child {
+        border-bottom: none;
+    }
+
+    .profile-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .profile-value {
+        color: #212529;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    @@media (max-width: 576px) {
+        .profile-row {
+            grid-template-columns: 1fr;
+            gap: 5px;
+        }
+    }
+</style>

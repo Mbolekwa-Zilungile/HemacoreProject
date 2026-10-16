@@ -1,103 +1,260 @@
-﻿@model HemaCore.Models.TestResultVerification
+﻿```cshtml
+@model HemaCore.Models.TestResultVerification
+@using HemaCore.Models
+@using System.Linq
 
 @{
     ViewData["Title"] = "Review Result";
     Layout = "_LabTechnicianLayout";
 
     var result = Model.TestResult;
-    var test = result?.TestRequestTestType.FirstOrDefault();
+    var test = result?.TestRequestTestType?.FirstOrDefault();
+    var request = test?.TestRequest;
+    var patient = request?.Patient;
+    var testType = test?.TestType;
+
+    var history = ViewBag.TestResultHistory as IEnumerable<TestResultHistory>
+                  ?? Enumerable.Empty<TestResultHistory>();
+
+    var historyRecords = history
+        .OrderBy(h => h.ActionDateTime)
+        .ToList();
+
+    var conditions = ViewBag.PatientConditions as IEnumerable<PatientCondition>
+                     ?? Enumerable.Empty<PatientCondition>();
+
+    var allergies = ViewBag.PatientAllergies as IEnumerable<PatientAllergy>
+                    ?? Enumerable.Empty<PatientAllergy>();
+
+    var medications = ViewBag.PatientMedications as IEnumerable<PatientMedication>
+                      ?? Enumerable.Empty<PatientMedication>();
+
+    var patientName = patient != null
+        ? $"{patient.Name} {patient.Surname}"
+        : "N/A";
+
+    var normalMin = ViewBag.NormalRangeMin;
+    var normalMax = ViewBag.NormalRangeMax;
+
+    var testUnit = ViewBag.TestUnit as string
+                   ?? testType?.UnitOfMeasurement
+                   ?? "";
+
+    var referenceRange = normalMin != null && normalMax != null
+        ? $"{normalMin} – {normalMax} {testUnit}".Trim()
+        : "Reference range not available";
 }
 
-<div class="container-fluid px-4 py-4">
+<div class="review-page">
 
-    <!-- HEADER -->
-    <div class="mb-4">
-        <h2 class="fw-bold">
-            Review Result
-        </h2>
+    <!-- PAGE HEADER -->
+    <header class="page-heading">
+        <div>
+            <h2>Review test result</h2>
+            <p>
+                Review the patient's medical information and the feedback
+                before correcting and resubmitting the test result.
+            </p>
+        </div>
 
-        <p class="text-muted mb-0">
-            Review and correct the test result that was sent back for further attention.
-        </p>
-    </div>
+        <a asp-action="ReviewResults"
+           class="btn btn-outline-secondary">
+            Back to review list
+        </a>
+    </header>
 
+    <!-- PATIENT AND TEST SUMMARY -->
+    <section class="summary-bar">
+        <div class="summary-item">
+            <span class="label">Patient</span>
+            <span class="value">@patientName</span>
+        </div>
 
-    <!-- PATIENT & TEST INFORMATION -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+        <div class="summary-item">
+            <span class="label">Test</span>
+            <span class="value">@(testType?.TestTypeName ?? "N/A")</span>
+        </div>
 
-            <h5 class="fw-bold mb-4">
-                <i class="fas fa-user me-2"></i>
-                Patient & Test Information
-            </h5>
+        <div class="summary-item">
+            <span class="label">Original result recorded</span>
+            <span class="value">
+                @(result == null
+                    ? "N/A"
+                    : result.DateCaptured.ToString("dd MMM yyyy, HH:mm"))
+            </span>
+        </div>
+    </section>
 
-            <div class="row g-4">
+    <!-- PATIENT INFORMATION -->
+    <section class="review-card">
+        <div class="card-head">
+            <div>
+                <h5>Patient information</h5>
+                <p>Patient identification and demographic details.</p>
+            </div>
+        </div>
 
-                <div class="col-md-3">
-                    <small class="text-muted">
-                        Request Number
-                    </small>
+        <div class="patient-info-grid">
+            <div class="info-item">
+                <span class="label">Full name</span>
+                <span class="info-value">@patientName</span>
+            </div>
 
-                    <div class="fw-semibold">
-                        #@test?.TestRequestId
-                    </div>
-                </div>
+            <div class="info-item">
+                <span class="label">Patient ID number</span>
+                <span class="info-value">
+                    @(patient?.IDNumber ?? "Not recorded")
+                </span>
+            </div>
 
-                <div class="col-md-3">
-                    <small class="text-muted">
-                        Patient
-                    </small>
+            <div class="info-item">
+                <span class="label">Date of birth</span>
+                <span class="info-value">
+                    @(patient == null
+                        ? "Not recorded"
+                        : patient.DateOfBirth.ToString("dd MMM yyyy"))
+                </span>
+            </div>
 
-                    <div class="fw-semibold">
-                        @test?.TestRequest?.Patient?.Name
-                        @test?.TestRequest?.Patient?.Surname
-                    </div>
-                </div>
+            <div class="info-item">
+                <span class="label">Gender</span>
+                <span class="info-value">
+                    @(patient?.Gender ?? "Not recorded")
+                </span>
+            </div>
 
-                <div class="col-md-3">
-                    <small class="text-muted">
-                        Test Type
-                    </small>
+            <div class="info-item">
+                <span class="label">Contact number</span>
+                <span class="info-value">
+                    @(patient?.PhoneNumber ?? "Not recorded")
+                </span>
+            </div>
 
-                    <div class="fw-semibold">
-                        @test?.TestType?.TestTypeName
-                    </div>
-                </div>
+            <div class="info-item">
+                <span class="label">Request number</span>
+                <span class="info-value">
+                    @(request == null
+                        ? "N/A"
+                        : request.TestRequestId.ToString())
+                </span>
+            </div>
+        </div>
+    </section>
 
-                <div class="col-md-3">
-                    <small class="text-muted">
-                        Original Result Date
-                    </small>
+    <!-- MEDICAL BACKGROUND -->
+    <section class="review-card">
+        <div class="card-head">
+            <div>
+                <h5>Medical background</h5>
+                <p>Review the patient's recorded medical information.</p>
+            </div>
+        </div>
 
-                    <div class="fw-semibold">
-                        @(result?.DateCaptured.ToString("dd/MM/yyyy HH:mm") ?? "-")
-                    </div>
-                </div>
+        <div class="medical-grid">
 
+            <div class="medical-section">
+                <h6>Medical conditions</h6>
+
+                @if (conditions.Any())
+                {
+                    <ul>
+                        @foreach (var item in conditions)
+                        {
+                            <li>
+                                @(item.Condition?.Name
+                                    ?? "Condition name unavailable")
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No medical conditions recorded.
+                    </p>
+                }
+            </div>
+
+            <div class="medical-section">
+                <h6>Allergies</h6>
+
+                @if (allergies.Any())
+                {
+                    <ul>
+                        @foreach (var item in allergies)
+                        {
+                            <li>
+                                @(item.Allergy?.Name
+                                    ?? "Allergy name unavailable")
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No allergies recorded.
+                    </p>
+                }
+            </div>
+
+            <div class="medical-section">
+                <h6>Medications</h6>
+
+                @if (medications.Any())
+                {
+                    <ul>
+                        @foreach (var item in medications)
+                        {
+                            <li>
+                                <strong>
+                                    @(item.Medication?.Name
+                                        ?? "Medication name unavailable")
+                                </strong>
+
+                                @if (!string.IsNullOrWhiteSpace(item.Dosage))
+                                {
+                                    <span> — @item.Dosage</span>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(item.Frequency))
+                                {
+                                    <span>, @item.Frequency</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No medications recorded.
+                    </p>
+                }
             </div>
 
         </div>
-    </div>
+    </section>
 
+    <!-- REVIEW FEEDBACK -->
+    <section class="review-card feedback-card">
+        <div class="card-head">
+            <div>
+                <h5>Reason for review</h5>
+                <p>
+                    Feedback provided by the technician who reviewed
+                    the original result.
+                </p>
+            </div>
 
-    <!-- VERIFIER'S REASON -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+            <span class="flag flag-review">Correction required</span>
+        </div>
 
-            <h5 class="fw-bold mb-3">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                Reason for Review
-            </h5>
-
-            <p class="text-muted mb-2">
-                The following feedback was provided by the technician who reviewed this result.
-            </p>
-
-            <div class="border rounded p-3 bg-light">
-
+        <div class="section-content">
+            <div class="notes-text">
                 @if (string.IsNullOrWhiteSpace(Model.ReviewNotes))
                 {
-                    <span class="text-muted">
+                    <span class="empty-info">
                         No review notes were provided.
                     </span>
                 }
@@ -105,173 +262,620 @@
                 {
                     @Model.ReviewNotes
                 }
+            </div>
+        </div>
+    </section>
 
+    <!-- CURRENT RESULT AND REFERENCE RANGE -->
+    <section class="review-card @(result?.IsAbnormal == true ? "is-abnormal" : "")">
+        <div class="card-head">
+            <div>
+                <h5>Current test result</h5>
+                <p>
+                    The original result and its configured reference range.
+                </p>
             </div>
 
+            <span class="flag @(result?.IsAbnormal == true
+                                      ? "flag-abnormal"
+                                      : "flag-normal")">
+                @(result?.IsAbnormal == true
+                    ? "Abnormal"
+                    : "Not marked abnormal")
+            </span>
         </div>
-    </div>
 
+        <div class="result-layout">
+            <div class="result-main">
+                <span class="label">Recorded result</span>
 
-    <!-- CURRENT RESULT -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-
-            <h5 class="fw-bold mb-4">
-                <i class="fas fa-vial me-2"></i>
-                Current Result
-            </h5>
-
-            <div class="row g-4">
-
-                <div class="col-md-6">
-
-                    <small class="text-muted">
-                        Current Result Value
-                    </small>
-
-                    <div class="mt-2">
-
-                        @if (result?.IsAbnormal == true)
-                        {
-                            <span class="badge bg-danger fs-6">
-                                @result.ResultValue
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success fs-6">
-                                @result?.ResultValue
-                            </span>
-                        }
-
-                    </div>
-
+                <div class="result-value @(string.IsNullOrWhiteSpace(result?.ResultValue) ? "is-empty" : "")">
+                    @(string.IsNullOrWhiteSpace(result?.ResultValue)
+                        ? "Not recorded"
+                        : $"{result.ResultValue} {testUnit}".Trim())
                 </div>
 
-                <div class="col-md-6">
-
-                    <small class="text-muted">
-                        Current Result Status
-                    </small>
-
-                    <div class="mt-2">
-
-                        @if (result?.IsAbnormal == true)
-                        {
-                            <span class="badge bg-danger">
-                                Abnormal
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">
-                                Normal
-                            </span>
-                        }
-
-                    </div>
-
+                <div class="reference-range">
+                    <span class="label">Normal reference range</span>
+                    <strong>@referenceRange</strong>
+                    <p>Reference range configured for this test type.</p>
                 </div>
-
-                <div class="col-12">
-
-                    <small class="text-muted">
-                        Technician Notes
-                    </small>
-
-                    <div class="border rounded p-3 mt-2 bg-light">
-
-                        @(string.IsNullOrWhiteSpace(result?.Notes)
-                            ? "No notes were provided."
-                            : result.Notes)
-
-                    </div>
-
-                </div>
-
             </div>
 
+            <div class="result-notes">
+                <span class="label">Original technician notes</span>
+
+                <div class="notes-text @(string.IsNullOrWhiteSpace(result?.Notes) ? "is-empty" : "")">
+                    @(string.IsNullOrWhiteSpace(result?.Notes)
+                        ? "No notes recorded."
+                        : result.Notes)
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
+    <!-- REVIEW HISTORY -->
+    <section class="review-card">
+        <div class="card-head">
+            <div>
+                <h5>Review history</h5>
+                <p>Recorded actions for this test result, oldest first.</p>
+            </div>
 
-    <!-- CORRECTION -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-
-            <h5 class="fw-bold mb-3">
-                <i class="fas fa-edit me-2"></i>
-                Correct Result
-            </h5>
-
-            <p class="text-muted">
-                Review the feedback above, make any necessary corrections,
-                and resubmit the result for verification.
-            </p>
-
-            <form asp-action="CompleteReview" method="post">
-
-                <input type="hidden"
-                       name="id"
-                       value="@Model.TestResultVerificationId" />
-
-
-                <!-- RESULT VALUE -->
-                <div class="mb-3">
-
-                    <label class="form-label fw-semibold">
-                        Result Value
-                    </label>
-
-                    <input type="text"
-                           name="resultValue"
-                           class="form-control"
-                           value="@result?.ResultValue"
-                           required />
-
-                </div>
-
-
-                <!-- NOTES -->
-                <div class="mb-3">
-
-                    <label class="form-label fw-semibold">
-                        Technician Notes
-                    </label>
-
-                    <textarea name="notes"
-                              class="form-control"
-                              rows="4"
-                              placeholder="Enter any relevant notes about the corrected result">@result?.Notes</textarea>
-
-                </div>
-
-
-                <!-- ACTIONS -->
-                <div class="d-flex gap-2">
-
-                    <a asp-action="ReviewResults"
-                       class="btn btn-secondary">
-
-                        <i class="fas fa-arrow-left me-1"></i>
-                        Back
-
-                    </a>
-
-
-                    <button type="submit"
-                            class="btn btn-primary">
-
-                        <i class="fas fa-paper-plane me-1"></i>
-                        Resubmit for Verification
-
-                    </button>
-
-                </div>
-
-            </form>
-
+            <span class="count-pill">
+                @historyRecords.Count
+                @(historyRecords.Count == 1 ? "event" : "events")
+            </span>
         </div>
-    </div>
+
+        @if (historyRecords.Any())
+        {
+            <ol class="timeline">
+                @foreach (var item in historyRecords)
+                {
+                    var eventTitle = item.Action switch
+                    {
+                        "Result Captured" => "Result captured",
+                        "Sent Back for Review" => "Sent back for correction",
+                        "Corrected Result Resubmitted" => "Correction resubmitted",
+                        "Result Verified" => "Result verified",
+                        _ => item.Action
+                    };
+
+                    var eventClass = item.Action switch
+                    {
+                        "Result Captured" => "ev-captured",
+                        "Sent Back for Review" => "ev-sentback",
+                        "Corrected Result Resubmitted" => "ev-resubmitted",
+                        "Result Verified" => "ev-verified",
+                        _ => "ev-captured"
+                    };
+
+                    var technicianName = item.LabTechnician?.User?.FullName;
+
+                    <li class="timeline-item @eventClass">
+                        <span class="timeline-dot" aria-hidden="true"></span>
+
+                        <div class="timeline-body">
+                            <div class="timeline-top">
+                                <strong class="timeline-title">
+                                    @eventTitle
+                                </strong>
+
+                                <time class="timeline-date">
+                                    @item.ActionDateTime.ToString("dd MMM yyyy, HH:mm")
+                                </time>
+                            </div>
+
+                            <div class="timeline-meta">
+                                <span>
+                                    By @(string.IsNullOrWhiteSpace(technicianName)
+                                        ? "Unknown technician"
+                                        : technicianName)
+                                </span>
+
+                                @if (!string.IsNullOrWhiteSpace(item.ResultValue))
+                                {
+                                    <span class="result-chip">
+                                        Result: @item.ResultValue
+                                    </span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(item.ReviewNotes))
+                            {
+                                <blockquote class="timeline-note">
+                                    @item.ReviewNotes
+                                </blockquote>
+                            }
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <div class="empty-history">
+                No review history has been recorded for this test yet.
+            </div>
+        }
+    </section>
+
+    <!-- CORRECT AND RESUBMIT -->
+    <section class="review-card correction-card">
+        <div class="card-head">
+            <div>
+                <h5>Correct result</h5>
+                <p>
+                    Make the necessary corrections based on the review
+                    feedback, then resubmit the result for verification.
+                </p>
+            </div>
+        </div>
+
+        <form asp-action="CompleteReview"
+              method="post"
+              class="correction-form">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   value="@Model.TestResultVerificationId" />
+
+            <div class="mb-4">
+                <label for="resultValue" class="form-label">
+                    Corrected result value
+                </label>
+
+                <input type="text"
+                       id="resultValue"
+                       name="resultValue"
+                       class="form-control"
+                       value="@result?.ResultValue"
+                       required />
+
+                <small class="form-text text-muted">
+                    Enter the corrected result using the appropriate
+                    format for this test.
+                </small>
+            </div>
+
+            <div class="mb-4">
+                <label for="notes" class="form-label">
+                    Technician notes
+                </label>
+
+                <textarea id="notes"
+                          name="notes"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Explain the correction or provide relevant observations.">@result?.Notes</textarea>
+            </div>
+
+            <div class="correction-actions">
+                <a asp-action="ReviewResults"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    Resubmit for verification
+                </button>
+            </div>
+        </form>
+    </section>
 
 </div>
+
+<style>
+    .review-page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        min-height: 100vh;
+        background: #f4f6f8;
+        color: #1f2933;
+        line-height: 1.5;
+    }
+
+    .page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .page-heading h2 {
+        margin: 0 0 4px;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .page-heading p,
+    .card-head p {
+        margin: 2px 0 0;
+        color: #52606d;
+        font-size: 13px;
+    }
+
+    .summary-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 16px;
+        background: #fff;
+        border: 1px solid #e1e6eb;
+        border-radius: 8px;
+    }
+
+    .summary-item {
+        padding: 14px 18px;
+        min-width: 0;
+    }
+
+    .summary-item + .summary-item {
+        border-left: 1px solid #edf0f3;
+    }
+
+    .label {
+        display: block;
+        margin-bottom: 4px;
+        color: #7b8794;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .summary-item .value,
+    .info-value {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .review-card {
+        margin-bottom: 16px;
+        background: #fff;
+        border: 1px solid #e1e6eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #edf0f3;
+    }
+
+    .card-head h5 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .patient-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .info-item {
+        min-width: 0;
+    }
+
+    .medical-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .medical-section {
+        min-width: 0;
+        padding: 14px;
+        background: #f8f9fa;
+        border: 1px solid #edf0f3;
+        border-radius: 6px;
+    }
+
+    .medical-section h6 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .medical-section ul {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .medical-section li {
+        margin-bottom: 6px;
+    }
+
+    .empty-info,
+    .empty-history {
+        margin: 0;
+        padding: 10px 0;
+        color: #7b8794;
+        font-size: 13px;
+    }
+
+    .section-content {
+        padding: 20px;
+    }
+
+    .feedback-card {
+        border-left: 4px solid #b45309;
+    }
+
+    .flag,
+    .count-pill {
+        flex-shrink: 0;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .flag-review {
+        background: #fff4e5;
+        color: #92400e;
+    }
+
+    .flag-normal,
+    .count-pill {
+        background: #eef1f4;
+        color: #52606d;
+    }
+
+    .flag-abnormal {
+        background: #fdf0ee;
+        color: #b42318;
+    }
+
+    .review-card.is-abnormal {
+        border-left: 4px solid #b42318;
+    }
+
+    .result-layout {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr);
+        gap: 24px;
+        padding: 20px;
+        align-items: start;
+    }
+
+    .result-value {
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    .is-abnormal .result-value {
+        color: #b42318;
+    }
+
+    .result-value.is-empty,
+    .notes-text.is-empty {
+        color: #7b8794;
+        font-weight: 400;
+    }
+
+    .result-value.is-empty {
+        font-size: 18px;
+    }
+
+    .notes-text {
+        font-size: 14px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-width: 70ch;
+    }
+
+    .reference-range {
+        margin-top: 18px;
+        padding: 12px;
+        background: #f8f9fa;
+        border: 1px solid #e1e6eb;
+        border-radius: 6px;
+    }
+
+    .reference-range strong {
+        font-size: 16px;
+        overflow-wrap: anywhere;
+    }
+
+    .reference-range p {
+        margin: 5px 0 0;
+        color: #52606d;
+        font-size: 12px;
+    }
+
+    .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 20px 20px 8px;
+    }
+
+    .timeline-item {
+        position: relative;
+        display: flex;
+        gap: 16px;
+        padding-bottom: 20px;
+    }
+
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        top: 18px;
+        bottom: -2px;
+        width: 2px;
+        background: #e1e6eb;
+    }
+
+    .timeline-item:last-child::before {
+        display: none;
+    }
+
+    .timeline-dot {
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+        margin-top: 4px;
+        border-radius: 50%;
+        background: #7b8794;
+        box-shadow: 0 0 0 3px #fff;
+        position: relative;
+        z-index: 1;
+    }
+
+    .ev-sentback .timeline-dot {
+        background: #b45309;
+    }
+
+    .ev-resubmitted .timeline-dot {
+        background: #0f766e;
+    }
+
+    .ev-verified .timeline-dot {
+        background: #15803d;
+    }
+
+    .timeline-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .timeline-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .timeline-title {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .timeline-date {
+        color: #7b8794;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .timeline-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+        color: #52606d;
+        font-size: 13px;
+    }
+
+    .result-chip {
+        padding: 1px 8px;
+        border-radius: 4px;
+        background: #eef1f4;
+        color: #1f2933;
+        font-size: 12px;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .timeline-note {
+        margin: 8px 0 0;
+        padding: 8px 12px;
+        border-left: 3px solid #e1e6eb;
+        background: #f8f9fa;
+        color: #1f2933;
+        font-size: 13px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .ev-sentback .timeline-note {
+        border-left-color: #b45309;
+    }
+
+    .empty-history {
+        padding: 28px 20px;
+        text-align: center;
+    }
+
+    .correction-form {
+        padding: 20px;
+    }
+
+    .correction-form .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1f2933;
+    }
+
+    .correction-form .form-control {
+        font-size: 14px;
+    }
+
+    .correction-form textarea {
+        resize: vertical;
+    }
+
+    .correction-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #edf0f3;
+    }
+
+    .review-page .btn:focus-visible,
+    .review-page .form-control:focus-visible {
+        outline: 2px solid #0f766e;
+        outline-offset: 2px;
+    }
+
+   @@media (max-width: 768px) {
+        .review-page {
+            padding: 14px 12px 32px;
+        }
+
+        .page-heading {
+            flex-direction: column;
+        }
+
+        .summary-bar,
+        .patient-info-grid,
+        .medical-grid,
+        .result-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-item + .summary-item {
+            border-left: none;
+            border-top: 1px solid #edf0f3;
+        }
+
+        .correction-actions {
+            flex-direction: column-reverse;
+        }
+
+        .correction-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
