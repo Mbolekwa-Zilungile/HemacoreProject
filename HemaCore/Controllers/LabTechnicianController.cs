@@ -61,13 +61,15 @@ namespace HemaCore.Controllers
 
             // Requests that still have samples waiting to be received.
 
+
             var samplesAwaitingReceipt = await _context.TestRequests
                 .CountAsync(r =>
                     r.Status == "Submitted" &&
                     r.Samples.Any(s =>
                         s.Status != "Received" &&
                         s.Status != "Rejected" &&
-                        s.DateTimeReceived == null));
+                        s.Status != "Cancelled" &&
+                        !s.DateTimeReceived.HasValue));
 
             // Unassigned tests are available for processing only when
             // the request has samples and every sample has been received.
