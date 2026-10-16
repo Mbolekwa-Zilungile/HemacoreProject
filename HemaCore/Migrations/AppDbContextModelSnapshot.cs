@@ -806,7 +806,8 @@ namespace HemaCore.Migrations
 
                     b.Property<string>("Barcode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("DateTimeReceived")
                         .HasColumnType("datetime2");
@@ -814,8 +815,23 @@ namespace HemaCore.Migrations
                     b.Property<int?>("LabTechnicianId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RejectedByLabTechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RejectedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("SampleTypeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("TestRequestId")
                         .HasColumnType("int");
