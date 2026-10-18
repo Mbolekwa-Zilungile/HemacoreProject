@@ -110,6 +110,15 @@
                     </a>
                 </li>
 
+                <!-- REVIEW RESULTS -->
+                <li class="@(currentAction == "ReviewResults"
+                                                                      ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="MyCompletedTests">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="menu-text">Completed tests</span>
+                    </a>
+                </li>
+
                 <li class="section-label">REPORTING</li>
 
                 <!-- REPORTS -->
@@ -129,7 +138,7 @@
                                                   ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="TechnicianProfile">
                         <i class="fas fa-id-card"></i>
-                        <span class="menu-text">My Account</span>
+                        <span class="menu-text">Profile</span>
                     </a>
                 </li>
 

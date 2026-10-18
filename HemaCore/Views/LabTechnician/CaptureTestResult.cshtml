@@ -1,5 +1,4 @@
-﻿
-@model HemaCore.Models.TestRequestItem
+﻿@model HemaCore.Models.TestRequestItem
 
 @{
     ViewData["Title"] = "Capture Test Result";
@@ -28,44 +27,28 @@
         color: #294b57;
         font-size: 22px;
         font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .result-heading i {
-        color: #75AABA;
-    }
-
-    .result-description {
-        color: #718087;
-        line-height: 1.6;
-        margin-bottom: 24px;
-    }
-
-    .patient-information {
-        background: #f7f9fa;
-        border: 1px solid #dfe7ea;
-        border-radius: 12px;
-        padding: 22px;
-        margin: 20px 0 28px;
-    }
-
-    .patient-information h5 {
-        color: #294b57;
-        font-weight: 700;
         margin-bottom: 20px;
     }
 
-    .patient-information h5 i,
-    .medical-history-item h6 i {
-        color: #75AABA;
-        margin-right: 8px;
+        .result-heading i {
+            color: #75AABA;
+        }
+
+    .patient-information {
+        margin: 0 0 28px;
     }
 
-    .patient-information h6 {
-        color: #294b57;
-        font-weight: 700;
-        margin-bottom: 12px;
-    }
+        .patient-information h5 {
+            color: #294b57;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+            .patient-information h5 i,
+            .medical-history-item h6 i {
+                color: #75AABA;
+                margin-right: 8px;
+            }
 
     .patient-information-grid {
         display: grid;
@@ -73,24 +56,24 @@
         gap: 16px 24px;
     }
 
-    .patient-information-grid > div {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        overflow-wrap: anywhere;
-    }
+        .patient-information-grid > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            overflow-wrap: anywhere;
+        }
 
-    .patient-information-grid span {
-        color: #718087;
-        font-size: 12px;
-        text-transform: uppercase;
-        font-weight: 600;
-    }
+        .patient-information-grid span {
+            color: #718087;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
 
-    .patient-information-grid strong {
-        color: #294b57;
-        font-size: 14px;
-    }
+        .patient-information-grid strong {
+            color: #294b57;
+            font-size: 14px;
+        }
 
     .clinical-notes {
         background: #fff;
@@ -100,13 +83,13 @@
         margin-top: 22px;
     }
 
-    .clinical-notes p {
-        color: #52666e;
-        margin: 8px 0 0;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-    }
+        .clinical-notes p {
+            color: #52666e;
+            margin: 8px 0 0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
 
     .medical-history-grid {
         display: grid;
@@ -123,39 +106,32 @@
         overflow-wrap: anywhere;
     }
 
-    .medical-history-item h6 {
-        color: #294b57;
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 12px;
-    }
+        .medical-history-item h6 {
+            color: #294b57;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
 
-    .medical-history-item ul {
-        padding-left: 18px;
-        margin-bottom: 0;
-    }
+        .medical-history-item ul {
+            padding-left: 18px;
+            margin-bottom: 0;
+        }
 
-    .medical-history-item li,
-    .medical-history-item p {
-        color: #52666e;
-        font-size: 13px;
-        line-height: 1.6;
-    }
+        .medical-history-item li,
+        .medical-history-item p {
+            color: #52666e;
+            font-size: 13px;
+            line-height: 1.6;
+        }
 
-    .medical-history-item li {
-        padding-bottom: 5px;
-    }
+        .medical-history-item li {
+            padding-bottom: 5px;
+        }
 
     .context-divider {
         border-color: #dfe7ea;
-        margin: 22px 0;
-    }
-
-    .read-only-note {
-        color: #718087;
-        font-size: 12px;
-        margin-top: 18px;
-        margin-bottom: 0;
+        margin: 28px 0;
     }
 
     .form-label {
@@ -175,21 +151,21 @@
         font-size: 17px;
     }
 
-    .result-input:focus,
-    .notes-input:focus {
-        border-color: #75AABA;
-        box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
-    }
+        .result-input:focus,
+        .notes-input:focus {
+            border-color: #75AABA;
+            box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
+        }
 
-    .result-input.is-invalid {
-        border-color: #dc3545;
-        background-image: none;
-    }
+        .result-input.is-invalid {
+            border-color: #dc3545;
+            background-image: none;
+        }
 
-    .result-input.is-valid {
-        border-color: #198754;
-        background-image: none;
-    }
+        .result-input.is-valid {
+            border-color: #198754;
+            background-image: none;
+        }
 
     .unit-label {
         background: #f3f7f8;
@@ -230,8 +206,8 @@
     }
 
     .range-card {
-        background: #f6f9fa;
-        border: 1px solid #e3ebee;
+        background: #fff;
+        border: 1px solid #e2e9ec;
         border-radius: 11px;
         padding: 18px 20px;
         margin-top: 22px;
@@ -252,39 +228,6 @@
         font-weight: 700;
     }
 
-    .help-text {
-        color: #788990;
-        font-size: 13px;
-        margin-top: 9px;
-    }
-
-    .info-card {
-        display: flex;
-        gap: 13px;
-        background: #f0f7f9;
-        border: 1px solid #d9e9ed;
-        border-radius: 10px;
-        padding: 17px;
-        margin: 24px 0;
-    }
-
-    .info-card > i {
-        color: #6096a6;
-        font-size: 20px;
-        margin-top: 3px;
-    }
-
-    .info-card strong {
-        color: #315967;
-    }
-
-    .info-card p {
-        color: #718087;
-        font-size: 13px;
-        line-height: 1.6;
-        margin: 5px 0 0;
-    }
-
     .notes-input {
         border: 1px solid #d8e1e5;
         border-radius: 10px;
@@ -300,11 +243,11 @@
         font-weight: 600;
     }
 
-    .btn-complete:hover {
-        background: #356778;
-        border-color: #356778;
-        color: #fff;
-    }
+        .btn-complete:hover {
+            background: #356778;
+            border-color: #356778;
+            color: #fff;
+        }
 
     .btn-back {
         border-radius: 8px;
@@ -318,8 +261,7 @@
     }
 
     @@media (max-width: 576px) {
-        .result-card,
-        .patient-information {
+        .result-card {
             padding: 18px;
         }
 
@@ -331,9 +273,9 @@
             flex-direction: column-reverse;
         }
 
-        .result-actions .btn {
-            width: 100%;
-        }
+            .result-actions .btn {
+                width: 100%;
+            }
     }
 </style>
 
@@ -343,11 +285,6 @@
         <i class="fas fa-edit"></i>
         Capture Test Result
     </div>
-
-    <p class="result-description">
-        Review the patient's information and relevant medical history before
-        entering the laboratory result.
-    </p>
 
     @if (patient != null)
     {
@@ -547,13 +484,9 @@
 
             </div>
 
-            <p class="read-only-note">
-                <i class="fas fa-lock me-1"></i>
-                Patient and medical history information is displayed for
-                reference and cannot be edited on this page.
-            </p>
-
         </section>
+
+        <hr class="context-divider" />
     }
     else
     {
@@ -567,11 +500,6 @@
         <i class="fas fa-vial"></i>
         Laboratory Result
     </div>
-
-    <p class="result-description">
-        Enter the laboratory result below. The system compares the value with
-        the configured normal range and flags results outside that range.
-    </p>
 
     <form asp-action="SaveTestResult"
           method="post"
@@ -602,7 +530,7 @@
                        required
                        data-normal-min="@Model.TestType?.NormalRangeMin"
                        data-normal-max="@Model.TestType?.NormalRangeMax"
-                       aria-describedby="resultHelp resultValidation" />
+                       aria-describedby="resultValidation" />
 
                 @if (!string.IsNullOrWhiteSpace(
                     Model.TestType?.UnitOfMeasurement))
@@ -612,11 +540,6 @@
                     </span>
                 }
 
-            </div>
-
-            <div id="resultHelp" class="help-text">
-                <i class="fas fa-info-circle me-1"></i>
-                Enter a numeric result using digits and an optional decimal point.
             </div>
 
             <div id="resultValidation"
@@ -644,23 +567,8 @@
                     }
                 </div>
 
-                <small class="text-muted">
-                    Values outside the configured range will be classified as abnormal.
-                </small>
-
             </div>
 
-        </div>
-
-        <div class="info-card">
-            <i class="fas fa-info-circle"></i>
-            <div>
-                <strong>Automatic Result Classification</strong>
-                <p>
-                    Results outside the configured normal range can still be
-                    submitted, but will be flagged as abnormal for review.
-                </p>
-            </div>
         </div>
 
         <div class="mb-4">
@@ -673,12 +581,8 @@
                       class="form-control notes-input"
                       rows="4"
                       maxlength="2000"
-                      placeholder="Enter relevant observations or notes"
+                      placeholder="Enter observations or notes"
                       required></textarea>
-
-            <small class="text-muted">
-                Enter relevant observations before completing the test.
-            </small>
         </div>
 
         <div class="d-flex justify-content-end gap-2 result-actions">
@@ -715,13 +619,13 @@
             <div class="modal-content border-0 shadow">
 
                 <div class="modal-header @(TempData["ResultSuccess"] != null
-                    ? "bg-success text-white"
-                    : "bg-danger text-white")">
+                                        ? "bg-success text-white"
+                                        : "bg-danger text-white")">
 
                     <h5 class="modal-title" id="resultMessageTitle">
                         <i class="fas @(TempData["ResultSuccess"] != null
-                            ? "fa-check-circle"
-                            : "fa-exclamation-circle") me-2"></i>
+                                                    ? "fa-check-circle"
+                                                    : "fa-exclamation-circle") me-2"></i>
 
                         @(TempData["ResultSuccess"] != null
                             ? "Success"
@@ -761,7 +665,7 @@
 }
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const input = document.getElementById("resultValue");
         const feedback = document.getElementById("resultValidation");
         const form = document.getElementById("resultForm");
@@ -846,7 +750,7 @@
                 return true;
             }
 
-            input.addEventListener("beforeinput", function (event) {
+            input.addEventListener("beforeinput", function(event) {
                 if (event.inputType &&
                     event.inputType.startsWith("delete")) return;
 
@@ -865,7 +769,7 @@
                 }
             });
 
-            input.addEventListener("input", function () {
+            input.addEventListener("input", function() {
                 const original = input.value;
                 let cleaned = original.replace(/[^\d.]/g, "");
                 const decimal = cleaned.indexOf(".");
@@ -883,7 +787,7 @@
                 validateResult();
             });
 
-            form.addEventListener("submit", function (event) {
+            form.addEventListener("submit", function(event) {
                 if (!validateResult()) {
                     event.preventDefault();
                     input.focus();

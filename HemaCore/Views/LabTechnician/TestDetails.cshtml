@@ -1,4 +1,5 @@
-﻿ @model HemaCore.Models.TestRequestItem
+﻿
+@model HemaCore.Models.TestRequestItem
 @using HemaCore.Models
 
 @{
@@ -19,143 +20,92 @@
 }
 
 <style>
-    .test-details-page {
-        max-width: 1200px;
+    .test-page {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 32px 28px 48px;
-        color: #263b43;
+        padding: 28px 24px 40px;
+        color: #304750;
     }
 
-    .page-topline {
+    .page-header {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         gap: 16px;
-        margin-bottom: 30px;
+        margin-bottom: 28px;
     }
 
-    .breadcrumb-text {
+    .page-header h1 {
+        margin: 0;
+        font-size: 27px;
+        font-weight: 650;
+        color: #263f48;
+    }
+
+    .request-label {
+        margin-top: 6px;
         color: #819198;
         font-size: 13px;
-        margin-bottom: 12px;
-    }
-
-    .breadcrumb-text span {
-        color: #75AABA;
-        margin: 0 7px;
-    }
-
-    .page-title {
-        font-size: clamp(25px, 3vw, 32px);
-        font-weight: 650;
-        letter-spacing: -0.8px;
-        margin: 0 0 8px;
-        color: #233941;
-    }
-
-    .page-description {
-        color: #74858c;
-        font-size: 14px;
-        line-height: 1.7;
-        margin: 0;
-        max-width: 650px;
     }
 
     .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        white-space: nowrap;
-        text-decoration: none;
         color: #426873;
-        background: #f5f9fa;
-        border: 1px solid #e5eef0;
-        padding: 10px 15px;
-        border-radius: 9px;
+        text-decoration: none;
         font-size: 13px;
         font-weight: 600;
-        transition: background .2s ease, border-color .2s ease;
+        white-space: nowrap;
     }
 
     .back-link:hover {
-        color: #315967;
-        background: #edf5f7;
-        border-color: #d3e5e9;
+        color: #75AABA;
     }
 
     .error-message {
+        padding: 12px 15px;
+        margin-bottom: 20px;
         border: 1px solid #f0dfb8;
+        border-radius: 7px;
         background: #fffaf0;
         color: #805c1b;
-        border-radius: 9px;
-        padding: 13px 16px;
-        margin-bottom: 24px;
-        font-size: 14px;
+        font-size: 13px;
     }
 
-    .section {
-        margin-top: 34px;
-    }
-
-    .section-heading {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 18px;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 650;
-        color: #304952;
-        margin: 0;
-    }
-
-    .section-subtitle {
-        color: #8a999e;
-        font-size: 12px;
-        margin-top: 5px;
-    }
-
-    .test-summary {
+    .summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        border-top: 1px solid #e8eef0;
-        border-bottom: 1px solid #e8eef0;
+        border-top: 1px solid #e5ecee;
+        border-bottom: 1px solid #e5ecee;
     }
 
     .summary-item {
+        padding: 18px 16px 18px 0;
         min-width: 0;
-        padding: 22px 20px 22px 0;
-        margin-right: 20px;
     }
 
     .summary-item:not(:last-child) {
-        border-right: 1px solid #e8eef0;
+        border-right: 1px solid #e5ecee;
+        margin-right: 16px;
     }
 
-    .summary-label {
+    .label {
         display: block;
-        color: #89989d;
+        margin-bottom: 7px;
+        color: #839399;
         font-size: 11px;
-        font-weight: 650;
         text-transform: uppercase;
-        letter-spacing: .65px;
-        margin-bottom: 9px;
+        letter-spacing: .5px;
     }
 
-    .summary-value {
-        color: #304750;
+    .value {
         font-size: 14px;
         font-weight: 600;
         overflow-wrap: anywhere;
     }
 
-    .urgency-value {
+    .urgency {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 7px;
     }
 
     .urgency-dot {
@@ -163,300 +113,184 @@
         height: 7px;
         border-radius: 50%;
         background: #d5a34a;
-        flex-shrink: 0;
     }
 
-    .turnaround-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-        gap: 50px;
-        padding: 24px 0 26px;
-        border-bottom: 1px solid #e8eef0;
+    .section {
+        margin-top: 30px;
     }
 
-    .metric-label {
-        color: #829198;
-        font-size: 13px;
-        margin-bottom: 12px;
-    }
-
-    .duration-value {
-        font-size: clamp(28px, 3vw, 36px);
-        letter-spacing: -1.2px;
-        line-height: 1.25;
-        font-weight: 650;
-        color: #2c4751;
-    }
-
-    .duration-caption {
-        font-size: 12px;
-        color: #8b999e;
-        margin-top: 9px;
-    }
-
-    .completion-row {
+    .section-header {
         display: flex;
         align-items: center;
-        gap: 15px;
-        margin-top: 17px;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
     }
 
-    .clock-icon {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #538b9a;
-        background: #edf5f7;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    .completion-time {
-        font-size: 23px;
+    .section-header h2 {
+        margin: 0;
+        font-size: 16px;
         font-weight: 650;
-        color: #304750;
-        line-height: 1.3;
+        color: #304952;
     }
 
-    .completion-caption {
-        font-size: 12px;
-        color: #89989d;
-        margin-top: 4px;
-    }
-
-    .time-track {
-        height: 3px;
-        background: #e9f0f2;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-top: 23px;
-    }
-
-    .time-track-fill {
-        width: 38%;
-        height: 100%;
-        background: #75AABA;
-        border-radius: 4px;
-    }
-
-    .consumables-section {
-        margin-top: 34px;
-    }
-
-    .stock-count {
+    .item-count {
         color: #839399;
         font-size: 12px;
-        white-space: nowrap;
+    }
+
+    .timing-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        padding: 20px 0;
+        border-top: 1px solid #e5ecee;
+        border-bottom: 1px solid #e5ecee;
+    }
+
+    .timing-value {
+        font-size: 25px;
+        font-weight: 650;
+        color: #304750;
+    }
+
+    .timing-caption {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #839399;
     }
 
     .table-wrap {
-        width: 100%;
         overflow-x: auto;
-        border-top: 1px solid #e7edef;
+        border-top: 1px solid #e5ecee;
     }
 
-    .modern-stock-table {
+    .stock-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 0;
-        min-width: 560px;
+        min-width: 500px;
     }
 
-    .modern-stock-table th {
-        padding: 14px 14px 14px 0;
+    .stock-table th {
+        padding: 12px 12px 12px 0;
         text-align: left;
+        color: #839399;
         font-size: 11px;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: .55px;
-        color: #89989d;
-        font-weight: 650;
-        border-bottom: 1px solid #e7edef;
-        background: transparent;
+        letter-spacing: .4px;
+        border-bottom: 1px solid #e5ecee;
     }
 
-    .modern-stock-table td {
-        padding: 17px 14px 17px 0;
+    .stock-table td {
+        padding: 14px 12px 14px 0;
         font-size: 13px;
-        color: #465d65;
         border-bottom: 1px solid #edf1f2;
-        vertical-align: middle;
+        color: #465d65;
     }
 
-    .modern-stock-table tbody tr:last-child td {
-        border-bottom: 1px solid #e7edef;
+    .stock-table tbody tr:last-child td {
+        border-bottom: 1px solid #e5ecee;
     }
 
-    .modern-stock-table tbody tr:hover {
-        background: #fafcfc;
-    }
-
-    .consumable-name {
+    .stock-name {
         font-weight: 600;
         color: #344e57;
     }
 
     .stock-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
         font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
     }
 
-    .stock-status::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        display: inline-block;
-        flex-shrink: 0;
-    }
+    .stock-status.ok { color: #347454; }
+    .stock-status.low { color: #976c23; }
+    .stock-status.out { color: #b24f43; }
 
-    .stock-status.ok {
-        color: #347454;
-    }
-
-    .stock-status.ok::before {
-        background: #48a574;
-    }
-
-    .stock-status.low {
-        color: #976c23;
-    }
-
-    .stock-status.low::before {
-        background: #d7a340;
-    }
-
-    .stock-status.out {
-        color: #b24f43;
-    }
-
-    .stock-status.out::before {
-        background: #d76b5d;
-    }
-
-    .empty-consumables {
-        padding: 25px 0;
+    .empty-stock {
+        padding: 18px 0;
+        border-top: 1px solid #e5ecee;
         color: #839399;
         font-size: 13px;
-        border-top: 1px solid #e7edef;
-        border-bottom: 1px solid #e7edef;
     }
 
     .stock-warning {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 15px 0;
-        color: #94632b;
+        margin-top: 18px;
+        padding: 13px 15px;
+        border: 1px solid #f0dfb8;
+        border-radius: 7px;
+        background: #fffaf0;
+        color: #805c1b;
         font-size: 13px;
-        line-height: 1.6;
-        border-bottom: 1px solid #e8eef0;
     }
 
-    .stock-warning i {
-        margin-top: 3px;
-    }
-
-    .action-area {
+    .actions {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        flex-wrap: wrap;
-        margin-top: 30px;
-        padding-top: 22px;
-        border-top: 1px solid #e8eef0;
-    }
-
-    .action-note {
-        color: #87969b;
-        font-size: 12px;
-        line-height: 1.6;
-        max-width: 430px;
-        margin: 0;
-    }
-
-    .action-buttons {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
+        justify-content: flex-end;
         gap: 12px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e5ecee;
     }
 
-    .btn-add-test {
+    .btn-select {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 9px;
-        min-height: 43px;
-        padding: 11px 19px;
-        border: 1px solid #6da3b2;
-        border-radius: 9px;
+        gap: 8px;
+        padding: 11px 18px;
+        border: 1px solid #75AABA;
+        border-radius: 7px;
         background: #75AABA;
         color: #fff;
         font-size: 13px;
         font-weight: 600;
-        transition: background .2s ease, transform .2s ease;
+        cursor: pointer;
     }
 
-    .btn-add-test:hover:not(:disabled) {
+    .btn-select:hover:not(:disabled) {
         background: #5f96a6;
-        color: white;
-        transform: translateY(-1px);
     }
 
-    .btn-add-test:disabled {
+    .btn-select:disabled {
         background: #c8d9de;
         border-color: #c8d9de;
-        color: #fff;
         cursor: not-allowed;
     }
 
-    .btn-secondary-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 43px;
-        padding: 10px 16px;
+    .btn-cancel {
+        padding: 10px 14px;
         color: #526a72;
         text-decoration: none;
         font-size: 13px;
         font-weight: 600;
-        border-radius: 9px;
-        transition: background .2s ease;
     }
 
-    .btn-secondary-link:hover {
+    .btn-cancel:hover {
         color: #315967;
-        background: #f3f7f8;
     }
 
-    @@media (max-width: 768px) {
-        .test-details-page {
-            padding: 24px 17px 36px;
+    @@media (max-width: 650px) {
+        .test-page {
+            padding: 22px 16px 32px;
         }
 
-        .page-topline {
+        .page-header {
             align-items: flex-start;
         }
 
-        .page-title {
-            font-size: 26px;
+        .page-header h1 {
+            font-size: 23px;
         }
 
-        .test-summary {
+        .summary {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .summary-item {
-            padding: 17px 12px 17px 0;
-            margin-right: 12px;
-            border-bottom: 1px solid #e8eef0;
+            border-bottom: 1px solid #e5ecee;
         }
 
         .summary-item:nth-child(2) {
@@ -469,54 +303,40 @@
             border-bottom: none;
         }
 
-        .turnaround-layout {
-            grid-template-columns: 1fr;
-            gap: 26px;
+        .timing-row {
+            gap: 16px;
         }
 
-        .action-area {
-            align-items: flex-start;
-            flex-direction: column;
+        .timing-value {
+            font-size: 22px;
         }
 
-        .action-buttons {
+        .actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        .btn-select {
             width: 100%;
         }
 
-        .action-buttons form {
-            flex: 1;
-        }
-
-        .btn-add-test {
-            width: 100%;
+        .btn-cancel {
+            text-align: center;
         }
     }
 
-    @@media (max-width: 480px) {
-        .page-topline {
+    @@media (max-width: 400px) {
+        .page-header {
             flex-direction: column;
         }
 
-        .back-link {
-            align-self: flex-start;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .action-buttons form {
-            width: 100%;
-        }
-
-        .btn-secondary-link {
-            justify-content: center;
+        .timing-row {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="test-details-page">
+<div class="test-page">
 
     @if (TempData["Error"] != null)
     {
@@ -526,136 +346,68 @@
         </div>
     }
 
-    <div class="page-topline">
+    <div class="page-header">
         <div>
-            <div class="breadcrumb-text">
-                Lab Technician <span>/</span> Process Tests <span>/</span> Test Details
+            <h1>@Model.TestType.TestTypeName</h1>
+            <div class="request-label">
+                Request #@Model.TestRequestId
             </div>
-
-            <h1 class="page-title">@Model.TestType.TestTypeName</h1>
-
-            <p class="page-description">
-                Review the test requirements, turnaround estimate and consumable availability
-                before adding this test to your workload.
-            </p>
         </div>
 
         <a asp-action="ProcessTests" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Back to tests
+            <i class="fas fa-arrow-left me-1"></i> Back to tests
         </a>
     </div>
 
-    <section class="section">
-        <div class="section-heading">
-            <div>
-                <h2 class="section-title">Test overview</h2>
-                <div class="section-subtitle">Request information and test classification</div>
-            </div>
-        </div>
-
-        <div class="test-summary">
-            <div class="summary-item">
-                <span class="summary-label">Request number</span>
-                <span class="summary-value">#@Model.TestRequestId</span>
-            </div>
-
-            <div class="summary-item">
-                <span class="summary-label">Test category</span>
-                <span class="summary-value">
-                    @(Model.TestType.Category?.CategoryName ?? "Not specified")
-                </span>
-            </div>
-
-            <div class="summary-item">
-                <span class="summary-label">Urgency</span>
-                <span class="summary-value urgency-value">
-                    <span class="urgency-dot"></span>
-                    @Model.TestRequest.Urgency
-                </span>
-            </div>
-
-            <div class="summary-item">
-                <span class="summary-label">Turnaround</span>
-                <span class="summary-value">@durationText</span>
-            </div>
-        </div>
-    </section>
-
-    <section class="section">
-        <div class="section-heading">
-            <div>
-                <h2 class="section-title">Turnaround estimate</h2>
-                <div class="section-subtitle">Estimated timing if the test is started now</div>
-            </div>
-        </div>
-
-        <div class="turnaround-layout">
-            <div>
-                <div class="metric-label">Estimated processing duration</div>
-                <div class="duration-value">@durationText</div>
-                <div class="duration-caption">
-                    Based on the configured turnaround time for this test
-                </div>
-
-                <div class="time-track">
-                    <div class="time-track-fill"></div>
-                </div>
-            </div>
-
-            <div>
-                <div class="metric-label">Estimated completion</div>
-                <div class="completion-row">
-                    <div class="clock-icon">
-                        <i class="far fa-clock"></i>
-                    </div>
-                    <div>
-                        <div class="completion-time">
-                            @expectedFinish.ToString("HH:mm")
-                        </div>
-                        <div class="completion-caption">
-                            Today, based on the current time
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="consumables-section">
-        <div class="section-heading">
-            <div>
-                <h2 class="section-title">Consumables</h2>
-                <div class="section-subtitle">
-                    Stock requirements and availability for this test
-                </div>
-            </div>
-
-            <span class="stock-count">
-                @consumables.Count item(s)
+    <div class="summary">
+        <div class="summary-item">
+            <span class="label">Category</span>
+            <span class="value">
+                @(Model.TestType.Category?.CategoryName ?? "Not specified")
             </span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Urgency</span>
+            <span class="value urgency">
+                <span class="urgency-dot"></span>
+                @Model.TestRequest.Urgency
+            </span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Turnaround</span>
+            <span class="value">@durationText</span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Estimated completion</span>
+            <span class="value">@expectedFinish.ToString("dd MMM, HH:mm")</span>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="section-header">
+            <h2>Consumables</h2>
+            <span class="item-count">@consumables.Count item(s)</span>
         </div>
 
         @if (!consumables.Any())
         {
-            <div class="empty-consumables">
-                <i class="fas fa-info-circle me-2"></i>
-                No consumables have been recorded for this test.
-            </div>
+            <div class="empty-stock">No consumables recorded for this test.</div>
         }
         else
         {
             <div class="table-wrap">
-                <table class="modern-stock-table">
+                <table class="stock-table">
                     <thead>
                         <tr>
                             <th>Consumable</th>
-                            <th>Quantity needed</th>
-                            <th>Current stock</th>
-                            <th>Availability</th>
+                            <th>Required</th>
+                            <th>In stock</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         @foreach (var item in consumables)
                         {
@@ -668,34 +420,23 @@
                                 <= item.Consumable.ReorderLevel;
 
                             <tr>
-                                <td>
-                                    <span class="consumable-name">
-                                        @item.Consumable.ConsumableName
-                                    </span>
+                                <td class="stock-name">
+                                    @item.Consumable.ConsumableName
                                 </td>
-
                                 <td>@item.QuantityNeeded</td>
-
                                 <td>@item.Consumable.QuantityInHand</td>
-
                                 <td>
                                     @if (!enough)
                                     {
-                                        <span class="stock-status out">
-                                            Not enough stock
-                                        </span>
+                                        <span class="stock-status out">Insufficient</span>
                                     }
                                     else if (low)
                                     {
-                                        <span class="stock-status low">
-                                            Low stock
-                                        </span>
+                                        <span class="stock-status low">Low stock</span>
                                     }
                                     else
                                     {
-                                        <span class="stock-status ok">
-                                            In stock
-                                        </span>
+                                        <span class="stock-status ok">Available</span>
                                     }
                                 </td>
                             </tr>
@@ -708,55 +449,37 @@
 
     @if (hasShortage)
     {
-        <div class="stock-warning">
-            <i class="fas fa-triangle-exclamation"></i>
-            <div>
-                <strong>Insufficient consumable stock.</strong>
-                This test cannot be added to My Tests because one or more
-                required consumables do not have enough stock available.
-            </div>
+        <div class="stock-warning" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            Insufficient stock. This test cannot be selected until the shortage is resolved.
         </div>
     }
 
-    <div class="action-area">
-        <p class="action-note">
-            @if (hasShortage)
-            {
-                <text>Resolve the stock shortage before selecting this test.</text>
-            }
-            else
-            {
-                <text>Stock availability has been checked. You can add this test to your workload when ready.</text>
-            }
-        </p>
+  
+    <div class="actions">
+        <a asp-action="ProcessTests" class="btn-cancel">
+            Select a Different Test
+        </a>
 
-        <div class="action-buttons">
-            @if (hasShortage)
-            {
-                <button type="button" class="btn-add-test" disabled>
-                    <i class="fas fa-plus"></i>
-                    Add to My Tests
+        @if (hasShortage)
+        {
+            <button type="button" class="btn-select" disabled>
+                <i class="fas fa-plus"></i> Add to My Tests
+            </button>
+        }
+        else
+        {
+            <form asp-action="AddToMyTests"
+                  asp-route-id="@Model.TestRequestTestTypeId"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <button type="submit" class="btn-select">
+                    <i class="fas fa-plus"></i> Add to My Tests
                 </button>
-            }
-            else
-            {
-                <form asp-action="AddToMyTests"
-                      asp-route-id="@Model.TestRequestTestTypeId"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <button type="submit" class="btn-add-test">
-                        <i class="fas fa-plus"></i>
-                        Add to My Tests
-                    </button>
-                </form>
-            }
-
-            <a asp-action="ProcessTests" class="btn-secondary-link">
-                Choose a different test
-            </a>
-        </div>
+            </form>
+        }
     </div>
+    
 
 </div>

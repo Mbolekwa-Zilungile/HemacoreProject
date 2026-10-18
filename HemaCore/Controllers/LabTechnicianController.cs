@@ -33,7 +33,11 @@ namespace HemaCore.Controllers
         // ==========================================
 
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+     string? urgency,
+     int? categoryId,
+     string? dueStatus,
+     int? requestNumber)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -55,13 +59,17 @@ namespace HemaCore.Controllers
 
             var now = DateTime.Now;
 
+            // Categories for the filter dropdown.
+            ViewBag.TestCategories = await _context.TestCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+
             // Tests assigned to the logged-in technician.
             var myTests = _context.TestRequestTestTypes
                 .Where(t => t.LabTechnicianId == technician.LabTechnicianId);
 
             // Requests that still have samples waiting to be received.
-
-
             var samplesAwaitingReceipt = await _context.TestRequests
                 .CountAsync(r =>
                     r.Status == "Submitted" &&
@@ -73,7 +81,6 @@ namespace HemaCore.Controllers
 
             // Unassigned tests are available for processing only when
             // the request has samples and every sample has been received.
-
             var qualifiedTestTypeIds = await _context.TechnicianTestTypes
                 .Where(tt => tt.LabTechnicianId == technician.LabTechnicianId)
                 .Select(tt => tt.TestTypeId)
@@ -92,8 +99,75 @@ namespace HemaCore.Controllers
                         s.SampleTypeId == t.TestType.SampleTypeId &&
                         s.DateTimeReceived != null));
 
+            // The card count is never filtered.
             var waitingToBeSelected = await waitingToBeSelectedQuery.CountAsync();
 
+            // Apply the dropdown filters to the table only.
+            var filteredQuery = waitingToBeSelectedQuery;
+
+            if (!string.IsNullOrWhiteSpace(urgency))
+            {
+                filteredQuery = filteredQuery.Where(t =>
+                    t.TestRequest.Urgency == urgency);
+            }
+
+            if (categoryId.HasValue)
+            {
+                filteredQuery = filteredQuery.Where(t =>
+                    t.TestType.CategoryId == categoryId.Value);
+            }
+
+            if (requestNumber.HasValue)
+            {
+                filteredQuery = filteredQuery.Where(t =>
+                    t.TestRequestId == requestNumber.Value);
+            }
+
+            var availableTests = await filteredQuery
+                .AsNoTracking()
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                    .ThenInclude(tt => tt.Category)
+                .OrderBy(t => t.TestRequestId)
+                .Select(t => new LabTechnicianWorkloadViewModel
+                {
+                    TestRequestTestTypeId = t.TestRequestTestTypeId,
+                    TestRequestId = t.TestRequestId,
+
+                    PatientName = t.TestRequest.Patient.Name + " " +
+                                  t.TestRequest.Patient.Surname,
+
+                    TestTypeName = t.TestType.TestTypeName,
+
+                    CategoryName = t.TestType.Category != null
+                        ? t.TestType.Category.CategoryName
+                        : "Uncategorised",
+
+                    Urgency = t.TestRequest.Urgency,
+                    Status = t.Status,
+
+                    DueTime = t.TestRequest.RequestDate
+                        .AddHours(t.TestType.TurnAroundTime)
+                })
+                .ToListAsync();
+
+            // Due time is calculated, so it is filtered after loading.
+            if (dueStatus == "Overdue")
+            {
+                availableTests = availableTests
+                    .Where(t => t.DueTime.HasValue && t.DueTime.Value < now)
+                    .ToList();
+            }
+            else if (dueStatus == "Nearing")
+            {
+                availableTests = availableTests
+                    .Where(t =>
+                        t.DueTime.HasValue &&
+                        t.DueTime.Value >= now &&
+                        t.DueTime.Value <= now.AddHours(2))
+                    .ToList();
+            }
 
             // Retrieve assigned tests and their related patient and category.
             var workload = await myTests
@@ -123,19 +197,16 @@ namespace HemaCore.Controllers
 
                     // Assumes TurnAroundTime is stored in hours.
                     DueTime = t.StartDateTime.HasValue
-    ? t.StartDateTime.Value.AddHours(t.TestType.TurnAroundTime)
-    : (DateTime?)null
+                        ? t.StartDateTime.Value.AddHours(t.TestType.TurnAroundTime)
+                        : (DateTime?)null
                 })
                 .ToListAsync();
 
             // Count tests that are currently being processed by this technician.
-
             var mySelectedTests = await myTests
                 .CountAsync(t =>
                     t.Status == "InProgress" &&
                     t.LabTechnicianId == technician.LabTechnicianId);
-
-
 
             var waitingVerification = await _context.TestRequestTestTypes
                 .CountAsync(t =>
@@ -146,19 +217,23 @@ namespace HemaCore.Controllers
                         tt.LabTechnicianId == technician.LabTechnicianId &&
                         tt.TestTypeId == t.TestTypeId));
 
-
-            // Count results returned for review.
-            // This follows the existing verification status used in your project.
+            // Results returned to THIS technician for correction.
             var waitingReview = await _context.TestResultVerifications
-                .CountAsync(v => v.Status == "To Be Reviewed");
+                .CountAsync(v =>
+                    v.Status == "To Be Reviewed" &&
+                    v.TestResult != null &&
+                    _context.TestRequestTestTypes.Any(t =>
+                        t.TestResultId == v.TestResultId &&
+                        t.LabTechnicianId == technician.LabTechnicianId &&
+                        t.Status == "To Be Reviewed"));
 
             // Only count unfinished tests for overdue and nearing-turnaround KPIs.
             var unfinishedStatuses = new[]
             {
-        "Submitted",
-        "In Progress",
-        "To Be Reviewed"
-    };
+                "Submitted",
+                "InProgress",
+                "To Be Reviewed"
+            };
 
             var overdueTests = workload.Count(t =>
                 t.DueTime.HasValue &&
@@ -198,13 +273,19 @@ namespace HemaCore.Controllers
 
                 NearingTurnaround = nearingTurnaround,
 
-                Workload = workload
+                Workload = workload,
+
+                AvailableTests = availableTests,
+
+                // Keep the chosen filters selected in the dropdowns.
+                FilterUrgency = urgency,
+                FilterCategoryId = categoryId,
+                FilterDueStatus = dueStatus,
+                FilterRequestNumber = requestNumber
             };
 
             return View(dashboard);
         }
-
-
         // ==========================================
         // RECEIVE SAMPLES
         // ==========================================
@@ -751,9 +832,11 @@ public async Task<IActionResult> ProcessTests(
         // ======================================================================
 
 
-      
-[HttpGet]
-public async Task<IActionResult> MyTests()
+
+        [HttpGet]
+        public async Task<IActionResult> MyTests(
+            string? dueStatus,
+            string? urgency)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -778,15 +861,45 @@ public async Task<IActionResult> MyTests()
                 .OrderBy(t => t.TestRequestId)
                 .ToListAsync();
 
+            var now = DateTime.Now;
+
+            // Optional filter used by the dashboard "Urgent Tests" card.
+            if (!string.IsNullOrWhiteSpace(urgency))
+            {
+                tests = tests
+                    .Where(t => t.TestRequest.Urgency == urgency)
+                    .ToList();
+            }
+
+            // Due time = when you accepted the test + turnaround hours.
+            if (dueStatus == "Overdue")
+            {
+                tests = tests
+                    .Where(t =>
+                        t.StartDateTime.HasValue &&
+                        t.StartDateTime.Value
+                            .AddHours(t.TestType.TurnAroundTime) < now)
+                    .ToList();
+            }
+            else if (dueStatus == "Nearing")
+            {
+                tests = tests
+                    .Where(t =>
+                        t.StartDateTime.HasValue &&
+                        t.StartDateTime.Value
+                            .AddHours(t.TestType.TurnAroundTime) >= now &&
+                        t.StartDateTime.Value
+                            .AddHours(t.TestType.TurnAroundTime) <= now.AddHours(2))
+                    .ToList();
+            }
+
             return View(tests);
         }
-
-
         // ======================================================================
         // STEP 4 - START PROCESSING (from My Tests; then on to Capture Result)
         // ======================================================================
 
-       
+
 
         [HttpGet]
 public async Task<IActionResult> CaptureTestResult(int id)
@@ -1290,9 +1403,8 @@ public async Task<IActionResult> VerifyResult(
 
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] =
-                    "Test result has been successfully verified.";
-
+                TempData["ResultSuccess"] =
+    "Test result has been successfully verified.";
                 return RedirectToAction(nameof(VerifyResults));
             }
 
@@ -1345,9 +1457,8 @@ public async Task<IActionResult> VerifyResult(
 
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] =
-                    "Test result has been sent back to the original technician for review.";
-
+                TempData["ResultSuccess"] =
+    "Test result has been sent back to the original technician for review.";
                 return RedirectToAction(nameof(VerifyResults));
             }
 

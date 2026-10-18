@@ -1,4 +1,4 @@
-﻿ @model HemaCore.Models.ViewModels.LabTechnicianDashboardViewModel
+﻿@model HemaCore.Models.ViewModels.LabTechnicianDashboardViewModel
 
 @{
     ViewData["Title"] = "Lab Technician Dashboard";
@@ -126,7 +126,7 @@
 
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
             <a asp-controller="LabTechnician"
-               asp-action="ProcessTests"
+               asp-action="MyTests"
                asp-route-urgency="STAT"
                class="lab-stat-link">
                 <div class="lab-stat">
@@ -179,7 +179,7 @@
                         </p>
 
                         <a asp-controller="LabTechnician"
-                           asp-action="ProcessTests"
+                           asp-action="MyTests"
                            asp-route-dueStatus="Overdue"
                            class="lab-action-link action-red">
                             Review overdue tests
@@ -221,7 +221,7 @@
                         </p>
 
                         <a asp-controller="LabTechnician"
-                           asp-action="ProcessTests"
+                           asp-action="MyTests"
                            asp-route-dueStatus="Nearing"
                            class="lab-action-link action-amber">
                             Review approaching deadlines
@@ -253,12 +253,20 @@
                     <span>Narrow down the tests available to you</span>
                 </div>
             </div>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Index"
+               class="lab-secondary-button">
+                <i class="fas fa-rotate-left"></i>
+                Clear Filters
+            </a>
         </div>
 
         <div class="lab-panel-content">
             <form asp-controller="LabTechnician"
                   asp-action="Index"
-                  method="get">
+                  method="get"
+                  id="filterForm">
 
                 <div class="row g-3">
 
@@ -268,7 +276,8 @@
                         </label>
                         <select id="urgencyFilter"
                                 name="urgency"
-                                class="form-select lab-input">
+                                class="form-select lab-input"
+                                onchange="this.form.submit()">
                             <option value="">All urgencies</option>
                             <option value="Routine"
                                     selected="@(Model.FilterUrgency == "Routine")">
@@ -291,7 +300,8 @@
                         </label>
                         <select id="categoryFilter"
                                 name="categoryId"
-                                class="form-select lab-input">
+                                class="form-select lab-input"
+                                onchange="this.form.submit()">
                             <option value="">All categories</option>
 
                             @if (ViewBag.TestCategories != null)
@@ -313,7 +323,8 @@
                         </label>
                         <select id="dueStatusFilter"
                                 name="dueStatus"
-                                class="form-select lab-input">
+                                class="form-select lab-input"
+                                onchange="this.form.submit()">
                             <option value="">All due times</option>
                             <option value="Nearing"
                                     selected="@(Model.FilterDueStatus == "Nearing")">
@@ -335,24 +346,11 @@
                                type="number"
                                min="1"
                                class="form-control lab-input"
-                               placeholder="Enter request number"
-                               value="@Model.FilterRequestNumber" />
+                               placeholder="Type number, press Enter"
+                               value="@Model.FilterRequestNumber"
+                               onchange="this.form.submit()" />
                     </div>
 
-                </div>
-
-                <div class="lab-filter-actions">
-                    <button type="submit" class="lab-primary-button">
-                        <i class="fas fa-filter"></i>
-                        Apply Filters
-                    </button>
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="Index"
-                       class="lab-secondary-button">
-                        <i class="fas fa-rotate-left"></i>
-                        Clear Filters
-                    </a>
                 </div>
 
             </form>
@@ -504,9 +502,9 @@
         margin-bottom: 9px;
     }
 
-    .lab-eyebrow i {
-        margin-right: 6px;
-    }
+        .lab-eyebrow i {
+            margin-right: 6px;
+        }
 
     .lab-header h2 {
         color: #263b43;
@@ -600,12 +598,35 @@
         margin-top: 5px;
     }
 
-    .stat-blue { background: #e9f2ff; color: #4d80bf; }
-    .stat-purple { background: #f0edff; color: #8174be; }
-    .stat-teal { background: #e3f3f1; color: #488f87; }
-    .stat-green { background: #e7f5ec; color: #4f9970; }
-    .stat-orange { background: #fff1e5; color: #c58a51; }
-    .stat-red { background: #ffeded; color: #c76c70; }
+    .stat-blue {
+        background: #e9f2ff;
+        color: #4d80bf;
+    }
+
+    .stat-purple {
+        background: #f0edff;
+        color: #8174be;
+    }
+
+    .stat-teal {
+        background: #e3f3f1;
+        color: #488f87;
+    }
+
+    .stat-green {
+        background: #e7f5ec;
+        color: #4f9970;
+    }
+
+    .stat-orange {
+        background: #fff1e5;
+        color: #c58a51;
+    }
+
+    .stat-red {
+        background: #ffeded;
+        color: #c76c70;
+    }
 
     .lab-section-heading {
         display: flex;
@@ -614,18 +635,18 @@
         margin: 29px 0 14px;
     }
 
-    .lab-section-heading h5 {
-        color: #30434b;
-        font-size: 16px;
-        font-weight: 700;
-        margin: 0;
-    }
+        .lab-section-heading h5 {
+            color: #30434b;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+        }
 
-    .lab-section-heading p {
-        color: #87969b;
-        font-size: 12px;
-        margin: 5px 0 0;
-    }
+        .lab-section-heading p {
+            color: #87969b;
+            font-size: 12px;
+            margin: 5px 0 0;
+        }
 
     .lab-panel {
         background: #fff;
@@ -650,17 +671,17 @@
         min-width: 0;
     }
 
-    .lab-panel-title h6 {
-        color: #34474e;
-        font-size: 13px;
-        font-weight: 700;
-        margin: 0 0 4px;
-    }
+        .lab-panel-title h6 {
+            color: #34474e;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
 
-    .lab-panel-title > div > span {
-        color: #8a989d;
-        font-size: 11px;
-    }
+        .lab-panel-title > div > span {
+            color: #8a989d;
+            font-size: 11px;
+        }
 
     .attention-icon,
     .section-icon {
@@ -674,9 +695,20 @@
         font-size: 14px;
     }
 
-    .overdue-icon { background: #fff0ef; color: #c66f6b; }
-    .nearing-icon { background: #fff5df; color: #b88c39; }
-    .section-icon { background: #e6f2f2; color: #568f95; }
+    .overdue-icon {
+        background: #fff0ef;
+        color: #c66f6b;
+    }
+
+    .nearing-icon {
+        background: #fff5df;
+        color: #b88c39;
+    }
+
+    .section-icon {
+        background: #e6f2f2;
+        color: #568f95;
+    }
 
     .lab-count {
         min-width: 31px;
@@ -687,18 +719,25 @@
         font-weight: 700;
     }
 
-    .count-red { background: #fff0ef; color: #bd6663; }
-    .count-amber { background: #fff5df; color: #a98232; }
+    .count-red {
+        background: #fff0ef;
+        color: #bd6663;
+    }
+
+    .count-amber {
+        background: #fff5df;
+        color: #a98232;
+    }
 
     .lab-panel-content {
         padding: 17px 20px;
     }
 
-    .lab-panel-content > p {
-        color: #77878d;
-        font-size: 12px;
-        margin: 0 0 13px;
-    }
+        .lab-panel-content > p {
+            color: #77878d;
+            font-size: 12px;
+            margin: 0 0 13px;
+        }
 
     .lab-empty-inline {
         display: flex;
@@ -709,9 +748,9 @@
         padding: 5px 0;
     }
 
-    .lab-empty-inline i {
-        color: #78ad91;
-    }
+        .lab-empty-inline i {
+            color: #78ad91;
+        }
 
     .lab-action-link {
         display: inline-flex;
@@ -722,8 +761,13 @@
         text-decoration: none;
     }
 
-    .action-red { color: #b96764; }
-    .action-amber { color: #a98232; }
+    .action-red {
+        color: #b96764;
+    }
+
+    .action-amber {
+        color: #a98232;
+    }
 
     .lab-action-link:hover {
         text-decoration: underline;
@@ -750,19 +794,10 @@
         box-shadow: none;
     }
 
-    .lab-input:focus {
-        border-color: #83b7ba;
-        box-shadow: 0 0 0 3px rgba(117, 170, 186, .13);
-    }
-
-    .lab-filter-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 9px;
-        margin-top: 22px;
-        padding-top: 17px;
-        border-top: 1px solid #edf1f2;
-    }
+        .lab-input:focus {
+            border-color: #83b7ba;
+            box-shadow: 0 0 0 3px rgba(117, 170, 186, .13);
+        }
 
     .lab-primary-button,
     .lab-secondary-button {
@@ -786,11 +821,11 @@
         color: #fff;
     }
 
-    .lab-primary-button:hover {
-        background: #639ba5;
-        border-color: #639ba5;
-        color: #fff;
-    }
+        .lab-primary-button:hover {
+            background: #639ba5;
+            border-color: #639ba5;
+            color: #fff;
+        }
 
     .lab-secondary-button {
         border: 1px solid #dce5e7;
@@ -798,11 +833,11 @@
         color: #667980;
     }
 
-    .lab-secondary-button:hover {
-        background: #f5f9f9;
-        border-color: #b9ced1;
-        color: #476a71;
-    }
+        .lab-secondary-button:hover {
+            background: #f5f9f9;
+            border-color: #b9ced1;
+            color: #476a71;
+        }
 
     .lab-table-count {
         background: #edf6f5;
@@ -820,33 +855,33 @@
         border-spacing: 0;
     }
 
-    .lab-table thead th {
-        background: #f7fafb;
-        color: #71838a;
-        border-bottom: 1px solid #e8eef0;
-        padding: 13px 15px;
-        font-size: 10px;
-        font-weight: 750;
-        letter-spacing: .35px;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
+        .lab-table thead th {
+            background: #f7fafb;
+            color: #71838a;
+            border-bottom: 1px solid #e8eef0;
+            padding: 13px 15px;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .35px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
 
-    .lab-table tbody td {
-        color: #5c6e75;
-        border-bottom: 1px solid #edf1f2;
-        padding: 14px 15px;
-        font-size: 11px;
-        vertical-align: middle;
-    }
+        .lab-table tbody td {
+            color: #5c6e75;
+            border-bottom: 1px solid #edf1f2;
+            padding: 14px 15px;
+            font-size: 11px;
+            vertical-align: middle;
+        }
 
-    .lab-table tbody tr:last-child td {
-        border-bottom: 0;
-    }
+        .lab-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
 
-    .lab-table tbody tr:hover {
-        background: #f8fbfb;
-    }
+        .lab-table tbody tr:hover {
+            background: #f8fbfb;
+        }
 
     .lab-request-number {
         color: #568f95;
@@ -879,10 +914,25 @@
         white-space: nowrap;
     }
 
-    .tag-stat { background: #ffeded; color: #bf676b; }
-    .tag-urgent { background: #fff3e5; color: #b57f42; }
-    .tag-routine { background: #edf4f1; color: #668b78; }
-    .tag-pending { background: #edf3fb; color: #6b86ae; }
+    .tag-stat {
+        background: #ffeded;
+        color: #bf676b;
+    }
+
+    .tag-urgent {
+        background: #fff3e5;
+        color: #b57f42;
+    }
+
+    .tag-routine {
+        background: #edf4f1;
+        color: #668b78;
+    }
+
+    .tag-pending {
+        background: #edf3fb;
+        color: #6b86ae;
+    }
 
     .lab-due-time {
         white-space: nowrap;
@@ -904,11 +954,11 @@
         white-space: nowrap;
     }
 
-    .lab-view-button:hover {
-        background: #eaf5f4;
-        border-color: #b8d8d7;
-        color: #3f797f;
-    }
+        .lab-view-button:hover {
+            background: #eaf5f4;
+            border-color: #b8d8d7;
+            color: #3f797f;
+        }
 
     .lab-empty-table {
         padding: 42px 20px;
@@ -974,10 +1024,6 @@
 
         .lab-panel-title > div > span {
             line-height: 1.5;
-        }
-
-        .lab-filter-actions > * {
-            flex: 1 1 auto;
         }
     }
 
