@@ -7,7 +7,15 @@ namespace HemaCore.ViewModels.DoctorViewModels
         public int PatientId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string IDNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please enter the patient's phone number.")]
+        [RegularExpression(
+            @"^\+27\d{9}$",
+            ErrorMessage = "Enter a valid South African phone number, e.g. +27712345678."
+        )]
+        [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; } = string.Empty;
+
         public string Email { get; set; } = string.Empty;
 
         public int RequestCount { get; set; }
@@ -54,8 +62,14 @@ namespace HemaCore.ViewModels.DoctorViewModels
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; }
 
-        [Required, Display(Name = "Phone Number")]
+
+        [Required(ErrorMessage = "Please enter the patient's phone number.")]
+        [RegularExpression(
+            @"^\+27\d{9}$",
+            ErrorMessage = "Enter a valid South African phone number, e.g. +27712345678."
+        )]
         public string PhoneNumber { get; set; } = string.Empty;
+
 
         [Required(ErrorMessage = "Gender is required")]
         [Display(Name = "Gender")]
@@ -118,7 +132,13 @@ namespace HemaCore.ViewModels.DoctorViewModels
     public class CheckOptionViewModel
     {
         public int Id { get; set; }
+
         public string Name { get; set; } = string.Empty;
+
         public bool IsSelected { get; set; }
+
+        public int CategoryId { get; set; }
+
+        public string CategoryName { get; set; } = string.Empty;
     }
 }

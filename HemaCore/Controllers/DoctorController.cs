@@ -1,10 +1,14 @@
-﻿using HemaCore.Data;
+﻿
+using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Services;
 using HemaCore.ViewModels.DoctorViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace HemaCore.Controllers
 {
@@ -42,36 +46,112 @@ namespace HemaCore.Controllers
         private async Task LoadCreateTestRequestOptionsAsync(
             CreateTestRequestViewModel model)
         {
+            // Load all registered patients for the search list.
             model.Patients = await _context.Patients
-                 .OrderBy(p => p.Surname)
-                 .Select(p => new PatientOptionViewModel
-                 {
-                     PatientId = p.PatientID,
-                     FullName = p.Name + " " + p.Surname,
-                     IDNumber = p.IDNumber,
-                     DateOfBirth = p.DateOfBirth,
-                     PhoneNumber = p.PhoneNumber,
-                     Address = p.StreetAddress + ", " +
-                      p.Suburb + ", " +
-                      p.City + ", " +
-                      p.Province + ", " +
-                      p.PostalCode
-                 })
-                 .ToListAsync();
+                .AsNoTracking()
+                .OrderBy(p => p.Surname)
+                .Select(p => new PatientOptionViewModel
+                {
+                    PatientId = p.PatientID,
+                    FullName = p.Name + " " + p.Surname,
+                    IDNumber = p.IDNumber,
+                    DateOfBirth = p.DateOfBirth,
+                    PhoneNumber = p.PhoneNumber,
+                    Address = p.StreetAddress + ", " +
+                              p.Suburb + ", " +
+                              p.City + ", " +
+                              p.Province + ", " +
+                              p.PostalCode
+                })
+                .ToListAsync();
 
-             model.TestTypes = await _context.TestTypes
-                    .Where(t => t.IsActive)
-                    .Include(t => t.SampleType)
-                    .OrderBy(t => t.TestTypeName)
-                    .Select(t => new TestTypeOptionViewModel
+            // Load medical history only for patients with active consent.
+            var doctor = await GetCurrentDoctorAsync();
+
+            if (doctor != null)
+            {
+                var consentedUserIds =
+                    await GetMyConsentedUserIdsAsync(doctor.DoctorId);
+
+                var consentedPatientIds = await _context.Patients
+                    .AsNoTracking()
+                    .Where(p => consentedUserIds.Contains(p.UserId))
+                    .Select(p => p.PatientID)
+                    .ToListAsync();
+
+                var conditions = await _context.PatientConditions
+                    .AsNoTracking()
+                    .Where(pc => consentedPatientIds.Contains(pc.PatientID))
+                    .Include(pc => pc.Condition)
+                    .Select(pc => new
                     {
-                        TestTypeId = t.TestTypeId,
-                        TestTypeName = t.TestTypeName ?? "",
-                        SampleTypeId = t.SampleTypeId,
-                        SampleTypeName = t.SampleType != null ? t.SampleType.SampleName : ""
+                        pc.PatientID,
+                        Name = pc.Condition.Name
                     })
                     .ToListAsync();
 
+                var allergies = await _context.PatientAllergies
+                    .AsNoTracking()
+                    .Where(pa => consentedPatientIds.Contains(pa.PatientID))
+                    .Include(pa => pa.Allergy)
+                    .Select(pa => new
+                    {
+                        pa.PatientID,
+                        Name = pa.Allergy.Name
+                    })
+                    .ToListAsync();
+
+                var medications = await _context.PatientMedications
+                    .AsNoTracking()
+                    .Where(pm => consentedPatientIds.Contains(pm.PatientID))
+                    .Include(pm => pm.Medication)
+                    .Select(pm => new
+                    {
+                        pm.PatientID,
+                        Name = pm.Medication.Name
+                    })
+                    .ToListAsync();
+
+                // Attach history only to patients with active consent.
+                foreach (var patient in model.Patients)
+                {
+                    if (!consentedPatientIds.Contains(patient.PatientId))
+                        continue;
+
+                    patient.Conditions = conditions
+                        .Where(c => c.PatientID == patient.PatientId)
+                        .Select(c => c.Name)
+                        .ToList();
+
+                    patient.Allergies = allergies
+                        .Where(a => a.PatientID == patient.PatientId)
+                        .Select(a => a.Name)
+                        .ToList();
+
+                    patient.Medications = medications
+                        .Where(m => m.PatientID == patient.PatientId)
+                        .Select(m => m.Name)
+                        .ToList();
+                }
+            }
+
+            // Load active laboratory test types.
+            model.TestTypes = await _context.TestTypes
+                .Where(t => t.IsActive)
+                .Include(t => t.SampleType)
+                .OrderBy(t => t.TestTypeName)
+                .Select(t => new TestTypeOptionViewModel
+                {
+                    TestTypeId = t.TestTypeId,
+                    TestTypeName = t.TestTypeName ?? "",
+                    SampleTypeId = t.SampleTypeId,
+                    SampleTypeName = t.SampleType != null
+                        ? t.SampleType.SampleName
+                        : ""
+                })
+                .ToListAsync();
+
+            // Load active sample types.
             model.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.SampleName)
@@ -92,16 +172,22 @@ namespace HemaCore.Controllers
             List<int>? selectedMedicationIds = null)
         {
             var conditions = await _context.Conditions
+                .AsNoTracking()
+                .Include(c => c.Category)
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
             var allergies = await _context.Allergies
+                .AsNoTracking()
+                .Include(a => a.Category)
                 .Where(a => a.IsActive)
                 .OrderBy(a => a.Name)
                 .ToListAsync();
 
             var medications = await _context.Medications
+                .AsNoTracking()
+                .Include(m => m.Category)
                 .Where(m => m.IsActive)
                 .OrderBy(m => m.Name)
                 .ToListAsync();
@@ -111,8 +197,9 @@ namespace HemaCore.Controllers
                 {
                     Id = c.Id,
                     Name = c.Name,
-                    IsSelected = selectedConditionIds != null &&
-                                 selectedConditionIds.Contains(c.Id)
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.Category.Name,
+                    IsSelected = selectedConditionIds?.Contains(c.Id) == true
                 }));
 
             allergiesTarget.AddRange(
@@ -120,8 +207,9 @@ namespace HemaCore.Controllers
                 {
                     Id = a.Id,
                     Name = a.Name,
-                    IsSelected = selectedAllergyIds != null &&
-                                 selectedAllergyIds.Contains(a.Id)
+                    CategoryId = a.CategoryId,
+                    CategoryName = a.Category.Name,
+                    IsSelected = selectedAllergyIds?.Contains(a.Id) == true
                 }));
 
             medicationsTarget.AddRange(
@@ -129,8 +217,9 @@ namespace HemaCore.Controllers
                 {
                     Id = m.Id,
                     Name = m.Name,
-                    IsSelected = selectedMedicationIds != null &&
-                                 selectedMedicationIds.Contains(m.Id)
+                    CategoryId = m.CategoryId,
+                    CategoryName = m.Category.Name,
+                    IsSelected = selectedMedicationIds?.Contains(m.Id) == true
                 }));
         }
 
@@ -287,7 +376,6 @@ namespace HemaCore.Controllers
 
         #region Create Test Request
 
-
         [HttpGet]
         public async Task<IActionResult> CreateTestRequest(int? patientId = null)
         {
@@ -439,7 +527,6 @@ namespace HemaCore.Controllers
                 nameof(RequestStatus),
                 new { id = newRequest.TestRequestId });
         }
-
 
         #endregion
 
@@ -669,7 +756,6 @@ namespace HemaCore.Controllers
 
         #region Manage Patients
 
-
         [HttpGet]
         public async Task<IActionResult> ManagePatients()
         {
@@ -828,30 +914,28 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Search all patients, not only the doctor's consented list.
+            // Search all registered patients.
             var patient = await _context.Patients
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.IDNumber == idNumber);
 
+            // Patient is not registered.
             if (patient == null)
             {
                 return NotFound(new
                 {
                     found = false,
                     hasConsent = false,
-                    message = "No patient was found with this ID number."
+                    message = "No patient was found with this ID number. You can add the patient if they are not registered."
                 });
             }
 
-            // Check consent separately. Finding a patient never grants consent.
-            var hasConsent = await _context.Consents
-                .AnyAsync(c =>
-                    c.DoctorId == doctor.DoctorId &&
-                    c.PatientID == patient.UserId &&
-                    c.IsActive &&
-                    c.RevokedAt == null &&
-                    (c.ExpiresAt == null ||
-                     c.ExpiresAt > DateTime.UtcNow));
+            // Check consent before accessing medical history.
+            var hasConsent = await IsPatientConsentedAsync(
+                doctor.DoctorId,
+                patient.UserId);
+
+            // Patient exists, but consent is missing, revoked, or expired.
             if (!hasConsent)
             {
                 return Ok(new
@@ -859,17 +943,56 @@ namespace HemaCore.Controllers
                     found = true,
                     hasConsent = false,
                     patientId = patient.PatientID,
-                    message = "You do not have active consent for this patient. Please request consent from the patient."
+                    fullName = patient.Name + " " + patient.Surname,
+                    message = "This patient is registered, but you do not have active consent. Please request consent from the patient before accessing their medical history."
                 });
             }
+
+            // Active consent confirmed: load the mini medical history.
+            var conditions = await _context.PatientConditions
+                .AsNoTracking()
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .Select(pc => pc.Condition.Name)
+                .ToListAsync();
+
+            var allergies = await _context.PatientAllergies
+                .AsNoTracking()
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .Select(pa => pa.Allergy.Name)
+                .ToListAsync();
+
+            var medications = await _context.PatientMedications
+                .AsNoTracking()
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .Select(pm => pm.Medication.Name)
+                .ToListAsync();
+
+            var address = string.Join(", ", new[]
+            {
+                patient.StreetAddress,
+                patient.Suburb,
+                patient.City,
+                patient.Province,
+                patient.PostalCode
+            }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
             return Ok(new
             {
                 found = true,
                 hasConsent = true,
                 patientId = patient.PatientID,
-                message = "Active consent confirmed. You may access this patient's records according to your permissions."
+                fullName = patient.Name + " " + patient.Surname,
+                idNumber = patient.IDNumber,
+                dateOfBirth = patient.DateOfBirth,
+                phoneNumber = patient.PhoneNumber,
+                address,
+                conditions,
+                allergies,
+                medications,
+                message = "Active consent confirmed. The patient's medical history is available."
             });
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestConsent(int patientId)
@@ -982,7 +1105,7 @@ namespace HemaCore.Controllers
                 PhoneNumber = patient.PhoneNumber,
 
                 Address = $"{patient.StreetAddress}, {patient.Suburb}, " +
-              $"{patient.City}, {patient.Province}, {patient.PostalCode}",
+                          $"{patient.City}, {patient.Province}, {patient.PostalCode}",
 
                 Conditions = conditions,
                 Allergies = allergies,
@@ -1010,14 +1133,10 @@ namespace HemaCore.Controllers
 
             var request = await _context.TestRequests
                 .Include(r => r.Patient)
-
-                .Include(r =>
-                    r.TestRequestTestTypes)
+                .Include(r => r.TestRequestTestTypes)
                     .ThenInclude(i => i.TestType)
-
                 .Include(r => r.Samples)
                     .ThenInclude(s => s.SampleType)
-
                 .FirstOrDefaultAsync(r =>
                     r.TestRequestId == id &&
                     r.DoctorId == doctor.DoctorId);
@@ -1027,51 +1146,33 @@ namespace HemaCore.Controllers
 
             var model = new RequestStatusViewModel
             {
-                TestRequestId =
-                    request.TestRequestId,
+                TestRequestId = request.TestRequestId,
 
                 PatientName =
                     request.Patient.Name + " " +
                     request.Patient.Surname,
 
-                Status =
-                    request.Status,
+                Status = request.Status,
+                RequestDate = request.RequestDate,
+                Urgency = request.Urgency,
+                CancelReason = request.CancelReason,
+                CancellationDate = request.CancellationDate,
 
-                RequestDate =
-                    request.RequestDate,
+                TestItems = request.TestRequestTestTypes
+                    .Select(i => new TestItemStatusViewModel
+                    {
+                        TestTypeName = i.TestType.TestTypeName ?? "",
+                        Status = i.Status
+                    })
+                    .ToList(),
 
-                Urgency =
-                    request.Urgency,
-
-                CancelReason =
-                    request.CancelReason,
-
-                CancellationDate =
-                    request.CancellationDate,
-
-                TestItems =
-                    request.TestRequestTestTypes
-                        .Select(i => new TestItemStatusViewModel
-                        {
-                            TestTypeName =
-                                i.TestType.TestTypeName ?? "",
-
-                            Status =
-                                i.Status
-                        })
-                        .ToList(),
-
-                Samples =
-                    request.Samples
-                        .Select(s => new SampleStatusViewModel
-                        {
-                            Barcode =
-                                s.Barcode,
-
-                            SampleTypeName =
-                                s.SampleType.SampleName
-                        })
-                        .ToList()
+                Samples = request.Samples
+                    .Select(s => new SampleStatusViewModel
+                    {
+                        Barcode = s.Barcode,
+                        SampleTypeName = s.SampleType.SampleName
+                    })
+                    .ToList()
             };
 
             return View(model);
@@ -1079,10 +1180,7 @@ namespace HemaCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-         
-        public async Task<IActionResult> CancelRequest(
-    int id,
-    string reason)
+        public async Task<IActionResult> CancelRequest(int id, string reason)
         {
             var doctor = await GetCurrentDoctorAsync();
 
@@ -1111,6 +1209,7 @@ namespace HemaCore.Controllers
                 nameof(RequestStatus),
                 new { id = id });
         }
+
         #endregion
 
         // ============================================================
@@ -1134,15 +1233,45 @@ namespace HemaCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddPatient(
-      AddPatientViewModel model)
+        public async Task<IActionResult> AddPatient(AddPatientViewModel model)
         {
             var doctor = await GetCurrentDoctorAsync();
 
             if (doctor == null)
                 return Unauthorized();
 
-            // Validate ViewModel
+            // Normalize values before checking for duplicates.
+            string email = model.Email?.Trim() ?? "";
+            string idNumber = model.IDNumber?.Trim() ?? "";
+
+            // Check whether the ID number already belongs to a patient.
+            if (!string.IsNullOrWhiteSpace(idNumber))
+            {
+                bool idExists = await _context.Patients
+                    .AnyAsync(p => p.IDNumber.Trim() == idNumber);
+
+                if (idExists)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.IDNumber),
+                        "A patient with this ID number already exists. You cannot register the same patient twice.");
+                }
+            }
+
+            // Check whether the email is already registered.
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var existingUser = await _userManager.FindByEmailAsync(email);
+
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.Email),
+                        "This email address is already registered.");
+                }
+            }
+
+            // Stop if validation fails. Do not create an account or patient.
             if (!ModelState.IsValid)
             {
                 model.AllConditions.Clear();
@@ -1160,62 +1289,10 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            string email = model.Email.Trim();
-            string idNumber = model.IDNumber.Trim();
-
-            // Check duplicate email
-            var existingUser = await _userManager.FindByEmailAsync(email);
-
-            if (existingUser != null)
-            {
-                ModelState.AddModelError(
-                    nameof(model.Email),
-                    "This email is already registered.");
-
-                model.AllConditions.Clear();
-                model.AllAllergies.Clear();
-                model.AllMedications.Clear();
-
-                await LoadHistoryOptionsAsync(
-                    model.AllConditions,
-                    model.AllAllergies,
-                    model.AllMedications,
-                    model.SelectedConditionIds,
-                    model.SelectedAllergyIds,
-                    model.SelectedMedicationIds);
-
-                return View(model);
-            }
-
-            // Check duplicate ID number
-            bool idExists = await _context.Patients
-                .AnyAsync(p => p.IDNumber == idNumber);
-
-            if (idExists)
-            {
-                ModelState.AddModelError(
-                    nameof(model.IDNumber),
-                    "This ID number is already registered.");
-
-                model.AllConditions.Clear();
-                model.AllAllergies.Clear();
-                model.AllMedications.Clear();
-
-                await LoadHistoryOptionsAsync(
-                    model.AllConditions,
-                    model.AllAllergies,
-                    model.AllMedications,
-                    model.SelectedConditionIds,
-                    model.SelectedAllergyIds,
-                    model.SelectedMedicationIds);
-
-                return View(model);
-            }
-
-            // Generate temporary password
+            // Generate a temporary password.
             string temporaryPassword = GeneratePatientPassword();
 
-            // Create Identity user
+            // Create the Identity user.
             var user = new Users
             {
                 FullName = $"{model.Name.Trim()} {model.Surname.Trim()}",
@@ -1230,9 +1307,7 @@ namespace HemaCore.Controllers
             if (!userResult.Succeeded)
             {
                 foreach (var error in userResult.Errors)
-                {
                     ModelState.AddModelError("", error.Description);
-                }
 
                 model.AllConditions.Clear();
                 model.AllAllergies.Clear();
@@ -1249,7 +1324,7 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Assign Patient role
+            // Assign the Patient role.
             var roleResult = await _userManager.AddToRoleAsync(user, "Patient");
 
             if (!roleResult.Succeeded)
@@ -1257,9 +1332,7 @@ namespace HemaCore.Controllers
                 await _userManager.DeleteAsync(user);
 
                 foreach (var error in roleResult.Errors)
-                {
                     ModelState.AddModelError("", error.Description);
-                }
 
                 model.AllConditions.Clear();
                 model.AllAllergies.Clear();
@@ -1276,27 +1349,7 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // ========================================================
-            // BUILD COMBINED ADDRESS (NEW)
-            // ========================================================
-
-            var addressParts = new[]
-            {
-        model.StreetAddress,
-        model.Suburb,
-        model.City,
-        model.Province,
-        model.PostalCode
-    }
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .Select(p => p!.Trim());
-
-            string fullAddress = string.Join(", ", addressParts);
-
-            // ========================================================
-            // CREATE PATIENT RECORD
-            // ========================================================
-
+            // Create the patient record.
             var patient = new Patient
             {
                 Name = model.Name.Trim(),
@@ -1305,13 +1358,11 @@ namespace HemaCore.Controllers
                 DateOfBirth = model.DateOfBirth,
                 PhoneNumber = model.PhoneNumber.Trim(),
                 Gender = model.Gender.Trim(),
-
                 StreetAddress = model.StreetAddress.Trim(),
                 Suburb = model.Suburb.Trim(),
                 City = model.City.Trim(),
                 Province = model.Province.Trim(),
                 PostalCode = model.PostalCode.Trim(),
-
                 UserId = user.Id
             };
 
@@ -1319,67 +1370,39 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            //// ========================================================
-            //// CREATE CONSENT
-            //// ========================================================
-
-            //_context.Consents.Add(
-            //    new Consent
-            //    {
-            //        PatientID = user.Id,
-            //        DoctorId = doctor.DoctorId,
-            //        IsActive = true,
-            //        GrantedAt = DateTime.UtcNow
-            //    });
-
-            // ========================================================
-            // SAVE MEDICAL CONDITIONS
-            // ========================================================
-
-            foreach (var conditionId in model.SelectedConditionIds)
+            // Save medical conditions.
+            foreach (var conditionId in model.SelectedConditionIds ?? new List<int>())
             {
-                _context.PatientConditions.Add(
-                    new PatientCondition
-                    {
-                        PatientID = patient.PatientID,
-                        ConditionId = conditionId
-                    });
+                _context.PatientConditions.Add(new PatientCondition
+                {
+                    PatientID = patient.PatientID,
+                    ConditionId = conditionId
+                });
             }
 
-            // ========================================================
-            // SAVE ALLERGIES
-            // ========================================================
-
-            foreach (var allergyId in model.SelectedAllergyIds)
+            // Save allergies.
+            foreach (var allergyId in model.SelectedAllergyIds ?? new List<int>())
             {
-                _context.PatientAllergies.Add(
-                    new PatientAllergy
-                    {
-                        PatientID = patient.PatientID,
-                        AllergyId = allergyId
-                    });
+                _context.PatientAllergies.Add(new PatientAllergy
+                {
+                    PatientID = patient.PatientID,
+                    AllergyId = allergyId
+                });
             }
 
-            // ========================================================
-            // SAVE MEDICATIONS
-            // ========================================================
-
-            foreach (var medicationId in model.SelectedMedicationIds)
+            // Save medications.
+            foreach (var medicationId in model.SelectedMedicationIds ?? new List<int>())
             {
-                _context.PatientMedications.Add(
-                    new PatientMedication
-                    {
-                        PatientID = patient.PatientID,
-                        MedicationId = medicationId
-                    });
+                _context.PatientMedications.Add(new PatientMedication
+                {
+                    PatientID = patient.PatientID,
+                    MedicationId = medicationId
+                });
             }
 
             await _context.SaveChangesAsync();
 
-            // ========================================================
-            // SEND WELCOME EMAIL
-            // ========================================================
-
+            // Send the welcome email.
             try
             {
                 await _emailService.SendWelcomeEmailAsync(
@@ -1400,6 +1423,7 @@ namespace HemaCore.Controllers
 
             return RedirectToAction(nameof(ManagePatients));
         }
+
         #endregion
 
         // ============================================================
@@ -1407,7 +1431,6 @@ namespace HemaCore.Controllers
         // ============================================================
 
         #region Edit Patient History
-
 
         [HttpGet]
         public async Task<IActionResult> EditPatientHistory(int id)
@@ -1589,36 +1612,21 @@ namespace HemaCore.Controllers
 
             var requests = await _context.TestRequests
                 .Include(r => r.Patient)
-                .Where(r =>
-                    r.DoctorId ==
-                    doctor.DoctorId)
-                .OrderByDescending(r =>
-                    r.RequestDate)
+                .Where(r => r.DoctorId == doctor.DoctorId)
+                .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
 
             var model = new ReportsViewModel
             {
                 Requests = requests
-                    .Select(r =>
-                        new ReportRequestItemViewModel
-                        {
-                            TestRequestId =
-                                r.TestRequestId,
-
-                            RequestDate =
-                                r.RequestDate,
-
-                            PatientName =
-                                r.Patient.Name +
-                                " " +
-                                r.Patient.Surname,
-
-                            Urgency =
-                                r.Urgency,
-
-                            Status =
-                                r.Status
-                        })
+                    .Select(r => new ReportRequestItemViewModel
+                    {
+                        TestRequestId = r.TestRequestId,
+                        RequestDate = r.RequestDate,
+                        PatientName = r.Patient.Name + " " + r.Patient.Surname,
+                        Urgency = r.Urgency,
+                        Status = r.Status
+                    })
                     .ToList()
             };
 
@@ -1655,12 +1663,9 @@ namespace HemaCore.Controllers
                 .Include(r => r.Patient)
                 .Where(r =>
                     r.DoctorId == doctor.DoctorId &&
-                    (start == null ||
-                     r.RequestDate >= start) &&
-                    (end == null ||
-                     r.RequestDate < end))
-                .OrderByDescending(r =>
-                    r.RequestDate)
+                    (start == null || r.RequestDate >= start) &&
+                    (end == null || r.RequestDate < end))
+                .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
 
             var model = new ReportsViewModel
@@ -1669,26 +1674,14 @@ namespace HemaCore.Controllers
                 EndDate = endDate,
 
                 Requests = requests
-                    .Select(r =>
-                        new ReportRequestItemViewModel
-                        {
-                            TestRequestId =
-                                r.TestRequestId,
-
-                            RequestDate =
-                                r.RequestDate,
-
-                            PatientName =
-                                r.Patient.Name +
-                                " " +
-                                r.Patient.Surname,
-
-                            Urgency =
-                                r.Urgency,
-
-                            Status =
-                                r.Status
-                        })
+                    .Select(r => new ReportRequestItemViewModel
+                    {
+                        TestRequestId = r.TestRequestId,
+                        RequestDate = r.RequestDate,
+                        PatientName = r.Patient.Name + " " + r.Patient.Surname,
+                        Urgency = r.Urgency,
+                        Status = r.Status
+                    })
                     .ToList()
             };
 
@@ -1717,132 +1710,272 @@ namespace HemaCore.Controllers
             if (!string.IsNullOrWhiteSpace(endDate) &&
                 DateTime.TryParse(endDate, out var parsedEnd))
             {
+                // Include the selected end date in the report.
                 end = parsedEnd.Date.AddDays(1);
             }
 
+            if (start.HasValue && end.HasValue && start >= end)
+            {
+                return BadRequest("The start date must not be after the end date.");
+            }
+
             var requests = await _context.TestRequests
+                .AsNoTracking()
                 .Include(r => r.Patient)
                 .Where(r =>
                     r.DoctorId == doctor.DoctorId &&
-                    (start == null ||
-                     r.RequestDate >= start) &&
-                    (end == null ||
-                     r.RequestDate < end))
-                .OrderByDescending(r =>
-                    r.RequestDate)
+                    (!start.HasValue || r.RequestDate >= start.Value) &&
+                    (!end.HasValue || r.RequestDate < end.Value))
+                .OrderByDescending(r => r.RequestDate)
+                .ThenByDescending(r => r.TestRequestId)
                 .ToListAsync();
 
-            var doctorName =
-                "Dr. " +
-                doctor.Name + " " +
-                doctor.Surname;
+            var doctorName = $"Dr. {doctor.Name} {doctor.Surname}";
+            var generatedAt = DateTime.Now;
 
-            var sb =
-                new System.Text.StringBuilder();
+            var period = start.HasValue || end.HasValue
+                ? $"{start?.ToString("dd MMM yyyy") ?? "Earliest"} - " +
+                  $"{(end.HasValue ? end.Value.AddDays(-1).ToString("dd MMM yyyy") : "Latest")}"
+                : "All dates";
 
-            sb.Append($@"
-<html>
-<head>
-<style>
+            var completed = requests.Count(r => r.Status == "Completed");
+            var inProgress = requests.Count(r => r.Status == "In Progress");
+            var statRequests = requests.Count(r => r.Urgency == "STAT");
+            var cancelled = requests.Count(r => r.Status == "Cancelled");
 
-body {{
-    font-family: Arial, sans-serif;
-    padding: 2rem;
-    color: #333;
-}}
-
-h1 {{
-    color: #1a73e8;
-}}
-
-table {{
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}}
-
-th {{
-    background: #1a73e8;
-    color: white;
-    padding: 0.6rem 1rem;
-    text-align: left;
-}}
-
-td {{
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid #eee;
-}}
-
-tr:nth-child(even) {{
-    background: #f9f9f9;
-}}
-
-.meta {{
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-}}
-
-</style>
-</head>
-
-<body>
-
-<h1>Test Requests Report</h1>
-
-<p class='meta'>
-    Doctor: {doctorName}<br/>
-    Period: {startDate ?? "All"} to {endDate ?? "All"}<br/>
-    Generated: {DateTime.Now:dd MMM yyyy HH:mm}
-</p>
-
-<table>
-
-<thead>
-
-<tr>
-    <th>Request #</th>
-    <th>Date</th>
-    <th>Patient</th>
-    <th>Urgency</th>
-    <th>Status</th>
-</tr>
-
-</thead>
-
-<tbody>
-");
-
-            foreach (var request in requests)
+            var document = QuestPDF.Fluent.Document.Create(container =>
             {
-                var patientName =
-                    request.Patient.Name +
-                    " " +
-                    request.Patient.Surname;
+                container.Page(page =>
+                {
+                    page.Size(QuestPDF.Helpers.PageSizes.A4);
+                    page.Margin(35);
+                    page.DefaultTextStyle(x => x
+                        .FontFamily("Arial")
+                        .FontSize(9)
+                        .FontColor(Colors.Grey.Darken3));
 
-                sb.Append($@"
-<tr>
-    <td>#{request.TestRequestId}</td>
-    <td>{request.RequestDate:dd MMM yyyy}</td>
-    <td>{patientName}</td>
-    <td>{request.Urgency}</td>
-    <td>{request.Status}</td>
-</tr>");
-            }
+                    // HEADER: Appears on every page.
+                    page.Header().Column(header =>
+                    {
+                        header.Item()
+                            .Text("NMB-HLabSys")
+                            .FontSize(11)
+                            .SemiBold()
+                            .FontColor(Colors.Blue.Darken2);
 
-            sb.Append(@"
-</tbody>
+                        header.Item()
+                            .PaddingTop(8)
+                            .Text("TEST REQUESTS REPORT")
+                            .FontSize(20)
+                            .Bold()
+                            .FontColor(Colors.Blue.Darken3);
 
-</table>
+                        header.Item()
+                            .PaddingTop(5)
+                            .Text("Doctor: " + doctorName)
+                            .FontSize(10);
 
-</body>
-</html>");
+                        header.Item()
+                            .Text("Report period: " + period);
 
-            ViewBag.HtmlContent =
-                sb.ToString();
+                        header.Item()
+                            .Text("Generated: " +
+                                  generatedAt.ToString("dd MMM yyyy, HH:mm"));
 
-            return View("PrintLayout");
+                        header.Item()
+                            .PaddingTop(12)
+                            .LineHorizontal(1)
+                            .LineColor(Colors.Blue.Lighten2);
+                    });
+
+                    page.Content()
+                        .PaddingTop(18)
+                        .Column(content =>
+                        {
+                            content.Spacing(12);
+
+                            // SUMMARY
+                            content.Item().Text("Report Summary")
+                                .FontSize(13)
+                                .Bold()
+                                .FontColor(Colors.Blue.Darken3);
+
+                            content.Item().Border(1)
+                                .BorderColor(Colors.Grey.Lighten2)
+                                .Padding(10)
+                                .Row(row =>
+                                {
+                                    row.RelativeItem().Column(col =>
+                                    {
+                                        col.Item().Text("Total Requests");
+                                        col.Item().Text(requests.Count.ToString())
+                                            .FontSize(16).Bold();
+                                    });
+
+                                    row.RelativeItem().Column(col =>
+                                    {
+                                        col.Item().Text("Completed");
+                                        col.Item().Text(completed.ToString())
+                                            .FontSize(16).Bold();
+                                    });
+
+                                    row.RelativeItem().Column(col =>
+                                    {
+                                        col.Item().Text("In Progress");
+                                        col.Item().Text(inProgress.ToString())
+                                            .FontSize(16).Bold();
+                                    });
+
+                                    row.RelativeItem().Column(col =>
+                                    {
+                                        col.Item().Text("STAT Requests");
+                                        col.Item().Text(statRequests.ToString())
+                                            .FontSize(16).Bold();
+                                    });
+                                });
+
+                            content.Item().Text("Test Request Details")
+                                .FontSize(13)
+                                .Bold()
+                                .FontColor(Colors.Blue.Darken3);
+
+                            if (requests.Count == 0)
+                            {
+                                content.Item()
+                                    .PaddingVertical(20)
+                                    .Border(1)
+                                    .BorderColor(Colors.Grey.Lighten2)
+                                    .Padding(15)
+                                    .Text("No records found for the selected date range.")
+                                    .FontSize(11);
+                            }
+                            else
+                            {
+                                content.Item().Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.ConstantColumn(48);
+                                        columns.ConstantColumn(78);
+                                        columns.RelativeColumn(2);
+                                        columns.ConstantColumn(58);
+                                        columns.RelativeColumn(1.2f);
+                                    });
+
+                                    // Table headings repeat on subsequent pages.
+                                    table.Header(header =>
+                                    {
+                                        string[] headings =
+                                        {
+                                    "Request #",
+                                    "Date",
+                                    "Patient",
+                                    "Urgency",
+                                    "Status"
+                                        };
+
+                                        foreach (var heading in headings)
+                                        {
+                                            header.Cell()
+                                                .Background(Colors.Blue.Darken2)
+                                                .Padding(6)
+                                                .Text(heading)
+                                                .FontSize(8)
+                                                .Bold()
+                                                .FontColor(Colors.White);
+                                        }
+                                    });
+
+                                    foreach (var request in requests)
+                                    {
+                                        var patientName = request.Patient == null
+                                            ? "Unknown patient"
+                                            : $"{request.Patient.Name} {request.Patient.Surname}";
+
+                                        var rowColor = request.TestRequestId % 2 == 0
+                                            ? Colors.Grey.Lighten4
+                                            : Colors.White;
+
+                                        table.Cell()
+                                            .Background(rowColor)
+                                            .BorderBottom(0.5f)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(6)
+                                            .Text("#" + request.TestRequestId);
+
+                                        table.Cell()
+                                            .Background(rowColor)
+                                            .BorderBottom(0.5f)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(6)
+                                            .Text(request.RequestDate.ToString("dd MMM yyyy"));
+
+                                        table.Cell()
+                                            .Background(rowColor)
+                                            .BorderBottom(0.5f)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(6)
+                                            .Text(patientName);
+
+                                        table.Cell()
+                                            .Background(rowColor)
+                                            .BorderBottom(0.5f)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(6)
+                                            .Text(request.Urgency ?? "N/A");
+
+                                        table.Cell()
+                                            .Background(rowColor)
+                                            .BorderBottom(0.5f)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(6)
+                                            .Text(request.Status ?? "Unknown");
+                                    }
+                                });
+                            }
+
+                            content.Item()
+                                .PaddingTop(8)
+                                .Text($"Cancelled requests: {cancelled}")
+                                .FontSize(9);
+                        });
+
+                    // FOOTER: Appears on every page.
+                    page.Footer().Column(footer =>
+                    {
+                        footer.Item()
+                            .LineHorizontal(0.5f)
+                            .LineColor(Colors.Grey.Lighten1);
+
+                        footer.Item()
+                            .PaddingTop(6)
+                            .Row(row =>
+                            {
+                                row.RelativeItem().Text(
+                                    $"NMB-HLabSys | Generated {generatedAt:dd MMM yyyy HH:mm}");
+
+                                row.ConstantItem(100)
+                                    .AlignRight()
+                                    .Text(text =>
+                                    {
+                                        text.Span("Page ");
+                                        text.CurrentPageNumber();
+                                        text.Span(" of ");
+                                        text.TotalPages();
+                                    });
+                            });
+                    });
+                });
+            });
+
+            byte[] pdf = document.GeneratePdf();
+
+            return File(
+                pdf,
+                "application/pdf",
+                $"TestRequestsReport_{generatedAt:yyyyMMdd_HHmm}.pdf");
         }
+
 
         #endregion
 
@@ -1855,44 +1988,29 @@ tr:nth-child(even) {{
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var userId =
-                _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
             var doctor = await _context.Doctors
                 .Include(d => d.User)
-                .FirstOrDefaultAsync(
-                    d => d.UserId == userId);
+                .FirstOrDefaultAsync(d => d.UserId == userId);
 
             if (doctor == null)
                 return NotFound();
 
             var model = new DoctorProfileViewModel
             {
-                DoctorId =
-                    doctor.DoctorId,
-
-                Name =
-                    doctor.Name,
-
-                Surname =
-                    doctor.Surname,
-
-                HPCSANumber =
-                    doctor.HPCSANumber,
-
-                PhoneNumber =
-                    doctor.PhoneNumber,
-
-                Email =
-                    doctor.User?.Email ?? ""
+                DoctorId = doctor.DoctorId,
+                Name = doctor.Name,
+                Surname = doctor.Surname,
+                HPCSANumber = doctor.HPCSANumber,
+                PhoneNumber = doctor.PhoneNumber,
+                Email = doctor.User?.Email ?? ""
             };
 
-            return View(
-                "MyProfile",
-                model);
+            return View("MyProfile", model);
         }
 
         [HttpPost]
@@ -1900,8 +2018,7 @@ tr:nth-child(even) {{
         public async Task<IActionResult> UpdatePersonal(
             DoctorProfileViewModel model)
         {
-            var doctor =
-                await GetCurrentDoctorAsync();
+            var doctor = await GetCurrentDoctorAsync();
 
             if (doctor == null)
                 return Unauthorized();
@@ -1909,26 +2026,19 @@ tr:nth-child(even) {{
             if (string.IsNullOrWhiteSpace(model.Name) ||
                 string.IsNullOrWhiteSpace(model.Surname))
             {
-                TempData["Error"] =
-                    "Name and surname are required.";
+                TempData["Error"] = "Name and surname are required.";
 
-                return RedirectToAction(
-                    nameof(Profile));
+                return RedirectToAction(nameof(Profile));
             }
 
-            doctor.Name =
-                model.Name.Trim();
-
-            doctor.Surname =
-                model.Surname.Trim();
+            doctor.Name = model.Name.Trim();
+            doctor.Surname = model.Surname.Trim();
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                "Personal information updated.";
+            TempData["Success"] = "Personal information updated.";
 
-            return RedirectToAction(
-                nameof(Profile));
+            return RedirectToAction(nameof(Profile));
         }
 
         [HttpPost]
@@ -1936,32 +2046,25 @@ tr:nth-child(even) {{
         public async Task<IActionResult> UpdateContact(
             DoctorProfileViewModel model)
         {
-            var doctor =
-                await GetCurrentDoctorAsync();
+            var doctor = await GetCurrentDoctorAsync();
 
             if (doctor == null)
                 return Unauthorized();
 
-            if (string.IsNullOrWhiteSpace(
-                    model.PhoneNumber))
+            if (string.IsNullOrWhiteSpace(model.PhoneNumber))
             {
-                TempData["Error"] =
-                    "Phone number is required.";
+                TempData["Error"] = "Phone number is required.";
 
-                return RedirectToAction(
-                    nameof(Profile));
+                return RedirectToAction(nameof(Profile));
             }
 
-            doctor.PhoneNumber =
-                model.PhoneNumber.Trim();
+            doctor.PhoneNumber = model.PhoneNumber.Trim();
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =
-                "Contact information updated.";
+            TempData["Success"] = "Contact information updated.";
 
-            return RedirectToAction(
-                nameof(Profile));
+            return RedirectToAction(nameof(Profile));
         }
 
         #endregion

@@ -18,21 +18,21 @@
         margin-bottom: 25px;
     }
 
-        .page-heading h1 {
-            margin: 0 0 6px;
-            font-size: 28px;
-            font-weight: 700;
-            color: #1f5068;
-        }
+    .page-heading h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f5068;
+    }
 
-        .page-heading p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
+    .page-heading p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
 
     .request-step-card {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
         margin-bottom: 22px;
@@ -110,18 +110,18 @@
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-        .request-select:focus,
-        .request-input:focus,
-        .request-textarea:focus {
-            outline: none;
-            border-color: #2c7da0;
-            box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.12);
-        }
+    .request-select:focus,
+    .request-input:focus,
+    .request-textarea:focus {
+        outline: none;
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 3px rgba(44, 125, 160, 0.12);
+    }
 
-        .request-input.input-error {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-        }
+    .request-input.input-error {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
 
     .request-textarea {
         min-height: 110px;
@@ -135,64 +135,6 @@
         font-size: 13px;
     }
 
-    .id-search-wrapper {
-        position: relative;
-    }
-
-    .id-suggestions {
-        display: none;
-        position: absolute;
-        top: calc(100% + 4px);
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        max-height: 260px;
-        overflow-y: auto;
-    }
-
-    .id-suggestion-item {
-        padding: 0.7rem 1rem;
-        cursor: pointer;
-        border-bottom: 1px solid #f1f5f9;
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-    }
-
-        .id-suggestion-item:hover {
-            background: #f8fafc;
-        }
-
-    .id-suggestion-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #2c7da0;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.75rem;
-        flex-shrink: 0;
-    }
-
-    .id-suggestion-name {
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: #1f5068;
-    }
-
-    .id-suggestion-id {
-        font-size: 0.75rem;
-        color: #6b7280;
-        font-family: monospace;
-    }
-
     .patient-summary {
         margin-top: 16px;
         padding: 18px;
@@ -202,9 +144,9 @@
         display: none;
     }
 
-        .patient-summary.show {
-            display: block;
-        }
+    .patient-summary.show {
+        display: block;
+    }
 
     .patient-summary-title {
         display: flex;
@@ -240,67 +182,156 @@
 
     .patient-summary-details {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         font-size: 13px;
         color: #374151;
         margin-top: 8px;
         padding-top: 10px;
         border-top: 1px solid #dbe7ec;
+        overflow-wrap: anywhere;
     }
 
-        .patient-summary-details strong {
-            display: block;
-            color: #6b7280;
-            font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin-bottom: 2px;
-        }
+    .patient-summary-details strong {
+        display: block;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 2px;
+    }
 
-    .not-found-box {
+    .patient-search-message {
         display: none;
         margin-top: 16px;
-        padding: 18px;
-        border: 1px dashed #fca5a5;
-        background: #fef2f2;
+        padding: 16px;
         border-radius: 9px;
-        text-align: center;
+        font-size: 14px;
     }
 
-        .not-found-box.show {
-            display: block;
-        }
+    .patient-search-message.show {
+        display: block;
+    }
 
-        .not-found-box p {
-            margin: 0 0 12px;
-            color: #991b1b;
-            font-size: 14px;
-        }
+    .patient-search-message p {
+        margin: 0 0 12px;
+    }
 
-        .not-found-box a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #2c7da0;
-            color: white;
-            text-decoration: none;
-            padding: 9px 18px;
-            border-radius: 7px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+    .patient-search-message p:last-child {
+        margin-bottom: 0;
+    }
 
-            .not-found-box a:hover {
-                background: #1f5068;
-                color: white;
-            }
+    .message-error {
+        color: #991b1b;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .message-warning {
+        color: #854d0e;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+    }
+
+    .message-info {
+        color: #1f5068;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+    }
+
+    .patient-message-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #2c7da0;
+        color: white;
+        text-decoration: none;
+        padding: 9px 16px;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .patient-message-link:hover {
+        background: #1f5068;
+        color: white;
+    }
+
+    .history-section {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid #dbe7ec;
+    }
+
+    .history-section h4 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        color: #1f5068;
+    }
+
+    .history-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .history-card {
+        background: #fff;
+        border: 1px solid #dbe7ec;
+        border-radius: 8px;
+        padding: 12px;
+        min-width: 0;
+    }
+
+    .history-card h5 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: #1f5068;
+    }
+
+    .history-list {
+        margin: 0;
+        padding-left: 18px;
+        color: #374151;
+        font-size: 13px;
+    }
+
+    .history-list li {
+        margin-bottom: 5px;
+        overflow-wrap: anywhere;
+    }
+
+    .history-empty {
+        color: #6b7280;
+        font-size: 13px;
+        margin: 0;
+    }
 
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+
+    /* TEST TYPES: search, grid and Show More */
+
+    .test-search-wrapper {
+        position: relative;
+        margin-bottom: 14px;
+    }
+
+    .test-search-wrapper > i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        pointer-events: none;
+    }
+
+    .test-search-wrapper .request-input {
+        padding-left: 40px;
     }
 
     .test-types-grid {
@@ -322,15 +353,19 @@
         transition: all 0.2s ease;
     }
 
-        .test-type-card:hover {
-            border-color: #61a5c2;
-            background: #f8fcfd;
-        }
+    .test-type-card[hidden] {
+        display: none !important;
+    }
 
-        .test-type-card.selected {
-            border-color: #2c7da0;
-            background: #eef8fb;
-        }
+    .test-type-card:hover {
+        border-color: #61a5c2;
+        background: #f8fcfd;
+    }
+
+    .test-type-card.selected {
+        border-color: #2c7da0;
+        background: #eef8fb;
+    }
 
     .test-checkbox {
         margin-top: 3px;
@@ -357,6 +392,40 @@
         font-size: 12px;
         color: #6b7280;
         margin-top: 3px;
+    }
+
+    .test-list-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .test-more-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 18px;
+        border: 1px solid #61a5c2;
+        border-radius: 8px;
+        background: #eef8fb;
+        color: #2c7da0;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .test-more-button:hover {
+        background: #d6edf5;
+        border-color: #2c7da0;
+    }
+
+    .test-more-button[hidden] {
+        display: none !important;
     }
 
     .selected-count {
@@ -406,9 +475,9 @@
         font-size: 14px;
     }
 
-        .sample-type-label i {
-            color: #2c7da0;
-        }
+    .sample-type-label i {
+        color: #2c7da0;
+    }
 
     .no-options,
     .no-samples-yet {
@@ -449,9 +518,9 @@
         color: #4b5563;
     }
 
-        .btn-cancel:hover {
-            background: #f9fafb;
-        }
+    .btn-cancel:hover {
+        background: #f9fafb;
+    }
 
     .btn-submit {
         border: 1px solid #2c7da0;
@@ -459,9 +528,9 @@
         color: white;
     }
 
-        .btn-submit:hover {
-            background: #1f5068;
-        }
+    .btn-submit:hover {
+        background: #1f5068;
+    }
 
     .validation-summary {
         margin-bottom: 20px;
@@ -477,16 +546,17 @@
         display: none;
     }
 
-        #clientValidationSummary ul {
-            margin: 6px 0 0;
-            padding-left: 20px;
-        }
+    #clientValidationSummary ul {
+        margin: 6px 0 0;
+        padding-left: 20px;
+    }
 
     @@media (max-width: 768px) {
         .form-row,
         .test-types-grid,
         .sample-row,
-        .patient-summary-details {
+        .patient-summary-details,
+        .history-grid {
             grid-template-columns: 1fr;
         }
 
@@ -498,6 +568,15 @@
         .btn-submit {
             width: 100%;
         }
+
+        .test-list-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .test-more-button {
+            justify-content: center;
+        }
     }
 </style>
 
@@ -505,7 +584,6 @@
 
     <div class="page-heading">
         <h1>Create New Test Request</h1>
-       @*  <p>Create a laboratory test request for one of your patients.</p> *@
     </div>
 
     <form asp-controller="Doctor"
@@ -523,21 +601,21 @@
             <ul id="clientValidationList"></ul>
         </div>
 
-        <!-- STEP 1 -->
+        <!-- STEP 1: PATIENT SELECTION -->
+
         <div class="request-step-card">
 
             <div class="request-step-header">
                 <div class="step-badge">1</div>
-
                 <div>
                     <h2>Patient Selection</h2>
-                    <p>Search for the patient by ID number to confirm their identity.</p>
+                    <p>Enter the patient's full 13-digit ID number to check their registration and consent.</p>
                 </div>
             </div>
 
             <div class="request-step-body">
 
-                <div class="form-group id-search-wrapper">
+                <div class="form-group">
 
                     <label for="patientIdSearch" class="form-label">
                         Patient ID Number <span class="required-star">*</span>
@@ -546,10 +624,15 @@
                     <input type="text"
                            id="patientIdSearch"
                            class="request-input"
-                           placeholder="Enter the patient's ID number..."
-                           autocomplete="off" />
+                           placeholder="Enter all 13 digits"
+                           autocomplete="off"
+                           maxlength="13"
+                           inputmode="numeric"
+                           aria-describedby="patientSearchStatus" />
 
-                    <div id="idSuggestions" class="id-suggestions"></div>
+                    <small id="patientSearchStatus" style="display:block; margin-top:6px; color:#6b7280;">
+                        Enter exactly 13 digits to search for a registered patient.
+                    </small>
 
                     <input type="hidden" asp-for="PatientId" id="patientIdHidden" />
 
@@ -557,6 +640,8 @@
                           class="field-validation"></span>
 
                 </div>
+
+                <!-- Patient details: only shown when consent is active -->
 
                 <div class="patient-summary" id="patientSummary">
 
@@ -568,41 +653,83 @@
 
                         <div>
                             <h3 id="selectedPatientName"></h3>
-                            <p>Confirmed patient — details below</p>
+                            <p id="patientConsentStatus">Active consent confirmed</p>
                         </div>
 
                     </div>
 
                     <div class="patient-summary-details">
+
                         <div>
                             <strong>ID Number</strong>
                             <span id="selectedPatientId"></span>
                         </div>
+
                         <div>
                             <strong>Date of Birth</strong>
                             <span id="selectedPatientDob"></span>
                         </div>
+
                         <div>
                             <strong>Phone Number</strong>
                             <span id="selectedPatientPhone"></span>
                         </div>
+
                         <div>
                             <strong>Address</strong>
                             <span id="selectedPatientAddress"></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Mini medical history -->
+
+                    <div class="history-section" id="patientHistorySection">
+
+                        <h4>
+                            <i class="fas fa-notes-medical"></i>
+                            Patient Medical History
+                        </h4>
+
+                        <div class="history-grid">
+
+                            <div class="history-card">
+                                <h5><i class="fas fa-heartbeat"></i> Medical Conditions</h5>
+                                <ul class="history-list" id="patientConditions"></ul>
+                            </div>
+
+                            <div class="history-card">
+                                <h5><i class="fas fa-allergies"></i> Allergies</h5>
+                                <ul class="history-list" id="patientAllergies"></ul>
+                            </div>
+
+                            <div class="history-card">
+                                <h5><i class="fas fa-pills"></i> Current Medications</h5>
+                                <ul class="history-list" id="patientMedications"></ul>
+                            </div>
+
                         </div>
                     </div>
 
                 </div>
 
-                <div class="not-found-box" id="notFoundBox">
-                    <p>
-                        <i class="fas fa-exclamation-circle"></i>
-                        Sorry, we don't have a patient with that ID number.
-                    </p>
-                    <a href="#" id="addPatientLink">
+                <!-- Messages for missing patients, missing consent, and errors -->
+
+                <div id="patientSearchMessage"
+                     class="patient-search-message"
+                     role="status"
+                     aria-live="polite">
+
+                    <p id="patientSearchMessageText"></p>
+
+                    <a href="#"
+                       id="patientMessageAction"
+                       class="patient-message-link"
+                       style="display:none;">
                         <i class="fas fa-user-plus"></i>
-                        Add New Patient
+                        <span id="patientMessageActionText">Add New Patient</span>
                     </a>
+
                 </div>
 
                 <div class="form-row">
@@ -613,14 +740,11 @@
                             Urgency <span class="required-star">*</span>
                         </label>
 
-                        <select asp-for="Urgency"
-                                class="request-select">
-
+                        <select asp-for="Urgency" class="request-select">
                             <option value="">-- Select Urgency --</option>
                             <option value="Routine">Routine</option>
                             <option value="Urgent">Urgent</option>
                             <option value="STAT">STAT</option>
-
                         </select>
 
                         <span asp-validation-for="Urgency"
@@ -648,16 +772,15 @@
             </div>
         </div>
 
+        <!-- STEP 2: TEST TYPES -->
 
-        <!-- STEP 2 -->
         <div class="request-step-card">
 
             <div class="request-step-header">
                 <div class="step-badge">2</div>
-
                 <div>
                     <h2>Select Test Types</h2>
-                    <p>Select one or more laboratory tests required for this patient.</p>
+                    <p>Search for the required tests and select one or more.</p>
                 </div>
             </div>
 
@@ -671,8 +794,17 @@
 
                 @if (Model.TestTypes != null && Model.TestTypes.Any())
                 {
-                    <div class="test-types-grid">
+                    <div class="test-search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="search"
+                               id="testTypeSearch"
+                               class="request-input"
+                               placeholder="Search test types..."
+                               autocomplete="off"
+                               aria-label="Search test types" />
+                    </div>
 
+                    <div class="test-types-grid" id="testTypesGrid">
                         @foreach (var test in Model.TestTypes)
                         {
                             var isSelected =
@@ -681,29 +813,44 @@
 
                             <label class="test-type-card @(isSelected ? "selected" : "")"
                                    data-sample-type-id="@test.SampleTypeId"
-                                   data-sample-type-name="@test.SampleTypeName">
+                                   data-sample-type-name="@test.SampleTypeName"
+                                   data-test-name="@test.TestTypeName.ToLowerInvariant()">
 
                                 <input type="checkbox"
                                        name="SelectedTestTypeIds"
                                        value="@test.TestTypeId"
                                        class="test-checkbox"
-                                @(isSelected ? "checked" : "") />
+                                       @(isSelected ? "checked" : "") />
 
                                 <div class="test-type-content">
-
                                     <span class="test-type-name">
                                         @test.TestTypeName
                                     </span>
 
                                     <span class="test-type-sample">
-                                        <i class="fas fa-tint"></i> Requires: @test.SampleTypeName
+                                        <i class="fas fa-tint"></i>
+                                        Requires: @test.SampleTypeName
                                     </span>
-
                                 </div>
-
                             </label>
                         }
+                    </div>
 
+                    <p id="noMatchingTests"
+                       class="no-options"
+                       style="display:none;">
+                        No test types match your search.
+                    </p>
+
+                    <div class="test-list-actions">
+                        <span id="testResultsCount"></span>
+
+                        <button type="button"
+                                id="toggleTestTypes"
+                                class="test-more-button"
+                                hidden>
+                            Show More
+                        </button>
                     </div>
                 }
                 else
@@ -717,16 +864,15 @@
             </div>
         </div>
 
+        <!-- STEP 3: SAMPLE INFORMATION -->
 
-        <!-- STEP 3 -->
         <div class="request-step-card">
 
             <div class="request-step-header">
                 <div class="step-badge">3</div>
-
                 <div>
                     <h2>Sample Information</h2>
-                    <p>These samples are needed based on the test types you selected above. Enter a barcode for each.</p>
+                    <p>Select test types above to see the required samples, then enter a barcode for each.</p>
                 </div>
             </div>
 
@@ -742,25 +888,20 @@
             </div>
         </div>
 
-
         <!-- ACTIONS -->
+
         <div class="form-actions">
 
             <a asp-controller="Doctor"
                asp-action="Index"
                class="btn-cancel">
-
                 <i class="fas fa-times"></i>
                 Cancel
-
             </a>
 
-            <button type="submit"
-                    class="btn-submit">
-
+            <button type="submit" class="btn-submit">
                 <i class="fas fa-paper-plane"></i>
                 Submit Test Request
-
             </button>
 
         </div>
@@ -769,17 +910,14 @@
 
 </div>
 
-
 @section Scripts {
 
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-
         document.addEventListener("DOMContentLoaded", function () {
 
             const idSearch = document.getElementById("patientIdSearch");
-            const idSuggestions = document.getElementById("idSuggestions");
             const patientIdHidden = document.getElementById("patientIdHidden");
 
             const patientSummary = document.getElementById("patientSummary");
@@ -789,38 +927,25 @@
             const selectedPatientPhone = document.getElementById("selectedPatientPhone");
             const selectedPatientAddress = document.getElementById("selectedPatientAddress");
 
-            const notFoundBox = document.getElementById("notFoundBox");
-            const addPatientLink = document.getElementById("addPatientLink");
+            const patientConditions = document.getElementById("patientConditions");
+            const patientAllergies = document.getElementById("patientAllergies");
+            const patientMedications = document.getElementById("patientMedications");
+
+            const patientSearchStatus = document.getElementById("patientSearchStatus");
+            const patientSearchMessage = document.getElementById("patientSearchMessage");
+            const patientSearchMessageText = document.getElementById("patientSearchMessageText");
+            const patientMessageAction = document.getElementById("patientMessageAction");
+            const patientMessageActionText = document.getElementById("patientMessageActionText");
 
             const testCheckboxes = document.querySelectorAll(".test-checkbox");
             const selectedTestCount = document.getElementById("selectedTestCount");
-
             const sampleList = document.getElementById("sampleList");
 
             const clientValidationSummary = document.getElementById("clientValidationSummary");
             const clientValidationList = document.getElementById("clientValidationList");
 
-            /*
-             * PATIENT DATA
-             */
-
-            const patients = [
-
-                @foreach (var patient in Model.Patients)
-                {
-                        <text>
-                            {
-                                id: @patient.PatientId,
-                                name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.FullName)),
-                                idNumber: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.IDNumber)),
-                                dob: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.DateOfBirth.HasValue ? patient.DateOfBirth.Value.ToString("dd MMM yyyy") : "Not recorded")),
-                                phone: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(patient.PhoneNumber)),
-                                address: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(string.IsNullOrEmpty(patient.Address) ? "Not recorded" : patient.Address))
-                            },
-                        </text>
-                }
-
-            ];
+            let searchController = null;
+            let searchSequence = 0;
 
             /*
              * EXISTING BARCODES (for postback with validation errors)
@@ -830,102 +955,344 @@
 
             @if (Model.SampleTypeIds != null && Model.BarcodeNumbers != null)
             {
-                    for (int i = 0; i < Model.SampleTypeIds.Count && i < Model.BarcodeNumbers.Count; i++)
+                for (int i = 0; i < Model.SampleTypeIds.Count && i < Model.BarcodeNumbers.Count; i++)
+                {
+                    if (Model.SampleTypeIds[i].HasValue)
                     {
-                            if (Model.SampleTypeIds[i].HasValue)
-                            {
-                                    <text>
-                                        existingBarcodes[@Model.SampleTypeIds[i]!.Value] = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BarcodeNumbers[i]));
-                                    </text>
-                            }
+                        <text>
+                            existingBarcodes[@Model.SampleTypeIds[i]!.Value] =
+                                @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BarcodeNumbers[i]));
+                        </text>
                     }
+                }
             }
 
             /*
-             * SELECT A PATIENT
+             * PATIENT SEARCH UI HELPERS
              */
 
-            function selectPatient(patient) {
-
-                patientIdHidden.value = patient.id;
-                idSearch.value = patient.idNumber;
-
-                selectedPatientName.textContent = patient.name;
-                selectedPatientId.textContent = patient.idNumber;
-                selectedPatientDob.textContent = patient.dob;
-                selectedPatientPhone.textContent = patient.phone;
-                selectedPatientAddress.textContent = patient.address;
-
-                patientSummary.classList.add("show");
-                notFoundBox.classList.remove("show");
-                idSuggestions.style.display = "none";
-            }
-
-            function clearSelection() {
-                patientIdHidden.value = "";
+            function hidePatientSummary() {
                 patientSummary.classList.remove("show");
+
+                selectedPatientName.textContent = "";
+                selectedPatientId.textContent = "";
+                selectedPatientDob.textContent = "";
+                selectedPatientPhone.textContent = "";
+                selectedPatientAddress.textContent = "";
+
+                patientConditions.innerHTML = "";
+                patientAllergies.innerHTML = "";
+                patientMedications.innerHTML = "";
             }
 
-            idSearch.addEventListener("input", function () {
+            function hidePatientMessage() {
+                patientSearchMessage.className = "patient-search-message";
+                patientSearchMessageText.textContent = "";
 
-                const query = this.value.trim().toLowerCase();
+                patientMessageAction.style.display = "none";
+                patientMessageAction.removeAttribute("href");
+            }
 
-                clearSelection();
-                notFoundBox.classList.remove("show");
+            function showPatientMessage(message, type, actionUrl, actionText) {
+                patientSearchMessage.className = "patient-search-message show " + type;
+                patientSearchMessageText.textContent = message;
 
-                if (query === "") {
-                    idSuggestions.style.display = "none";
+                if (actionUrl) {
+                    patientMessageAction.href = actionUrl;
+                    patientMessageActionText.textContent = actionText || "Continue";
+                    patientMessageAction.style.display = "inline-flex";
+                } else {
+                    patientMessageAction.style.display = "none";
+                    patientMessageAction.removeAttribute("href");
+                }
+            }
+
+            function setHistoryList(listElement, values) {
+                listElement.innerHTML = "";
+
+                if (!Array.isArray(values) || values.length === 0) {
+                    const item = document.createElement("li");
+                    item.className = "history-empty";
+                    item.textContent = "No records available.";
+                    listElement.appendChild(item);
                     return;
                 }
 
-                const matches = patients.filter(function (p) {
-                    return p.idNumber.toLowerCase().includes(query);
+                values.forEach(function (value) {
+                    const item = document.createElement("li");
+                    item.textContent = value || "Not recorded";
+                    listElement.appendChild(item);
                 });
+            }
 
-                if (matches.length > 0) {
+            function formatDate(value) {
+                if (!value) {
+                    return "Not recorded";
+                }
 
-                    idSuggestions.innerHTML = "";
+                const date = new Date(value);
 
-                    matches.forEach(function (p) {
+                if (Number.isNaN(date.getTime())) {
+                    return value;
+                }
 
-                        const item = document.createElement("div");
-                        item.className = "id-suggestion-item";
+                return date.toLocaleDateString("en-ZA", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    timeZone: "UTC"
+                });
+            }
 
-                        const initial = p.name.charAt(0).toUpperCase();
+            function showPatientDetails(patient) {
+                patientIdHidden.value = patient.patientId;
 
-                        item.innerHTML = `
-                            <div class="id-suggestion-avatar">${initial}</div>
-                            <div>
-                                <div class="id-suggestion-name">${p.name}</div>
-                                <div class="id-suggestion-id">${p.idNumber}</div>
-                            </div>
-                        `;
+                selectedPatientName.textContent = patient.fullName || "Name not recorded";
+                selectedPatientId.textContent = patient.idNumber || idSearch.value;
+                selectedPatientDob.textContent = formatDate(patient.dateOfBirth);
+                selectedPatientPhone.textContent = patient.phoneNumber || "Not recorded";
+                selectedPatientAddress.textContent = patient.address || "Not recorded";
 
-                        item.addEventListener("click", function () {
-                            selectPatient(p);
-                        });
+                setHistoryList(patientConditions, patient.conditions);
+                setHistoryList(patientAllergies, patient.allergies);
+                setHistoryList(patientMedications, patient.medications);
 
-                        idSuggestions.appendChild(item);
-                    });
+                patientSummary.classList.add("show");
+                hidePatientMessage();
+            }
 
-                    idSuggestions.style.display = "block";
+            function resetPatientSelection() {
+                patientIdHidden.value = "";
+                hidePatientSummary();
+                hidePatientMessage();
+            }
 
-                } else {
+            /*
+             * SEARCH THE DATABASE USING THE CONTROLLER ACTION.
+             *
+             * The server checks whether the patient exists and whether
+             * the current doctor has active consent.
+             */
 
-                    idSuggestions.style.display = "none";
+            async function searchPatient(idNumber) {
 
-                    if (query.length >= 6) {
-                        notFoundBox.classList.add("show");
-                        addPatientLink.href = "/Doctor/AddPatient?idNumber=" + encodeURIComponent(this.value.trim());
+                const currentSequence = ++searchSequence;
+
+                if (searchController) {
+                    searchController.abort();
+                }
+
+                searchController = new AbortController();
+
+                resetPatientSelection();
+
+                if (!/^\d{13}$/.test(idNumber)) {
+                    patientSearchStatus.textContent =
+                        "Enter exactly 13 digits to search for a registered patient.";
+
+                    return;
+                }
+
+                patientSearchStatus.textContent = "Searching for patient...";
+                idSearch.classList.remove("input-error");
+
+                try {
+                    const response = await fetch(
+                        "/Doctor/SearchPatientById?idNumber=" + encodeURIComponent(idNumber),
+                        {
+                            method: "GET",
+                            headers: {
+                                "Accept": "application/json"
+                            },
+                            signal: searchController.signal
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    // Ignore an old response if the doctor has typed again.
+                    if (currentSequence !== searchSequence) {
+                        return;
                     }
+
+                    // Patient does not exist in the database.
+                    if (response.status === 404 || data.found === false) {
+
+                        patientIdHidden.value = "";
+
+                        showPatientMessage(
+                            data.message ||
+                            "No patient was found with this ID number. You can add the patient if they are not registered.",
+                            "message-error",
+                            "/Doctor/AddPatient?idNumber=" + encodeURIComponent(idNumber),
+                            "Add New Patient"
+                        );
+
+                        patientSearchStatus.textContent = "Patient not found.";
+                        return;
+                    }
+
+                    // Invalid ID number or another client-side request error.
+                    if (!response.ok) {
+
+                        patientIdHidden.value = "";
+
+                        showPatientMessage(
+                            data.message || "We could not complete the patient search. Please try again.",
+                            "message-error"
+                        );
+
+                        patientSearchStatus.textContent = "Search unsuccessful.";
+                        return;
+                    }
+
+                    // Patient exists but the doctor does not have active consent.
+                    // Do not display the patient's medical history.
+                    if (data.found && !data.hasConsent) {
+
+                        patientIdHidden.value = "";
+
+                        showPatientMessage(
+                            data.message ||
+                            "This patient is registered, but you do not have active consent. Please request consent before accessing their medical history.",
+                            "message-warning",
+                            "/Doctor/RequestConsent?patientId=" + encodeURIComponent(data.patientId),
+                            "Request Patient Consent"
+                        );
+
+                        patientSearchStatus.textContent =
+                            "Patient found. Active consent is required.";
+
+                        return;
+                    }
+
+                    // Patient exists and active consent has been confirmed.
+                    if (data.found && data.hasConsent) {
+
+                        showPatientDetails(data);
+
+                        patientSearchStatus.textContent =
+                            "Patient found. Active consent confirmed.";
+
+                        return;
+                    }
+
+                    showPatientMessage(
+                        "We could not confirm the patient's registration and consent. Please try again.",
+                        "message-error"
+                    );
+
+                    patientSearchStatus.textContent = "Unable to confirm patient.";
+
+                } catch (error) {
+
+                    if (error.name === "AbortError") {
+                        return;
+                    }
+
+                    if (currentSequence !== searchSequence) {
+                        return;
+                    }
+
+                    patientIdHidden.value = "";
+
+                    showPatientMessage(
+                        "An error occurred while searching. Please check your connection and try again.",
+                        "message-error"
+                    );
+
+                    patientSearchStatus.textContent = "Search failed.";
                 }
+            }
+
+            /*
+             * REQUIRE EXACTLY 13 DIGITS.
+             *
+             * The search is performed only after all 13 digits are entered.
+             */
+
+            idSearch.addEventListener("input", function () {
+
+                const originalValue = this.value;
+                const digitsOnly = originalValue.replace(/\D/g, "").slice(0, 13);
+
+                if (originalValue !== digitsOnly) {
+                    this.value = digitsOnly;
+                }
+
+                resetPatientSelection();
+                idSearch.classList.remove("input-error");
+
+                if (searchController) {
+                    searchController.abort();
+                }
+
+                searchSequence++;
+
+                if (digitsOnly.length === 0) {
+                    patientSearchStatus.textContent =
+                        "Enter exactly 13 digits to search for a registered patient.";
+                    return;
+                }
+
+                if (digitsOnly.length < 13) {
+                    patientSearchStatus.textContent =
+                        "You have entered " + digitsOnly.length +
+                        " of 13 digits. Enter the full ID number.";
+
+                    return;
+                }
+
+                searchPatient(digitsOnly);
+            });
+                        /*
+             * REQUEST CONSENT MUST BE A POST (the controller action is [HttpPost]).
+             * Intercept the link and submit a temporary form with the
+             * anti-forgery token instead of navigating with a GET.
+             */
+
+            patientMessageAction.addEventListener("click", function (event) {
+
+                const href = this.getAttribute("href") || "";
+
+                if (!href.startsWith("/Doctor/RequestConsent")) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const patientId = new URL(href, window.location.origin)
+                    .searchParams.get("patientId");
+
+                const token = document.querySelector(
+                    '#createTestRequestForm input[name="__RequestVerificationToken"]'
+                );
+
+                if (!patientId || !token) {
+                    return;
+                }
+
+                const consentForm = document.createElement("form");
+                consentForm.method = "post";
+                consentForm.action = "/Doctor/RequestConsent";
+
+                const patientInput = document.createElement("input");
+                patientInput.type = "hidden";
+                patientInput.name = "patientId";
+                patientInput.value = patientId;
+
+                const tokenInput = document.createElement("input");
+                tokenInput.type = "hidden";
+                tokenInput.name = "__RequestVerificationToken";
+                tokenInput.value = token.value;
+
+                consentForm.appendChild(patientInput);
+                consentForm.appendChild(tokenInput);
+
+                document.body.appendChild(consentForm);
+                consentForm.submit();
             });
 
-            document.addEventListener("click", function (e) {
-                if (e.target !== idSearch && !idSuggestions.contains(e.target)) {
-                    idSuggestions.style.display = "none";
-                }
-            });
 
             /*
              * TEST TYPE SELECTION -> AUTO-BUILD SAMPLE ROWS
@@ -934,23 +1301,30 @@
             function rebuildSampleRows() {
 
                 const currentBarcodes = {};
+
                 sampleList.querySelectorAll(".sample-row").forEach(function (row) {
-                    const sid = row.getAttribute("data-sample-type-id");
+
+                    const sampleId = row.getAttribute("data-sample-type-id");
                     const input = row.querySelector('input[name="BarcodeNumbers"]');
-                    if (sid && input) {
-                        currentBarcodes[sid] = input.value;
+
+                    if (sampleId && input) {
+                        currentBarcodes[sampleId] = input.value;
                     }
                 });
 
                 const neededMap = new Map();
 
                 testCheckboxes.forEach(function (checkbox) {
+
                     const card = checkbox.closest(".test-type-card");
+
                     if (checkbox.checked && card) {
-                        const sId = card.getAttribute("data-sample-type-id");
-                        const sName = card.getAttribute("data-sample-type-name");
-                        if (sId && !neededMap.has(sId)) {
-                            neededMap.set(sId, sName);
+
+                        const sampleId = card.getAttribute("data-sample-type-id");
+                        const sampleName = card.getAttribute("data-sample-type-name");
+
+                        if (sampleId && !neededMap.has(sampleId)) {
+                            neededMap.set(sampleId, sampleName);
                         }
                     }
                 });
@@ -958,39 +1332,80 @@
                 sampleList.innerHTML = "";
 
                 if (neededMap.size === 0) {
+
                     const empty = document.createElement("div");
                     empty.className = "no-samples-yet";
                     empty.id = "noSamplesYet";
-                    empty.innerHTML = '<i class="fas fa-info-circle"></i> Select test types above to see which samples are needed.';
+                    empty.innerHTML =
+                        '<i class="fas fa-info-circle"></i> Select test types above to see which samples are needed.';
+
                     sampleList.appendChild(empty);
                     return;
                 }
 
-                neededMap.forEach(function (sName, sId) {
+                neededMap.forEach(function (sampleName, sampleId) {
 
                     const row = document.createElement("div");
                     row.className = "sample-row";
-                    row.setAttribute("data-sample-type-id", sId);
+                    row.setAttribute("data-sample-type-id", sampleId);
 
-                    const prefill = currentBarcodes[sId] !== undefined
-                        ? currentBarcodes[sId]
-                        : (existingBarcodes[sId] || "");
+                    const prefill = currentBarcodes[sampleId] !== undefined
+                        ? currentBarcodes[sampleId]
+                        : (existingBarcodes[sampleId] || "");
 
-                    row.innerHTML = `
-                        <div class="sample-field">
-                            <label>Sample Type</label>
-                            <div class="sample-type-label">
-                                <i class="fas fa-tint"></i> ${sName}
-                            </div>
-                            <input type="hidden" name="SampleTypeIds" value="${sId}" />
-                        </div>
+                    const sampleField = document.createElement("div");
+                    sampleField.className = "sample-field";
 
-                        <div class="sample-field">
-                            <label>Barcode Number</label>
-                            <input type="text" name="BarcodeNumbers" class="request-input" placeholder="Enter barcode" value="${prefill}" data-sample-name="${sName}" />
-                            <span class="field-validation barcode-error" style="display:none;"></span>
-                        </div>
-                    `;
+                    const sampleLabel = document.createElement("label");
+                    sampleLabel.textContent = "Sample Type";
+
+                    const sampleTypeLabel = document.createElement("div");
+                    sampleTypeLabel.className = "sample-type-label";
+
+                    const sampleIcon = document.createElement("i");
+                    sampleIcon.className = "fas fa-tint";
+
+                    sampleTypeLabel.appendChild(sampleIcon);
+                    sampleTypeLabel.appendChild(
+                        document.createTextNode(" " + (sampleName || "Sample"))
+                    );
+
+                    const sampleTypeInput = document.createElement("input");
+                    sampleTypeInput.type = "hidden";
+                    sampleTypeInput.name = "SampleTypeIds";
+                    sampleTypeInput.value = sampleId;
+
+                    sampleField.appendChild(sampleLabel);
+                    sampleField.appendChild(sampleTypeLabel);
+                    sampleField.appendChild(sampleTypeInput);
+
+                    const barcodeField = document.createElement("div");
+                    barcodeField.className = "sample-field";
+
+                    const barcodeLabel = document.createElement("label");
+                    barcodeLabel.textContent = "Barcode Number";
+
+                    const barcodeInput = document.createElement("input");
+                    barcodeInput.type = "text";
+                    barcodeInput.name = "BarcodeNumbers";
+                    barcodeInput.className = "request-input";
+                    barcodeInput.placeholder = "Enter barcode";
+                    barcodeInput.value = prefill;
+                    barcodeInput.setAttribute(
+                        "data-sample-name",
+                        sampleName || "sample"
+                    );
+
+                    const barcodeError = document.createElement("span");
+                    barcodeError.className = "field-validation barcode-error";
+                    barcodeError.style.display = "none";
+
+                    barcodeField.appendChild(barcodeLabel);
+                    barcodeField.appendChild(barcodeInput);
+                    barcodeField.appendChild(barcodeError);
+
+                    row.appendChild(sampleField);
+                    row.appendChild(barcodeField);
 
                     sampleList.appendChild(row);
                 });
@@ -1006,9 +1421,12 @@
 
                     if (checkbox.checked) {
                         count++;
-                        if (card) card.classList.add("selected");
-                    } else {
-                        if (card) card.classList.remove("selected");
+
+                        if (card) {
+                            card.classList.add("selected");
+                        }
+                    } else if (card) {
+                        card.classList.remove("selected");
                     }
                 });
 
@@ -1016,11 +1434,108 @@
             }
 
             testCheckboxes.forEach(function (checkbox) {
+
                 checkbox.addEventListener("change", function () {
                     updateTestCount();
                     rebuildSampleRows();
                 });
             });
+
+            /*
+             * TEST TYPE SEARCH AND SHOW MORE
+             *
+             * Only the first 6 matching tests are visible. Show More reveals
+             * 6 more each time. Hidden tests that are ticked are still
+             * submitted with the form.
+             */
+
+            const testSearch = document.getElementById("testTypeSearch");
+            const testCards = Array.from(
+                document.querySelectorAll("#testTypesGrid .test-type-card")
+            );
+            const noMatchingTests = document.getElementById("noMatchingTests");
+            const toggleTestTypes = document.getElementById("toggleTestTypes");
+            const testResultsCount = document.getElementById("testResultsCount");
+
+            const TESTS_PER_BATCH = 6;
+            let testVisibleLimit = TESTS_PER_BATCH;
+
+            function getMatchingTestCards() {
+                const query = testSearch.value.trim().toLowerCase();
+
+                return testCards.filter(function (card) {
+                    const testName = card.getAttribute("data-test-name") || "";
+                    const sampleName = (
+                        card.getAttribute("data-sample-type-name") || ""
+                    ).toLowerCase();
+
+                    return testName.includes(query) || sampleName.includes(query);
+                });
+            }
+
+            function filterTestTypes() {
+                const matches = getMatchingTestCards();
+
+                testCards.forEach(function (card) {
+                    card.hidden = true;
+                });
+
+                matches.forEach(function (card, index) {
+                    card.hidden = index >= testVisibleLimit;
+                });
+
+                const shown = Math.min(testVisibleLimit, matches.length);
+
+                noMatchingTests.style.display = matches.length === 0 ? "block" : "none";
+
+                testResultsCount.textContent = matches.length === 0
+                    ? ""
+                    : "Showing " + shown + " of " + matches.length + " tests";
+
+                toggleTestTypes.hidden = matches.length <= TESTS_PER_BATCH;
+
+                if (!toggleTestTypes.hidden) {
+                    if (testVisibleLimit >= matches.length) {
+                        toggleTestTypes.textContent = "Show Less";
+                    } else {
+                        const nextCount = Math.min(
+                            TESTS_PER_BATCH,
+                            matches.length - testVisibleLimit
+                        );
+
+                        toggleTestTypes.textContent = "Show More (" + nextCount + ")";
+                    }
+                }
+            }
+
+            if (testSearch && toggleTestTypes && noMatchingTests && testResultsCount) {
+
+                testSearch.addEventListener("input", function () {
+                    testVisibleLimit = TESTS_PER_BATCH;
+                    filterTestTypes();
+                });
+
+                // Pressing Enter in the search box must not submit the form.
+                testSearch.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                    }
+                });
+
+                toggleTestTypes.addEventListener("click", function () {
+                    const matchingCount = getMatchingTestCards().length;
+
+                    if (testVisibleLimit >= matchingCount) {
+                        testVisibleLimit = TESTS_PER_BATCH;
+                    } else {
+                        testVisibleLimit += TESTS_PER_BATCH;
+                    }
+
+                    filterTestTypes();
+                });
+
+                filterTestTypes();
+            }
 
             /*
              * INITIAL STATE
@@ -1030,21 +1545,24 @@
             rebuildSampleRows();
 
             /*
-             * FORM VALIDATION (inline, no alerts)
+             * FORM VALIDATION
              */
 
             function clearValidationState() {
+
                 clientValidationSummary.style.display = "none";
                 clientValidationList.innerHTML = "";
 
-                document.querySelectorAll(".request-input.input-error").forEach(function (el) {
-                    el.classList.remove("input-error");
-                });
+                document.querySelectorAll(".request-input.input-error")
+                    .forEach(function (element) {
+                        element.classList.remove("input-error");
+                    });
 
-                document.querySelectorAll(".barcode-error").forEach(function (el) {
-                    el.style.display = "none";
-                    el.textContent = "";
-                });
+                document.querySelectorAll(".barcode-error")
+                    .forEach(function (element) {
+                        element.style.display = "none";
+                        element.textContent = "";
+                    });
             }
 
             document.getElementById("createTestRequestForm")
@@ -1054,48 +1572,78 @@
 
                     const problems = [];
 
-                    if (!patientIdHidden.value || patientIdHidden.value === "0") {
-                        problems.push("Please search for and select a patient by ID number.");
+                    const idNumber = idSearch.value.trim();
+
+                    if (!/^\d{13}$/.test(idNumber)) {
+                        problems.push("Enter the patient's complete 13-digit ID number.");
+                        idSearch.classList.add("input-error");
                     }
 
-                    const selectedTests = document.querySelectorAll(".test-checkbox:checked");
+                    if (!patientIdHidden.value || patientIdHidden.value === "0") {
+                        problems.push(
+                            "Search for a registered patient and confirm that you have active consent before submitting the request."
+                        );
+                    }
+
+                    const selectedTests =
+                        document.querySelectorAll(".test-checkbox:checked");
+
                     if (selectedTests.length === 0) {
                         problems.push("Please select at least one test type.");
                     }
 
-                    const barcodeInputs = document.querySelectorAll('input[name="BarcodeNumbers"]');
+                    const barcodeInputs =
+                        document.querySelectorAll('input[name="BarcodeNumbers"]');
+
                     barcodeInputs.forEach(function (input) {
+
                         if (!input.value.trim()) {
+
                             input.classList.add("input-error");
-                            const sampleName = input.getAttribute("data-sample-name") || "sample";
+
+                            const sampleName =
+                                input.getAttribute("data-sample-name") || "sample";
+
                             const errorSpan = input.nextElementSibling;
-                            if (errorSpan && errorSpan.classList.contains("barcode-error")) {
-                                errorSpan.textContent = `Barcode is required for ${sampleName}.`;
+
+                            if (errorSpan &&
+                                errorSpan.classList.contains("barcode-error")) {
+
+                                errorSpan.textContent =
+                                    "Barcode is required for " + sampleName + ".";
+
                                 errorSpan.style.display = "block";
                             }
-                            problems.push(`Enter a barcode for the ${sampleName} sample.`);
+
+                            problems.push(
+                                "Enter a barcode for the " + sampleName + " sample."
+                            );
                         }
                     });
 
                     if (problems.length > 0) {
+
                         event.preventDefault();
 
                         clientValidationList.innerHTML = "";
-                        problems.forEach(function (p) {
+
+                        problems.forEach(function (problem) {
+
                             const li = document.createElement("li");
-                            li.textContent = p;
+                            li.textContent = problem;
+
                             clientValidationList.appendChild(li);
                         });
 
                         clientValidationSummary.style.display = "block";
-                        clientValidationSummary.scrollIntoView({ behavior: "smooth", block: "start" });
 
-                        return;
+                        clientValidationSummary.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
                     }
-
                 });
 
         });
-
     </script>
 }
