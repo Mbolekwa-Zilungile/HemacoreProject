@@ -14,6 +14,7 @@
     double normalMin = ViewBag.NormalMin ?? 0.0;
     double normalMax = ViewBag.NormalMax ?? 0.0;
     string unit = ViewBag.Unit?.ToString() ?? "";
+    bool latestIsAbnormal = ViewBag.LatestIsAbnormal ?? false;
 
     var totalTests = ViewBag.TotalTests ?? 0;
     var completedTests = ViewBag.CompletedTests ?? 0;
@@ -105,7 +106,7 @@
         </div>
     </div>
 
-    <!-- GRAPH -->
+    <!-- GRAPH SECTION -->
     <div class="health-card">
         <div class="card-header">
             <div>
@@ -113,7 +114,7 @@
                 <p>
                     @if (selectedTestTypeId.HasValue)
                     {
-                        <span>Showing results for the selected test. Red lines indicate normal ranges.</span>
+                        <span>Visualizing <strong>@graphValues.Count()</strong> results over time. Shaded areas indicate the normal range.</span>
                     }
                     else
                     {
@@ -133,6 +134,23 @@
         }
         else if (graphLabels.Any())
         {
+            <!-- DYNAMIC BANNER (The "Right Now" view) -->
+            <div class="status-banner @(latestIsAbnormal ? "status-danger" : "status-success")">
+                <i class="fas @(latestIsAbnormal ? "fa-exclamation-triangle" : "fa-check-circle")"></i>
+                <div>
+                    @if (latestIsAbnormal)
+                    {
+                        <strong>Attention Needed:</strong>
+                        <span>Your most recent result (<strong>@graphValues.Last() @unit</strong>) is outside the normal range. Please discuss this with your doctor.</span>
+                    }
+                    else
+                    {
+                        <strong>Looking Good:</strong>
+                        <span>Your most recent result (<strong>@graphValues.Last() @unit</strong>) is within the normal range. Keep up the good work!</span>
+                    }
+                </div>
+            </div>
+
             <div class="chart-container">
                 <canvas id="healthChart"></canvas>
             </div>
@@ -147,7 +165,73 @@
         }
     </div>
 
-    <!-- CONDITIONS & RECENT TESTS -->
+    <!-- RECENT TESTS TABLE -->
+    <div class="health-card">
+        <div class="card-header">
+            <div>
+                <h2><i class="fas fa-vial"></i> Recent Test History</h2>
+                <p>Detailed results for your recent laboratory tests.</p>
+            </div>
+            <a asp-controller="Patient" asp-action="MyTestRequests" class="view-all-btn">
+                View Requests <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="recent-tests">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Test Type</th>
+                            <th>Result</th>
+                            <th>Reference Range</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model.OrderByDescending(r => r.RequestDate).Take(10))
+                        {
+                            foreach (var item in request.TestRequestTestTypes.Where(t => t.TestResult != null && t.Status == "Verified"))
+                            {
+                                var isAbnormal = item.TestResult.IsAbnormal;
+                                <tr>
+                                    <td>@request.RequestDate.ToString("dd MMM yyyy")</td>
+                                    <td><strong>@item.TestType?.TestTypeName</strong></td>
+                                    <td class="@(isAbnormal ? "text-danger fw-bold" : "text-success fw-bold")">
+                                        @item.TestResult.ResultValue @item.TestType?.UnitOfMeasurement
+                                    </td>
+                                    <td class="text-muted">
+                                        @item.TestType?.NormalRangeMin - @item.TestType?.NormalRangeMax
+                                    </td>
+                                    <td>
+                                        @if (isAbnormal)
+                                        {
+                                            <span class="badge bg-danger">Abnormal</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Normal</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="no-conditions">
+                <i class="fas fa-info-circle"></i>
+                <span>No test requests have been recorded yet.</span>
+            </div>
+        }
+    </div>
+
+    <!-- CONDITIONS -->
     <div class="health-card conditions-card">
         <div class="card-header">
             <div>
@@ -184,48 +268,6 @@
         }
     </div>
 
-    <div class="health-card">
-        <div class="card-header">
-            <div>
-                <h2><i class="fas fa-vial"></i> Recent Tests</h2>
-                <p>Your latest laboratory test activity.</p>
-            </div>
-            <a asp-controller="Patient" asp-action="MyTestRequests" class="view-all-btn">
-                View Requests <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-
-        @if (Model != null && Model.Any())
-        {
-            <div class="recent-tests">
-                @foreach (var request in Model.OrderByDescending(r => r.RequestDate).Take(5))
-                {
-                    <div class="recent-test-row">
-                        <div class="recent-test-icon"><i class="fas fa-flask"></i></div>
-                        <div class="recent-test-info">
-                            <strong>Test Request #@request.TestRequestId</strong>
-                            <span>@request.RequestDate.ToString("dd MMM yyyy HH:mm")</span>
-                        </div>
-                        <div class="recent-test-count">
-                            <strong>@(request.TestRequestTestTypes?.Count ?? 0)</strong>
-                            <span>test(s)</span>
-                        </div>
-                        <div class="recent-test-status">
-                            <span>@request.Status</span>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="no-conditions">
-                <i class="fas fa-info-circle"></i>
-                <span>No test requests have been recorded yet.</span>
-            </div>
-        }
-    </div>
-
 </div>
 
 <!-- CHART.JS -->
@@ -238,50 +280,74 @@
 
     const labels = @Html.Raw(labelsJson);
     const dataValues = @Html.Raw(valuesJson);
-    const minLineData = @Html.Raw(minJson);
-    const maxLineData = @Html.Raw(maxJson);
     const unitLabel = "@Html.Raw(unit)";
+    const normalMin = @normalMin;
+    const normalMax = @normalMax;
 
-    if (labels.length > 0) {
+    // 1. Custom Background Zones Plugin (Traffic Light System)
+    const backgroundZones = {
+    id: 'backgroundZones',
+    beforeDraw: (chart) => {
+    const ctx = chart.ctx;
+    const yAxis = chart.scales.y;
+    const xAxis = chart.scales.x;
+
+    // Draw Red Zone (Above Max)
+    const yMaxPx = yAxis.getPixelForValue(normalMax);
+    ctx.fillStyle = 'rgba(192, 57, 43, 0.05)'; // Very faint red
+    ctx.fillRect(xAxis.left, yAxis.top, xAxis.width, yMaxPx - yAxis.top);
+
+    // Draw Green Zone (Between Min and Max)
+    const yMinPx = yAxis.getPixelForValue(normalMin);
+    ctx.fillStyle = 'rgba(38, 115, 70, 0.05)'; // Very faint green
+    ctx.fillRect(xAxis.left, yMaxPx, xAxis.width, yMinPx - yMaxPx);
+
+    // Draw Red Zone (Below Min)
+    ctx.fillStyle = 'rgba(192, 57, 43, 0.05)';
+    ctx.fillRect(xAxis.left, yMinPx, xAxis.width, yAxis.bottom - yMinPx);
+    }
+    };
+
+    // 2. Color points based on their value
+    const pointColors = dataValues.map(val => {
+    return (val < normalMin || val > normalMax) ? "#c0392b" : "#3157c7";
+    });
+
     new Chart(chartElement, {
     type: "line",
+    plugins: [backgroundZones],
     data: {
     labels: labels,
     datasets: [
     {
-    // The actual test results
     label: `Result (${unitLabel})`,
     data: dataValues,
     tension: 0.3,
     borderWidth: 3,
     borderColor: "#3157c7",
-    backgroundColor: "rgba(49, 87, 199, 0.1)",
-    pointBackgroundColor: "#3157c7",
-    pointRadius: 5,
-    pointHoverRadius: 7,
+    pointBackgroundColor: pointColors,
+    pointBorderColor: pointColors,
+    pointRadius: 6,
+    pointHoverRadius: 8,
     fill: false
     },
     {
-    // Normal Minimum line
-    label: "Normal Min",
-    data: minLineData,
+    label: "Normal Range Upper",
+    data: Array(labels.length).fill(normalMax),
     borderDash: [5, 5],
-    borderColor: "#c0392b",
-    borderWidth: 2,
+    borderColor: "rgba(192, 57, 43, 0.5)",
+    borderWidth: 1,
     pointRadius: 0,
-    pointHoverRadius: 0,
-    fill: false
+    pointHoverRadius: 0
     },
     {
-    // Normal Maximum line
-    label: "Normal Max",
-    data: maxLineData,
+    label: "Normal Range Lower",
+    data: Array(labels.length).fill(normalMin),
     borderDash: [5, 5],
-    borderColor: "#c0392b",
-    borderWidth: 2,
+    borderColor: "rgba(192, 57, 43, 0.5)",
+    borderWidth: 1,
     pointRadius: 0,
-    pointHoverRadius: 0,
-    fill: false
+    pointHoverRadius: 0
     }
     ]
     },
@@ -294,13 +360,20 @@
     },
     plugins: {
     legend: {
-    display: true,
-    position: "top"
+    display: false // Hide the legend, the colored zones explain it better
     },
     tooltip: {
     callbacks: {
     label: function(context) {
-    return context.dataset.label + ": " + context.parsed.y;
+    if (context.dataset.label.includes("Range")) return null;
+
+    const val = context.parsed.y;
+    let status = "🟢 Normal";
+
+    if (val > normalMax) status = "🔴 High";
+    if (val < normalMin) status = "🔴 Low";
+
+    return [`Result: ${val} ${unitLabel}`, status];
     }
     }
     }
@@ -321,7 +394,6 @@
     }
     }
     });
-    }
     });
 </script>
 
@@ -530,6 +602,65 @@
     padding: 25px;
     }
 
+    /* DYNAMIC BANNER STYLES */
+    .status-banner {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 24px;
+    margin: 20px 24px 0;
+    border-radius: 10px;
+    font-size: 14px;
+    }
+
+    .status-banner i {
+    font-size: 24px;
+    }
+
+    .status-success {
+    background: #eef9f2;
+    border: 1px solid #c9ead4;
+    color: #267346;
+    }
+
+    .status-danger {
+    background: #fff5f5;
+    border: 1px solid #f3cccc;
+    color: #b53a3a;
+    }
+
+    /* TABLE STYLES */
+    .recent-tests {
+    padding: 0 24px 20px 24px;
+    }
+
+    .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    }
+
+    .table th {
+    text-align: left;
+    padding: 12px 10px;
+    border-bottom: 2px solid #edf0f4;
+    color: #718096;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    }
+
+    .table td {
+    padding: 14px 10px;
+    border-bottom: 1px solid #edf0f4;
+    font-size: 14px;
+    vertical-align: middle;
+    }
+
+    .table tr:last-child td {
+    border-bottom: none;
+    }
+
     .empty-health {
     text-align: center;
     padding: 60px 25px;
@@ -608,70 +739,6 @@
     color: #267346;
     }
 
-    .recent-tests {
-    padding: 0 24px;
-    }
-
-    .recent-test-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    align-items: center;
-    gap: 15px;
-    padding: 16px 0;
-    border-bottom: 1px solid #edf0f4;
-    }
-
-    .recent-test-row:last-child {
-    border-bottom: none;
-    }
-
-    .recent-test-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 9px;
-    background: #f1f4fb;
-    color: #3157c7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    }
-
-    .recent-test-info strong {
-    display: block;
-    font-size: 14px;
-    }
-
-    .recent-test-info span {
-    display: block;
-    margin-top: 3px;
-    color: #718096;
-    font-size: 12px;
-    }
-
-    .recent-test-count {
-    text-align: center;
-    }
-
-    .recent-test-count strong {
-    display: block;
-    font-size: 16px;
-    }
-
-    .recent-test-count span {
-    color: #718096;
-    font-size: 11px;
-    }
-
-    .recent-test-status span {
-    display: inline-block;
-    padding: 6px 10px;
-    background: #f1f4fb;
-    color: #3157c7;
-    border-radius: 15px;
-    font-size: 11px;
-    font-weight: 600;
-    }
-
     .view-all-btn {
     display: inline-flex;
     align-items: center;
@@ -721,13 +788,9 @@
     flex-direction: column;
     }
 
-    .recent-test-row {
-    grid-template-columns: auto 1fr;
-    }
-
-    .recent-test-count, .recent-test-status {
-    grid-column: 2;
-    text-align: left;
+    .table th, .table td {
+    padding: 10px 5px;
+    font-size: 12px;
     }
     }
 </style>

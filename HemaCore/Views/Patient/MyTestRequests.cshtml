@@ -80,65 +80,62 @@
 
             @foreach (var request in Model)
             {
+                var status = request.Status?.Trim() ?? "";
+
+                // 1. Determine Badge Color
                 var statusClass = "status-default";
 
-                if (request.Status == "Completed")
+                if (status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                 {
                     statusClass = "status-completed";
                 }
-                else if (request.Status == "Cancelled")
+                else if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 {
                     statusClass = "status-cancelled";
                 }
-                else if (request.Status == "Submitted")
+                else if (status.Equals("Submitted", StringComparison.OrdinalIgnoreCase))
                 {
                     statusClass = "status-submitted";
                 }
-                else if (request.Status == "In progress" ||
-                         request.Status == "Sample(s) received" ||
-                         request.Status == "SamplesReceived")
+                else if (status.Equals("In progress", StringComparison.OrdinalIgnoreCase) ||
+                         status.Equals("InProgress", StringComparison.OrdinalIgnoreCase) ||
+                         status.Equals("Sample(s) received", StringComparison.OrdinalIgnoreCase) ||
+                         status.Equals("SamplesReceived", StringComparison.OrdinalIgnoreCase))
                 {
                     statusClass = "status-progress";
                 }
-                else if (request.Status == "Released by doctor")
+                else if (status.Equals("Released by doctor", StringComparison.OrdinalIgnoreCase))
                 {
                     statusClass = "status-released";
                 }
 
+                // 2. Determine Urgency Color
                 var urgencyClass = "urgency-normal";
 
-                if (request.Urgency == "Urgent" ||
-                    request.Urgency == "STAT")
+                if (request.Urgency == "Urgent" || request.Urgency == "STAT")
                 {
                     urgencyClass = "urgency-urgent";
                 }
 
-                /*
-                 * Determine the current tracking stage.
-                 *
-                 * 1 = Submitted
-                 * 2 = Sample Received
-                 * 3 = In Progress
-                 * 4 = Completed
-                 * 5 = Released
-                 */
-
+                // 3. Determine Tracker Stage
+                // 1 = Submitted, 2 = Sample Received, 3 = In Progress, 4 = Completed, 5 = Released
                 var currentStage = 1;
 
-                if (request.Status == "Sample(s) received" ||
-                    request.Status == "SamplesReceived")
+                if (status.Equals("Sample(s) received", StringComparison.OrdinalIgnoreCase) ||
+                    status.Equals("SamplesReceived", StringComparison.OrdinalIgnoreCase))
                 {
                     currentStage = 2;
                 }
-                else if (request.Status == "In progress")
+                else if (status.Equals("In progress", StringComparison.OrdinalIgnoreCase) ||
+                         status.Equals("InProgress", StringComparison.OrdinalIgnoreCase))
                 {
                     currentStage = 3;
                 }
-                else if (request.Status == "Completed")
+                else if (status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                 {
                     currentStage = 4;
                 }
-                else if (request.Status == "Released by doctor")
+                else if (status.Equals("Released by doctor", StringComparison.OrdinalIgnoreCase))
                 {
                     currentStage = 5;
                 }
@@ -212,8 +209,8 @@
 
                                 <!-- STEP 1 -->
                                 <div class="tracker-step
-                                     @(currentStage >= 1 ? "completed" : "")
-                                     @(currentStage == 1 ? "current" : "")">
+                                    @(currentStage >= 1 ? "completed" : "")
+                                    @(currentStage == 1 ? "current" : "")">
 
                                     <div class="tracker-circle">
                                         @if (currentStage > 1)
@@ -231,14 +228,14 @@
 
 
                                 <div class="tracker-line
-                                     @(currentStage >= 2 ? "active" : "")">
+                                    @(currentStage >= 2 ? "active" : "")">
                                 </div>
 
 
                                 <!-- STEP 2 -->
                                 <div class="tracker-step
-                                     @(currentStage >= 2 ? "completed" : "")
-                                     @(currentStage == 2 ? "current" : "")">
+                                    @(currentStage >= 2 ? "completed" : "")
+                                    @(currentStage == 2 ? "current" : "")">
 
                                     <div class="tracker-circle">
                                         @if (currentStage > 2)
@@ -256,14 +253,14 @@
 
 
                                 <div class="tracker-line
-                                     @(currentStage >= 3 ? "active" : "")">
+                                    @(currentStage >= 3 ? "active" : "")">
                                 </div>
 
 
                                 <!-- STEP 3 -->
                                 <div class="tracker-step
-                                     @(currentStage >= 3 ? "completed" : "")
-                                     @(currentStage == 3 ? "current" : "")">
+                                    @(currentStage >= 3 ? "completed" : "")
+                                    @(currentStage == 3 ? "current" : "")">
 
                                     <div class="tracker-circle">
                                         @if (currentStage > 3)
@@ -281,14 +278,14 @@
 
 
                                 <div class="tracker-line
-                                     @(currentStage >= 4 ? "active" : "")">
+                                    @(currentStage >= 4 ? "active" : "")">
                                 </div>
 
 
                                 <!-- STEP 4 -->
                                 <div class="tracker-step
-                                     @(currentStage >= 4 ? "completed" : "")
-                                     @(currentStage == 4 ? "current" : "")">
+                                    @(currentStage >= 4 ? "completed" : "")
+                                    @(currentStage == 4 ? "current" : "")">
 
                                     <div class="tracker-circle">
                                         @if (currentStage > 4)
@@ -306,14 +303,14 @@
 
 
                                 <div class="tracker-line
-                                     @(currentStage >= 5 ? "active" : "")">
+                                    @(currentStage >= 5 ? "active" : "")">
                                 </div>
 
 
                                 <!-- STEP 5 -->
                                 <div class="tracker-step
-                                     @(currentStage >= 5 ? "completed" : "")
-                                     @(currentStage == 5 ? "current" : "")">
+                                    @(currentStage >= 5 ? "completed" : "")
+                                    @(currentStage == 5 ? "current" : "")">
 
                                     <div class="tracker-circle">
                                         @if (currentStage >= 5)
@@ -624,9 +621,9 @@
         margin-bottom: 6px;
     }
 
-    .page-label i {
-        margin-right: 6px;
-    }
+        .page-label i {
+            margin-right: 6px;
+        }
 
     .page-header h1 {
         margin: 0;
@@ -655,10 +652,10 @@
         transition: 0.2s ease;
     }
 
-    .back-btn:hover {
-        background: #f5f7fb;
-        color: #2447aa;
-    }
+        .back-btn:hover {
+            background: #f5f7fb;
+            color: #2447aa;
+        }
 
     /* Alerts */
 
@@ -765,10 +762,10 @@
         font-weight: 600;
     }
 
-    .primary-btn:hover {
-        background: #2447aa;
-        color: white;
-    }
+        .primary-btn:hover {
+            background: #2447aa;
+            color: white;
+        }
 
     /* Request Card */
 
@@ -805,10 +802,10 @@
         color: #172033;
     }
 
-    .request-header h2 i {
-        color: #3157c7;
-        margin-right: 7px;
-    }
+        .request-header h2 i {
+            color: #3157c7;
+            margin-right: 7px;
+        }
 
     /* Status */
 
@@ -865,8 +862,8 @@
 
 
     /* =========================
-       REQUEST TRACKER
-       ========================= */
+           REQUEST TRACKER
+           ========================= */
 
     .request-tracker {
         margin: 22px 0 6px;
@@ -884,11 +881,11 @@
         margin-bottom: 24px;
     }
 
-    .tracker-header > div {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
+        .tracker-header > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
     .tracker-label {
         color: #718096;
@@ -897,10 +894,10 @@
         letter-spacing: 0.07em;
     }
 
-    .tracker-label i {
-        color: #3157c7;
-        margin-right: 5px;
-    }
+        .tracker-label i {
+            color: #3157c7;
+            margin-right: 5px;
+        }
 
     .tracker-header strong {
         font-size: 15px;
@@ -981,9 +978,9 @@
         border-radius: 5px;
     }
 
-    .tracker-line.active {
-        background: #3157c7;
-    }
+        .tracker-line.active {
+            background: #3157c7;
+        }
 
 
     /* Cancelled Tracker */
@@ -1049,10 +1046,10 @@
         letter-spacing: 0.04em;
     }
 
-    .info-label i {
-        color: #3157c7;
-        margin-right: 5px;
-    }
+        .info-label i {
+            color: #3157c7;
+            margin-right: 5px;
+        }
 
     .info-item strong {
         color: #172033;
@@ -1069,12 +1066,12 @@
         margin-bottom: 22px;
     }
 
-    .clinical-notes p {
-        margin: 8px 0 0;
-        color: #4a5568;
-        line-height: 1.6;
-        font-size: 14px;
-    }
+        .clinical-notes p {
+            margin: 8px 0 0;
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 14px;
+        }
 
 
     /* Sections */
@@ -1092,10 +1089,10 @@
         margin-bottom: 14px;
     }
 
-    .section-title i {
-        color: #3157c7;
-        margin-right: 7px;
-    }
+        .section-title i {
+            color: #3157c7;
+            margin-right: 7px;
+        }
 
 
     /* Tests */
@@ -1133,15 +1130,15 @@
         gap: 3px;
     }
 
-    .test-details strong {
-        font-size: 14px;
-        color: #172033;
-    }
+        .test-details strong {
+            font-size: 14px;
+            color: #172033;
+        }
 
-    .test-details span {
-        font-size: 12px;
-        color: #718096;
-    }
+        .test-details span {
+            font-size: 12px;
+            color: #718096;
+        }
 
 
     /* Samples */
@@ -1162,11 +1159,11 @@
         padding: 13px 15px;
     }
 
-    .sample-item > div {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
+        .sample-item > div {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
     .sample-label {
         font-size: 11px;
@@ -1197,11 +1194,11 @@
         border: 1px solid #f3cccc;
     }
 
-    .cancelled-box p {
-        margin: 7px 0 0;
-        font-size: 14px;
-        color: #6b3a3a;
-    }
+        .cancelled-box p {
+            margin: 7px 0 0;
+            font-size: 14px;
+            color: #6b3a3a;
+        }
 
 
     /* Released */
@@ -1218,31 +1215,31 @@
         gap: 15px;
     }
 
-    .released-box > div {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+        .released-box > div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .released-box > div > i {
-        color: #16766b;
-        font-size: 23px;
-    }
+            .released-box > div > i {
+                color: #16766b;
+                font-size: 23px;
+            }
 
-    .released-box strong,
-    .released-box span {
-        display: block;
-    }
+        .released-box strong,
+        .released-box span {
+            display: block;
+        }
 
-    .released-box strong {
-        color: #16766b;
-        margin-bottom: 3px;
-    }
+        .released-box strong {
+            color: #16766b;
+            margin-bottom: 3px;
+        }
 
-    .released-box span {
-        color: #5b7773;
-        font-size: 13px;
-    }
+        .released-box span {
+            color: #5b7773;
+            font-size: 13px;
+        }
 
     .view-results-btn {
         display: inline-flex;
@@ -1258,10 +1255,10 @@
         white-space: nowrap;
     }
 
-    .view-results-btn:hover {
-        background: #2447aa;
-        color: white;
-    }
+        .view-results-btn:hover {
+            background: #2447aa;
+            color: white;
+        }
 
 
     /* Responsive */

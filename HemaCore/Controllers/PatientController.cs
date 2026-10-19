@@ -561,6 +561,7 @@ namespace HemaCore.Controllers
             double normalMin = 0;
             double normalMax = 0;
             string unit = "";
+            bool latestIsAbnormal = false; // NEW: Tracks if the most recent test is abnormal
 
             if (testTypeId.HasValue)
             {
@@ -599,6 +600,13 @@ namespace HemaCore.Controllers
                         graphValues.Add(val);
                     }
                 }
+
+                // Determine if the latest result is abnormal
+                if (graphValues.Any())
+                {
+                    var latestVal = graphValues.Last();
+                    latestIsAbnormal = latestVal < normalMin || latestVal > normalMax;
+                }
             }
 
             // ---------------------------------------------------------
@@ -636,10 +644,17 @@ namespace HemaCore.Controllers
             ViewBag.NormalMin = normalMin;
             ViewBag.NormalMax = normalMax;
             ViewBag.Unit = unit;
+            ViewBag.LatestIsAbnormal = latestIsAbnormal; // NEW: Pass to View
 
             ViewBag.TotalTests = requests.Sum(r => r.TestRequestTestTypes?.Count ?? 0);
-            ViewBag.CompletedTests = requests.SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>()).Count(t => t.Status == "Completed" || t.Status == "Verified");
-            ViewBag.AbnormalResults = requests.SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>()).Count(t => t.TestResult != null && t.TestResult.IsAbnormal);
+
+            ViewBag.CompletedTests = requests
+                .SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>())
+                .Count(t => t.Status == "Completed" || t.Status == "Verified");
+
+            ViewBag.AbnormalResults = requests
+                .SelectMany(r => r.TestRequestTestTypes ?? new List<TestRequestItem>())
+                .Count(t => t.Status == "Verified" && t.TestResult != null && t.TestResult.IsAbnormal);
 
             ViewBag.Conditions = conditions;
 
