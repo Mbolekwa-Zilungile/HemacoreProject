@@ -1,4 +1,5 @@
-﻿@model HemaCore.Models.TestRequestItem
+﻿
+@model HemaCore.Models.TestRequestItem
 @using HemaCore.Models
 
 @{
@@ -11,7 +12,7 @@
     var expectedFinish = (DateTime)ViewBag.ExpectedFinish;
     bool hasShortage = (bool)ViewBag.HasShortage;
 
-    var duration = TimeSpan.FromMinutes(Model.TestType.TurnAroundTime);
+    var duration = TimeSpan.FromHours(Model.TestType.TurnAroundTime);
 
     string durationText = duration.TotalHours >= 1
         ? $"{(int)duration.TotalHours} h {duration.Minutes} min"
@@ -19,402 +20,466 @@
 }
 
 <style>
-    .details-page {
-        padding-bottom: 40px;
+    .test-page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 24px 40px;
+        color: #304750;
     }
 
-    .page-hero {
-        background: linear-gradient(135deg, #75AABA 0%, #5f9aaa 100%);
-        color: white;
-        border-radius: 16px;
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        box-shadow: 0 6px 18px rgba(70, 120, 140, 0.18);
-    }
-
-        .page-hero h2 {
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .page-hero p {
-            margin-bottom: 0;
-            opacity: .9;
-        }
-
-    .back-btn {
-        background: rgba(255,255,255,.15);
-        border: 1px solid rgba(255,255,255,.45);
-        color: white;
-        border-radius: 8px;
-        padding: 9px 16px;
-    }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,.25);
-            color: white;
-        }
-
-    .info-card {
-        background: white;
-        border-radius: 14px;
-        box-shadow: 0 3px 14px rgba(0,0,0,.07);
-        margin-bottom: 20px;
-        overflow: hidden;
-    }
-
-    .info-card-header {
+    .page-header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 10px;
-        padding: 17px 22px;
-        background: #f7fafb;
-        border-bottom: 1px solid #e8eef0;
-        color: #315967;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 27px;
+        font-weight: 650;
+        color: #263f48;
+    }
+
+    .request-label {
+        margin-top: 6px;
+        color: #819198;
+        font-size: 13px;
+    }
+
+    .back-link {
+        color: #426873;
+        text-decoration: none;
+        font-size: 13px;
         font-weight: 600;
+        white-space: nowrap;
     }
 
-        .info-card-header i {
-            color: #75AABA;
-            font-size: 17px;
-        }
-
-    .info-card-body {
-        padding: 22px;
+    .back-link:hover {
+        color: #75AABA;
     }
 
-    .info-item {
+    .error-message {
         padding: 12px 15px;
-        background: #f9fbfc;
-        border-radius: 9px;
-        height: 100%;
-        border: 1px solid #edf2f4;
+        margin-bottom: 20px;
+        border: 1px solid #f0dfb8;
+        border-radius: 7px;
+        background: #fffaf0;
+        color: #805c1b;
+        font-size: 13px;
     }
 
-    .info-label {
+    .summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid #e5ecee;
+        border-bottom: 1px solid #e5ecee;
+    }
+
+    .summary-item {
+        padding: 18px 16px 18px 0;
+        min-width: 0;
+    }
+
+    .summary-item:not(:last-child) {
+        border-right: 1px solid #e5ecee;
+        margin-right: 16px;
+    }
+
+    .label {
         display: block;
-        font-size: 12px;
-        color: #7a8b92;
+        margin-bottom: 7px;
+        color: #839399;
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: .4px;
-        margin-bottom: 5px;
+        letter-spacing: .5px;
+    }
+
+    .value {
+        font-size: 14px;
         font-weight: 600;
-    }
-
-    .info-value {
-        color: #263b43;
-        font-weight: 500;
-        font-size: 15px;
-    }
-
-    .time-big {
-        font-size: 28px;
-        font-weight: 700;
-        color: #263b43;
-        line-height: 1.3;
         overflow-wrap: anywhere;
     }
 
-    .stock-table {
-        margin-bottom: 0;
+    .urgency {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
     }
 
-        .stock-table thead th {
-            background: #f3f7f8;
-            color: #58717a;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            border-bottom: 1px solid #dfe8eb;
-            padding: 13px 15px;
-        }
+    .urgency-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #d5a34a;
+    }
 
-        .stock-table tbody td {
-            padding: 14px 15px;
-            vertical-align: middle;
-            color: #40545b;
-        }
+    .section {
+        margin-top: 30px;
+    }
 
-    .stock-badge {
-        display: inline-block;
-        padding: 4px 11px;
-        border-radius: 20px;
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .section-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+        color: #304952;
+    }
+
+    .item-count {
+        color: #839399;
         font-size: 12px;
+    }
+
+    .timing-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        padding: 20px 0;
+        border-top: 1px solid #e5ecee;
+        border-bottom: 1px solid #e5ecee;
+    }
+
+    .timing-value {
+        font-size: 25px;
+        font-weight: 650;
+        color: #304750;
+    }
+
+    .timing-caption {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #839399;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+        border-top: 1px solid #e5ecee;
+    }
+
+    .stock-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 500px;
+    }
+
+    .stock-table th {
+        padding: 12px 12px 12px 0;
+        text-align: left;
+        color: #839399;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        border-bottom: 1px solid #e5ecee;
+    }
+
+    .stock-table td {
+        padding: 14px 12px 14px 0;
+        font-size: 13px;
+        border-bottom: 1px solid #edf1f2;
+        color: #465d65;
+    }
+
+    .stock-table tbody tr:last-child td {
+        border-bottom: 1px solid #e5ecee;
+    }
+
+    .stock-name {
+        font-weight: 600;
+        color: #344e57;
+    }
+
+    .stock-status {
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .stock-status.ok { color: #347454; }
+    .stock-status.low { color: #976c23; }
+    .stock-status.out { color: #b24f43; }
+
+    .empty-stock {
+        padding: 18px 0;
+        border-top: 1px solid #e5ecee;
+        color: #839399;
+        font-size: 13px;
+    }
+
+    .stock-warning {
+        margin-top: 18px;
+        padding: 13px 15px;
+        border: 1px solid #f0dfb8;
+        border-radius: 7px;
+        background: #fffaf0;
+        color: #805c1b;
+        font-size: 13px;
+    }
+
+    .actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e5ecee;
+    }
+
+    .btn-select {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border: 1px solid #75AABA;
+        border-radius: 7px;
+        background: #75AABA;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-select:hover:not(:disabled) {
+        background: #5f96a6;
+    }
+
+    .btn-select:disabled {
+        background: #c8d9de;
+        border-color: #c8d9de;
+        cursor: not-allowed;
+    }
+
+    .btn-cancel {
+        padding: 10px 14px;
+        color: #526a72;
+        text-decoration: none;
+        font-size: 13px;
         font-weight: 600;
     }
 
-        .stock-badge.ok {
-            background: #e8f5ee;
-            color: #1f6b43;
-        }
-
-        .stock-badge.low {
-            background: #fdf3dc;
-            color: #8a5a0d;
-        }
-
-        .stock-badge.out {
-            background: #fbe3de;
-            color: #9b3b2c;
-        }
-
-    .decision-bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-        padding: 20px 22px;
+    .btn-cancel:hover {
+        color: #315967;
     }
 
-    @@media (max-width: 768px) {
-        .page-hero {
-            padding: 22px 18px;
+    @@media (max-width: 650px) {
+        .test-page {
+            padding: 22px 16px 32px;
         }
 
-        .info-card-body {
-            padding: 16px;
+        .page-header {
+            align-items: flex-start;
         }
 
-        .time-big {
-            font-size: 24px;
+        .page-header h1 {
+            font-size: 23px;
+        }
+
+        .summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .summary-item {
+            border-bottom: 1px solid #e5ecee;
+        }
+
+        .summary-item:nth-child(2) {
+            border-right: none;
+            margin-right: 0;
+        }
+
+        .summary-item:nth-child(3),
+        .summary-item:nth-child(4) {
+            border-bottom: none;
+        }
+
+        .timing-row {
+            gap: 16px;
+        }
+
+        .timing-value {
+            font-size: 22px;
+        }
+
+        .actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        .btn-select {
+            width: 100%;
+        }
+
+        .btn-cancel {
+            text-align: center;
+        }
+    }
+
+    @@media (max-width: 400px) {
+        .page-header {
+            flex-direction: column;
+        }
+
+        .timing-row {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="container mt-4 details-page">
+<div class="test-page">
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
+        <div class="error-message" role="alert">
+            <i class="fas fa-circle-exclamation me-2"></i>
             @TempData["Error"]
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
         </div>
     }
 
-    <!-- PAGE HEADER -->
-    <div class="page-hero">
-        <div class="d-flex justify-content-between align-items-center gap-3">
-            <div>
-                <h2>@Model.TestType.TestTypeName</h2>
-                <p>
-                    Review the test turnaround time and available consumables
-                    before adding this test to My Tests.
-                </p>
+    <div class="page-header">
+        <div>
+            <h1>@Model.TestType.TestTypeName</h1>
+            <div class="request-label">
+                Request #@Model.TestRequestId
             </div>
+        </div>
 
-            <a asp-action="ProcessTests" class="btn back-btn">
-                <i class="fas fa-arrow-left me-2"></i>Back
-            </a>
+        <a asp-action="ProcessTests" class="back-link">
+            <i class="fas fa-arrow-left me-1"></i> Back to tests
+        </a>
+    </div>
+
+    <div class="summary">
+        <div class="summary-item">
+            <span class="label">Category</span>
+            <span class="value">
+                @(Model.TestType.Category?.CategoryName ?? "Not specified")
+            </span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Urgency</span>
+            <span class="value urgency">
+                <span class="urgency-dot"></span>
+                @Model.TestRequest.Urgency
+            </span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Turnaround</span>
+            <span class="value">@durationText</span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Estimated completion</span>
+            <span class="value">@expectedFinish.ToString("dd MMM, HH:mm")</span>
         </div>
     </div>
 
-    <!-- TEST DETAILS -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-microscope"></i>
-            <span>Test details</span>
+    <section class="section">
+        <div class="section-header">
+            <h2>Consumables</h2>
+            <span class="item-count">@consumables.Count item(s)</span>
         </div>
 
-        <div class="info-card-body">
-            <div class="row g-3">
+        @if (!consumables.Any())
+        {
+            <div class="empty-stock">No consumables recorded for this test.</div>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Consumable</th>
+                            <th>Required</th>
+                            <th>In stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in consumables)
+                        {
+                            bool enough =
+                                item.Consumable.QuantityInHand >= item.QuantityNeeded;
 
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Request number</span>
-                        <span class="info-value">#@Model.TestRequestId</span>
-                    </div>
-                </div>
+                            bool low =
+                                enough &&
+                                item.Consumable.QuantityInHand
+                                <= item.Consumable.ReorderLevel;
 
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Test</span>
-                        <span class="info-value">
-                            @Model.TestType.TestTypeName
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Category</span>
-                        <span class="info-value">
-                            @(Model.TestType.Category?.CategoryName ?? "Not specified")
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="info-item">
-                        <span class="info-label">Urgency</span>
-                        <span class="info-value">
-                            @Model.TestRequest.Urgency
-                        </span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- TURNAROUND TIME -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-hourglass-half"></i>
-            <span>Turnaround time</span>
-        </div>
-
-        <div class="info-card-body">
-            <div class="row g-3">
-
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">Estimated turnaround time</span>
-                        <span class="time-big">@durationText</span>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="info-item">
-                        <span class="info-label">
-                            Estimated completion time if started now
-                        </span>
-                        <span class="time-big">
-                            @expectedFinish.ToString("HH:mm")
-                        </span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- CONSUMABLES -->
-    <div class="info-card">
-        <div class="info-card-header">
-            <i class="fas fa-boxes-stacked"></i>
-            <span>Consumables needed</span>
-        </div>
-
-        <div class="info-card-body">
-
-            @if (!consumables.Any())
-            {
-                <p class="text-muted mb-0">
-                    No consumables are recorded for this test.
-                </p>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table stock-table">
-                        <thead>
                             <tr>
-                                <th>Consumable</th>
-                                <th>Needed</th>
-                                <th>In stock</th>
-                                <th>Availability</th>
+                                <td class="stock-name">
+                                    @item.Consumable.ConsumableName
+                                </td>
+                                <td>@item.QuantityNeeded</td>
+                                <td>@item.Consumable.QuantityInHand</td>
+                                <td>
+                                    @if (!enough)
+                                    {
+                                        <span class="stock-status out">Insufficient</span>
+                                    }
+                                    else if (low)
+                                    {
+                                        <span class="stock-status low">Low stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="stock-status ok">Available</span>
+                                    }
+                                </td>
                             </tr>
-                        </thead>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 
-                        <tbody>
-                            @foreach (var item in consumables)
-                            {
-                                bool enough =
-                                    item.Consumable.QuantityInHand >= item.QuantityNeeded;
-
-                                bool low =
-                                    enough &&
-                                    item.Consumable.QuantityInHand
-                                    <= item.Consumable.ReorderLevel;
-
-                                <tr>
-                                    <td>
-                                        @item.Consumable.ConsumableName
-                                    </td>
-
-                                    <td>
-                                        @item.QuantityNeeded
-                                    </td>
-
-                                    <td>
-                                        @item.Consumable.QuantityInHand
-                                    </td>
-
-                                    <td>
-                                        @if (!enough)
-                                        {
-                                            <span class="stock-badge out">
-                                                Not enough stock
-                                            </span>
-                                        }
-                                        else if (low)
-                                        {
-                                            <span class="stock-badge low">
-                                                Low stock
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="stock-badge ok">
-                                                In stock
-                                            </span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-
+    @if (hasShortage)
+    {
+        <div class="stock-warning" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            Insufficient stock. This test cannot be selected until the shortage is resolved.
         </div>
-    </div>
+    }
 
-    <!-- DECISION -->
-    <div class="info-card">
-        <div class="decision-bar">
+  
+    <div class="actions">
+        <a asp-action="ProcessTests" class="btn-cancel">
+            Select a Different Test
+        </a>
 
-            @if (hasShortage)
-            {
-                <button type="button"
-                        class="btn btn-primary"
-                        disabled>
-                    <i class="fas fa-plus me-2"></i>
-                    Add to My Tests
+        @if (hasShortage)
+        {
+            <button type="button" class="btn-select" disabled>
+                <i class="fas fa-plus"></i> Add to My Tests
+            </button>
+        }
+        else
+        {
+            <form asp-action="AddToMyTests"
+                  asp-route-id="@Model.TestRequestTestTypeId"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <button type="submit" class="btn-select">
+                    <i class="fas fa-plus"></i> Add to My Tests
                 </button>
-
-                <span class="text-danger">
-                    <i class="fas fa-ban me-1"></i>
-                    You cannot add this test because some consumables
-                    are out of stock.
-                </span>
-            }
-            else
-            {
-                <form asp-action="AddToMyTests"
-                      asp-route-id="@Model.TestRequestTestTypeId"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>
-                        Add to My Tests
-                    </button>
-                </form>
-            }
-
-            <a asp-action="ProcessTests"
-               class="btn btn-light border">
-                Choose a different test
-            </a>
-
-        </div>
+            </form>
+        }
     </div>
+    
 
 </div>

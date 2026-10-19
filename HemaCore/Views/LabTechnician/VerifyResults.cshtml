@@ -155,3 +155,155 @@
     </div>
 
 </div>
+
+@if (TempData["ResultSuccess"] != null ||
+     TempData["Error"] != null)
+{
+    var isSuccess = TempData["ResultSuccess"] != null;
+
+    <div class="modal fade"
+         id="resultMessageModal"
+         tabindex="-1"
+         aria-labelledby="resultMessageTitle"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content status-modal">
+
+                <div class="status-icon @(isSuccess ? "status-success" : "status-error")">
+                    <svg viewBox="0 0 24 24"
+                         width="36"
+                         height="36"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.5"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        @if (isSuccess)
+                        {
+                            <polyline points="5 12.5 10 17.5 19 7.5"></polyline>
+                        }
+                        else
+                        {
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                        }
+                    </svg>
+                </div>
+
+                <h4 class="status-title" id="resultMessageTitle">
+                    @(isSuccess ? "Done!" : "Something went wrong")
+                </h4>
+
+                <p class="status-message">
+                    @(isSuccess
+                        ? TempData["ResultSuccess"]
+                        : TempData["Error"])
+                </p>
+
+                <button type="button"
+                        class="btn status-btn @(isSuccess ? "status-btn-success" : "status-btn-error")"
+                        data-bs-dismiss="modal">
+                    Continue
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .status-modal {
+            border: 0;
+            border-radius: 16px;
+            padding: 36px 32px 28px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, .22);
+        }
+
+        .status-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            animation: status-pop .35s ease-out;
+        }
+
+        .status-success {
+            background: #e7f6ec;
+            color: #15803d;
+        }
+
+        .status-error {
+            background: #fdf0ee;
+            color: #b42318;
+        }
+
+        .status-title {
+            margin: 0 0 8px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2933;
+        }
+
+        .status-message {
+            margin: 0 0 24px;
+            color: #52606d;
+            font-size: 15px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .status-btn {
+            width: 100%;
+            padding: 11px 18px;
+            border-radius: 10px;
+            border: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .status-btn-success {
+            background: #15803d;
+        }
+
+            .status-btn-success:hover {
+                background: #116530;
+                color: #fff;
+            }
+
+        .status-btn-error {
+            background: #b42318;
+        }
+
+            .status-btn-error:hover {
+                background: #8f1c12;
+                color: #fff;
+            }
+
+        @@keyframes status-pop {
+            0% {
+                transform: scale(.6);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const modalElement = document.getElementById("resultMessageModal");
+
+            if (modalElement && window.bootstrap) {
+                new bootstrap.Modal(modalElement).show();
+            }
+        });
+    </script>
+}

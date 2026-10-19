@@ -1,5 +1,4 @@
-﻿
-@model HemaCore.Models.TestResult
+﻿@model HemaCore.Models.TestResult
 @using HemaCore.Models
 @using System.Linq
 
@@ -34,6 +33,7 @@
 
     var normalMin = ViewBag.NormalRangeMin;
     var normalMax = ViewBag.NormalRangeMax;
+
     var testUnit = ViewBag.TestUnit as string
                    ?? testType?.UnitOfMeasurement
                    ?? "";
@@ -48,11 +48,10 @@
     <header class="page-heading">
         <div>
             <h2>Verify test result</h2>
-            <p>Review the patient information, medical background and test reference range before making your decision.</p>
+            <p>Review the patient information, medical background and test result before making your decision.</p>
         </div>
 
-        <a asp-action="VerifyResults"
-           class="btn btn-outline-secondary">
+        <a asp-action="VerifyResults" class="btn btn-outline-secondary">
             Back to verification list
         </a>
     </header>
@@ -75,7 +74,7 @@
         </div>
     </section>
 
-    <!-- Patient demographics -->
+    <!-- Patient information -->
     <section class="verify-card">
         <div class="card-head">
             <div>
@@ -98,9 +97,7 @@
             <div class="info-item">
                 <span class="label">Date of birth</span>
                 <span class="info-value">
-                    @(patient == null
-                        ? "Not recorded"
-                        : patient.DateOfBirth.ToString("dd MMM yyyy"))
+                    @(patient == null ? "Not recorded" : patient.DateOfBirth.ToString("dd MMM yyyy"))
                 </span>
             </div>
 
@@ -128,7 +125,7 @@
         <div class="card-head">
             <div>
                 <h5>Medical background</h5>
-                <p>Review the medical information recorded for this patient.</p>
+                <p>Medical information recorded for this patient.</p>
             </div>
         </div>
 
@@ -142,17 +139,13 @@
                     <ul>
                         @foreach (var item in conditions)
                         {
-                            <li>
-                                @(item.Condition?.Name ?? "Condition name unavailable")
-                            </li>
+                            <li>@(item.Condition?.Name ?? "Condition name unavailable")</li>
                         }
                     </ul>
                 }
                 else
                 {
-                    <p class="empty-info">
-                        No medical conditions recorded.
-                    </p>
+                    <p class="empty-info">No medical conditions recorded.</p>
                 }
             </div>
 
@@ -164,17 +157,13 @@
                     <ul>
                         @foreach (var item in allergies)
                         {
-                            <li>
-                                @(item.Allergy?.Name ?? "Allergy name unavailable")
-                            </li>
+                            <li>@(item.Allergy?.Name ?? "Allergy name unavailable")</li>
                         }
                     </ul>
                 }
                 else
                 {
-                    <p class="empty-info">
-                        No allergies recorded.
-                    </p>
+                    <p class="empty-info">No allergies recorded.</p>
                 }
             </div>
 
@@ -187,9 +176,7 @@
                         @foreach (var item in medications)
                         {
                             <li>
-                                <strong>
-                                    @(item.Medication?.Name ?? "Medication name unavailable")
-                                </strong>
+                                <strong>@(item.Medication?.Name ?? "Medication name unavailable")</strong>
 
                                 @if (!string.IsNullOrWhiteSpace(item.Dosage))
                                 {
@@ -206,21 +193,19 @@
                 }
                 else
                 {
-                    <p class="empty-info">
-                        No medications recorded.
-                    </p>
+                    <p class="empty-info">No medications recorded.</p>
                 }
             </div>
 
         </div>
     </section>
 
-    <!-- Current result and reference range -->
+    <!-- Current result -->
     <section class="verify-card @(Model.IsAbnormal ? "is-abnormal" : "")">
         <div class="card-head">
             <div>
                 <h5>Current test result</h5>
-                <p>Compare the recorded result with the configured reference range.</p>
+                <p>Compare the current result with the configured reference range.</p>
             </div>
 
             <span class="flag @(Model.IsAbnormal ? "flag-abnormal" : "flag-normal")">
@@ -230,7 +215,7 @@
 
         <div class="result-layout">
             <div class="result-main">
-                <span class="label">Recorded result</span>
+                <span class="label">Current recorded value</span>
 
                 <div class="result-value @(string.IsNullOrWhiteSpace(Model.ResultValue) ? "is-empty" : "")">
                     @(string.IsNullOrWhiteSpace(Model.ResultValue)
@@ -248,97 +233,120 @@
             <div class="result-notes">
                 <span class="label">Result notes</span>
                 <div class="notes-text @(string.IsNullOrWhiteSpace(Model.Notes) ? "is-empty" : "")">
-                    @(string.IsNullOrWhiteSpace(Model.Notes)
-                        ? "No notes recorded"
-                        : Model.Notes)
+                    @(string.IsNullOrWhiteSpace(Model.Notes) ? "No notes recorded" : Model.Notes)
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Review history -->
-    <section class="verify-card">
-        <div class="card-head">
+    <!-- Test history -->
+    <section class="review-card">
+        <div class="history-heading">
             <div>
-                <h5>Review history</h5>
-                <p>From capture to verification, oldest first.</p>
+                <h5>Test history</h5>
+                <p>Recorded actions and result changes for this test.</p>
             </div>
-
-            <span class="count-pill">
-                @historyRecords.Count
-                @(historyRecords.Count == 1 ? "event" : "events")
-            </span>
+            <span class="history-count">@historyRecords.Count @(historyRecords.Count == 1 ? "entry" : "entries")</span>
         </div>
 
-        @if (historyRecords.Any())
-        {
-            <ol class="timeline">
-                @foreach (var item in historyRecords)
-                {
-                    var eventTitle = item.Action switch
+        <div class="history-table-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Action</th>
+                        <th>Technician</th>
+                        <th>Captured Value</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (historyRecords.Any())
                     {
-                        "Result Captured" => "Result captured",
-                        "Sent Back for Review" => "Sent back for correction",
-                        "Corrected Result Resubmitted" => "Correction resubmitted",
-                        "Result Verified" => "Result verified",
-                        _ => item.Action
-                    };
-
-                    var eventClass = item.Action switch
-                    {
-                        "Result Captured" => "ev-captured",
-                        "Sent Back for Review" => "ev-sentback",
-                        "Corrected Result Resubmitted" => "ev-resubmitted",
-                        "Result Verified" => "ev-verified",
-                        _ => "ev-captured"
-                    };
-
-                    var technicianName = item.LabTechnician?.User?.FullName;
-
-                    <li class="timeline-item @eventClass">
-                        <span class="timeline-dot" aria-hidden="true"></span>
-
-                        <div class="timeline-body">
-                            <div class="timeline-top">
-                                <strong class="timeline-title">@eventTitle</strong>
-
-                                <time class="timeline-date">
-                                    @item.ActionDateTime.ToString("dd MMM yyyy, HH:mm")
-                                </time>
-                            </div>
-
-                            <div class="timeline-meta">
-                                <span>
-                                    By @(string.IsNullOrWhiteSpace(technicianName)
-                                        ? "Unknown technician"
-                                        : technicianName)
-                                </span>
-
-                                @if (!string.IsNullOrWhiteSpace(item.ResultValue))
-                                {
-                                    <span class="result-chip">
-                                        Result: @item.ResultValue
-                                    </span>
-                                }
-                            </div>
-
-                            @if (!string.IsNullOrWhiteSpace(item.ReviewNotes))
+                        foreach (var item in historyRecords)
+                        {
+                            var actionLabel = item.Action switch
                             {
-                                <blockquote class="timeline-note">
-                                    @item.ReviewNotes
-                                </blockquote>
-                            }
-                        </div>
-                    </li>
-                }
-            </ol>
-        }
-        else
-        {
-            <div class="empty-history">
-                No review history has been recorded for this test yet.
-            </div>
-        }
+                                "Result Captured" => "Result Captured",
+                                "Sent Back for Review" => "Sent Back For Review",
+                                "Sent Back For Review" => "Sent Back For Review",
+                                "Corrected Result Resubmitted" => "Resubmitted",
+                                "Result Verified" => "Verified",
+                                _ => item.Action
+                            };
+
+                            var isSentBack =
+                                item.Action == "Sent Back for Review" ||
+                                item.Action == "Sent Back For Review";
+
+                            var actionClass = isSentBack
+                                ? "action-returned"
+                                : item.Action == "Result Verified"
+                                    ? "action-verified"
+                                    : item.Action == "Corrected Result Resubmitted"
+                                        ? "action-resubmitted"
+                                        : "action-captured";
+
+                            <tr>
+                                <td class="history-date">
+                                    @item.ActionDateTime.ToString("dd MMM yyyy")
+                                    <span>@item.ActionDateTime.ToString("HH:mm")</span>
+                                </td>
+
+                                <td>
+                                    <span class="action-label @actionClass">
+                                        @actionLabel
+                                    </span>
+                                </td>
+
+                                <td class="history-user">
+                                    @(item.LabTechnician?.User?.FullName ?? "Unknown user")
+                                </td>
+
+                                <td class="captured-value">
+                                    @if (isSentBack)
+                                    {
+                                        <span class="no-value">—</span>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(item.ResultValue))
+                                    {
+                                        @($"{item.ResultValue} {testUnit}".Trim())
+                                    }
+                                    else
+                                    {
+                                        <span class="no-value">—</span>
+                                    }
+                                </td>
+
+                                <td class="history-notes">
+                                    @if (!string.IsNullOrWhiteSpace(item.ReviewNotes))
+                                    {
+                                        @item.ReviewNotes
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(item.ResultNotes))
+                                    {
+                                        @item.ResultNotes
+                                    }
+                                    else
+                                    {
+                                        <span class="no-value">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="history-empty">
+                                No test history recorded.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <!-- Verification decision -->
@@ -355,13 +363,9 @@
               id="decisionForm"
               class="decision-form">
 
-            <input type="hidden"
-                   name="id"
-                   value="@Model.TestResultId" />
+            <input type="hidden" name="id" value="@Model.TestResultId" />
 
-            <label for="reviewNotes" class="form-label">
-                Review notes
-            </label>
+            <label for="reviewNotes" class="form-label">Review notes</label>
 
             <textarea id="reviewNotes"
                       name="reviewNotes"
@@ -396,7 +400,7 @@
 </div>
 
 <script>
-    (function () {
+    (function() {
         const form = document.getElementById("decisionForm");
         const notes = document.getElementById("reviewNotes");
         const help = document.getElementById("notesHelp");
@@ -405,7 +409,7 @@
 
         const defaultHelp = help.textContent;
 
-        form.addEventListener("submit", function (e) {
+        form.addEventListener("submit", function(e) {
             const action = e.submitter ? e.submitter.value : "";
 
             if (action === "SendBack" && notes.value.trim() === "") {
@@ -418,7 +422,7 @@
             }
         });
 
-        notes.addEventListener("input", function () {
+        notes.addEventListener("input", function() {
             notes.classList.remove("is-invalid");
             help.classList.remove("is-error");
             help.textContent = defaultHelp;
@@ -435,11 +439,14 @@
         --page: #f4f6f8;
         --line: #e1e6eb;
         --line-soft: #edf0f3;
-        --accent: #0f766e;
+        --accent: #75aaba;
+        --accent-dark: #356f7c;
         --danger: #b42318;
         --danger-bg: #fdf0ee;
-        --warn: #b45309;
-        --ok: #15803d;
+        --warn: #9a6700;
+        --warn-bg: #fff7e6;
+        --ok: #18794e;
+        --ok-bg: #eaf6ef;
         --radius: 8px;
     }
 
@@ -461,18 +468,19 @@
         margin-bottom: 20px;
     }
 
-    .page-heading h2 {
-        margin: 0 0 4px;
-        font-size: 24px;
-        font-weight: 600;
-    }
+        .page-heading h2 {
+            margin: 0 0 4px;
+            font-size: 24px;
+            font-weight: 600;
+        }
 
-    .page-heading p,
-    .card-head p {
-        margin: 2px 0 0;
-        color: var(--ink-soft);
-        font-size: 13px;
-    }
+        .page-heading p,
+        .card-head p,
+        .history-heading p {
+            margin: 3px 0 0;
+            color: var(--ink-soft);
+            font-size: 13px;
+        }
 
     .label {
         display: block;
@@ -496,19 +504,20 @@
         min-width: 0;
     }
 
-    .summary-item + .summary-item {
-        border-left: 1px solid var(--line-soft);
-    }
+        .summary-item + .summary-item {
+            border-left: 1px solid var(--line-soft);
+        }
 
-    .summary-item .value,
-    .info-value {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        overflow-wrap: anywhere;
-    }
+        .summary-item .value,
+        .info-value {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
 
-    .verify-card {
+    .verify-card,
+    .review-card {
         margin-bottom: 16px;
         background: var(--surface);
         border: 1px solid var(--line);
@@ -525,11 +534,12 @@
         border-bottom: 1px solid var(--line-soft);
     }
 
-    .card-head h5 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-    }
+        .card-head h5,
+        .history-heading h5 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
 
     .patient-info-grid {
         display: grid;
@@ -557,25 +567,24 @@
         border-radius: 6px;
     }
 
-    .medical-section h6 {
-        margin: 0 0 10px;
-        font-size: 14px;
-        font-weight: 600;
-    }
+        .medical-section h6 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-    .medical-section ul {
-        margin: 0;
-        padding-left: 18px;
-        font-size: 13px;
-        overflow-wrap: anywhere;
-    }
+        .medical-section ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
 
-    .medical-section li {
-        margin-bottom: 6px;
-    }
+        .medical-section li {
+            margin-bottom: 6px;
+        }
 
-    .empty-info,
-    .empty-history {
+    .empty-info {
         margin: 0;
         padding: 10px 0;
         color: var(--ink-faint);
@@ -630,19 +639,18 @@
         border-radius: 6px;
     }
 
-    .reference-range strong {
-        font-size: 16px;
-        overflow-wrap: anywhere;
-    }
+        .reference-range strong {
+            font-size: 16px;
+            overflow-wrap: anywhere;
+        }
 
-    .reference-range p {
-        margin: 5px 0 0;
-        color: var(--ink-soft);
-        font-size: 12px;
-    }
+        .reference-range p {
+            margin: 5px 0 0;
+            color: var(--ink-soft);
+            font-size: 12px;
+        }
 
-    .flag,
-    .count-pill {
+    .flag {
         flex-shrink: 0;
         padding: 3px 10px;
         border-radius: 999px;
@@ -650,8 +658,7 @@
         font-weight: 600;
     }
 
-    .flag-normal,
-    .count-pill {
+    .flag-normal {
         background: #eef1f4;
         color: var(--ink-soft);
     }
@@ -661,119 +668,141 @@
         color: var(--danger);
     }
 
-    .timeline {
-        list-style: none;
-        margin: 0;
-        padding: 20px 20px 8px;
-    }
-
-    .timeline-item {
-        position: relative;
-        display: flex;
-        gap: 16px;
-        padding-bottom: 20px;
-    }
-
-    .timeline-item::before {
-        content: "";
-        position: absolute;
-        left: 6px;
-        top: 18px;
-        bottom: -2px;
-        width: 2px;
-        background: var(--line);
-    }
-
-    .timeline-item:last-child::before {
-        display: none;
-    }
-
-    .timeline-dot {
-        flex-shrink: 0;
-        width: 14px;
-        height: 14px;
-        margin-top: 4px;
-        border-radius: 50%;
-        background: var(--ink-faint);
-        box-shadow: 0 0 0 3px var(--surface);
-        position: relative;
-        z-index: 1;
-    }
-
-    .ev-sentback .timeline-dot {
-        background: var(--warn);
-    }
-
-    .ev-resubmitted .timeline-dot {
-        background: var(--accent);
-    }
-
-    .ev-verified .timeline-dot {
-        background: var(--ok);
-    }
-
-    .timeline-body {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .timeline-top {
+    /* Test history table */
+    .history-heading {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line-soft);
     }
 
-    .timeline-title {
-        font-size: 14px;
+    .history-count {
+        flex-shrink: 0;
+        padding: 4px 9px;
+        border-radius: 6px;
+        background: #f0f5f6;
+        color: var(--accent-dark);
+        font-size: 12px;
         font-weight: 600;
     }
 
-    .timeline-date {
-        color: var(--ink-faint);
-        font-size: 12px;
+    .history-table-wrapper {
+        padding: 14px 16px 16px;
+        overflow-x: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        overflow: hidden;
+        font-size: 13px;
+    }
+
+        .history-table thead {
+            background: #edf5f6;
+        }
+
+        .history-table th {
+            padding: 12px 14px;
+            text-align: left;
+            color: #365b63;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 1px solid #dce8ea;
+        }
+
+        .history-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #edf0f2;
+            vertical-align: middle;
+        }
+
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table tbody tr:nth-child(even) {
+            background: #fafcfc;
+        }
+
+        .history-table tbody tr:hover {
+            background: #f3f8f9;
+        }
+
+    .history-date {
+        min-width: 125px;
+        color: var(--ink);
         white-space: nowrap;
     }
 
-    .timeline-meta {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 2px;
-        color: var(--ink-soft);
-        font-size: 13px;
-    }
+        .history-date span {
+            display: block;
+            margin-top: 2px;
+            color: var(--ink-faint);
+            font-size: 12px;
+        }
 
-    .result-chip {
-        padding: 1px 8px;
-        border-radius: 4px;
-        background: #eef1f4;
-        color: var(--ink);
-        font-size: 12px;
+    .history-user {
+        min-width: 135px;
         font-weight: 500;
+    }
+
+    .action-label {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .action-captured {
+        background: #eef1f4;
+        color: #475569;
+    }
+
+    .action-returned {
+        background: var(--warn-bg);
+        color: var(--warn);
+    }
+
+    .action-resubmitted {
+        background: #eaf4f7;
+        color: #356f7c;
+    }
+
+    .action-verified {
+        background: var(--ok-bg);
+        color: var(--ok);
+    }
+
+    .captured-value {
+        min-width: 110px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .history-notes {
+        min-width: 180px;
+        max-width: 320px;
         overflow-wrap: anywhere;
     }
 
-    .timeline-note {
-        margin: 8px 0 0;
-        padding: 8px 12px;
-        border-left: 3px solid var(--line);
-        background: #f8f9fa;
-        color: var(--ink);
-        font-size: 13px;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
+    .no-value {
+        color: #9aa4af;
     }
 
-    .ev-sentback .timeline-note {
-        border-left-color: var(--warn);
-    }
-
-    .empty-history {
-        padding: 28px 20px;
+    .history-empty {
+        padding: 26px !important;
         text-align: center;
+        color: var(--ink-faint);
     }
 
     .decision-form {
@@ -792,9 +821,9 @@
         resize: vertical;
     }
 
-    #reviewNotes.is-invalid {
-        border-color: var(--danger);
-    }
+        #reviewNotes.is-invalid {
+            border-color: var(--danger);
+        }
 
     .notes-help {
         margin-top: 6px;
@@ -802,10 +831,10 @@
         font-size: 12px;
     }
 
-    .notes-help.is-error {
-        color: var(--danger);
-        font-weight: 500;
-    }
+        .notes-help.is-error {
+            color: var(--danger);
+            font-weight: 500;
+        }
 
     .decision-actions {
         display: flex;
@@ -820,7 +849,7 @@
     .decision-card .btn:focus-visible,
     .page-heading .btn:focus-visible,
     #reviewNotes:focus-visible {
-        outline: 2px solid var(--accent);
+        outline: 2px solid var(--accent-dark);
         outline-offset: 2px;
     }
 
@@ -849,8 +878,8 @@
             flex-direction: column-reverse;
         }
 
-        .decision-actions .btn {
-            width: 100%;
-        }
+            .decision-actions .btn {
+                width: 100%;
+            }
     }
 </style>

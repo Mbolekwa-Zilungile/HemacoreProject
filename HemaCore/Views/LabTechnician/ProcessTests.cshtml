@@ -3,149 +3,277 @@
 @{
     ViewData["Title"] = "Select & Process Tests";
     Layout = "_LabTechnicianLayout";
-    var categories = ViewBag.Categories as List<HemaCore.Models.TestCategory>;
+
+    var categories = ViewBag.Categories as List<HemaCore.Models.TestCategory>
+                     ?? new List<HemaCore.Models.TestCategory>();
+
+    var selectedUrgency = Context.Request.Query["urgency"].ToString();
+    var selectedCategory = Context.Request.Query["categoryId"].ToString();
+
+    var filtersActive = !string.IsNullOrWhiteSpace(selectedUrgency)
+                        || !string.IsNullOrWhiteSpace(selectedCategory);
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
+@if (TempData["ResultSuccess"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["ResultSuccess"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="content-card">
-    
-  
-   
-
-    @if (TempData["ResultSuccess"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            @TempData["ResultSuccess"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
 
     <div class="section-title d-flex align-items-center justify-content-between">
+
         <div class="d-flex align-items-center">
             <i class="fas fa-microscope me-2"></i>
-            <span>Select & Process Tests</span>
-            <span class="badge blue-badge ms-2">
-                @(Model?.Count() ?? 0)
+
+            <span>
+                Available Tests (@(Model?.Count() ?? 0))
             </span>
         </div>
 
-        <a asp-action="MyTests" class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-list-check me-1"></i>
-            My Tests
-        </a>
+       
+
     </div>
 
-    <p class="text-muted mb-3">
-        View the details of an eligible test, including how long it takes and
-        whether the consumables are in stock, then add it to My Tests.
-    </p>
+    <form method="get"
+          asp-action="ProcessTests"
+          id="filterForm"
+          class="search-toolbar">
 
-    @{
-        var urgencyList = new SelectList(
-            new List<string> { "Routine", "Urgent", "STAT" },
-            selectedValue: Context.Request.Query["urgency"].ToString());
-    }
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
 
-    <form method="get" asp-action="ProcessTests" class="row g-2 mb-3">
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search patient, test or request..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+            <label for="urgencyFilter" class="filter-label">
+                <i class="fas fa-bolt me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="urgencyFilter"
+                        name="urgency"
+                        class="filter-select"
+                        onchange="this.form.submit()">
+
+                    <option value="">All urgencies</option>
+
+                    <option value="Routine"
+                            selected="@(selectedUrgency == "Routine")">
+                        Routine
+                    </option>
+
+                    <option value="Urgent"
+                            selected="@(selectedUrgency == "Urgent")">
+                        Urgent
+                    </option>
+
+                    <option value="STAT"
+                            selected="@(selectedUrgency == "STAT")">
+                        STAT
+                    </option>
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+        <div class="filter-box">
+            <label for="categoryFilter" class="filter-label">
+                <i class="fas fa-folder me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="categoryFilter"
+                        name="categoryId"
+                        class="filter-select"
+                        onchange="this.form.submit()">
+
+                    <option value="">All categories</option>
+
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.CategoryId"
+                                selected="@(selectedCategory == category.CategoryId.ToString())">
+                            @category.CategoryName
+                        </option>
+                    }
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+        @if (filtersActive)
+        {
+            <a asp-action="ProcessTests"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-rotate-left me-1"></i>
+                Clear
+            </a>
+        }
+
     </form>
 
-    <div class="table-responsive">
-        <table class="modern-table">
+    <table class="modern-table">
 
-            <thead>
+        <thead>
+            <tr>
+                <th>Request</th>
+                <th>Patient</th>
+                <th>Test Type</th>
+                <th>Category</th>
+                <th>Urgency</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="testsTable">
+
+            @if (Model == null || !Model.Any())
+            {
                 <tr>
-                    <th>Request Number</th>
-                    <th>Patient</th>
-                    <th>Test Type</th>
-                    <th>Category</th>
-                    <th>Urgency</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-microscope fa-2x mb-2"></i>
+                        <div class="fw-semibold">
+                            There are currently no tests to display.
+                        </div>
+                        <small>
+                            Eligible tests appear after their required samples have been received.
+                        </small>
+                    </td>
                 </tr>
-            </thead>
-
-            <tbody>
-                @if (Model == null || !Model.Any())
+            }
+            else
+            {
+                foreach (var test in Model)
                 {
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-microscope fa-2x mb-2"></i>
-                            <div class="fw-semibold">
-                                There are currently no tests to display.
-                            </div>
-                            <small>
-                                Eligible tests appear after their required samples have been received.
-                                Tests you add to My Tests are removed from this list.
-                            </small>
+                    <tr class="test-row">
+
+                        <td class="fw-semibold blue-text">
+                            #@test.TestRequestId
                         </td>
+
+                        <td>
+                            @test.TestRequest?.Patient?.Name
+                            @test.TestRequest?.Patient?.Surname
+                        </td>
+
+                        <td>
+                            @test.TestType?.TestTypeName
+                        </td>
+
+                        <td>
+                            @(test.TestType?.Category?.CategoryName ?? "Uncategorised")
+                        </td>
+
+                        <td>
+                            @if (test.TestRequest?.Urgency == "STAT")
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-bolt me-1"></i>STAT
+                                </span>
+                            }
+                            else if (test.TestRequest?.Urgency == "Urgent")
+                            {
+                                <span class="badge bg-warning text-dark">Urgent</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    @(test.TestRequest?.Urgency ?? "Routine")
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (test.Status == "InProgress")
+                            {
+                                <span class="badge bg-primary">In Progress</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@test.Status</span>
+                            }
+                        </td>
+
+                        <td>
+                            <a asp-action="TestDetails"
+                               asp-route-id="@test.TestRequestTestTypeId"
+                               class="btn btn-sm btn-outline-primary"
+                               title="View details">
+                                <i class="fas fa-eye me-1"></i>
+                                View Details
+                            </a>
+                        </td>
+
                     </tr>
                 }
-                else
-                {
-                    @foreach (var test in Model)
-                    {
-                        <tr>
-                            <td class="fw-semibold blue-text">
-                                #@test.TestRequestId
-                            </td>
 
-                            <td>
-                                @test.TestRequest?.Patient?.Name
-                                @test.TestRequest?.Patient?.Surname
-                            </td>
+                <tr id="noMatchRow" style="display:none;">
+                    <td colspan="7" class="text-center text-muted py-3">
+                        No tests match your search.
+                    </td>
+                </tr>
+            }
 
-                            <td>
-                                @test.TestType?.TestTypeName
-                            </td>
+        </tbody>
 
-                            <td>
-                                @test.TestType?.Category?.CategoryName
-                            </td>
-
-                            <td>
-                                @test.TestRequest?.Urgency
-                            </td>
-
-                            <td>
-                                @if (test.Status == "InProgress")
-                                {
-                                    <span class="badge bg-primary">
-                                        In Progress
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark">
-                                        @test.Status
-                                    </span>
-                                }
-                            </td>
-
-                            <td>
-                                <a asp-action="TestDetails"
-                                   asp-route-id="@test.TestRequestTestTypeId"
-                                   class="btn btn-sm btn-primary">
-                                    <i class="fas fa-eye me-1"></i>
-                                    View Details
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-
-        </table>
-    </div>
+    </table>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchBox = document.getElementById("searchBox");
+        const rows = document.querySelectorAll("#testsTable .test-row");
+        const noMatchRow = document.getElementById("noMatchRow");
+
+        if (!searchBox) return;
+
+        // Stop Enter from submitting the filter form.
+        searchBox.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+            }
+        });
+
+        // Filter the rows already on the page as you type.
+        searchBox.addEventListener("input", function() {
+            const term = this.value.trim().toLowerCase();
+            let visible = 0;
+
+            rows.forEach(function(row) {
+                const match = row.textContent.toLowerCase().includes(term);
+                row.style.display = match ? "" : "none";
+
+                if (match) visible++;
+            });
+
+            if (noMatchRow) {
+                noMatchRow.style.display = visible === 0 ? "" : "none";
+            }
+        });
+    });
+</script>

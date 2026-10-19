@@ -4,278 +4,397 @@
     ViewData["Title"] = "My Tests";
     Layout = "_LabTechnicianLayout";
 
+    var tests = Model?.ToList() ?? new List<HemaCore.Models.TestRequestItem>();
+    var now = DateTime.Now;
+
+    var selectedUrgency = Context.Request.Query["urgency"].ToString();
+    var selectedDue = Context.Request.Query["dueStatus"].ToString();
+
+    var filtersActive = !string.IsNullOrWhiteSpace(selectedUrgency)
+                        || !string.IsNullOrWhiteSpace(selectedDue);
+
     string Duration(double minutes)
     {
         minutes = Math.Max(0, minutes);
-        var duration = TimeSpan.FromMinutes(minutes);
+        var totalMinutes = (int)Math.Floor(minutes);
+        var hours = totalMinutes / 60;
+        var remainingMinutes = totalMinutes % 60;
 
-        return duration.TotalHours >= 1
-            ? $"{(int)duration.TotalHours} h {duration.Minutes} min"
-            : $"{duration.Minutes} min";
+        return hours > 0
+            ? $"{hours}h {remainingMinutes:D2}m"
+            : $"{remainingMinutes} min";
     }
 
-    var now = DateTime.Now;
+    string DisplayStatus(string? status)
+    {
+        return status switch
+        {
+            "InProgress" => "In progress",
+            "To Be Reviewed" => "To be reviewed",
+            "Completed" => "Completed",
+            _ => string.IsNullOrWhiteSpace(status) ? "Unknown" : status
+        };
+    }
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
+@if (TempData["ResultSuccess"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["ResultSuccess"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="content-card">
 
-    @if (TempData["ResultSuccess"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show mb-3"
-             role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            @TempData["ResultSuccess"]
-            <button type="button" class="btn-close"
-                    data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show mb-3"
-             role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            @TempData["Error"]
-            <button type="button" class="btn-close"
-                    data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
     <div class="section-title d-flex align-items-center justify-content-between">
+
         <div class="d-flex align-items-center">
-            <i class="fas fa-list-check me-2"></i>
-            <span>My Tests</span>
-            <span class="badge blue-badge ms-2">
-                @(Model?.Count() ?? 0)
+            <i class="fas fa-vial me-2"></i>
+
+            <span>
+                My Tests (@tests.Count)
             </span>
         </div>
 
-        <a asp-action="ProcessTests"
-           class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-plus me-1"></i>
-            Find more tests
-        </a>
+      
+
     </div>
 
-    <p class="text-muted mb-3">
-        Monitor your assigned tests, turnaround deadlines and processing status.
-    </p>
+    <form method="get"
+          asp-action="MyTests"
+          id="filterForm"
+          class="search-toolbar">
 
-    <div class="table-responsive">
-        <table class="modern-table">
-            <thead>
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search patient, test or request..."
+                   autocomplete="off" />
+        </div>
+
+        <div class="filter-box">
+            <label for="urgencyFilter" class="filter-label">
+                <i class="fas fa-bolt me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="urgencyFilter"
+                        name="urgency"
+                        class="filter-select"
+                        onchange="this.form.submit()">
+
+                    <option value="">All urgencies</option>
+
+                    <option value="Routine"
+                            selected="@(selectedUrgency == "Routine")">
+                        Routine
+                    </option>
+
+                    <option value="Urgent"
+                            selected="@(selectedUrgency == "Urgent")">
+                        Urgent
+                    </option>
+
+                    <option value="STAT"
+                            selected="@(selectedUrgency == "STAT")">
+                        STAT
+                    </option>
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+        <div class="filter-box">
+            <label for="dueFilter" class="filter-label">
+                <i class="fas fa-clock me-1"></i>
+            </label>
+
+            <div class="select-wrapper">
+                <select id="dueFilter"
+                        name="dueStatus"
+                        class="filter-select"
+                        onchange="this.form.submit()">
+
+                    <option value="">All due times</option>
+
+                    <option value="Nearing"
+                            selected="@(selectedDue == "Nearing")">
+                        Nearing deadline
+                    </option>
+
+                    <option value="Overdue"
+                            selected="@(selectedDue == "Overdue")">
+                        Overdue
+                    </option>
+                </select>
+
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
+
+        @if (filtersActive)
+        {
+            <a asp-action="MyTests"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-rotate-left me-1"></i>
+                Clear
+            </a>
+        }
+
+    </form>
+
+    <table class="modern-table">
+
+        <thead>
+            <tr>
+                <th>Request</th>
+                <th>Patient</th>
+                <th>Test Type</th>
+                <th>Urgency</th>
+                <th>Expected Completion</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="testsTable">
+
+            @if (!tests.Any())
+            {
                 <tr>
-                    <th>Request Number</th>
-                    <th>Patient</th>
-                    <th>Test Type</th>
-                    <th>Category</th>
-                    <th>Urgency</th>
-                    <th>Turnaround</th>
-                    <th>Expected Completion</th>
-                    <th>Time Remaining</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-vial fa-2x mb-2"></i>
+
+                        <div class="fw-semibold">
+                            @(filtersActive
+                                ? "No tests match your filters."
+                                : "There are currently no assigned tests.")
+                        </div>
+
+                        <small>
+                            @(filtersActive
+                                ? "Try clearing the filters."
+                                : "Tests you add from Available Tests will appear here.")
+                        </small>
+                    </td>
                 </tr>
-            </thead>
-
-            <tbody>
-                @if (Model == null || !Model.Any())
+            }
+            else
+            {
+                foreach (var test in tests)
                 {
-                    <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
-                            <i class="fas fa-list-check fa-2x mb-2"></i>
+                    var isInProgress = test.Status == "InProgress";
+                    var isUnderReview = test.Status == "To Be Reviewed";
+                    var isCompleted = test.Status == "Completed";
 
-                            <div class="fw-semibold">
-                                You have not added any tests yet.
-                            </div>
+                    DateTime? deadline = null;
 
-                            <small>
-                                Go to Select &amp; Process Tests to find
-                                an available test.
-                            </small>
+                    if (test.StartDateTime.HasValue && test.TestType != null)
+                    {
+                        deadline = test.StartDateTime.Value.AddHours(
+                            test.TestType.TurnAroundTime);
+                    }
+
+                    var remaining = deadline.HasValue
+                        ? (deadline.Value - now).TotalMinutes
+                        : (double?)null;
+
+                    var isOverdue = isInProgress
+                        && remaining.HasValue
+                        && remaining.Value < 0
+                        && !test.CompletionDateTime.HasValue;
+
+                    var isDueSoon = isInProgress
+                        && remaining.HasValue
+                        && remaining.Value >= 0
+                        && remaining.Value <= 60
+                        && !test.CompletionDateTime.HasValue;
+
+                    var urgency = test.TestRequest?.Urgency ?? "N/A";
+
+                    // Shown as a tooltip so the row stays one line.
+                    var completionTip = test.TestType != null
+                        ? $"{test.TestType.TurnAroundTime} h turnaround"
+                        : "";
+
+                    <tr class="test-row">
+
+                        <td class="fw-semibold blue-text">
+                            #@test.TestRequestId
                         </td>
+
+                        <td>
+                            @test.TestRequest?.Patient?.Name
+                            @test.TestRequest?.Patient?.Surname
+                        </td>
+
+                        <td title="@test.TestType?.Category?.CategoryName">
+                            @(test.TestType?.TestTypeName ?? "Not specified")
+                        </td>
+
+                        <td>
+                            @if (urgency == "STAT")
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-bolt me-1"></i>STAT
+                                </span>
+                            }
+                            else if (urgency == "Urgent")
+                            {
+                                <span class="badge bg-warning text-dark">Urgent</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@urgency</span>
+                            }
+                        </td>
+
+                        <td title="@completionTip">
+                            @if (deadline.HasValue)
+                            {
+                                @deadline.Value.ToString("dd/MM/yyyy HH:mm")
+
+                                if (isOverdue)
+                                {
+                                    <div>
+                                        <small class="text-danger fw-semibold">
+                                            @Duration(Math.Abs(remaining!.Value)) overdue
+                                        </small>
+                                    </div>
+                                }
+                                else if (isDueSoon)
+                                {
+                                    <div>
+                                        <small class="text-warning fw-semibold">
+                                            @Duration(remaining!.Value) left
+                                        </small>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Not available</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (isOverdue)
+                            {
+                                <span class="badge bg-danger">Overdue</span>
+                            }
+                            else if (isDueSoon)
+                            {
+                                <span class="badge bg-warning text-dark">Due soon</span>
+                            }
+                            else if (isInProgress)
+                            {
+                                <span class="badge bg-primary">In progress</span>
+                            }
+                            else if (isUnderReview)
+                            {
+                                <span class="badge bg-warning text-dark">To be reviewed</span>
+                            }
+                            else if (isCompleted)
+                            {
+                                <span class="badge bg-success">Completed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    @DisplayStatus(test.Status)
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (isInProgress)
+                            {
+                                <a asp-action="CaptureTestResult"
+                                   asp-route-id="@test.TestRequestTestTypeId"
+                                   class="btn btn-sm btn-outline-primary"
+                                   title="Capture result">
+                                    <i class="fas fa-vial me-1"></i>
+                                    Capture
+                                </a>
+                            }
+                            else if (isUnderReview)
+                            {
+                                <a asp-action="ReviewResults"
+                                   class="btn btn-sm btn-outline-primary"
+                                   title="Review results">
+                                    <i class="fas fa-clipboard-check me-1"></i>
+                                    Review
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No action</span>
+                            }
+                        </td>
+
                     </tr>
                 }
-                else
-                {
-                    @foreach (var test in Model)
-                    {
-                        var isInProgress = test.Status == "InProgress";
-                        var isUnderReview = test.Status == "To Be Reviewed";
 
-                        DateTime? deadline = null;
+                <tr id="noMatchRow" style="display:none;">
+                    <td colspan="7" class="text-center text-muted py-3">
+                        No tests match your search.
+                    </td>
+                </tr>
+            }
 
-                        if (test.StartDateTime.HasValue &&
-                            test.TestType != null)
-                        {
-                            deadline = test.StartDateTime.Value.AddMinutes(
-                                test.TestType.TurnAroundTime);
-                        }
+        </tbody>
 
-                        var remaining = deadline.HasValue
-                            ? (deadline.Value - now).TotalMinutes
-                            : (double?)null;
-
-                        var isOverdue = isInProgress &&
-                            remaining.HasValue &&
-                            remaining.Value < 0 &&
-                            !test.CompletionDateTime.HasValue;
-
-                        var isDueSoon = isInProgress &&
-                            remaining.HasValue &&
-                            remaining.Value >= 0 &&
-                            remaining.Value <= 60 &&
-                            !test.CompletionDateTime.HasValue;
-
-                        <tr>
-                            <td class="fw-semibold blue-text">
-                                #@test.TestRequestId
-                            </td>
-
-                            <td>
-                                @test.TestRequest?.Patient?.Name
-                                @test.TestRequest?.Patient?.Surname
-                            </td>
-
-                            <td>
-                                @test.TestType?.TestTypeName
-                            </td>
-
-                            <td>
-                                @test.TestType?.Category?.CategoryName
-                            </td>
-
-                            <td>
-                                @test.TestRequest?.Urgency
-                            </td>
-
-                            <td>
-                                @if (test.TestType != null)
-                                {
-                                    @Duration(test.TestType.TurnAroundTime)
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                            </td>
-
-                            <td>
-                                @if (deadline.HasValue)
-                                {
-                                    <div class="fw-semibold">
-                                        @deadline.Value.ToString("dd MMM yyyy")
-                                    </div>
-
-                                    <small class="text-muted">
-                                        @deadline.Value.ToString("HH:mm")
-                                    </small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">
-                                        Start time unavailable
-                                    </span>
-                                }
-                            </td>
-
-                            <td>
-                                @if (isOverdue)
-                                {
-                                    <span class="text-danger fw-semibold">
-                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                        @Duration(Math.Abs(remaining!.Value)) overdue
-                                    </span>
-                                }
-                                else if (isDueSoon)
-                                {
-                                    <span class="text-warning fw-semibold">
-                                        <i class="fas fa-clock me-1"></i>
-                                        @Duration(remaining!.Value) left
-                                    </span>
-                                }
-                                else if (isInProgress && remaining.HasValue)
-                                {
-                                    <span class="text-success">
-                                        @Duration(remaining.Value) left
-                                    </span>
-                                }
-                                else if (isUnderReview)
-                                {
-                                    <span class="text-muted">
-                                        Review required
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                            </td>
-
-                            <td>
-                                @if (isOverdue)
-                                {
-                                    <span class="badge bg-danger">Overdue</span>
-                                }
-                                else if (isDueSoon)
-                                {
-                                    <span class="badge bg-warning text-dark">
-                                        Due Soon
-                                    </span>
-                                }
-                                else if (isInProgress)
-                                {
-                                    <span class="badge bg-primary">
-                                        In Progress
-                                    </span>
-                                }
-                                else if (isUnderReview)
-                                {
-                                    <span class="badge bg-warning text-dark">
-                                        To Be Reviewed
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">
-                                        @test.Status
-                                    </span>
-                                }
-                            </td>
-
-                            <td>
-                                @if (isInProgress)
-                                {
-                                    <a asp-action="CaptureTestResult"
-                                       asp-route-id="@test.TestRequestTestTypeId"
-                                       class="btn btn-sm btn-success">
-                                        <i class="fas fa-file-pen me-1"></i>
-                                        Capture Results
-                                    </a>
-                                }
-                                else if (isUnderReview)
-                                {
-                                    <a asp-action="ReviewResults"
-                                       class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-eye me-1"></i>
-                                        Review Results
-                                    </a>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <div class="text-muted small mt-3">
-        <i class="fas fa-info-circle me-1"></i>
-        Deadlines are calculated from the recorded start time and the test's
-        turnaround time. Due Soon means 60 minutes or less remain.
-        Refresh this page to recalculate the displayed time.
-    </div>
+    </table>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchBox = document.getElementById("searchBox");
+        const rows = document.querySelectorAll("#testsTable .test-row");
+        const noMatchRow = document.getElementById("noMatchRow");
+
+        if (!searchBox) return;
+
+        // Stop Enter from submitting the filter form.
+        searchBox.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+            }
+        });
+
+        // Filter the rows already on the page as you type.
+        searchBox.addEventListener("input", function() {
+            const term = this.value.trim().toLowerCase();
+            let visible = 0;
+
+            rows.forEach(function(row) {
+                const match = row.textContent.toLowerCase().includes(term);
+                row.style.display = match ? "" : "none";
+
+                if (match) visible++;
+            });
+
+            if (noMatchRow) {
+                noMatchRow.style.display = visible === 0 ? "" : "none";
+            }
+        });
+    });
+</script>

@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),sql => sql.CommandTimeout(120)));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddIdentity<Users, IdentityRole>(options =>
@@ -27,8 +27,9 @@ builder.Services.AddIdentity<Users, IdentityRole>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-QuestPDF.Settings.License = LicenseType.Community;
-
+//QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.License =
+    QuestPDF.Infrastructure.LicenseType.Community;
 var app = builder.Build();
 
 await SeedService.SeedDatabase(app.Services);

@@ -10,47 +10,47 @@
 <style>
     .add-patient-page {
         padding: 5px 5px 30px;
-        animation: fadeInUp 0.5s ease;
+        animation: fadeInUp .5s ease;
     }
 
     .page-header {
         margin-bottom: 2rem;
     }
 
-    .page-header h1 {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    .page-header h1 i {
-        -webkit-text-fill-color: #667eea;
-    }
+            .page-header h1 i {
+                -webkit-text-fill-color: #667eea;
+            }
 
-    .page-header p {
-        margin: 6px 0 0;
-        color: #718096;
-        font-size: 14px;
-    }
+        .page-header p {
+            margin: 6px 0 0;
+            color: #718096;
+            font-size: 14px;
+        }
 
     .form-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        background: linear-gradient(135deg,#fff,#f8f9fa);
         border-radius: 24px;
         padding: 2rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 10px 40px rgba(0,0,0,.08);
         margin-bottom: 1.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(0,0,0,.05);
+        transition: transform .3s ease,box-shadow .3s ease;
     }
 
-    .form-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-    }
+        .form-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0,0,0,.12);
+        }
 
     .step-header {
         display: flex;
@@ -64,7 +64,7 @@
     .step-number {
         width: 40px;
         height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg,#667eea,#764ba2);
         color: white;
         border-radius: 12px;
         display: flex;
@@ -84,13 +84,13 @@
 
     .step-subtitle {
         color: #718096;
-        font-size: 0.85rem;
-        margin: 0.25rem 0 0;
+        font-size: .85rem;
+        margin: .25rem 0 0;
     }
 
     .form-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2,minmax(0,1fr));
         gap: 1.5rem;
     }
 
@@ -99,45 +99,66 @@
         flex-direction: column;
     }
 
-    .form-group.full-width {
-        grid-column: 1 / -1;
-    }
+        .form-group.full-width {
+            grid-column: 1/-1;
+        }
 
-    .form-group label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: .5rem;
+            font-size: .9rem;
+        }
 
-    .form-group label i {
-        color: #667eea;
-        width: 20px;
-    }
+            .form-group label i {
+                color: #667eea;
+                width: 20px;
+            }
 
     .form-control {
         width: 100%;
-        padding: 0.75rem 1rem;
+        padding: .75rem 1rem;
         border: 2px solid #e2e8f0;
         border-radius: 12px;
-        font-size: 0.95rem;
+        font-size: .95rem;
         background: white;
         box-sizing: border-box;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
     }
 
-    .form-control:hover {
-        border-color: #cbd5e0;
-    }
+        .form-control:hover {
+            border-color: #cbd5e0;
+        }
 
-    .form-control:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,.1);
+        }
+
+        .form-control.input-invalid,
+        .form-control.input-validation-error {
+            border-color: #dc3545 !important;
+            background: #fffafa;
+        }
+
+        .form-control.input-valid {
+            border-color: #38a169;
+        }
+
+        .form-control[readonly] {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .form-control:disabled {
+            background: #f1f3f5;
+            color: #718096;
+            cursor: not-allowed;
+        }
 
     textarea.form-control {
         min-height: 85px;
@@ -146,19 +167,38 @@
 
     .validation {
         color: #dc3545;
-        font-size: 0.8rem;
-        margin-top: 0.3rem;
+        font-size: .8rem;
+        margin-top: .3rem;
     }
+
+    .validation-summary-valid {
+        display: none;
+    }
+
+    .validation-summary-errors {
+        color: #742a2a;
+        background: #fed7d7;
+        border: 1px solid #feb2b2;
+        border-left: 4px solid #e53e3e;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
 
     .info-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: .5rem;
         background: #ebf8ff;
         color: #3182ce;
-        padding: 0.5rem 1rem;
+        padding: .5rem 1rem;
         border-radius: 12px;
-        font-size: 0.85rem;
+        font-size: .85rem;
         margin-bottom: 1rem;
     }
 
@@ -170,54 +210,7 @@
         color: #2d3748;
         font-size: 1rem;
         font-weight: 600;
-        margin-bottom: 0.8rem;
-    }
-
-    .options-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-    }
-
-    .option-item {
-        background: #f7fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 0.85rem 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .option-item:hover {
-        background: #edf2f7;
-        border-color: #c3dafe;
-        transform: translateX(5px);
-    }
-
-    .option-item label {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        cursor: pointer;
-        color: #4a5568;
-        font-size: 0.88rem;
-        font-weight: 500;
-        margin: 0;
-    }
-
-    .option-item input[type="checkbox"] {
-        width: 17px;
-        height: 17px;
-        accent-color: #667eea;
-        cursor: pointer;
-    }
-
-    .empty-options {
-        color: #9ca3af;
-        background: #f8fafc;
-        border: 1px dashed #d1d5db;
-        border-radius: 12px;
-        padding: 1rem;
-        font-size: 0.85rem;
+        margin-bottom: .8rem;
     }
 
     .history-divider {
@@ -225,6 +218,258 @@
         border-top: 1px solid #edf0f2;
         margin: 1.5rem 0;
     }
+
+    .history-picker {
+        width: 100%;
+    }
+
+    .history-search {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+        .history-search > i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            z-index: 1;
+        }
+
+        .history-search .history-search-input {
+            padding-left: 42px;
+        }
+
+    .history-picker-layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0,1fr);
+        gap: 1.25rem;
+        align-items: start;
+    }
+
+    .history-categories,
+    .history-items-panel {
+        min-width: 0;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+        .history-categories h4,
+        .history-items-panel h4,
+        .selected-history h4 {
+            margin: 0 0 .85rem;
+            color: #2d3748;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+
+    .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    .history-category-button {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: .7rem .8rem;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        background: #f7fafc;
+        color: #4a5568;
+        font-size: .85rem;
+        text-align: left;
+        cursor: pointer;
+        transition: background .2s,color .2s;
+    }
+
+        .history-category-button:hover {
+            background: #edf2f7;
+        }
+
+        .history-category-button.active {
+            background: #ebf8ff;
+            color: #2c7da0;
+            border-color: #90cdf4;
+            font-weight: 600;
+        }
+
+    .history-category-count {
+        font-size: .75rem;
+        color: #718096;
+        margin-left: .5rem;
+        flex-shrink: 0;
+    }
+
+    .history-category-help {
+        margin: 0 0 .75rem;
+        color: #718096;
+        font-size: .78rem;
+        line-height: 1.5;
+    }
+
+    .history-items {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: .65rem;
+    }
+
+    .history-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        width: 100%;
+        min-width: 0;
+        padding: .85rem;
+        margin: 0;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #4a5568;
+        font-size: .86rem;
+        font-weight: 500;
+        line-height: 1.4;
+        text-align: left;
+        transition: background .2s,border-color .2s;
+    }
+
+        .history-option:hover {
+            background: #edf2f7;
+            border-color: #90cdf4;
+        }
+
+        .history-option:focus-visible {
+            outline: 2px solid #2c7da0;
+            outline-offset: 2px;
+        }
+
+    .history-option-name {
+        overflow-wrap: anywhere;
+    }
+
+    .history-option-action {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        flex-shrink: 0;
+        color: #2c7da0;
+        font-size: .8rem;
+        font-weight: 600;
+    }
+
+    .history-option.is-selected {
+        background: #ebf8ff;
+        border-color: #63b3ed;
+        color: #2c5282;
+    }
+
+        .history-option.is-selected .history-option-action {
+            color: #276749;
+        }
+
+    .history-option[hidden],
+    .history-empty[hidden],
+    .history-show-more[hidden] {
+        display: none !important;
+    }
+
+    .history-items.is-collapsed {
+        display: none !important;
+    }
+
+    .history-empty {
+        margin: 0;
+        padding: 1rem;
+        color: #718096;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e0;
+        border-radius: 10px;
+        text-align: center;
+        font-size: .85rem;
+    }
+
+    /* Show More / Show Less */
+    .history-show-more {
+        display: block;
+        width: 100%;
+        margin-top: .85rem;
+        padding: .7rem 1rem;
+        border: 1px solid #90cdf4;
+        border-radius: 10px;
+        background: #ebf8ff;
+        color: #2c7da0;
+        font-size: .88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .2s,border-color .2s;
+    }
+
+        .history-show-more:hover {
+            background: #bee3f8;
+            border-color: #63b3ed;
+        }
+
+    .selected-history {
+        margin-top: 1.25rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+    }
+
+    .selected-empty {
+        margin: 0;
+        color: #718096;
+        font-size: .85rem;
+    }
+
+    .selected-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+    }
+
+    .selected-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        max-width: 100%;
+        padding: .5rem .7rem;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 9px;
+        color: #2c5282;
+        font-size: .82rem;
+        overflow-wrap: anywhere;
+    }
+
+        .selected-chip button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 50%;
+            background: #bee3f8;
+            color: #2c5282;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+            .selected-chip button:hover {
+                background: #90cdf4;
+            }
 
     .form-actions {
         display: flex;
@@ -237,54 +482,59 @@
         background: white;
         color: #718096;
         border: 2px solid #e2e8f0;
-        padding: 0.7rem 1.8rem;
+        padding: .7rem 1.8rem;
         border-radius: 12px;
         font-weight: 500;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: .5rem;
     }
 
-    .btn-cancel:hover {
-        background: #f7fafc;
-        border-color: #cbd5e0;
-        transform: translateY(-2px);
-    }
+        .btn-cancel:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+        }
 
     .btn-submit {
-        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        background: linear-gradient(135deg,#48bb78,#38a169);
         color: white;
         border: none;
-        padding: 0.7rem 2rem;
+        padding: .7rem 2rem;
         border-radius: 12px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: .5rem;
         font-size: 1rem;
     }
 
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
-    }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72,187,120,.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
 
     .info-box {
         margin-top: 1.5rem;
-        padding: 0.9rem 1rem;
+        padding: .9rem 1rem;
         background: #ebf8ff;
         border: 1px solid #bee3f8;
         border-radius: 12px;
         color: #2b6cb0;
-        font-size: 0.85rem;
+        font-size: .85rem;
         line-height: 1.5;
         display: flex;
         align-items: flex-start;
-        gap: 0.6rem;
+        gap: .6rem;
     }
 
     .success-message {
@@ -310,6 +560,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -326,16 +577,11 @@
             grid-column: auto;
         }
 
-        .options-grid {
-            grid-template-columns: 1fr;
-        }
-
         .form-actions {
             flex-direction: column-reverse;
         }
 
-        .btn-cancel,
-        .btn-submit {
+        .btn-cancel, .btn-submit {
             width: 100%;
             justify-content: center;
         }
@@ -347,13 +593,33 @@
         .step-title {
             font-size: 1.1rem;
         }
+
+        .history-picker-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+        }
+
+        .history-items {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .category-list {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
+
 <div class="add-patient-page">
 
     @if (TempData["Success"] != null)
     {
-        <div class="success-message">
+        <div class="success-message" role="status">
             <i class="fas fa-check-circle"></i>
             @TempData["Success"]
         </div>
@@ -361,553 +627,1072 @@
 
     @if (TempData["Error"] != null)
     {
-        <div class="error-message">
+        <div class="error-message" role="alert">
             <i class="fas fa-exclamation-triangle"></i>
             @TempData["Error"]
         </div>
     }
 
-    @* <div class="page-header">
-        <h1>
-            <i class="fas fa-user-plus"></i>
-            Add New Patient
-        </h1>
-
-        <p>Register a new patient and capture their medical history.</p>
-    </div>
- *@
     <form asp-controller="Doctor"
           asp-action="AddPatient"
-          method="post">
+          method="post"
+          id="addPatientForm"
+          novalidate>
 
         @Html.AntiForgeryToken()
 
-        <div asp-validation-summary="ModelOnly"
-             class="validation"
-             style="margin-bottom: 15px;">
-        </div>
+        <div asp-validation-summary="All"
+             class="validation-summary-errors"
+             role="alert"></div>
 
         <!-- STEP 1: PERSONAL DETAILS -->
         <div class="form-card">
-
             <div class="step-header">
                 <div class="step-number">1</div>
-
                 <div>
                     <h3 class="step-title">Personal Details</h3>
-
-                    <p class="step-subtitle">
-                        Basic information about the patient
-                    </p>
+                    <p class="step-subtitle">Basic information about the patient</p>
                 </div>
             </div>
 
             <div class="form-grid">
-
-                <!-- FIRST NAME -->
                 <div class="form-group">
-                    <label asp-for="Name">
-                        <i class="fas fa-user"></i>
-                        First Name *
-                    </label>
-
-                    <input asp-for="Name"
-                           class="form-control"
-                           placeholder="Enter first name" />
-
-                    <span asp-validation-for="Name"
-                          class="validation"></span>
+                    <label asp-for="Name"><i class="fas fa-user"></i> First Name *</label>
+                    <input asp-for="Name" class="form-control" placeholder="Enter first name" />
+                    <span asp-validation-for="Name" class="validation"></span>
                 </div>
 
-                <!-- SURNAME -->
                 <div class="form-group">
-                    <label asp-for="Surname">
-                        <i class="fas fa-user"></i>
-                        Surname *
-                    </label>
-
-                    <input asp-for="Surname"
-                           class="form-control"
-                           placeholder="Enter surname" />
-
-                    <span asp-validation-for="Surname"
-                          class="validation"></span>
+                    <label asp-for="Surname"><i class="fas fa-user"></i> Surname *</label>
+                    <input asp-for="Surname" class="form-control" placeholder="Enter surname" />
+                    <span asp-validation-for="Surname" class="validation"></span>
                 </div>
 
-                <!-- ID NUMBER -->
                 <div class="form-group">
-                    <label asp-for="IDNumber">
-                        <i class="fas fa-id-card"></i>
-                        ID Number *
-                    </label>
-
+                    <label asp-for="IDNumber"><i class="fas fa-id-card"></i> ID Number *</label>
                     <input asp-for="IDNumber"
                            id="idNumber"
                            class="form-control"
-                           placeholder="e.g. 9001011234567"
+                           placeholder="Enter all 13 digits"
                            maxlength="13"
-                           inputmode="numeric" />
-
-                    <span asp-validation-for="IDNumber"
-                          class="validation"></span>
-
-                    <small id="idError"
-                           style="color:#dc3545; display:none; margin-top:5px;">
-                        <i class="fas fa-exclamation-circle"></i>
-                        Invalid ID number format.
+                           inputmode="numeric"
+                           autocomplete="off"
+                           aria-describedby="idError" />
+                    <span id="idError" class="validation" role="alert"></span>
+                    <span asp-validation-for="IDNumber" class="validation"></span>
+                    <small style="color:#718096;font-size:.78rem;margin-top:5px;">
+                        Enter the complete 13-digit South African ID number.
                     </small>
                 </div>
 
-                <!-- DATE OF BIRTH -->
                 <div class="form-group">
-                    <label asp-for="DateOfBirth">
-                        <i class="fas fa-calendar"></i>
-                        Date of Birth *
-                    </label>
-
+                    <label asp-for="DateOfBirth"><i class="fas fa-calendar"></i> Date of Birth *</label>
                     <input asp-for="DateOfBirth"
                            id="dateOfBirth"
                            type="date"
                            class="form-control"
                            readonly
-                           style="background:#f8f9fa; cursor:not-allowed;" />
-
-                    <span asp-validation-for="DateOfBirth"
-                          class="validation"></span>
-
-                    <small style="color:#718096; font-size:0.78rem; margin-top:5px;">
-                        <i class="fas fa-info-circle"></i>
-                        Auto-filled from ID number.
+                           style="background:#f8f9fa;cursor:not-allowed;" />
+                    <span asp-validation-for="DateOfBirth" class="validation"></span>
+                    <small style="color:#718096;font-size:.78rem;margin-top:5px;">
+                        Auto-filled from the ID number.
                     </small>
                 </div>
 
-                <!-- PHONE NUMBER -->
                 <div class="form-group">
-                    <label asp-for="PhoneNumber">
-                        <i class="fas fa-phone"></i>
-                        Phone Number *
-                    </label>
-
+                    <label asp-for="PhoneNumber"><i class="fas fa-phone"></i> Phone Number *</label>
                     <input asp-for="PhoneNumber"
+                           id="phoneNumber"
                            class="form-control"
-                           placeholder="+27XXXXXXXXX" />
-
-                    <span asp-validation-for="PhoneNumber"
-                          class="validation"></span>
+                           placeholder="+27712345678"
+                           maxlength="12"
+                           inputmode="tel"
+                           autocomplete="tel"
+                           aria-describedby="phoneError" />
+                    <span id="phoneError" class="validation" role="alert"></span>
+                    <span asp-validation-for="PhoneNumber" class="validation"></span>
                 </div>
 
-                <!-- GENDER -->
                 <div class="form-group">
-                    <label asp-for="Gender">
-                        <i class="fas fa-venus-mars"></i>
-                        Gender *
-                    </label>
-
-                    <select asp-for="Gender"
-                            class="form-control">
-
+                    <label asp-for="Gender"><i class="fas fa-venus-mars"></i> Gender *</label>
+                    <select asp-for="Gender" class="form-control">
                         <option value="">Select gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
-
                     </select>
-
-                    <span asp-validation-for="Gender"
-                          class="validation"></span>
+                    <span asp-validation-for="Gender" class="validation"></span>
                 </div>
 
-                <!-- EMAIL -->
                 <div class="form-group">
-                    <label asp-for="Email">
-                        <i class="fas fa-envelope"></i>
-                        Email Address *
-                    </label>
-
+                    <label asp-for="Email"><i class="fas fa-envelope"></i> Email Address *</label>
                     <input asp-for="Email"
                            type="email"
                            class="form-control"
-                           placeholder="patient@example.com" />
-
-                    <span asp-validation-for="Email"
-                          class="validation"></span>
+                           placeholder="patient@example.com"
+                           autocomplete="email" />
+                    <span asp-validation-for="Email" class="validation"></span>
                 </div>
 
-                
-            <!-- STREET ADDRESS -->
-<div class="form-group full-width">
-    <label asp-for="StreetAddress">
-        <i class="fas fa-home"></i>
-        Street Address *
-    </label>
+                <div class="form-group full-width">
+                    <label asp-for="StreetAddress"><i class="fas fa-home"></i> Street Address *</label>
+                    <input asp-for="StreetAddress" class="form-control" placeholder="e.g. 12 Main Road" />
+                    <span asp-validation-for="StreetAddress" class="validation"></span>
+                </div>
 
-    <input asp-for="StreetAddress"
-           class="form-control"
-           placeholder="e.g. 12 Main Road" />
+                <div class="form-group">
+                    <label asp-for="Province"><i class="fas fa-map"></i> Province *</label>
+                    <select asp-for="Province" id="province" class="form-control" required>
+                        <option value="">Select province</option>
+                        <option value="Eastern Cape">Eastern Cape</option>
+                        <option value="Free State">Free State</option>
+                        <option value="Gauteng">Gauteng</option>
+                        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                        <option value="Limpopo">Limpopo</option>
+                        <option value="Mpumalanga">Mpumalanga</option>
+                        <option value="Northern Cape">Northern Cape</option>
+                        <option value="North West">North West</option>
+                        <option value="Western Cape">Western Cape</option>
+                    </select>
+                    <span asp-validation-for="Province" class="validation"></span>
+                </div>
 
-    <span asp-validation-for="StreetAddress"
-          class="validation"></span>
-</div>
+                <div class="form-group">
+                    <label asp-for="City"><i class="fas fa-city"></i> City / Town *</label>
+                    <select asp-for="City"
+                            id="city"
+                            class="form-control"
+                            data-current-city="@Model.City"
+                            required
+                            disabled>
+                        <option value="">Select province first</option>
+                    </select>
+                    <span asp-validation-for="City" class="validation"></span>
+                    <small style="color:#718096;font-size:.78rem;margin-top:5px;">
+                        Select a province first to see its cities and towns.
+                    </small>
+                </div>
 
-<!-- SUBURB -->
-<div class="form-group">
-    <label asp-for="Suburb">
-        <i class="fas fa-map-marker-alt"></i>
-        Suburb
-    </label>
+                <div class="form-group">
+                    <label asp-for="Suburb"><i class="fas fa-map-marker-alt"></i> Suburb</label>
+                    <input asp-for="Suburb" class="form-control" placeholder="e.g. Walmer" />
+                    <span asp-validation-for="Suburb" class="validation"></span>
+                </div>
 
-    <input asp-for="Suburb"
-           class="form-control"
-           placeholder="e.g. Walmer" />
-
-    <span asp-validation-for="Suburb"
-          class="validation"></span>
-</div>
-
-<!-- CITY -->
-<div class="form-group">
-    <label asp-for="City">
-        <i class="fas fa-city"></i>
-        City / Town *
-    </label>
-
-    <input asp-for="City"
-           class="form-control"
-           placeholder="e.g. Gqeberha" />
-
-    <span asp-validation-for="City"
-          class="validation"></span>
-</div>
-
-<!-- PROVINCE -->
-<div class="form-group">
-    <label asp-for="Province">
-        <i class="fas fa-map"></i>
-        Province *
-    </label>
-
-    <select asp-for="Province"
-            class="form-control">
-
-        <option value="">Select province</option>
-        <option value="Eastern Cape">Eastern Cape</option>
-        <option value="Free State">Free State</option>
-        <option value="Gauteng">Gauteng</option>
-        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-        <option value="Limpopo">Limpopo</option>
-        <option value="Mpumalanga">Mpumalanga</option>
-        <option value="Northern Cape">Northern Cape</option>
-        <option value="North West">North West</option>
-        <option value="Western Cape">Western Cape</option>
-
-    </select>
-
-    <span asp-validation-for="Province"
-          class="validation"></span>
-</div>
-
-<!-- POSTAL CODE -->
-<div class="form-group">
-    <label asp-for="PostalCode">
-        <i class="fas fa-mail-bulk"></i>
-        Postal Code *
-    </label>
-
-    <input asp-for="PostalCode"
-           class="form-control"
-           placeholder="e.g. 6070"
-           maxlength="4"
-           inputmode="numeric" />
-
-    <span asp-validation-for="PostalCode"
-          class="validation"></span>
-</div>
+                <div class="form-group">
+                    <label asp-for="PostalCode"><i class="fas fa-mail-bulk"></i> Postal Code *</label>
+                    <input asp-for="PostalCode"
+                           id="postalCode"
+                           class="form-control"
+                           placeholder="e.g. 6070"
+                           maxlength="4"
+                           inputmode="numeric"
+                           aria-describedby="postalCodeError" />
+                    <span id="postalCodeError" class="validation" role="alert"></span>
+                    <span asp-validation-for="PostalCode" class="validation"></span>
+                </div>
+            </div>
         </div>
 
         <!-- STEP 2: MEDICAL CONDITIONS -->
         <div class="form-card">
-
             <div class="step-header">
                 <div class="step-number">2</div>
-
                 <div>
                     <h3 class="step-title">Medical Conditions</h3>
-
-                    <p class="step-subtitle">
-                        Chronic diseases and long-term health conditions
-                    </p>
+                    <p class="step-subtitle">Search and select the patient's known medical conditions.</p>
                 </div>
             </div>
 
-            <div class="info-badge">
-                <i class="fas fa-info-circle"></i>
-                Select any known chronic conditions the patient has.
-            </div>
+            <div class="history-picker"
+                 data-history-picker
+                 data-selected-input-name="SelectedConditionIds">
 
-            <div class="history-section">
-
-                <div class="history-title">
-                    Known Conditions
+                <div class="history-search">
+                    <i class="fas fa-search"></i>
+                    <input type="search"
+                           class="form-control history-search-input"
+                           placeholder="Search medical conditions..."
+                           aria-label="Search medical conditions" />
                 </div>
 
-                @if (Model.AllConditions != null && Model.AllConditions.Any())
-                {
-                    <div class="options-grid">
+                <div class="history-picker-layout">
+                    <aside class="history-categories">
+                        <h4>CATEGORIES</h4>
+                        <p class="history-category-help">
+                            Choose a category or use the search box.
+                        </p>
+                        <div class="category-list" data-category-list></div>
+                    </aside>
 
-                        @for (int i = 0; i < Model.AllConditions.Count; i++)
-                        {
-                            <div class="option-item">
+                    <div class="history-items-panel">
+                        <h4>MEDICAL CONDITIONS</h4>
 
-                                <label>
-                                    <input type="checkbox"
-                                           name="SelectedConditionIds"
-                                           value="@Model.AllConditions[i].Id"
-                                           @(Model.AllConditions[i].IsSelected ? "checked" : "") />
+                        <p class="history-empty" data-initial-prompt>
+                            Search for a condition or choose a category to view items.
+                        </p>
 
-                                    @Model.AllConditions[i].Name
-                                </label>
+                        <div class="history-items is-collapsed" data-history-items>
+                            @foreach (var item in Model.AllConditions)
+                            {
+                                <button type="button"
+                                        class="history-option"
+                                        data-history-option
+                                        data-item-id="@item.Id"
+                                        data-item-name="@item.Name"
+                                        data-category-id="@item.CategoryId"
+                                        data-category-name="@item.CategoryName"
+                                        data-selected="@item.IsSelected"
+                                        aria-pressed="@item.IsSelected"
+                                        hidden>
+                                    <span class="history-option-name">@item.Name</span>
+                                    <span class="history-option-action">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Add</span>
+                                    </span>
+                                </button>
+                            }
+                        </div>
 
-                            </div>
-                        }
+                        <button type="button" class="history-show-more" data-show-more hidden>
+                            Show More
+                        </button>
 
+                        <p class="history-empty" data-empty-message hidden>
+                            No matching medical conditions found.
+                        </p>
                     </div>
-                }
-                else
-                {
-                    <div class="empty-options">
-                        No conditions are currently available.
-                    </div>
-                }
+                </div>
 
+                <div class="selected-history">
+                    <h4>Selected medical conditions</h4>
+                    <p class="selected-empty" data-selected-empty>No medical conditions selected yet.</p>
+                    <div class="selected-chips" data-selected-items></div>
+                    <div data-selected-inputs hidden></div>
+                </div>
             </div>
         </div>
 
         <!-- STEP 3: ALLERGIES -->
         <div class="form-card">
-
             <div class="step-header">
                 <div class="step-number">3</div>
-
                 <div>
                     <h3 class="step-title">Allergies</h3>
-
-                    <p class="step-subtitle">
-                        Medication, food, or environmental allergies
-                    </p>
+                    <p class="step-subtitle">Record known medication, food, and environmental allergies.</p>
                 </div>
             </div>
 
-            <div class="info-badge"
-                 style="background:#fff5f5; color:#c53030;">
-
+            <div class="info-badge" style="background:#fff5f5;color:#c53030;">
                 <i class="fas fa-exclamation-triangle"></i>
-                Critical information for patient safety.
-
+                Allergy information is important for patient safety.
             </div>
 
-            <div class="history-section">
+            <div class="history-picker"
+                 data-history-picker
+                 data-selected-input-name="SelectedAllergyIds">
 
-                <div class="history-title">
-                    Known Allergies
+                <div class="history-search">
+                    <i class="fas fa-search"></i>
+                    <input type="search"
+                           class="form-control history-search-input"
+                           placeholder="Search allergies..."
+                           aria-label="Search allergies" />
                 </div>
 
-                @if (Model.AllAllergies != null && Model.AllAllergies.Any())
-                {
-                    <div class="options-grid">
+                <div class="history-picker-layout">
+                    <aside class="history-categories">
+                        <h4>CATEGORIES</h4>
+                        <p class="history-category-help">
+                            Choose a category or use the search box.
+                        </p>
+                        <div class="category-list" data-category-list></div>
+                    </aside>
 
-                        @for (int i = 0; i < Model.AllAllergies.Count; i++)
-                        {
-                            <div class="option-item">
+                    <div class="history-items-panel">
+                        <h4>ALLERGIES</h4>
 
-                                <label>
-                                    <input type="checkbox"
-                                           name="SelectedAllergyIds"
-                                           value="@Model.AllAllergies[i].Id"
-                                           @(Model.AllAllergies[i].IsSelected ? "checked" : "") />
+                        <p class="history-empty" data-initial-prompt>
+                            Search for an allergy or choose a category to view items.
+                        </p>
 
-                                    @Model.AllAllergies[i].Name
-                                </label>
+                        <div class="history-items is-collapsed" data-history-items>
+                            @foreach (var item in Model.AllAllergies)
+                            {
+                                <button type="button"
+                                        class="history-option"
+                                        data-history-option
+                                        data-item-id="@item.Id"
+                                        data-item-name="@item.Name"
+                                        data-category-id="@item.CategoryId"
+                                        data-category-name="@item.CategoryName"
+                                        data-selected="@item.IsSelected"
+                                        aria-pressed="@item.IsSelected"
+                                        hidden>
+                                    <span class="history-option-name">@item.Name</span>
+                                    <span class="history-option-action">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Add</span>
+                                    </span>
+                                </button>
+                            }
+                        </div>
 
-                            </div>
-                        }
+                        <button type="button" class="history-show-more" data-show-more hidden>
+                            Show More
+                        </button>
 
+                        <p class="history-empty" data-empty-message hidden>
+                            No matching allergies found.
+                        </p>
                     </div>
-                }
-                else
-                {
-                    <div class="empty-options">
-                        No allergies are currently available.
-                    </div>
-                }
+                </div>
 
+                <div class="selected-history">
+                    <h4>Selected allergies</h4>
+                    <p class="selected-empty" data-selected-empty>No allergies selected yet.</p>
+                    <div class="selected-chips" data-selected-items></div>
+                    <div data-selected-inputs hidden></div>
+                </div>
             </div>
         </div>
 
-        <!-- STEP 4: MEDICATIONS -->
+        <!-- STEP 4: CURRENT MEDICATIONS -->
         <div class="form-card">
-
             <div class="step-header">
                 <div class="step-number">4</div>
-
                 <div>
                     <h3 class="step-title">Current Medications</h3>
-
-                    <p class="step-subtitle">
-                        Prescription drugs and regular treatments
-                    </p>
+                    <p class="step-subtitle">Record the medications the patient currently takes.</p>
                 </div>
             </div>
 
-            <div class="info-badge"
-                 style="background:#f0fff4; color:#38a169;">
-
+            <div class="info-badge" style="background:#f0fff4;color:#276749;">
                 <i class="fas fa-pills"></i>
-                Select any medication currently taken by the patient.
-
+                Select all applicable current medications.
             </div>
 
-            <div class="history-section">
+            <div class="history-picker"
+                 data-history-picker
+                 data-selected-input-name="SelectedMedicationIds">
 
-                <div class="history-title">
-                    Current Medications
+                <div class="history-search">
+                    <i class="fas fa-search"></i>
+                    <input type="search"
+                           class="form-control history-search-input"
+                           placeholder="Search medications..."
+                           aria-label="Search medications" />
                 </div>
 
-                @if (Model.AllMedications != null && Model.AllMedications.Any())
-                {
-                    <div class="options-grid">
+                <div class="history-picker-layout">
+                    <aside class="history-categories">
+                        <h4>CATEGORIES</h4>
+                        <p class="history-category-help">
+                            Choose a category or use the search box.
+                        </p>
+                        <div class="category-list" data-category-list></div>
+                    </aside>
 
-                        @for (int i = 0; i < Model.AllMedications.Count; i++)
-                        {
-                            <div class="option-item">
+                    <div class="history-items-panel">
+                        <h4>MEDICATIONS</h4>
 
-                                <label>
-                                    <input type="checkbox"
-                                           name="SelectedMedicationIds"
-                                           value="@Model.AllMedications[i].Id"
-                                           @(Model.AllMedications[i].IsSelected ? "checked" : "") />
+                        <p class="history-empty" data-initial-prompt>
+                            Search for a medication or choose a category to view items.
+                        </p>
 
-                                    @Model.AllMedications[i].Name
-                                </label>
+                        <div class="history-items is-collapsed" data-history-items>
+                            @foreach (var item in Model.AllMedications)
+                            {
+                                <button type="button"
+                                        class="history-option"
+                                        data-history-option
+                                        data-item-id="@item.Id"
+                                        data-item-name="@item.Name"
+                                        data-category-id="@item.CategoryId"
+                                        data-category-name="@item.CategoryName"
+                                        data-selected="@item.IsSelected"
+                                        aria-pressed="@item.IsSelected"
+                                        hidden>
+                                    <span class="history-option-name">@item.Name</span>
+                                    <span class="history-option-action">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Add</span>
+                                    </span>
+                                </button>
+                            }
+                        </div>
 
-                            </div>
-                        }
+                        <button type="button" class="history-show-more" data-show-more hidden>
+                            Show More
+                        </button>
 
+                        <p class="history-empty" data-empty-message hidden>
+                            No matching medications found.
+                        </p>
                     </div>
-                }
-                else
-                {
-                    <div class="empty-options">
-                        No medications are currently available.
-                    </div>
-                }
+                </div>
 
+                <div class="selected-history">
+                    <h4>Selected medications</h4>
+                    <p class="selected-empty" data-selected-empty>No medications selected yet.</p>
+                    <div class="selected-chips" data-selected-items></div>
+                    <div data-selected-inputs hidden></div>
+                </div>
             </div>
 
             <div class="info-box">
-
                 <i class="fas fa-info-circle"></i>
-
                 <span>
-                    A temporary password will be generated automatically
-                    and sent to the patient's e-mail address. The patient
-                    must change the password when logging in for the first time.
+                    A temporary password will be generated and sent to the
+                    patient's email address. The patient must change it on
+                    their first login.
                 </span>
-
             </div>
-
         </div>
 
         <!-- ACTIONS -->
         <div class="form-actions">
-
             <a asp-controller="Doctor"
                asp-action="ManagePatients"
                class="btn-cancel">
-
-                <i class="fas fa-times"></i>
-                Cancel
-
+                <i class="fas fa-times"></i> Cancel
             </a>
 
-            <button type="submit"
-                    class="btn-submit">
-
-                <i class="fas fa-user-plus"></i>
-                Register Patient
-
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-user-plus"></i> Register Patient
             </button>
-
         </div>
-
     </form>
-
 </div>
 
 <script>
-    // Automatically extract date of birth from a South African ID number.
     document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("addPatientForm");
 
         const idNumber = document.getElementById("idNumber");
         const dateOfBirth = document.getElementById("dateOfBirth");
         const idError = document.getElementById("idError");
 
-        if (!idNumber || !dateOfBirth) {
-            return;
+        const phoneNumber = document.getElementById("phoneNumber");
+        const phoneError = document.getElementById("phoneError");
+
+        const postalCode = document.getElementById("postalCode");
+        const postalCodeError = document.getElementById("postalCodeError");
+
+        const provinceSelect = document.getElementById("province");
+        const citySelect = document.getElementById("city");
+
+        const citiesByProvince = {
+            "Eastern Cape": [
+                "Gqeberha", "East London", "Mthatha", "Bhisho",
+                "Qonce (King William's Town)", "Kariega (Uitenhage)",
+                "Komani (Queenstown)", "Graaff-Reinet", "Cradock",
+                "Jeffreys Bay", "Humansdorp", "Port Alfred", "Butterworth",
+                "Mdantsane", "Stutterheim", "Fort Beaufort", "Lusikisiki"
+            ],
+            "Free State": [
+                "Bloemfontein", "Welkom", "Bethlehem", "Sasolburg",
+                "Kroonstad", "Parys", "Harrismith", "Phuthaditjhaba",
+                "Virginia", "Ficksburg", "Ladybrand", "Heilbron",
+                "Frankfort", "Bothaville", "Boshof"
+            ],
+            "Gauteng": [
+                "Johannesburg", "Pretoria", "Soweto", "Centurion", "Midrand",
+                "Sandton", "Randburg", "Roodepoort", "Benoni", "Boksburg",
+                "Germiston", "Kempton Park", "Vereeniging", "Vanderbijlpark",
+                "Springs", "Nigel", "Alberton", "Tembisa", "Krugersdorp"
+            ],
+            "KwaZulu-Natal": [
+                "Durban", "Pietermaritzburg", "Richards Bay", "Newcastle",
+                "Ladysmith", "Pinetown", "Umhlanga", "Ballito", "Empangeni",
+                "Port Shepstone", "Howick", "Kokstad", "Vryheid", "Dundee",
+                "KwaDukuza", "Margate"
+            ],
+            "Limpopo": [
+                "Polokwane", "Thohoyandou", "Tzaneen", "Lephalale", "Musina",
+                "Makhado", "Giyani", "Mokopane", "Phalaborwa", "Bela-Bela",
+                "Modimolle", "Burgersfort", "Hoedspruit"
+            ],
+            "Mpumalanga": [
+                "Mbombela", "eMalahleni (Witbank)", "Secunda", "Middelburg",
+                "Ermelo", "Standerton", "Barberton", "White River", "Hazyview",
+                "Malelane", "Komatipoort", "Bethal", "Mashishing (Lydenburg)",
+                "Sabie"
+            ],
+            "Northern Cape": [
+                "Kimberley", "Upington", "Springbok", "De Aar", "Kuruman",
+                "Kathu", "Prieska", "Postmasburg", "Calvinia", "Carnarvon",
+                "Port Nolloth", "Colesberg", "Douglas"
+            ],
+            "North West": [
+                "Mahikeng", "Rustenburg", "Potchefstroom", "Klerksdorp",
+                "Brits", "Vryburg", "Zeerust", "Lichtenburg", "Orkney",
+                "Stilfontein", "Hartbeespoort", "Wolmaransstad",
+                "Schweizer-Reneke"
+            ],
+            "Western Cape": [
+                "Cape Town", "Stellenbosch", "George", "Paarl", "Worcester",
+                "Mossel Bay", "Oudtshoorn", "Knysna", "Hermanus", "Swellendam",
+                "Beaufort West", "Malmesbury", "Vredenburg", "Saldanha",
+                "Ceres", "Robertson", "Wellington", "Somerset West", "Strand",
+                "Bellville", "Caledon", "Plettenberg Bay"
+            ]
+        };
+
+        // CITY DROPDOWN
+        function updateCityDropdown(selectedCity = "") {
+            const province = provinceSelect.value;
+            const cities = citiesByProvince[province] || [];
+
+            citySelect.innerHTML = "";
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = province
+                ? "Select city / town"
+                : "Select province first";
+
+            citySelect.appendChild(placeholder);
+
+            cities.forEach(function (city) {
+                const option = document.createElement("option");
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+
+            citySelect.disabled = !province;
+
+            if (cities.includes(selectedCity)) {
+                citySelect.value = selectedCity;
+            } else {
+                citySelect.value = "";
+            }
         }
 
-        idNumber.addEventListener("input", function () {
+        updateCityDropdown(citySelect.dataset.currentCity || "");
 
-            const value = this.value.trim();
+        provinceSelect.addEventListener("change", function () {
+            updateCityDropdown("");
+        });
 
-            if (value.length === 0) {
+        // VALIDATION HELPERS
+        function setError(input, errorElement, message) {
+            errorElement.textContent = message;
+            errorElement.style.display = message ? "block" : "none";
+
+            input.classList.toggle("input-invalid", !!message);
+            input.classList.toggle(
+                "input-valid",
+                !message && input.value.trim() !== ""
+            );
+
+            input.setAttribute("aria-invalid", message ? "true" : "false");
+        }
+
+        // SOUTH AFRICAN ID NUMBER
+        function validateID() {
+            const value = idNumber.value.trim();
+
+            if (!value) {
                 dateOfBirth.value = "";
-                idError.style.display = "none";
-                return;
+                setError(idNumber, idError,
+                    "Please enter the patient's ID number.");
+                return false;
             }
 
-            if (!/^\d{13}$/.test(value)) {
+            if (!/^\d+$/.test(value)) {
                 dateOfBirth.value = "";
-
-                if (value.length === 13) {
-                    idError.style.display = "block";
-                } else {
-                    idError.style.display = "none";
-                }
-
-                return;
+                setError(idNumber, idError,
+                    "ID number must contain digits only. Letters and symbols are not allowed.");
+                return false;
             }
 
-            const yy = parseInt(value.substring(0, 2));
-            const mm = parseInt(value.substring(2, 4));
-            const dd = parseInt(value.substring(4, 6));
+            if (value.length !== 13) {
+                dateOfBirth.value = "";
+                setError(idNumber, idError,
+                    "ID number must contain exactly 13 digits. You entered " +
+                    value.length + ".");
+                return false;
+            }
+
+            const yy = Number(value.substring(0, 2));
+            const month = Number(value.substring(2, 4));
+            const day = Number(value.substring(4, 6));
 
             const currentYear = new Date().getFullYear();
             const currentYY = currentYear % 100;
+            const fullYear = yy > currentYY ? 1900 + yy : 2000 + yy;
 
-            const fullYear =
-                yy > currentYY
-                    ? 1900 + yy
-                    : 2000 + yy;
-
-            const testDate = new Date(fullYear, mm - 1, dd);
+            const birthDate = new Date(fullYear, month - 1, day);
 
             if (
-                testDate.getFullYear() !== fullYear ||
-                testDate.getMonth() !== mm - 1 ||
-                testDate.getDate() !== dd
+                birthDate.getFullYear() !== fullYear ||
+                birthDate.getMonth() !== month - 1 ||
+                birthDate.getDate() !== day
             ) {
                 dateOfBirth.value = "";
-                idError.style.display = "block";
+                setError(idNumber, idError,
+                    "The date of birth contained in this ID number is invalid.");
+                return false;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (birthDate > today) {
+                dateOfBirth.value = "";
+                setError(idNumber, idError,
+                    "Date of birth cannot be in the future.");
+                return false;
+            }
+
+            dateOfBirth.value =
+                fullYear + "-" +
+                String(month).padStart(2, "0") + "-" +
+                String(day).padStart(2, "0");
+
+            setError(idNumber, idError, "");
+            return true;
+        }
+
+        // PHONE NUMBER
+        function validatePhone() {
+            const value = phoneNumber.value.trim();
+
+            if (!value) {
+                setError(phoneNumber, phoneError,
+                    "Please enter the patient's phone number.");
+                return false;
+            }
+
+            if (!/^\+27\d{9}$/.test(value)) {
+                setError(phoneNumber, phoneError,
+                    "Enter a valid South African phone number, e.g. +27712345678.");
+                return false;
+            }
+
+            setError(phoneNumber, phoneError, "");
+            return true;
+        }
+
+        // POSTAL CODE
+        function validatePostalCode() {
+            const value = postalCode.value.trim();
+
+            if (!value) {
+                setError(postalCode, postalCodeError,
+                    "Please enter the postal code.");
+                return false;
+            }
+
+            if (!/^\d{4}$/.test(value)) {
+                setError(postalCode, postalCodeError,
+                    "Postal code must contain exactly 4 digits. Letters and symbols are not allowed.");
+                return false;
+            }
+
+            setError(postalCode, postalCodeError, "");
+            return true;
+        }
+
+        idNumber.addEventListener("input", validateID);
+        idNumber.addEventListener("blur", validateID);
+
+        phoneNumber.addEventListener("input", validatePhone);
+        phoneNumber.addEventListener("blur", validatePhone);
+
+        postalCode.addEventListener("input", validatePostalCode);
+        postalCode.addEventListener("blur", validatePostalCode);
+
+        // FORM SUBMISSION VALIDATION
+        form.addEventListener("submit", function (event) {
+            const idValid = validateID();
+            const phoneValid = validatePhone();
+            const postalValid = validatePostalCode();
+
+            let addressValid = true;
+
+            if (!provinceSelect.value) {
+                provinceSelect.classList.add("input-invalid");
+                addressValid = false;
+            } else {
+                provinceSelect.classList.remove("input-invalid");
+            }
+
+            if (!citySelect.value || citySelect.disabled) {
+                citySelect.classList.add("input-invalid");
+                addressValid = false;
+            } else {
+                citySelect.classList.remove("input-invalid");
+            }
+
+            if (!idValid || !phoneValid || !postalValid || !addressValid) {
+                event.preventDefault();
+
+                const firstInvalid = form.querySelector(".input-invalid");
+
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+                }
+            }
+        });
+
+        const idServerError = document.querySelector(
+            '[data-valmsg-for="IDNumber"]'
+        );
+
+        if (idServerError && idServerError.textContent.trim()) {
+            idNumber.classList.add("input-invalid");
+            idNumber.setAttribute("aria-invalid", "true");
+        }
+
+        // MEDICAL HISTORY PICKERS
+        document.querySelectorAll("[data-history-picker]").forEach(function (picker) {
+            const searchInput = picker.querySelector(".history-search-input");
+            const categoryList = picker.querySelector("[data-category-list]");
+            const options = Array.from(
+                picker.querySelectorAll("[data-history-option]")
+            );
+            const itemsContainer = picker.querySelector("[data-history-items]");
+            const showMoreButton = picker.querySelector("[data-show-more]");
+            const emptyMessage = picker.querySelector("[data-empty-message]");
+            const initialPrompt = picker.querySelector("[data-initial-prompt]");
+            const selectedContainer = picker.querySelector("[data-selected-items]");
+            const selectedEmpty = picker.querySelector("[data-selected-empty]");
+            const hiddenInputs = picker.querySelector("[data-selected-inputs]");
+            const inputName = picker.dataset.selectedInputName;
+
+            const ITEMS_PER_BATCH = 3;
+            let visibleLimit = ITEMS_PER_BATCH;
+            let activeCategory = "";
+
+            const selectedIds = new Set();
+
+            if (
+                !searchInput ||
+                !categoryList ||
+                !itemsContainer ||
+                !showMoreButton ||
+                !emptyMessage ||
+                !initialPrompt ||
+                !selectedContainer ||
+                !selectedEmpty ||
+                !hiddenInputs ||
+                !inputName
+            ) {
                 return;
             }
 
-            const month = String(mm).padStart(2, "0");
-            const day = String(dd).padStart(2, "0");
+            function categoryKey(option) {
+                const id = (option.dataset.categoryId || "").trim();
+                const name = (option.dataset.categoryName || "").trim();
 
-            dateOfBirth.value =
-                `${fullYear}-${month}-${day}`;
+                if (id) return "id:" + id;
+                if (name) return "name:" + name.toLowerCase();
 
-            idError.style.display = "none";
+                return "uncategorized";
+            }
+
+            function categoryName(option) {
+                return (option.dataset.categoryName || "").trim()
+                    || "Uncategorized";
+            }
+
+            const categoryMap = new Map();
+
+            options.forEach(function (option) {
+                const id = option.dataset.itemId;
+
+                if (
+                    option.dataset.selected === "True" ||
+                    option.dataset.selected === "true"
+                ) {
+                    selectedIds.add(id);
+                }
+
+                const key = categoryKey(option);
+
+                if (!categoryMap.has(key)) {
+                    categoryMap.set(key, categoryName(option));
+                }
+            });
+
+            const categories = Array.from(categoryMap.entries())
+                .sort(function (a, b) {
+                    return a[1].localeCompare(b[1]);
+                });
+
+            function makeCategoryButton(label, key, count) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "history-category-button";
+                button.dataset.categoryKey = key;
+
+                const title = document.createElement("span");
+                title.textContent = label;
+
+                const badge = document.createElement("span");
+                badge.className = "history-category-count";
+                badge.textContent = count;
+
+                button.append(title, badge);
+
+                button.addEventListener("click", function () {
+                    activeCategory = key;
+                    searchInput.value = "";
+                    visibleLimit = ITEMS_PER_BATCH;
+
+                    renderCategories();
+                    filterOptions();
+                });
+
+                return button;
+            }
+
+            function renderCategories() {
+                categoryList.replaceChildren();
+
+                categories.forEach(function (category) {
+                    const count = options.filter(function (option) {
+                        return categoryKey(option) === category[0];
+                    }).length;
+
+                    categoryList.appendChild(
+                        makeCategoryButton(
+                            category[1],
+                            category[0],
+                            count
+                        )
+                    );
+                });
+
+                categoryList
+                    .querySelectorAll(".history-category-button")
+                    .forEach(function (button) {
+                        button.classList.toggle(
+                            "active",
+                            button.dataset.categoryKey === activeCategory
+                        );
+                    });
+            }
+
+            function filterOptions() {
+                const query = searchInput.value.trim().toLowerCase();
+                const searching = query.length > 0;
+                const categorySelected = activeCategory !== "";
+                const shouldShowItems = searching || categorySelected;
+
+                initialPrompt.hidden = shouldShowItems;
+                itemsContainer.classList.toggle(
+                    "is-collapsed",
+                    !shouldShowItems
+                );
+
+                // First find all items matching the current search/category.
+                const matchingOptions = options.filter(function (option) {
+                    const name = (
+                        option.dataset.itemName || ""
+                    ).toLowerCase();
+
+                    const category = categoryName(option).toLowerCase();
+
+                    const matchesSearch =
+                        name.includes(query) ||
+                        category.includes(query);
+
+                    // Searching looks across all categories.
+                    // Clicking a category filters to that category.
+                    const matchesCategory = searching
+                        ? true
+                        : categorySelected &&
+                          categoryKey(option) === activeCategory;
+
+                    return shouldShowItems &&
+                        matchesSearch &&
+                        matchesCategory;
+                });
+
+                // Only show the first 3 matching items initially.
+                matchingOptions.forEach(function (option, index) {
+                    option.hidden = index >= visibleLimit;
+                });
+
+                // Hide items that do not match the search/category.
+                options.forEach(function (option) {
+                    if (!matchingOptions.includes(option)) {
+                        option.hidden = true;
+                    }
+                });
+
+                emptyMessage.hidden =
+                    !shouldShowItems || matchingOptions.length > 0;
+
+                // Show the button only when there are more than 3 matches.
+                showMoreButton.hidden =
+                    !shouldShowItems ||
+                    matchingOptions.length <= ITEMS_PER_BATCH;
+
+                if (!showMoreButton.hidden) {
+                    if (visibleLimit >= matchingOptions.length) {
+                        showMoreButton.textContent = "Show Less";
+                    } else {
+                        const remaining =
+                            matchingOptions.length - visibleLimit;
+
+                        const nextCount = Math.min(
+                            ITEMS_PER_BATCH,
+                            remaining
+                        );
+
+                        showMoreButton.textContent =
+                            "Show More (" + nextCount + ")";
+                    }
+                }
+            }
+
+            showMoreButton.addEventListener("click", function () {
+                const query = searchInput.value.trim().toLowerCase();
+                const searching = query.length > 0;
+                const categorySelected = activeCategory !== "";
+
+                const matchingCount = options.filter(function (option) {
+                    const name = (
+                        option.dataset.itemName || ""
+                    ).toLowerCase();
+
+                    const category = categoryName(option).toLowerCase();
+
+                    const matchesSearch =
+                        name.includes(query) ||
+                        category.includes(query);
+
+                    const matchesCategory = searching
+                        ? true
+                        : categorySelected &&
+                          categoryKey(option) === activeCategory;
+
+                    return (searching || categorySelected) &&
+                        matchesSearch &&
+                        matchesCategory;
+                }).length;
+
+                if (visibleLimit >= matchingCount) {
+                    // Collapse back to the first 3.
+                    visibleLimit = ITEMS_PER_BATCH;
+                } else {
+                    // Reveal 3 more each time.
+                    visibleLimit += ITEMS_PER_BATCH;
+                }
+
+                filterOptions();
+            });
+
+            function updateOptionButtons() {
+                options.forEach(function (option) {
+                    const added = selectedIds.has(option.dataset.itemId);
+                    const action = option.querySelector(
+                        ".history-option-action"
+                    );
+
+                    option.classList.toggle("is-selected", added);
+                    option.setAttribute(
+                        "aria-pressed",
+                        added ? "true" : "false"
+                    );
+
+                    if (action) {
+                        action.replaceChildren();
+
+                        const icon = document.createElement("i");
+                        icon.className = added
+                            ? "fas fa-check"
+                            : "fas fa-plus";
+
+                        const text = document.createElement("span");
+                        text.textContent = added ? "Added" : "Add";
+
+                        action.append(icon, text);
+                    }
+                });
+            }
+
+            function renderSelectedItems() {
+                selectedContainer.replaceChildren();
+                hiddenInputs.replaceChildren();
+
+                const selectedOptions = options.filter(function (option) {
+                    return selectedIds.has(option.dataset.itemId);
+                });
+
+                selectedEmpty.hidden = selectedOptions.length > 0;
+
+                selectedOptions.forEach(function (option) {
+                    const id = option.dataset.itemId;
+                    const name = option.dataset.itemName || "";
+
+                    // Preserve the original form field names.
+                    const hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = inputName;
+                    hiddenInput.value = id;
+                    hiddenInputs.appendChild(hiddenInput);
+
+                    const chip = document.createElement("span");
+                    chip.className = "selected-chip";
+
+                    const label = document.createElement("span");
+                    label.textContent = name;
+
+                    const removeButton = document.createElement("button");
+                    removeButton.type = "button";
+                    removeButton.textContent = "×";
+                    removeButton.title = "Remove " + name;
+                    removeButton.setAttribute(
+                        "aria-label",
+                        "Remove " + name
+                    );
+
+                    removeButton.addEventListener("click", function () {
+                        selectedIds.delete(id);
+                        renderSelectedItems();
+                    });
+
+                    chip.append(label, removeButton);
+                    selectedContainer.appendChild(chip);
+                });
+
+                updateOptionButtons();
+            }
+
+            options.forEach(function (option) {
+                option.addEventListener("click", function () {
+                    const id = option.dataset.itemId;
+
+                    if (!selectedIds.has(id)) {
+                        selectedIds.add(id);
+                        renderSelectedItems();
+                    }
+                });
+            });
+
+            searchInput.addEventListener("input", function () {
+                // A search checks all categories, not only the last selected one.
+                activeCategory = "";
+                visibleLimit = ITEMS_PER_BATCH;
+
+                renderCategories();
+                filterOptions();
+            });
+
+            // Initial state: no available items displayed.
+            renderCategories();
+            filterOptions();
+            renderSelectedItems();
         });
     });
 </script>
