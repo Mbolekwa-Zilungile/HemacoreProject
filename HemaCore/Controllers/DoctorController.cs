@@ -1,5 +1,4 @@
-﻿
-using HemaCore.Data;
+﻿using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Services;
 using HemaCore.ViewModels.DoctorViewModels;
@@ -46,7 +45,6 @@ namespace HemaCore.Controllers
         private async Task LoadCreateTestRequestOptionsAsync(
             CreateTestRequestViewModel model)
         {
-            // Load all registered patients for the search list.
             model.Patients = await _context.Patients
                 .AsNoTracking()
                 .OrderBy(p => p.Surname)
@@ -65,7 +63,6 @@ namespace HemaCore.Controllers
                 })
                 .ToListAsync();
 
-            // Load medical history only for patients with active consent.
             var doctor = await GetCurrentDoctorAsync();
 
             if (doctor != null)
@@ -112,7 +109,6 @@ namespace HemaCore.Controllers
                     })
                     .ToListAsync();
 
-                // Attach history only to patients with active consent.
                 foreach (var patient in model.Patients)
                 {
                     if (!consentedPatientIds.Contains(patient.PatientId))
@@ -135,7 +131,6 @@ namespace HemaCore.Controllers
                 }
             }
 
-            // Load active laboratory test types.
             model.TestTypes = await _context.TestTypes
                 .Where(t => t.IsActive)
                 .Include(t => t.SampleType)
@@ -151,7 +146,6 @@ namespace HemaCore.Controllers
                 })
                 .ToListAsync();
 
-            // Load active sample types.
             model.SampleTypes = await _context.SampleTypes
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.SampleName)
@@ -531,7 +525,7 @@ namespace HemaCore.Controllers
         #endregion
 
         // ============================================================
-        // RESULTS
+        // RESULTS  ← UPDATED REGION
         // ============================================================
 
         #region Results
@@ -550,12 +544,30 @@ namespace HemaCore.Controllers
                     .ThenInclude(i => i.TestType)
                 .Include(r => r.TestRequestTestTypes)
                     .ThenInclude(i => i.TestResult)
+                        .ThenInclude(tr => tr.TestResultVerification)
                 .FirstOrDefaultAsync(r =>
                     r.TestRequestId == id &&
                     r.DoctorId == doctor.DoctorId);
 
             if (request == null)
                 return NotFound();
+
+            // A result is verified only when BOTH the test item status
+            // and the verification record say "Verified".
+            bool IsVerified(TestRequestItem i) =>
+                i.Status == "Verified" &&
+                i.TestResult != null &&
+                i.TestResult.TestResultVerification != null &&
+                i.TestResult.TestResultVerification.Status == "Verified";
+
+            var verifiedItems = request.TestRequestTestTypes
+                .Where(IsVerified)
+                .OrderBy(i => i.TestType.TestTypeName)
+                .ToList();
+
+            var pendingItems = request.TestRequestTestTypes
+                .Where(i => !IsVerified(i))
+                .ToList();
 
             var model = new ResultsViewModel
             {
@@ -567,11 +579,18 @@ namespace HemaCore.Controllers
 
                 Status = request.Status,
 
-                TestResults = request.TestRequestTestTypes
-                    .Where(i =>
-                        i.Status == "Verified" &&
-                        i.TestResult != null)
+                // ---- New release state ----
+                RequestDate = request.RequestDate,
 
+                IsReleased = request.ReleasedToPatientDate != null,
+                ReleasedToPatientDate = request.ReleasedToPatientDate,
+                ReleaseNote = request.ReleaseNote,
+
+                VerifiedCount = verifiedItems.Count,
+                PendingCount = pendingItems.Count,
+
+                // ---- Verified results only ----
+                TestResults = verifiedItems
                     .Select(i => new VerifiedTestResultViewModel
                     {
                         TestTypeName =
@@ -593,7 +612,14 @@ namespace HemaCore.Controllers
                             i.TestResult.IsAbnormal,
 
                         Notes =
-                            i.TestResult.Notes
+                            i.TestResult.Notes,
+
+                        TestRequestTestTypeId =
+                            i.TestRequestTestTypeId,
+
+                        VerifiedOn =
+                            i.TestResult.TestResultVerification?
+                                .VerificationDateTime
                     })
                     .ToList()
             };
@@ -605,7 +631,7 @@ namespace HemaCore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ReleaseResults(
             int requestId,
-            string releaseNote)
+            string? releaseNote)
         {
             var doctor = await GetCurrentDoctorAsync();
 
@@ -613,6 +639,10 @@ namespace HemaCore.Controllers
                 return Unauthorized();
 
             var request = await _context.TestRequests
+                .Include(r => r.Patient)
+                .Include(r => r.TestRequestTestTypes)
+                    .ThenInclude(i => i.TestResult)
+                        .ThenInclude(tr => tr.TestResultVerification)
                 .FirstOrDefaultAsync(r =>
                     r.TestRequestId == requestId &&
                     r.DoctorId == doctor.DoctorId);
@@ -620,25 +650,95 @@ namespace HemaCore.Controllers
             if (request == null)
                 return NotFound();
 
-            if (request.Status == "Completed")
+            // Guard 1: already released.
+            if (request.ReleasedToPatientDate != null)
             {
-                request.Status = "Released by doctor";
-                request.ReleaseNote = releaseNote;
-                request.ReleasedToPatientDate = DateTime.Now;
+                TempData["Error"] =
+                    "These results have already been released to the patient.";
 
-                await _context.SaveChangesAsync();
-
-                // TODO:
-                // E-mail patient when the result notification
-                // service is implemented.
+                return RedirectToAction(nameof(Results),
+                    new { id = requestId });
             }
 
-            return RedirectToAction(
-                nameof(Results),
-                new
+            // Guard 2: at least one verified result.
+            bool IsVerified(TestRequestItem i) =>
+                i.Status == "Verified" &&
+                i.TestResult != null &&
+                i.TestResult.TestResultVerification != null &&
+                i.TestResult.TestResultVerification.Status == "Verified";
+
+            var verifiedItems = request.TestRequestTestTypes
+                .Where(IsVerified)
+                .ToList();
+
+            if (!verifiedItems.Any())
+            {
+                TempData["Error"] =
+                    "You cannot release results until at least one test " +
+                    "has been verified by a lab technician.";
+
+                return RedirectToAction(nameof(Results),
+                    new { id = requestId });
+            }
+
+            // Guard 3: cancelled requests cannot be released.
+            if (request.Status == "Cancelled")
+            {
+                TempData["Error"] =
+                    "Cancelled requests cannot have their results released.";
+
+                return RedirectToAction(nameof(Results),
+                    new { id = requestId });
+            }
+
+            // ---- Release ----
+            var now = DateTime.Now;
+
+            request.ReleasedToPatientDate = now;
+            request.ReleaseNote = releaseNote?.Trim();
+
+            // Promote the request status only when EVERY test is verified.
+            var allTestsVerified = request.TestRequestTestTypes.All(IsVerified);
+
+            if (allTestsVerified)
+                request.Status = "Released by doctor";
+
+            await _context.SaveChangesAsync();
+
+            // ---- Notify the patient (best-effort, never blocks release) ----
+            try
+            {
+                var patientUser = await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == request.Patient.UserId);
+
+                var patientEmail = patientUser?.Email;
+
+                if (!string.IsNullOrWhiteSpace(patientEmail) &&
+                    _emailService != null)
                 {
-                    id = requestId
-                });
+                    // If you do not have this method on IEmailService yet,
+                    // delete this block — the release still works fine.
+                    await _emailService.SendResultsReleasedEmailAsync(
+                        patientEmail,
+                        request.Patient.Name,
+                        request.Patient.Surname,
+                        request.TestRequestId,
+                        verifiedItems.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"Results released, but patient email failed: {ex.Message}");
+            }
+
+            TempData["Success"] =
+                $"Results for Request #{request.TestRequestId} have been " +
+                $"released to the patient ({verifiedItems.Count} result(s)).";
+
+            return RedirectToAction(nameof(Results),
+                new { id = requestId });
         }
 
         #endregion
@@ -667,7 +767,6 @@ namespace HemaCore.Controllers
                 .Where(a =>
                     a.DoctorID == doctor.DoctorId &&
                     a.CreatedDateTime >= cutoffDate)
-
                 .OrderByDescending(a => a.CreatedDateTime)
                 .ToListAsync();
 
@@ -700,8 +799,7 @@ namespace HemaCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAlertAsRead(
-            int alertId)
+        public async Task<IActionResult> MarkAlertAsRead(int alertId)
         {
             var doctor = await GetCurrentDoctorAsync();
 
@@ -764,7 +862,6 @@ namespace HemaCore.Controllers
             if (doctor == null)
                 return Unauthorized();
 
-            // Load ALL registered patients, regardless of consent.
             var patients = await _context.Patients
                 .AsNoTracking()
                 .OrderBy(p => p.Surname)
@@ -780,13 +877,11 @@ namespace HemaCore.Controllers
                 .Distinct()
                 .ToList();
 
-            // Get email addresses for registered patients.
             var emails = await _context.Users
                 .AsNoTracking()
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, u => u.Email);
 
-            // Count test requests belonging to this doctor.
             var requestCounts = await _context.TestRequests
                 .AsNoTracking()
                 .Where(r =>
@@ -800,7 +895,6 @@ namespace HemaCore.Controllers
                 })
                 .ToDictionaryAsync(x => x.PatientId, x => x.Count);
 
-            // Determine which patients have active consent for this doctor.
             var now = DateTime.UtcNow;
 
             var consentedUserIds = await _context.Consents
@@ -814,7 +908,6 @@ namespace HemaCore.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            // Only retrieve medical history for patients with valid consent.
             var consentedPatientIds = patients
                 .Where(p => consentedUserIds.Contains(p.UserId))
                 .Select(p => p.PatientID)
@@ -862,7 +955,6 @@ namespace HemaCore.Controllers
                             ? count
                             : 0,
 
-                        // Do not expose medical history without active consent.
                         Conditions = hasConsent
                             ? conditions
                                 .Where(c => c.PatientID == p.PatientID)
@@ -887,7 +979,6 @@ namespace HemaCore.Controllers
                 })
                 .ToList();
 
-            // Make consent information available to the view.
             ViewBag.ConsentedUserIds = consentedUserIds;
 
             return View(model);
@@ -901,7 +992,6 @@ namespace HemaCore.Controllers
             if (doctor == null)
                 return Unauthorized();
 
-            // Require exactly 13 digits.
             if (string.IsNullOrWhiteSpace(idNumber) ||
                 idNumber.Length != 13 ||
                 !idNumber.All(char.IsDigit))
@@ -914,12 +1004,10 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Search all registered patients.
             var patient = await _context.Patients
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.IDNumber == idNumber);
 
-            // Patient is not registered.
             if (patient == null)
             {
                 return NotFound(new
@@ -930,12 +1018,10 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Check consent before accessing medical history.
             var hasConsent = await IsPatientConsentedAsync(
                 doctor.DoctorId,
                 patient.UserId);
 
-            // Patient exists, but consent is missing, revoked, or expired.
             if (!hasConsent)
             {
                 return Ok(new
@@ -948,7 +1034,6 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Active consent confirmed: load the mini medical history.
             var conditions = await _context.PatientConditions
                 .AsNoTracking()
                 .Where(pc => pc.PatientID == patient.PatientID)
@@ -1011,7 +1096,6 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(ManagePatients));
             }
 
-            // Do not request consent if valid consent already exists.
             if (await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
             {
                 TempData["Error"] =
@@ -1020,7 +1104,6 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(ManagePatients));
             }
 
-            // Prevent multiple pending requests for the same patient and doctor.
             var pendingRequest = await _context.ConsentRequests
                 .AnyAsync(r =>
                     r.PatientID == patient.UserId &&
@@ -1240,11 +1323,9 @@ namespace HemaCore.Controllers
             if (doctor == null)
                 return Unauthorized();
 
-            // Normalize values before checking for duplicates.
             string email = model.Email?.Trim() ?? "";
             string idNumber = model.IDNumber?.Trim() ?? "";
 
-            // Check whether the ID number already belongs to a patient.
             if (!string.IsNullOrWhiteSpace(idNumber))
             {
                 bool idExists = await _context.Patients
@@ -1258,7 +1339,6 @@ namespace HemaCore.Controllers
                 }
             }
 
-            // Check whether the email is already registered.
             if (!string.IsNullOrWhiteSpace(email))
             {
                 var existingUser = await _userManager.FindByEmailAsync(email);
@@ -1271,7 +1351,6 @@ namespace HemaCore.Controllers
                 }
             }
 
-            // Stop if validation fails. Do not create an account or patient.
             if (!ModelState.IsValid)
             {
                 model.AllConditions.Clear();
@@ -1289,10 +1368,8 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Generate a temporary password.
             string temporaryPassword = GeneratePatientPassword();
 
-            // Create the Identity user.
             var user = new Users
             {
                 FullName = $"{model.Name.Trim()} {model.Surname.Trim()}",
@@ -1324,7 +1401,6 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Assign the Patient role.
             var roleResult = await _userManager.AddToRoleAsync(user, "Patient");
 
             if (!roleResult.Succeeded)
@@ -1349,7 +1425,6 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Create the patient record.
             var patient = new Patient
             {
                 Name = model.Name.Trim(),
@@ -1370,7 +1445,6 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Save medical conditions.
             foreach (var conditionId in model.SelectedConditionIds ?? new List<int>())
             {
                 _context.PatientConditions.Add(new PatientCondition
@@ -1380,7 +1454,6 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Save allergies.
             foreach (var allergyId in model.SelectedAllergyIds ?? new List<int>())
             {
                 _context.PatientAllergies.Add(new PatientAllergy
@@ -1390,7 +1463,6 @@ namespace HemaCore.Controllers
                 });
             }
 
-            // Save medications.
             foreach (var medicationId in model.SelectedMedicationIds ?? new List<int>())
             {
                 _context.PatientMedications.Add(new PatientMedication
@@ -1402,7 +1474,6 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Send the welcome email.
             try
             {
                 await _emailService.SendWelcomeEmailAsync(
@@ -1710,7 +1781,6 @@ namespace HemaCore.Controllers
             if (!string.IsNullOrWhiteSpace(endDate) &&
                 DateTime.TryParse(endDate, out var parsedEnd))
             {
-                // Include the selected end date in the report.
                 end = parsedEnd.Date.AddDays(1);
             }
 
@@ -1754,7 +1824,6 @@ namespace HemaCore.Controllers
                         .FontSize(9)
                         .FontColor(Colors.Grey.Darken3));
 
-                    // HEADER: Appears on every page.
                     page.Header().Column(header =>
                     {
                         header.Item()
@@ -1794,7 +1863,6 @@ namespace HemaCore.Controllers
                         {
                             content.Spacing(12);
 
-                            // SUMMARY
                             content.Item().Text("Report Summary")
                                 .FontSize(13)
                                 .Bold()
@@ -1862,16 +1930,15 @@ namespace HemaCore.Controllers
                                         columns.RelativeColumn(1.2f);
                                     });
 
-                                    // Table headings repeat on subsequent pages.
                                     table.Header(header =>
                                     {
                                         string[] headings =
                                         {
-                                    "Request #",
-                                    "Date",
-                                    "Patient",
-                                    "Urgency",
-                                    "Status"
+                                            "Request #",
+                                            "Date",
+                                            "Patient",
+                                            "Urgency",
+                                            "Status"
                                         };
 
                                         foreach (var heading in headings)
@@ -1940,7 +2007,6 @@ namespace HemaCore.Controllers
                                 .FontSize(9);
                         });
 
-                    // FOOTER: Appears on every page.
                     page.Footer().Column(footer =>
                     {
                         footer.Item()
@@ -1975,7 +2041,6 @@ namespace HemaCore.Controllers
                 "application/pdf",
                 $"TestRequestsReport_{generatedAt:yyyyMMdd_HHmm}.pdf");
         }
-
 
         #endregion
 

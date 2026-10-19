@@ -4,6 +4,7 @@ using HemaCore.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 
 namespace HemaCore.Controllers
 {
@@ -2817,7 +2818,180 @@ public async Task<IActionResult> Reports()
 
             return View();
         }
+        [HttpGet]
+        public async Task<IActionResult> ExportSystemReportPdf()
+        {
+            var generatedAt = DateTime.Now;
 
+            // Fetch all data for report
+            var conditions = await _context.Conditions.Include(c => c.Category).OrderBy(c => c.Category.Name).ThenBy(c => c.Name).ToListAsync();
+            var allergies = await _context.Allergies.Include(a => a.Category).OrderBy(a => a.Category.Name).ThenBy(a => a.Name).ToListAsync();
+            var medications = await _context.Medications.Include(m => m.Category).OrderBy(m => m.Category.Name).ThenBy(m => m.Name).ToListAsync();
+
+            var document = QuestPDF.Fluent.Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(QuestPDF.Helpers.PageSizes.A4);
+                    page.Margin(35);
+                    page.DefaultTextStyle(x => x.FontFamily("Lato").FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken3));
+
+                    // HEADER
+                    page.Header().Column(header =>
+                    {
+                        header.Item().Text("HEMACORE").FontSize(18).Bold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken3);
+                        header.Item().PaddingTop(3).Text("ADMINISTRATION PORTAL").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        header.Item().PaddingTop(10).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Blue.Lighten2);
+                        header.Item().PaddingTop(10).Text("System Reference Data Report").FontSize(16).Bold();
+                        header.Item().PaddingTop(3).Text($"Generated: {generatedAt:dd MMM yyyy HH:mm}").FontSize(8);
+                    });
+
+                    // CONTENT
+                    page.Content().PaddingTop(15).Column(content =>
+                    {
+                        content.Spacing(15);
+
+                        // SUMMARY SECTION
+                        content.Item().Text("Data Summary").FontSize(12).Bold();
+                        content.Item().Row(row =>
+                        {
+                            void SummaryBox(string label, string val)
+                            {
+                                row.RelativeItem().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(8).Column(c =>
+                                {
+                                    c.Item().Text(label).FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                                    c.Item().Text(val).FontSize(14).Bold();
+                                });
+                            }
+                            SummaryBox("Conditions", conditions.Count.ToString());
+                            SummaryBox("Allergies", allergies.Count.ToString());
+                            SummaryBox("Medications", medications.Count.ToString());
+                        });
+
+                        // TABLE 1: CONDITIONS
+                        content.Item().PaddingTop(5).Text("Registered Conditions").FontSize(12).Bold();
+                        content.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.RelativeColumn(2); // Category
+                                cols.RelativeColumn(2); // Name
+                                cols.RelativeColumn(3); // Description
+                                cols.ConstantColumn(50); // Status
+                            });
+
+                            table.Header(header =>
+                            {
+                                string[] headings = { "Category", "Condition Name", "Description", "Status" };
+                                foreach (var heading in headings)
+                                {
+                                    header.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                                          .PaddingVertical(6).PaddingHorizontal(4).Text(heading).FontSize(8).Bold();
+                                }
+                            });
+
+                            foreach (var item in conditions)
+                            {
+                                void DataCell(string text)
+                                {
+                                    table.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(4).Text(text ?? "—").FontSize(8);
+                                }
+                                DataCell(item.Category?.Name);
+                                DataCell(item.Name);
+                                DataCell(item.Description);
+                                DataCell(item.IsActive ? "Active" : "Inactive");
+                            }
+                        });
+
+                        // TABLE 2: ALLERGIES
+                        content.Item().PaddingTop(5).Text("Registered Allergies").FontSize(12).Bold();
+                        content.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.RelativeColumn(2); // Category
+                                cols.RelativeColumn(2); // Name
+                                cols.RelativeColumn(3); // Description
+                                cols.ConstantColumn(50); // Status
+                            });
+
+                            table.Header(header =>
+                            {
+                                string[] headings = { "Category", "Allergy Name", "Description", "Status" };
+                                foreach (var heading in headings)
+                                {
+                                    header.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                                          .PaddingVertical(6).PaddingHorizontal(4).Text(heading).FontSize(8).Bold();
+                                }
+                            });
+
+                            foreach (var item in allergies)
+                            {
+                                void DataCell(string text)
+                                {
+                                    table.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(4).Text(text ?? "—").FontSize(8);
+                                }
+                                DataCell(item.Category?.Name);
+                                DataCell(item.Name);
+                                DataCell(item.Description);
+                                DataCell(item.IsActive ? "Active" : "Inactive");
+                            }
+                        });
+
+                        // TABLE 3: MEDICATIONS (Continues on next page if necessary)
+                        content.Item().PaddingTop(5).Text("Registered Medications").FontSize(12).Bold();
+                        content.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.RelativeColumn(2); // Category
+                                cols.RelativeColumn(2); // Name
+                                cols.RelativeColumn(3); // Description
+                                cols.ConstantColumn(50); // Status
+                            });
+
+                            table.Header(header =>
+                            {
+                                string[] headings = { "Category", "Medication Name", "Description", "Status" };
+                                foreach (var heading in headings)
+                                {
+                                    header.Cell().Background(QuestPDF.Helpers.Colors.Grey.Lighten3).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Darken1)
+                                          .PaddingVertical(6).PaddingHorizontal(4).Text(heading).FontSize(8).Bold();
+                                }
+                            });
+
+                            foreach (var item in medications)
+                            {
+                                void DataCell(string text)
+                                {
+                                    table.Cell().BorderBottom(0.5f).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).PaddingVertical(5).PaddingHorizontal(4).Text(text ?? "—").FontSize(8);
+                                }
+                                DataCell(item.Category?.Name);
+                                DataCell(item.Name);
+                                DataCell(item.Description);
+                                DataCell(item.IsActive ? "Active" : "Inactive");
+                            }
+                        });
+                    });
+
+                    // FOOTER
+                    page.Footer().PaddingTop(8).BorderTop(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Row(row =>
+                    {
+                        row.RelativeItem().Text($"HemaCore Admin | Generated {generatedAt:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        row.ConstantItem(100).AlignRight().Text(text =>
+                        {
+                            text.Span("Page ").FontSize(8);
+                            text.CurrentPageNumber().FontSize(8);
+                            text.Span(" of ").FontSize(8);
+                            text.TotalPages().FontSize(8);
+                        });
+                    });
+                });
+            });
+
+            var pdfBytes = document.GeneratePdf();
+            return File(pdfBytes, "application/pdf", $"HemaCore_SystemData_{generatedAt:yyyyMMdd}.pdf");
+        }
         #endregion
     }
 }

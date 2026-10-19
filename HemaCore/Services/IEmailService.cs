@@ -21,6 +21,13 @@
             string doctorName,
             string patientName,
             string patientSurname);
+
+        // NEW: notifies the patient that the doctor has released verified results.
+        Task SendResultsReleasedEmailAsync(
+            string patientEmail,
+            string patientName,
+            string patientSurname,
+            int testRequestId,
+            int verifiedResultCount);
     }
 }
-

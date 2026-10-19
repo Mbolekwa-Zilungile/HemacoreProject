@@ -143,6 +143,90 @@
         .empty-state p {
             color: #94a3b8;
         }
+
+    /* ==========================================
+           NEW STYLES: release panel
+           ========================================== */
+
+    .release-panel {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .release-panel.released {
+            border-left: 4px solid #16a34a;
+        }
+
+        .release-panel.ready {
+            border-left: 4px solid #2563eb;
+        }
+
+        .release-panel.waiting {
+            border-left: 4px solid #d97706;
+        }
+
+        .release-panel h5 {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.4rem;
+        }
+
+        .release-panel p {
+            color: #64748b;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+    .release-btn {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 0.7rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        width: 100%;
+    }
+
+        .release-btn:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+    .release-note-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .released-badge-small {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .pending-badge-small {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
 </style>
 
 <div class="container-fluid fade-in">
@@ -169,6 +253,103 @@
             Back to Requests
 
         </a>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- RELEASE PANEL (NEW)                        -->
+    <!-- ========================================== -->
+    <div class="release-panel @(Model.IsReleased ? "released" : Model.VerifiedCount > 0 ? "ready" : "waiting")">
+
+        @if (Model.IsReleased)
+        {
+            <!-- Already released -->
+            <div class="d-flex align-items-start gap-3">
+                <i class="fas fa-check-circle text-success fs-3"></i>
+                <div class="flex-grow-1">
+                    <h5>Results Released to Patient</h5>
+                    <p>
+                        Released on
+                        <strong>@Model.ReleasedToPatientDate?.ToString("dd MMM yyyy HH:mm")</strong>.
+                        The patient can now view these results in their portal.
+                    </p>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ReleaseNote))
+                    {
+                        <div class="release-note-box">
+                            <strong class="d-block mb-1" style="font-size:0.85rem;color:#1e293b;">
+                                Release note
+                            </strong>
+                            <span style="color:#475569;font-size:0.85rem;">@Model.ReleaseNote</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (Model.VerifiedCount > 0)
+        {
+            <!-- Ready to release -->
+            <div class="row g-3 align-items-center">
+                <div class="col-md-7">
+                    <h5>
+                        <i class="fas fa-share-square me-2" style="color:#2563eb;"></i>
+                        Release Verified Results
+                    </h5>
+                    <p>
+                        <strong>@Model.VerifiedCount</strong> verified result(s) are ready to be released.
+                        @if (Model.PendingCount > 0)
+                        {
+                            <span>
+                                <strong>@Model.PendingCount</strong> result(s) are still awaiting lab verification
+                                and will <strong>not</strong> be released yet.
+                            </span>
+                        }
+                    </p>
+                </div>
+
+                <div class="col-md-5">
+                    <form asp-action="ReleaseResults"
+                          method="post"
+                          onsubmit="return confirm('Release these verified results to the patient? This cannot be undone.');">
+
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="requestId" value="@Model.TestRequestId" />
+
+                        <label for="releaseNote"
+                               class="form-label"
+                               style="font-size:0.8rem;color:#64748b;">
+                            Optional note to the patient
+                        </label>
+
+                        <textarea id="releaseNote"
+                                  name="releaseNote"
+                                  class="form-control mb-2"
+                                  rows="2"
+                                  maxlength="1000"
+                                  placeholder="e.g. Please book a follow-up appointment."></textarea>
+
+                        <button type="submit" class="release-btn">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Release to Patient
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Waiting for verification -->
+            <div class="d-flex align-items-start gap-3">
+                <i class="fas fa-hourglass-half text-warning fs-3"></i>
+                <div>
+                    <h5>Waiting for Lab Verification</h5>
+                    <p>
+                        No results are ready for release yet. A lab technician must first
+                        <strong>verify</strong> each test result before it can be shown to the patient.
+                    </p>
+                </div>
+            </div>
+        }
 
     </div>
 
@@ -208,8 +389,23 @@
                     Request Status
                 </div>
 
-                <div class="info-value">
+                <div class="info-value d-flex align-items-center flex-wrap gap-2">
                     @Model.Status
+
+                    @if (Model.IsReleased)
+                    {
+                        <span class="released-badge-small">
+                            <i class="fas fa-check-circle"></i>
+                            Released
+                        </span>
+                    }
+                    else if (Model.PendingCount > 0)
+                    {
+                        <span class="pending-badge-small">
+                            <i class="fas fa-clock"></i>
+                            @Model.PendingCount pending
+                        </span>
+                    }
                 </div>
 
             </div>
