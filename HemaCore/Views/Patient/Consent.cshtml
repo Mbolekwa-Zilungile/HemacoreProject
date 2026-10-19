@@ -11,640 +11,14 @@
     var completedTestRequests = ViewBag.CompletedTestRequests as IEnumerable<TestRequest>
                                 ?? new List<TestRequest>();
 
+    var releasedTestRequests = ViewBag.ReleasedTestRequests as IEnumerable<TestRequest>
+                               ?? completedTestRequests;
+
     var consents = ViewBag.Consents as IEnumerable<Consent>
                    ?? new List<Consent>();
 }
 
-<div class="consent-page">
-
-    <!-- PAGE HEADER -->
-    <div class="consent-header">
-
-        <div>
-            <div class="consent-eyebrow">
-                <i class="fas fa-shield-alt"></i>
-                PATIENT PORTAL
-            </div>
-
-            <h1>My Consent</h1>
-
-            <p>
-                Control which doctors can access your completed test requests
-                and how long they can access them.
-            </p>
-        </div>
-
-        <div class="consent-header-icon">
-            <i class="fas fa-user-shield"></i>
-        </div>
-
-    </div>
-
-    <!-- ALERTS -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="consent-alert success">
-            <div class="alert-icon">
-                <i class="fas fa-check"></i>
-            </div>
-
-            <div>
-                <strong>Success</strong>
-                <span>@TempData["Success"]</span>
-            </div>
-
-            <button type="button"
-                    class="alert-close"
-                    data-bs-dismiss="alert">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="consent-alert error">
-            <div class="alert-icon">
-                <i class="fas fa-exclamation"></i>
-            </div>
-
-            <div>
-                <strong>Something went wrong</strong>
-                <span>@TempData["Error"]</span>
-            </div>
-
-            <button type="button"
-                    class="alert-close"
-                    data-bs-dismiss="alert">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    }
-
-    <div class="consent-layout">
-
-        <!-- MAIN COLUMN -->
-        <div class="consent-main">
-
-            <!-- GRANT CONSENT -->
-            <div class="consent-card">
-
-                <div class="card-heading">
-
-                    <div class="heading-icon blue">
-                        <i class="fas fa-hand-holding-medical"></i>
-                    </div>
-
-                    <div>
-                        <h2>Grant Doctor Access</h2>
-                        <p>
-                            Choose a doctor and select the completed test requests
-                            you want to share.
-                        </p>
-                    </div>
-
-                </div>
-
-                <form asp-controller="Patient"
-                      asp-action="Consent"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <!-- DOCTOR -->
-                    <div class="form-section">
-
-                        <label for="doctorId">
-                            <i class="fas fa-user-md"></i>
-                            Select Doctor
-                        </label>
-
-                        <select id="doctorId"
-                                name="doctorId"
-                                class="form-control consent-select"
-                                required>
-
-                            <option value="">
-                                -- Select a Doctor --
-                            </option>
-
-                            @foreach (var doctor in doctors)
-                            {
-                                <option value="@doctor.DoctorId">
-                                    Dr. @doctor.Name @doctor.Surname
-                                </option>
-                            }
-
-                        </select>
-
-                        <small>
-                            Select the doctor you want to give access to.
-                        </small>
-
-                    </div>
-
-                    <!-- DURATION -->
-                    <div class="form-section">
-
-                        <label for="consentDuration">
-                            <i class="fas fa-clock"></i>
-                            Access Duration
-                        </label>
-
-                        <select id="consentDuration"
-                                name="consentDuration"
-                                class="form-control consent-select"
-                                required>
-
-                            <option value="">
-                                -- Select Duration --
-                            </option>
-
-                            <option value="1Hour">
-                                1 Hour
-                            </option>
-
-                            <option value="1Day">
-                                1 Day
-                            </option>
-
-                            <option value="7Days">
-                                7 Days
-                            </option>
-
-                            <option value="30Days">
-                                30 Days
-                            </option>
-
-                            <option value="Custom">
-                                Custom Date &amp; Time
-                            </option>
-
-                        </select>
-
-                        <small>
-                            Access will automatically expire after the selected period.
-                        </small>
-
-                    </div>
-
-                    <!-- CUSTOM EXPIRY -->
-                    <div class="form-section"
-                         id="customExpiryContainer"
-                         style="display:none;">
-
-                        <label for="customExpiry">
-                            <i class="fas fa-calendar-alt"></i>
-                            Custom Expiry
-                        </label>
-
-                        <input type="datetime-local"
-                               id="customExpiry"
-                               name="customExpiry"
-                               class="form-control consent-select" />
-
-                        <small>
-                            Choose exactly when the doctor's access should end.
-                        </small>
-
-                    </div>
-
-                    <!-- INFORMATION TO SHARE -->
-                    <div class="share-heading">
-                        <div>
-                            <h3>
-                                <i class="fas fa-file-medical"></i>
-                                Completed Test Requests to Share
-                            </h3>
-
-                            <p>
-                                Select completed test requests to share with the doctor,
-                                or leave them unselected to grant consent without
-                                specifying test requests.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- COMPLETED TEST REQUESTS -->
-                    <div class="medical-section">
-
-                        <div class="medical-section-header">
-
-                            <div class="medical-title">
-
-                                <div class="medical-icon condition">
-                                    <i class="fas fa-flask"></i>
-                                </div>
-
-                                <div>
-                                    <strong>Completed Test Requests</strong>
-
-                                    <span>
-                                        Only completed test requests can be selected.
-                                    </span>
-                                </div>
-
-                            </div>
-
-                            @if (completedTestRequests.Any())
-                            {
-                                <span class="count-badge">
-                                    @completedTestRequests.Count()
-                                </span>
-                            }
-
-                        </div>
-
-                        @if (completedTestRequests.Any())
-                        {
-                            <div class="medical-list">
-
-                                @foreach (var request in completedTestRequests)
-                                {
-                                    <label class="medical-item"
-                                           for="testRequest_@request.TestRequestId">
-
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="selectedTestRequestIds"
-                                               value="@request.TestRequestId"
-                                               id="testRequest_@request.TestRequestId" />
-
-                                        <span class="custom-check">
-                                            <i class="fas fa-check"></i>
-                                        </span>
-
-                                        <span class="medical-name">
-
-                                            <span>
-                                                Test Request #@request.TestRequestId
-                                            </span>
-
-                                            @if (request.RequestDate != default)
-                                            {
-                                                <small>
-                                                    @request.RequestDate.ToString("dd MMM yyyy")
-                                                </small>
-                                            }
-
-                                            @if (request.TestRequestTestTypes != null &&
-                                                 request.TestRequestTestTypes.Any())
-                                            {
-                                                <small>
-                                                    Tests:
-                                                    @string.Join(", ",
-                                                        request.TestRequestTestTypes
-                                                            .Where(t => t.TestType != null)
-                                                            .Select(t => t.TestType.TestTypeName))
-                                                </small>
-                                            }
-
-                                        </span>
-
-                                    </label>
-                                }
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-information">
-                                <i class="fas fa-info-circle"></i>
-
-                                <span>
-                                    You have no completed test requests available to share.
-                                    You can still grant consent to your selected doctor.
-                                </span>
-                            </div>
-                        }
-
-                    </div>
-
-                    <!-- PRIVACY NOTICE -->
-                    <div class="privacy-notice">
-                        <div class="privacy-icon">
-                            <i class="fas fa-lock"></i>
-                        </div>
-
-                        <div>
-                            <strong>
-                                Your medical information stays under your control.
-                            </strong>
-
-                            <p>
-                                You can grant consent even if you have no completed
-                                test requests. If you select test requests, only those
-                                selected requests are linked to this consent. Consent
-                                expires at the selected time, and you can revoke it
-                                whenever you choose.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- SUBMIT -->
-                    <div class="consent-submit">
-                        <button type="submit"
-                                class="grant-button"
-                                disabled="@(!doctors.Any())">
-
-                            <i class="fas fa-check"></i>
-                            Grant Consent
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-
-            <!-- EXISTING CONSENTS -->
-            <div class="consent-card existing-card">
-
-                <div class="card-heading">
-
-                    <div class="heading-icon purple">
-                        <i class="fas fa-history"></i>
-                    </div>
-
-                    <div>
-                        <h2>My Doctor Consents</h2>
-
-                        <p>
-                            View and manage the access you have granted.
-                        </p>
-                    </div>
-
-                </div>
-
-                @if (consents.Any())
-                {
-                    <div class="consent-list">
-
-                        @foreach (var consent in consents)
-                        {
-                            var expired =
-                                consent.ExpiresAt.HasValue &&
-                                consent.ExpiresAt.Value <= DateTime.UtcNow;
-
-                            var active =
-                                consent.IsActive &&
-                                !expired;
-
-                            <div class="existing-consent">
-
-                                <div class="existing-top">
-
-                                    <div class="doctor-info">
-
-                                        <div class="doctor-avatar">
-                                            <i class="fas fa-user-md"></i>
-                                        </div>
-
-                                        <div>
-                                            <h4>
-                                                Dr. @consent.Doctor.Name
-                                                @consent.Doctor.Surname
-                                            </h4>
-
-                                            <small>
-                                                Granted
-                                                @consent.GrantedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-                                            </small>
-                                        </div>
-
-                                    </div>
-
-                                    @if (active)
-                                    {
-                                        <span class="status-badge active">
-                                            Active
-                                        </span>
-                                    }
-                                    else if (consent.RevokedAt.HasValue)
-                                    {
-                                        <span class="status-badge revoked">
-                                            Revoked
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="status-badge expired">
-                                            Expired
-                                        </span>
-                                    }
-
-                                </div>
-
-                                <!-- SHARED TEST REQUESTS -->
-                                <div class="shared-information test-request-information">
-
-                                    <div>
-                                        <span class="shared-label">
-                                            Shared Completed Test Requests
-                                        </span>
-
-                                        @if (consent.TestAccesses != null &&
-                                             consent.TestAccesses.Any())
-                                        {
-                                            <div class="tag-list">
-
-                                                @foreach (var access in consent.TestAccesses)
-                                                {
-                                                    <span class="medical-tag">
-                                                        Test Request #@access.TestRequestId
-                                                    </span>
-                                                }
-
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <small class="none-text">
-                                                No test requests recorded for this consent.
-                                            </small>
-                                        }
-                                    </div>
-
-                                </div>
-
-                                <!-- CONSENT FOOTER -->
-                                <div class="existing-footer">
-
-                                    @if (consent.ExpiresAt.HasValue)
-                                    {
-                                        <span>
-                                            <i class="fas fa-clock"></i>
-                                            Expires
-                                            @consent.ExpiresAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-                                        </span>
-                                    }
-
-                                    @if (active)
-                                    {
-                                        <form asp-controller="Patient"
-                                              asp-action="RevokeConsent"
-                                              method="post"
-                                              onsubmit="return confirm('Are you sure you want to revoke this consent? The doctor will no longer have access to the selected test requests.');">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="consentId"
-                                                   value="@consent.Id" />
-
-                                            <button type="submit"
-                                                    class="revoke-button">
-
-                                                <i class="fas fa-ban"></i>
-                                                Revoke Consent
-
-                                            </button>
-
-                                        </form>
-                                    }
-
-                                </div>
-
-                            </div>
-                        }
-
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-consents">
-
-                        <div class="empty-consents-icon">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-
-                        <h4>No doctor access granted</h4>
-
-                        <p>
-                            You have not granted consent to any doctors yet.
-                        </p>
-
-                    </div>
-                }
-
-            </div>
-
-        </div>
-
-        <!-- RIGHT INFORMATION PANEL -->
-        <aside class="consent-sidebar">
-
-            <div class="info-card">
-
-                <div class="info-card-header">
-
-                    <div class="heading-icon blue">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
-
-                    <div>
-                        <h3>How Consent Works</h3>
-                        <p>You're always in control.</p>
-                    </div>
-
-                </div>
-
-                <div class="step">
-
-                    <div class="step-number">
-                        1
-                    </div>
-
-                    <div>
-                        <strong>Choose a doctor</strong>
-
-                        <p>
-                            Select the doctor you want to give access to.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="step">
-
-                    <div class="step-number">
-                        2
-                    </div>
-
-                    <div>
-                        <strong>Select test requests</strong>
-
-                        <p>
-                            Choose one or more completed test requests you want
-                            the doctor to access.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="step">
-
-                    <div class="step-number">
-                        3
-                    </div>
-
-                    <div>
-                        <strong>Set a duration</strong>
-
-                        <p>
-                            Decide how long the doctor can access the selected
-                            test requests.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="step">
-
-                    <div class="step-number">
-                        4
-                    </div>
-
-                    <div>
-                        <strong>Revoke anytime</strong>
-
-                        <p>
-                            You can revoke active consent whenever you choose.
-                        </p>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- PRIVACY CARD -->
-            <div class="privacy-card">
-
-                <div class="privacy-card-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-
-                <div>
-                    <h4>Your Privacy</h4>
-
-                    <p>
-                        Only the completed test requests you specifically select
-                        are included in the consent.
-                    </p>
-                </div>
-
-            </div>
-
-        </aside>
-
-    </div>
-
-</div>
-
 <style>
-
-    /* =========================================================
-           PAGE
-        ========================================================= */
 
     .consent-page {
         width: 100%;
@@ -653,10 +27,6 @@
         padding: 28px 30px 40px;
         box-sizing: border-box;
     }
-
-    /* =========================================================
-           HEADER
-        ========================================================= */
 
     .consent-header {
         display: flex;
@@ -702,10 +72,6 @@
         color: #3157c7;
         font-size: 23px;
     }
-
-    /* =========================================================
-           ALERTS
-        ========================================================= */
 
     .consent-alert {
         display: flex;
@@ -766,10 +132,6 @@
         cursor: pointer;
     }
 
-    /* =========================================================
-           LAYOUT
-        ========================================================= */
-
     .consent-layout {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 320px;
@@ -786,10 +148,6 @@
         position: sticky;
         top: 20px;
     }
-
-    /* =========================================================
-           CARDS
-        ========================================================= */
 
     .consent-card,
     .info-card,
@@ -850,10 +208,6 @@
         font-size: 12px;
     }
 
-    /* =========================================================
-           FORM
-        ========================================================= */
-
     .form-section {
         margin-bottom: 20px;
     }
@@ -892,10 +246,6 @@
         font-size: 11px;
     }
 
-    /* =========================================================
-           SHARE HEADING
-        ========================================================= */
-
     .share-heading {
         padding: 3px 0 15px;
     }
@@ -917,10 +267,6 @@
             color: #8a94a6;
             font-size: 11px;
         }
-
-    /* =========================================================
-           TEST REQUEST SECTION
-        ========================================================= */
 
     .medical-section {
         margin-bottom: 14px;
@@ -989,10 +335,6 @@
         font-size: 10px;
         margin-top: 2px;
     }
-
-    /* =========================================================
-           CHECKBOX LIST
-        ========================================================= */
 
     .medical-list {
         display: grid;
@@ -1066,10 +408,6 @@
             font-weight: 400;
         }
 
-    /* =========================================================
-           EMPTY INFORMATION
-        ========================================================= */
-
     .empty-information {
         display: flex;
         align-items: center;
@@ -1084,10 +422,6 @@
         .empty-information i {
             color: #64748b;
         }
-
-    /* =========================================================
-           PRIVACY
-        ========================================================= */
 
     .privacy-notice {
         display: flex;
@@ -1125,10 +459,6 @@
         line-height: 1.5;
     }
 
-    /* =========================================================
-           SUBMIT
-        ========================================================= */
-
     .consent-submit {
         display: flex;
         justify-content: flex-end;
@@ -1161,10 +491,6 @@
             opacity: .5;
             cursor: not-allowed;
         }
-
-    /* =========================================================
-           EXISTING CONSENTS
-        ========================================================= */
 
     .existing-consent {
         padding: 16px;
@@ -1309,10 +635,6 @@
             background: #fff3f3;
         }
 
-    /* =========================================================
-           EMPTY CONSENTS
-        ========================================================= */
-
     .empty-consents {
         padding: 35px 20px;
         text-align: center;
@@ -1342,10 +664,6 @@
         color: #8a94a6;
         font-size: 11px;
     }
-
-    /* =========================================================
-           RIGHT SIDEBAR
-        ========================================================= */
 
     .info-card {
         padding: 20px;
@@ -1413,10 +731,6 @@
         line-height: 1.5;
     }
 
-    /* =========================================================
-           PRIVACY CARD
-        ========================================================= */
-
     .privacy-card {
         display: flex;
         gap: 11px;
@@ -1449,10 +763,6 @@
         font-size: 10px;
         line-height: 1.5;
     }
-
-    /* =========================================================
-           RESPONSIVE
-        ========================================================= */
 
     @@media (max-width: 1100px) {
 
@@ -1537,8 +847,498 @@
 
 </style>
 
-<script>
+<div class="consent-page">
 
+    <!-- PAGE HEADER -->
+    <div class="consent-header">
+        <div>
+            <div class="consent-eyebrow">
+                <i class="fas fa-shield-alt"></i>
+                PATIENT PORTAL
+            </div>
+            <h1>My Consent</h1>
+            <p>
+                Control which doctors can access your released test results
+                and how long they can access them.
+            </p>
+        </div>
+
+        <div class="consent-header-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+    </div>
+
+    <!-- ALERTS -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="consent-alert success">
+            <div class="alert-icon"><i class="fas fa-check"></i></div>
+            <div>
+                <strong>Success</strong>
+                <span>@TempData["Success"]</span>
+            </div>
+            <button type="button" class="alert-close" data-bs-dismiss="alert">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="consent-alert error">
+            <div class="alert-icon"><i class="fas fa-exclamation"></i></div>
+            <div>
+                <strong>Something went wrong</strong>
+                <span>@TempData["Error"]</span>
+            </div>
+            <button type="button" class="alert-close" data-bs-dismiss="alert">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    }
+
+    <div class="consent-layout">
+
+        <!-- MAIN COLUMN -->
+        <div class="consent-main">
+
+            <!-- GRANT CONSENT -->
+            <div class="consent-card">
+
+                <div class="card-heading">
+                    <div class="heading-icon blue">
+                        <i class="fas fa-hand-holding-medical"></i>
+                    </div>
+                    <div>
+                        <h2>Grant Doctor Access</h2>
+                        <p>
+                            Choose a doctor and optionally select the released
+                            test results you want to share.
+                        </p>
+                    </div>
+                </div>
+
+                <form asp-controller="Patient"
+                      asp-action="Consent"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <!-- DOCTOR -->
+                    <div class="form-section">
+                        <label for="doctorId">
+                            <i class="fas fa-user-md"></i>
+                            Select Doctor
+                        </label>
+
+                        <select id="doctorId"
+                                name="doctorId"
+                                class="form-control consent-select"
+                                required>
+
+                            <option value="">-- Select a Doctor --</option>
+
+                            @foreach (var doctor in doctors)
+                            {
+                                <option value="@doctor.DoctorId">
+                                    Dr. @doctor.Name @doctor.Surname
+                                </option>
+                            }
+
+                        </select>
+
+                        <small>Select the doctor you want to give access to.</small>
+                    </div>
+
+                    <!-- DURATION -->
+                    <div class="form-section">
+                        <label for="consentDuration">
+                            <i class="fas fa-clock"></i>
+                            Access Duration
+                        </label>
+
+                        <select id="consentDuration"
+                                name="consentDuration"
+                                class="form-control consent-select"
+                                required>
+
+                            <option value="">-- Select Duration --</option>
+                            <option value="1Hour">1 Hour</option>
+                            <option value="1Day">1 Day</option>
+                            <option value="7Days">7 Days</option>
+                            <option value="30Days">30 Days</option>
+                            <option value="Custom">Custom Date &amp; Time</option>
+
+                        </select>
+
+                        <small>
+                            Access will automatically expire after the selected period.
+                        </small>
+                    </div>
+
+                    <!-- CUSTOM EXPIRY -->
+                    <div class="form-section"
+                         id="customExpiryContainer"
+                         style="display:none;">
+
+                        <label for="customExpiry">
+                            <i class="fas fa-calendar-alt"></i>
+                            Custom Expiry
+                        </label>
+
+                        <input type="datetime-local"
+                               id="customExpiry"
+                               name="customExpiry"
+                               class="form-control consent-select" />
+
+                        <small>Choose exactly when the doctor's access should end.</small>
+                    </div>
+
+                    <!-- SHARE HEADING -->
+                    <div class="share-heading">
+                        <div>
+                            <h3>
+                                <i class="fas fa-file-medical"></i>
+                                Released Test Results to Share
+                            </h3>
+                            <p>
+                                Select the released test results you want to share with the doctor.
+                                You can also grant consent without sharing any results — you can
+                                share them later by revoking this consent and granting a new one.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- RELEASED TEST REQUESTS -->
+                    <div class="medical-section">
+
+                        <div class="medical-section-header">
+                            <div class="medical-title">
+                                <div class="medical-icon condition">
+                                    <i class="fas fa-flask"></i>
+                                </div>
+                                <div>
+                                    <strong>Released Test Results</strong>
+                                    <span>Optional — you can grant consent without selecting any.</span>
+                                </div>
+                            </div>
+
+                            @if (releasedTestRequests.Any())
+                            {
+                                <span class="count-badge">
+                                    @releasedTestRequests.Count()
+                                </span>
+                            }
+                        </div>
+
+                        @if (releasedTestRequests.Any())
+                        {
+                            <div class="medical-list">
+
+                                @foreach (var request in releasedTestRequests)
+                                {
+                                    <label class="medical-item"
+                                           for="testRequest_@request.TestRequestId">
+
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="selectedTestRequestIds"
+                                               value="@request.TestRequestId"
+                                               id="testRequest_@request.TestRequestId" />
+
+                                        <span class="custom-check">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+
+                                        <span class="medical-name">
+
+                                            <span>Test Request #@request.TestRequestId</span>
+
+                                            @if (request.ReleasedToPatientDate.HasValue)
+                                            {
+                                                <small>
+                                                    Released
+                                                    @request.ReleasedToPatientDate.Value
+                                                    .ToLocalTime()
+                                                    .ToString("dd MMM yyyy HH:mm")
+                                                </small>
+                                            }
+
+                                            @if (request.TestRequestTestTypes != null &&
+                                                 request.TestRequestTestTypes.Any())
+                                            {
+                                                <small>
+                                                    Tests:
+                                                    @string.Join(", ",
+                                                        request.TestRequestTestTypes
+                                                            .Where(t =>
+                                                                t.TestType != null &&
+                                                                t.TestResult != null &&
+                                                                t.TestResult.TestResultVerification != null &&
+                                                                t.TestResult.TestResultVerification.Status == "Verified")
+                                                            .Select(t => t.TestType.TestTypeName))
+                                                </small>
+                                            }
+
+                                        </span>
+                                    </label>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-information">
+                                <i class="fas fa-info-circle"></i>
+                                <span>
+                                    You have no released test results to share yet. You can still
+                                    grant consent to your selected doctor — once results are released
+                                    to you, revoke this consent and grant a new one to share them.
+                                </span>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- PRIVACY NOTICE -->
+                    <div class="privacy-notice">
+                        <div class="privacy-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div>
+                            <strong>Your medical information stays under your control.</strong>
+                            <p>
+                                You can grant consent with or without selecting results.
+                                Only the released test results you select are linked to
+                                this consent. Consent expires at the selected time, and
+                                you can revoke it whenever you choose.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div class="consent-submit">
+                        <button type="submit"
+                                class="grant-button"
+                                disabled="@(!doctors.Any())">
+
+                            <i class="fas fa-check"></i>
+                            Grant Consent
+
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- EXISTING CONSENTS -->
+            <div class="consent-card existing-card">
+
+                <div class="card-heading">
+                    <div class="heading-icon purple">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h2>My Doctor Consents</h2>
+                        <p>View and manage the access you have granted.</p>
+                    </div>
+                </div>
+
+                @if (consents.Any())
+                {
+                    <div class="consent-list">
+
+                        @foreach (var consent in consents)
+                        {
+                            var expired =
+                                consent.ExpiresAt.HasValue &&
+                                consent.ExpiresAt.Value <= DateTime.UtcNow;
+
+                            var active =
+                                consent.IsActive &&
+                                !expired;
+
+                            <div class="existing-consent">
+
+                                <div class="existing-top">
+
+                                    <div class="doctor-info">
+                                        <div class="doctor-avatar">
+                                            <i class="fas fa-user-md"></i>
+                                        </div>
+                                        <div>
+                                            <h4>
+                                                Dr. @consent.Doctor.Name @consent.Doctor.Surname
+                                            </h4>
+                                            <small>
+                                                Granted
+                                                @consent.GrantedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    @if (active)
+                                    {
+                                        <span class="status-badge active">Active</span>
+                                    }
+                                    else if (consent.RevokedAt.HasValue)
+                                    {
+                                        <span class="status-badge revoked">Revoked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge expired">Expired</span>
+                                    }
+
+                                </div>
+
+                                <div class="shared-information test-request-information">
+                                    <div>
+                                        <span class="shared-label">
+                                            Shared Test Results
+                                        </span>
+
+                                        @if (consent.TestAccesses != null &&
+                                             consent.TestAccesses.Any())
+                                        {
+                                            <div class="tag-list">
+                                                @foreach (var access in consent.TestAccesses)
+                                                {
+                                                    <span class="medical-tag">
+                                                        Test Request #@access.TestRequestId
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <small class="none-text">
+                                                No test results were shared with this consent.
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="existing-footer">
+
+                                    @if (consent.ExpiresAt.HasValue)
+                                    {
+                                        <span>
+                                            <i class="fas fa-clock"></i>
+                                            Expires
+                                            @consent.ExpiresAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                        </span>
+                                    }
+
+                                    @if (active)
+                                    {
+                                        <form asp-controller="Patient"
+                                              asp-action="RevokeConsent"
+                                              method="post"
+                                              onsubmit="return confirm('Are you sure you want to revoke this consent? The doctor will no longer have access to the shared test results.');">
+
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="consentId" value="@consent.Id" />
+
+                                            <button type="submit" class="revoke-button">
+                                                <i class="fas fa-ban"></i>
+                                                Revoke Consent
+                                            </button>
+
+                                        </form>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-consents">
+                        <div class="empty-consents-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h4>No doctor access granted</h4>
+                        <p>You have not granted consent to any doctors yet.</p>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="consent-sidebar">
+
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="heading-icon blue">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div>
+                        <h3>How Consent Works</h3>
+                        <p>You're always in control.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Choose a doctor</strong>
+                        <p>Select the doctor you want to give access to.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>Optionally select results</strong>
+                        <p>Share released test results now, or leave it empty and share later.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Set a duration</strong>
+                        <p>Decide how long the doctor can access the shared test results.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <strong>Revoke anytime</strong>
+                        <p>You can revoke active consent whenever you choose.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="privacy-card">
+                <div class="privacy-card-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div>
+                    <h4>Your Privacy</h4>
+                    <p>
+                        Only the released test results you specifically select
+                        are included in the consent. Granting consent without
+                        selecting results shares nothing until you update it.
+                    </p>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+<script>
     document.addEventListener("DOMContentLoaded", function () {
 
         const duration = document.getElementById("consentDuration");
@@ -1550,26 +1350,17 @@
         }
 
         function updateExpiry() {
-
             if (duration.value === "Custom") {
-
                 container.style.display = "block";
                 input.required = true;
-
             } else {
-
                 container.style.display = "none";
                 input.required = false;
                 input.value = "";
-
             }
-
         }
 
         duration.addEventListener("change", updateExpiry);
-
         updateExpiry();
-
     });
-
 </script>

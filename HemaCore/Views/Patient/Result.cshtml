@@ -35,6 +35,23 @@
     </div>
 
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mb-3">
+            <i class="fas fa-exclamation-circle me-1"></i>
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mb-3">
+            <i class="fas fa-check-circle me-1"></i>
+            @TempData["Success"]
+        </div>
+    }
+
+
     @if (Model == null || !Model.Any())
     {
         <!-- NO RESULTS -->
@@ -227,8 +244,8 @@
 
                                     <strong class="result-value
                                         @(result.IsAbnormal
-                                            ? "abnormal-result"
-                                            : "normal-result")">
+                                                    ? "abnormal-result"
+                                                    : "normal-result")">
 
                                         @result.ResultValue
 
@@ -301,7 +318,7 @@
                     </div>
 
 
-                    <!-- DOWNLOAD -->
+                    <!-- FOOTER -->
 
                     <div class="result-footer">
 
@@ -364,9 +381,9 @@
         margin-bottom: 6px;
     }
 
-    .page-label i {
-        margin-right: 6px;
-    }
+        .page-label i {
+            margin-right: 6px;
+        }
 
     .page-header h1 {
         margin: 0;
@@ -397,10 +414,10 @@
         transition: 0.2s ease;
     }
 
-    .back-btn:hover {
-        background: #f5f7fb;
-        color: #2447aa;
-    }
+        .back-btn:hover {
+            background: #f5f7fb;
+            color: #2447aa;
+        }
 
     /* EMPTY */
 
@@ -448,10 +465,10 @@
         font-weight: 600;
     }
 
-    .primary-btn:hover {
-        color: #fff;
-        background: #2447aa;
-    }
+        .primary-btn:hover {
+            color: #fff;
+            background: #2447aa;
+        }
 
     /* RESULT CARD */
 
@@ -494,9 +511,9 @@
         font-size: 14px;
     }
 
-    .result-date i {
-        margin-right: 5px;
-    }
+        .result-date i {
+            margin-right: 5px;
+        }
 
     .released-badge {
         display: inline-flex;
@@ -585,10 +602,10 @@
         margin-bottom: 15px;
     }
 
-    .section-title i {
-        color: #3157c7;
-        margin-right: 7px;
-    }
+        .section-title i {
+            color: #3157c7;
+            margin-right: 7px;
+        }
 
     /* RESULT ROW */
 
@@ -680,9 +697,9 @@
         font-weight: 700;
     }
 
-    .verified-text i {
-        margin-right: 4px;
-    }
+        .verified-text i {
+            margin-right: 4px;
+        }
 
     .verification-section small {
         display: block;
@@ -709,10 +726,12 @@
         font-size: 13px;
     }
 
-    .secure-message i {
-        color: #3157c7;
-        margin-right: 5px;
-    }
+        .secure-message i {
+            color: #3157c7;
+            margin-right: 5px;
+        }
+
+    /* DOWNLOAD BUTTON */
 
     .download-btn {
         display: inline-flex;
@@ -726,12 +745,17 @@
         font-size: 13px;
         font-weight: 600;
         white-space: nowrap;
+        transition: 0.2s ease;
     }
 
-    .download-btn:hover {
-        background: #2447aa;
-        color: #fff;
-    }
+        .download-btn:hover {
+            background: #2447aa;
+            color: #fff;
+        }
+
+        .download-btn i {
+            font-size: 13px;
+        }
 
     /* MOBILE */
 
@@ -740,7 +764,6 @@
         .test-result-row {
             grid-template-columns: 1fr 1fr;
         }
-
     }
 
     @@media (max-width: 700px) {
@@ -764,6 +787,10 @@
             align-items: flex-start;
         }
 
+        .download-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 
 </style>

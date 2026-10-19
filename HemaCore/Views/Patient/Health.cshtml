@@ -1,1071 +1,733 @@
 ﻿@model List<HemaCore.Models.TestRequest>
-
 @using System.Text.Json
 
 @{
     ViewData["Title"] = "My Health";
     Layout = "_PatientLayout";
 
-    var graphLabels = ViewBag.GraphLabels as List<string>
-                      ?? new List<string>();
+    var availableTests = ViewBag.AvailableTests as IEnumerable<dynamic> ?? new List<dynamic>();
+    var selectedTestTypeId = ViewBag.SelectedTestTypeId as int?;
 
-    var graphCounts = ViewBag.GraphCounts as List<int>
-                      ?? new List<int>();
+    var graphLabels = ViewBag.GraphLabels as List<string> ?? new List<string>();
+    var graphValues = ViewBag.GraphValues as List<double> ?? new List<double>();
+
+    double normalMin = ViewBag.NormalMin ?? 0.0;
+    double normalMax = ViewBag.NormalMax ?? 0.0;
+    string unit = ViewBag.Unit?.ToString() ?? "";
 
     var totalTests = ViewBag.TotalTests ?? 0;
     var completedTests = ViewBag.CompletedTests ?? 0;
     var abnormalResults = ViewBag.AbnormalResults ?? 0;
 
-    var conditions = ViewBag.Conditions
-                    as IEnumerable<HemaCore.Models.PatientCondition>
-                    ?? new List<HemaCore.Models.PatientCondition>();
-
-    var labelsJson = JsonSerializer.Serialize(graphLabels);
-    var countsJson = JsonSerializer.Serialize(graphCounts);
-
+    var conditions = ViewBag.Conditions as IEnumerable<HemaCore.Models.PatientCondition> ?? new List<HemaCore.Models.PatientCondition>();
     var selectedPeriod = ViewBag.Period?.ToString() ?? "all";
-}
 
+    // JSON for the chart
+    var labelsJson = JsonSerializer.Serialize(graphLabels);
+    var valuesJson = JsonSerializer.Serialize(graphValues);
+
+    // Create arrays for the normal range lines (same length as data)
+    var minLines = Enumerable.Repeat(normalMin, graphLabels.Count).ToList();
+    var maxLines = Enumerable.Repeat(normalMax, graphLabels.Count).ToList();
+    var minJson = JsonSerializer.Serialize(minLines);
+    var maxJson = JsonSerializer.Serialize(maxLines);
+}
 
 <div class="health-page">
 
-    <!-- ===================================================== -->
     <!-- HEADER -->
-    <!-- ===================================================== -->
-
     <div class="health-header">
-
         <div>
-
             <div class="health-label">
-
                 <i class="fas fa-heartbeat"></i>
-
                 MY HEALTH
-
             </div>
-
             <h1>My Health</h1>
-
-            <p>
-                Track your health activity and laboratory tests over time.
-            </p>
-
+            <p>Track your health activity and laboratory tests over time.</p>
         </div>
-
     </div>
 
-
-    <!-- ===================================================== -->
     <!-- FILTER -->
-    <!-- ===================================================== -->
-
     <div class="health-filter-card">
-
         <div class="filter-title">
-
             <div class="filter-icon">
-
-                <i class="fas fa-calendar-alt"></i>
-
+                <i class="fas fa-filter"></i>
             </div>
-
             <div>
-
-                <strong>Health History</strong>
-
-                <span>
-                    Choose how far back you want to view your health activity.
-                </span>
-
+                <strong>Filter Health Data</strong>
+                <span>Select a specific test and time period to view trends.</span>
             </div>
-
         </div>
 
+        <form asp-controller="Patient" asp-action="Health" method="get" class="period-form">
+            <!-- Period Selector -->
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label for="period" style="font-size:11px; color:#718096; margin-bottom:2px;">Time Period</label>
+                <select id="period" name="period" onchange="this.form.submit()">
+                    <option value="7" selected="@(selectedPeriod == "7")">Last 7 days</option>
+                    <option value="30" selected="@(selectedPeriod == "30")">Last 30 days</option>
+                    <option value="90" selected="@(selectedPeriod == "90")">Last 3 months</option>
+                    <option value="180" selected="@(selectedPeriod == "180")">Last 6 months</option>
+                    <option value="365" selected="@(selectedPeriod == "365")">Last year</option>
+                    <option value="all" selected="@(selectedPeriod == "all")">All history</option>
+                </select>
+            </div>
 
-        <form asp-controller="Patient"
-              asp-action="Health"
-              method="get"
-              class="period-form">
-
-            <label for="period">
-                View period
-            </label>
-
-            <select id="period"
-                    name="period"
-                    onchange="this.form.submit()">
-
-                @if (selectedPeriod == "7")
-                {
-                    <option value="7" selected>
-                        Last 7 days
-                    </option>
-                }
-                else
-                {
-                    <option value="7">
-                        Last 7 days
-                    </option>
-                }
-
-
-                @if (selectedPeriod == "30")
-                {
-                    <option value="30" selected>
-                        Last 30 days
-                    </option>
-                }
-                else
-                {
-                    <option value="30">
-                        Last 30 days
-                    </option>
-                }
-
-
-                @if (selectedPeriod == "90")
-                {
-                    <option value="90" selected>
-                        Last 3 months
-                    </option>
-                }
-                else
-                {
-                    <option value="90">
-                        Last 3 months
-                    </option>
-                }
-
-
-                @if (selectedPeriod == "180")
-                {
-                    <option value="180" selected>
-                        Last 6 months
-                    </option>
-                }
-                else
-                {
-                    <option value="180">
-                        Last 6 months
-                    </option>
-                }
-
-
-                @if (selectedPeriod == "365")
-                {
-                    <option value="365" selected>
-                        Last year
-                    </option>
-                }
-                else
-                {
-                    <option value="365">
-                        Last year
-                    </option>
-                }
-
-
-                @if (selectedPeriod == "all")
-                {
-                    <option value="all" selected>
-                        All available history
-                    </option>
-                }
-                else
-                {
-                    <option value="all">
-                        All available history
-                    </option>
-                }
-
-            </select>
-
+            <!-- Test Selector -->
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label for="testTypeId" style="font-size:11px; color:#718096; margin-bottom:2px;">Select Test</label>
+                <select id="testTypeId" name="testTypeId" onchange="this.form.submit()">
+                    <option value="">-- Choose a Test --</option>
+                    @foreach (var test in availableTests)
+                    {
+                        <option value="@test.TestTypeId" selected="@(selectedTestTypeId == test.TestTypeId)">
+                            @test.TestTypeName
+                        </option>
+                    }
+                </select>
+            </div>
         </form>
-
     </div>
 
-
-    <!-- ===================================================== -->
     <!-- SUMMARY CARDS -->
-    <!-- ===================================================== -->
-
     <div class="summary-grid">
-
         <div class="summary-card">
-
-            <div class="summary-icon tests-icon">
-
-                <i class="fas fa-vials"></i>
-
-            </div>
-
-            <div>
-
-                <span>
-                    Total Tests
-                </span>
-
-                <strong>
-                    @totalTests
-                </strong>
-
-            </div>
-
+            <div class="summary-icon tests-icon"><i class="fas fa-vials"></i></div>
+            <div><span>Total Tests</span><strong>@totalTests</strong></div>
         </div>
-
-
         <div class="summary-card">
-
-            <div class="summary-icon completed-icon">
-
-                <i class="fas fa-check-circle"></i>
-
-            </div>
-
-            <div>
-
-                <span>
-                    Completed
-                </span>
-
-                <strong>
-                    @completedTests
-                </strong>
-
-            </div>
-
+            <div class="summary-icon completed-icon"><i class="fas fa-check-circle"></i></div>
+            <div><span>Completed</span><strong>@completedTests</strong></div>
         </div>
-
-
         <div class="summary-card">
-
-            <div class="summary-icon abnormal-icon">
-
-                <i class="fas fa-exclamation-triangle"></i>
-
-            </div>
-
-            <div>
-
-                <span>
-                    Abnormal Results
-                </span>
-
-                <strong>
-                    @abnormalResults
-                </strong>
-
-            </div>
-
+            <div class="summary-icon abnormal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div><span>Abnormal Results</span><strong>@abnormalResults</strong></div>
         </div>
-
     </div>
 
-
-    <!-- ===================================================== -->
     <!-- GRAPH -->
-    <!-- ===================================================== -->
-
     <div class="health-card">
-
         <div class="card-header">
-
             <div>
-
-                <h2>
-
-                    <i class="fas fa-chart-line"></i>
-
-                    Test History
-
-                </h2>
-
+                <h2><i class="fas fa-chart-line"></i> Test Results Trend</h2>
                 <p>
-                    Your laboratory test activity over the selected period.
+                    @if (selectedTestTypeId.HasValue)
+                    {
+                        <span>Showing results for the selected test. Red lines indicate normal ranges.</span>
+                    }
+                    else
+                    {
+                        <span>Select a test from the dropdown above to view its graph.</span>
+                    }
                 </p>
-
             </div>
-
-            <span class="history-badge">
-
-                <i class="fas fa-history"></i>
-
-                Health History
-
-            </span>
-
         </div>
 
-
-        @if (graphLabels.Any())
+        @if (!selectedTestTypeId.HasValue)
+        {
+            <div class="empty-health">
+                <div class="empty-health-icon"><i class="fas fa-hand-pointer"></i></div>
+                <h3>No Test Selected</h3>
+                <p>Please select a test from the filter above to view your progress graph.</p>
+            </div>
+        }
+        else if (graphLabels.Any())
         {
             <div class="chart-container">
-
                 <canvas id="healthChart"></canvas>
-
             </div>
         }
         else
         {
             <div class="empty-health">
-
-                <div class="empty-health-icon">
-
-                    <i class="fas fa-chart-line"></i>
-
-                </div>
-
-                <h3>
-                    No Test History
-                </h3>
-
-                <p>
-                    There are no laboratory tests recorded for the
-                    selected period.
-                </p>
-
+                <div class="empty-health-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>No Data Available</h3>
+                <p>You do not have verified results for this test in the selected time period.</p>
             </div>
         }
-
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- CONDITIONS -->
-    <!-- ===================================================== -->
-
+    <!-- CONDITIONS & RECENT TESTS -->
     <div class="health-card conditions-card">
-
         <div class="card-header">
-
             <div>
-
-                <h2>
-
-                    <i class="fas fa-notes-medical"></i>
-
-                    Known Health Conditions
-
-                </h2>
-
-                <p>
-                    Conditions currently recorded on your health profile.
-                </p>
-
+                <h2><i class="fas fa-notes-medical"></i> Known Health Conditions</h2>
+                <p>Conditions currently recorded on your health profile.</p>
             </div>
-
-            <span class="condition-count">
-                @conditions.Count()
-            </span>
-
+            <span class="condition-count">@conditions.Count()</span>
         </div>
-
 
         @if (conditions.Any())
         {
             <div class="conditions-grid">
-
-                @foreach (var patientCondition in conditions)
+                @foreach (var pc in conditions)
                 {
                     <div class="condition-item">
-
-                        <div class="condition-icon">
-
-                            <i class="fas fa-heartbeat"></i>
-
-                        </div>
-
+                        <div class="condition-icon"><i class="fas fa-heartbeat"></i></div>
                         <div>
-
-                            <strong>
-                                @patientCondition.Condition?.Name
-                            </strong>
-
-                            @if (!string.IsNullOrWhiteSpace(
-                                patientCondition.Condition?.Description))
+                            <strong>@pc.Condition?.Name</strong>
+                            @if (!string.IsNullOrWhiteSpace(pc.Condition?.Description))
                             {
-                                <span>
-                                    @patientCondition.Condition.Description
-                                </span>
+                                <span>@pc.Condition.Description</span>
                             }
-
                         </div>
-
                     </div>
                 }
-
             </div>
         }
         else
         {
             <div class="no-conditions">
-
                 <i class="fas fa-check-circle"></i>
-
-                <span>
-                    No health conditions are currently recorded.
-                </span>
-
+                <span>No health conditions are currently recorded.</span>
             </div>
         }
-
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- RECENT TESTS -->
-    <!-- ===================================================== -->
-
     <div class="health-card">
-
         <div class="card-header">
-
             <div>
-
-                <h2>
-
-                    <i class="fas fa-vial"></i>
-
-                    Recent Tests
-
-                </h2>
-
-                <p>
-                    Your latest laboratory test activity.
-                </p>
-
+                <h2><i class="fas fa-vial"></i> Recent Tests</h2>
+                <p>Your latest laboratory test activity.</p>
             </div>
-
-            <a asp-controller="Patient"
-               asp-action="MyTestRequests"
-               class="view-all-btn">
-
-                View Requests
-
-                <i class="fas fa-arrow-right"></i>
-
+            <a asp-controller="Patient" asp-action="MyTestRequests" class="view-all-btn">
+                View Requests <i class="fas fa-arrow-right"></i>
             </a>
-
         </div>
-
 
         @if (Model != null && Model.Any())
         {
             <div class="recent-tests">
-
-                @foreach (var request in Model
-                    .OrderByDescending(r => r.RequestDate)
-                    .Take(5))
+                @foreach (var request in Model.OrderByDescending(r => r.RequestDate).Take(5))
                 {
                     <div class="recent-test-row">
-
-                        <div class="recent-test-icon">
-
-                            <i class="fas fa-flask"></i>
-
-                        </div>
-
+                        <div class="recent-test-icon"><i class="fas fa-flask"></i></div>
                         <div class="recent-test-info">
-
-                            <strong>
-                                Test Request #@request.TestRequestId
-                            </strong>
-
-                            <span>
-                                @request.RequestDate.ToString(
-                                    "dd MMM yyyy HH:mm")
-                            </span>
-
+                            <strong>Test Request #@request.TestRequestId</strong>
+                            <span>@request.RequestDate.ToString("dd MMM yyyy HH:mm")</span>
                         </div>
-
                         <div class="recent-test-count">
-
-                            <strong>
-                                @(request.TestRequestTestTypes?.Count ?? 0)
-                            </strong>
-
-                            <span>
-                                test(s)
-                            </span>
-
+                            <strong>@(request.TestRequestTestTypes?.Count ?? 0)</strong>
+                            <span>test(s)</span>
                         </div>
-
                         <div class="recent-test-status">
-
-                            <span>
-                                @request.Status
-                            </span>
-
+                            <span>@request.Status</span>
                         </div>
-
                     </div>
                 }
-
             </div>
         }
         else
         {
             <div class="no-conditions">
-
                 <i class="fas fa-info-circle"></i>
-
-                <span>
-                    No test requests have been recorded yet.
-                </span>
-
+                <span>No test requests have been recorded yet.</span>
             </div>
         }
-
     </div>
 
 </div>
 
-
-<!-- ========================================================= -->
 <!-- CHART.JS -->
-<!-- ========================================================= -->
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const chartElement = document.getElementById("healthChart");
+    if (!chartElement) return;
 
-    const healthLabels =
-        @Html.Raw(labelsJson);
+    const labels = @Html.Raw(labelsJson);
+    const dataValues = @Html.Raw(valuesJson);
+    const minLineData = @Html.Raw(minJson);
+    const maxLineData = @Html.Raw(maxJson);
+    const unitLabel = "@Html.Raw(unit)";
 
-    const healthCounts =
-        @Html.Raw(countsJson);
-
-
-    const chartElement =
-        document.getElementById("healthChart");
-
-
-    if (chartElement && healthLabels.length > 0)
+    if (labels.length > 0) {
+    new Chart(chartElement, {
+    type: "line",
+    data: {
+    labels: labels,
+    datasets: [
     {
-        new Chart(chartElement,
-        {
-            type: "line",
-
-            data:
-            {
-                labels: healthLabels,
-
-                datasets:
-                [
-                    {
-                        label: "Tests",
-
-                        data: healthCounts,
-
-                        tension: 0.35,
-
-                        fill: true,
-
-                        borderWidth: 3,
-
-                        pointRadius: 4,
-
-                        pointHoverRadius: 6
-                    }
-                ]
-            },
-
-            options:
-            {
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                interaction:
-                {
-                    intersect: false,
-
-                    mode: "index"
-                },
-
-                plugins:
-                {
-                    legend:
-                    {
-                        display: true
-                    }
-                },
-
-                scales:
-                {
-                    y:
-                    {
-                        beginAtZero: true,
-
-                        ticks:
-                        {
-                            precision: 0
-                        },
-
-                        title:
-                        {
-                            display: true,
-
-                            text: "Number of Tests"
-                        }
-                    },
-
-                    x:
-                    {
-                        title:
-                        {
-                            display: true,
-
-                            text: "Period"
-                        }
-                    }
-                }
-            }
-        });
+    // The actual test results
+    label: `Result (${unitLabel})`,
+    data: dataValues,
+    tension: 0.3,
+    borderWidth: 3,
+    borderColor: "#3157c7",
+    backgroundColor: "rgba(49, 87, 199, 0.1)",
+    pointBackgroundColor: "#3157c7",
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    fill: false
+    },
+    {
+    // Normal Minimum line
+    label: "Normal Min",
+    data: minLineData,
+    borderDash: [5, 5],
+    borderColor: "#c0392b",
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: false
+    },
+    {
+    // Normal Maximum line
+    label: "Normal Max",
+    data: maxLineData,
+    borderDash: [5, 5],
+    borderColor: "#c0392b",
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: false
     }
-
+    ]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+    intersect: false,
+    mode: "index"
+    },
+    plugins: {
+    legend: {
+    display: true,
+    position: "top"
+    },
+    tooltip: {
+    callbacks: {
+    label: function(context) {
+    return context.dataset.label + ": " + context.parsed.y;
+    }
+    }
+    }
+    },
+    scales: {
+    y: {
+    title: {
+    display: true,
+    text: `Result Value (${unitLabel})`
+    }
+    },
+    x: {
+    title: {
+    display: true,
+    text: "Date of Test"
+    }
+    }
+    }
+    }
+    });
+    }
+    });
 </script>
 
-
 <style>
-
     .health-page {
-        width: 100%;
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 24px;
-        color: #172033;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    color: #172033;
     }
 
-
-    /* HEADER */
-
     .health-header {
-        margin-bottom: 25px;
+    margin-bottom: 25px;
     }
 
     .health-label {
-        color: #3157c7;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: .08em;
-        margin-bottom: 6px;
+    color: #3157c7;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    margin-bottom: 6px;
     }
 
     .health-label i {
-        margin-right: 6px;
+    margin-right: 6px;
     }
 
     .health-header h1 {
-        margin: 0;
-        font-size: 32px;
-        font-weight: 700;
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
     }
 
     .health-header p {
-        margin: 8px 0 0;
-        color: #718096;
+    margin: 8px 0 0;
+    color: #718096;
     }
 
-
-    /* FILTER */
-
     .health-filter-card {
-        background: #fff;
-        border: 1px solid #e7ebf1;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-        box-shadow: 0 3px 12px rgba(23,32,51,.05);
+    background: #fff;
+    border: 1px solid #e7ebf1;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 3px 12px rgba(23,32,51,.05);
+    flex-wrap: wrap;
     }
 
     .filter-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     }
 
     .filter-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: #f1f4fb;
-        color: #3157c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #f1f4fb;
+    color: #3157c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
     }
 
     .filter-title strong {
-        display: block;
+    display: block;
     }
 
     .filter-title span {
-        display: block;
-        margin-top: 3px;
-        color: #718096;
-        font-size: 13px;
+    display: block;
+    margin-top: 3px;
+    color: #718096;
+    font-size: 13px;
     }
 
     .period-form {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .period-form label {
-        font-size: 13px;
-        font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
     }
 
     .period-form select {
-        min-width: 190px;
-        padding: 10px 13px;
-        border: 1px solid #dce2ea;
-        border-radius: 8px;
-        background: #fff;
-        color: #172033;
-        font-size: 14px;
-        outline: none;
+    min-width: 190px;
+    padding: 10px 13px;
+    border: 1px solid #dce2ea;
+    border-radius: 8px;
+    background: #fff;
+    color: #172033;
+    font-size: 14px;
+    outline: none;
     }
 
-
-    /* SUMMARY */
+    .period-form select:focus {
+    border-color: #3157c7;
+    }
 
     .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
     }
 
     .summary-card {
-        background: #fff;
-        border: 1px solid #e7ebf1;
-        border-radius: 12px;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        box-shadow: 0 3px 12px rgba(23,32,51,.05);
+    background: #fff;
+    border: 1px solid #e7ebf1;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 3px 12px rgba(23,32,51,.05);
     }
 
     .summary-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     }
 
     .tests-icon {
-        background: #f1f4fb;
-        color: #3157c7;
+    background: #f1f4fb;
+    color: #3157c7;
     }
 
     .completed-icon {
-        background: #eef9f2;
-        color: #267346;
+    background: #eef9f2;
+    color: #267346;
     }
 
     .abnormal-icon {
-        background: #fff4f1;
-        color: #c0392b;
+    background: #fff4f1;
+    color: #c0392b;
     }
 
     .summary-card span {
-        display: block;
-        color: #718096;
-        font-size: 13px;
+    display: block;
+    color: #718096;
+    font-size: 13px;
     }
 
     .summary-card strong {
-        display: block;
-        margin-top: 3px;
-        font-size: 25px;
+    display: block;
+    margin-top: 3px;
+    font-size: 25px;
     }
 
-
-    /* CARDS */
-
     .health-card {
-        background: #fff;
-        border: 1px solid #e7ebf1;
-        border-radius: 12px;
-        margin-bottom: 24px;
-        box-shadow: 0 3px 12px rgba(23,32,51,.05);
-        overflow: hidden;
+    background: #fff;
+    border: 1px solid #e7ebf1;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 3px 12px rgba(23,32,51,.05);
+    overflow: hidden;
     }
 
     .card-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid #edf0f4;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #edf0f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
     }
 
     .card-header h2 {
-        margin: 0;
-        font-size: 19px;
+    margin: 0;
+    font-size: 19px;
     }
 
     .card-header h2 i {
-        color: #3157c7;
-        margin-right: 7px;
+    color: #3157c7;
+    margin-right: 7px;
     }
 
     .card-header p {
-        margin: 5px 0 0;
-        color: #718096;
-        font-size: 13px;
+    margin: 5px 0 0;
+    color: #718096;
+    font-size: 13px;
     }
 
-    .history-badge,
     .condition-count {
-        padding: 7px 12px;
-        border-radius: 20px;
-        background: #f1f4fb;
-        color: #3157c7;
-        font-size: 12px;
-        font-weight: 700;
+    padding: 7px 12px;
+    border-radius: 20px;
+    background: #f1f4fb;
+    color: #3157c7;
+    font-size: 12px;
+    font-weight: 700;
     }
-
-
-    /* CHART */
 
     .chart-container {
-        position: relative;
-        height: 360px;
-        padding: 25px;
+    position: relative;
+    height: 400px;
+    padding: 25px;
     }
 
-
-    /* EMPTY */
-
     .empty-health {
-        text-align: center;
-        padding: 60px 25px;
+    text-align: center;
+    padding: 60px 25px;
     }
 
     .empty-health-icon {
-        width: 65px;
-        height: 65px;
-        border-radius: 50%;
-        background: #f1f4fb;
-        color: #3157c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        font-size: 25px;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: #f1f4fb;
+    color: #3157c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 25px;
     }
 
     .empty-health h3 {
-        margin: 0 0 6px;
+    margin: 0 0 6px;
     }
 
     .empty-health p {
-        color: #718096;
-        margin: 0;
+    color: #718096;
+    margin: 0;
     }
 
-
-    /* CONDITIONS */
-
     .conditions-grid {
-        padding: 20px 24px;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
     }
 
     .condition-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        border: 1px solid #edf0f4;
-        border-radius: 9px;
-        padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #edf0f4;
+    border-radius: 9px;
+    padding: 15px;
     }
 
     .condition-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 9px;
-        background: #f1f4fb;
-        color: #3157c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    background: #f1f4fb;
+    color: #3157c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     }
 
     .condition-item strong {
-        display: block;
-        font-size: 14px;
+    display: block;
+    font-size: 14px;
     }
 
     .condition-item span {
-        display: block;
-        margin-top: 3px;
-        color: #718096;
-        font-size: 12px;
+    display: block;
+    margin-top: 3px;
+    color: #718096;
+    font-size: 12px;
     }
 
     .no-conditions {
-        padding: 25px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #718096;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #718096;
     }
 
     .no-conditions i {
-        color: #267346;
+    color: #267346;
     }
 
-
-    /* RECENT TESTS */
-
     .recent-tests {
-        padding: 0 24px;
+    padding: 0 24px;
     }
 
     .recent-test-row {
-        display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        align-items: center;
-        gap: 15px;
-        padding: 16px 0;
-        border-bottom: 1px solid #edf0f4;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 0;
+    border-bottom: 1px solid #edf0f4;
     }
 
     .recent-test-row:last-child {
-        border-bottom: none;
+    border-bottom: none;
     }
 
     .recent-test-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 9px;
-        background: #f1f4fb;
-        color: #3157c7;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    background: #f1f4fb;
+    color: #3157c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     }
 
     .recent-test-info strong {
-        display: block;
-        font-size: 14px;
+    display: block;
+    font-size: 14px;
     }
 
     .recent-test-info span {
-        display: block;
-        margin-top: 3px;
-        color: #718096;
-        font-size: 12px;
+    display: block;
+    margin-top: 3px;
+    color: #718096;
+    font-size: 12px;
     }
 
     .recent-test-count {
-        text-align: center;
+    text-align: center;
     }
 
     .recent-test-count strong {
-        display: block;
-        font-size: 16px;
+    display: block;
+    font-size: 16px;
     }
 
     .recent-test-count span {
-        color: #718096;
-        font-size: 11px;
+    color: #718096;
+    font-size: 11px;
     }
 
     .recent-test-status span {
-        display: inline-block;
-        padding: 6px 10px;
-        background: #f1f4fb;
-        color: #3157c7;
-        border-radius: 15px;
-        font-size: 11px;
-        font-weight: 600;
+    display: inline-block;
+    padding: 6px 10px;
+    background: #f1f4fb;
+    color: #3157c7;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
     }
 
     .view-all-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        color: #3157c7;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #3157c7;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
     }
 
     .view-all-btn:hover {
-        color: #2447aa;
+    color: #2447aa;
     }
-
-
-    /* MOBILE */
 
     @@media (max-width: 900px) {
-
-        .summary-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .health-filter-card {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .period-form {
-            width: 100%;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .period-form select {
-            width: 100%;
-        }
-
-        .conditions-grid {
-            grid-template-columns: 1fr;
-        }
-
+    .summary-grid {
+    grid-template-columns: 1fr;
     }
 
+    .health-filter-card {
+    flex-direction: column;
+    align-items: flex-start;
+    }
+
+    .period-form {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    }
+
+    .period-form select {
+    width: 100%;
+    }
+
+    .conditions-grid {
+    grid-template-columns: 1fr;
+    }
+    }
 
     @@media (max-width: 650px) {
-
-        .health-page {
-            padding: 15px;
-        }
-
-        .card-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .recent-test-row {
-            grid-template-columns: auto 1fr;
-        }
-
-        .recent-test-count,
-        .recent-test-status {
-            grid-column: 2;
-            text-align: left;
-        }
-
+    .health-page {
+    padding: 15px;
     }
 
+    .card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    }
+
+    .recent-test-row {
+    grid-template-columns: auto 1fr;
+    }
+
+    .recent-test-count, .recent-test-status {
+    grid-column: 2;
+    text-align: left;
+    }
+    }
 </style>

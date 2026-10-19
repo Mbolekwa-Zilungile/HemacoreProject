@@ -12,6 +12,10 @@
         ViewBag.CompletedTestRequests as IEnumerable<TestRequest>
         ?? new List<TestRequest>();
 
+    var releasedTestRequests =
+        ViewBag.ReleasedTestRequests as IEnumerable<TestRequest>
+        ?? completedTestRequests;
+
     var pendingCount = requests.Count(r => r.Status == "Pending");
     var approvedCount = requests.Count(r => r.Status == "Approved");
     var rejectedCount = requests.Count(r => r.Status == "Rejected");
@@ -642,13 +646,14 @@
 
 <div class="cr-page">
 
+    <!-- HEADER -->
     <div class="cr-header">
         <div>
             <span class="cr-eyebrow">Patient Portal</span>
             <h1>Consent Requests</h1>
             <p>
                 Review requests from doctors who need permission to access
-                your selected medical test results. You decide what to share
+                your medical test results. You decide what to share
                 and how long access should last.
             </p>
         </div>
@@ -658,6 +663,7 @@
         </div>
     </div>
 
+    <!-- ALERTS -->
     @if (TempData["Success"] != null)
     {
         <div class="cr-alert cr-alert-success" role="status">
@@ -674,6 +680,7 @@
         </div>
     }
 
+    <!-- SUMMARY -->
     <div class="cr-summary">
         <div class="cr-summary-card">
             <div class="cr-summary-icon cr-icon-blue">
@@ -706,6 +713,7 @@
         </div>
     </div>
 
+    <!-- REQUESTS -->
     <section>
         <h2 class="cr-section-title">Your requests</h2>
         <p class="cr-section-description">
@@ -792,30 +800,32 @@
                                       class="cr-approve-form">
 
                                     @Html.AntiForgeryToken()
+                                    <input type="hidden" name="requestId" value="@request.Id" />
 
-                                    <input type="hidden"
-                                           name="requestId"
-                                           value="@request.Id" />
-
-                                    @if (completedTestRequests.Any())
+                                    @if (releasedTestRequests.Any())
                                     {
                                         <div class="cr-form-section">
                                             <h4>
                                                 <i class="fas fa-file-medical"></i>
-                                                Select test results to share
+                                                Select released test results to share
                                             </h4>
 
                                             <p class="cr-help-text">
-                                                Select the completed test requests
-                                                you want to share. Selecting tests
-                                                is optional.
+                                                Select the released test results you want to share
+                                                with this doctor. Sharing results is optional — you
+                                                can approve the request now and share results later
+                                                by granting a new consent.
                                             </p>
 
                                             <div class="cr-test-list">
-                                                @foreach (var testRequest in completedTestRequests)
+                                                @foreach (var testRequest in releasedTestRequests)
                                                 {
-                                                    var testNames = testRequest
+                                                    var verifiedTestNames = testRequest
                                                         .TestRequestTestTypes?
+                                                        .Where(t =>
+                                                            t.TestResult != null &&
+                                                            t.TestResult.TestResultVerification != null &&
+                                                            t.TestResult.TestResultVerification.Status == "Verified")
                                                         .Select(t => t.TestType?.TestTypeName)
                                                         .Where(name => !string.IsNullOrWhiteSpace(name))
                                                         .ToList()
@@ -824,9 +834,7 @@
                                                     var checkboxId =
                                                         $"test-{request.Id}-{testRequest.TestRequestId}";
 
-                                                    <label class="cr-test-option"
-                                                           for="@checkboxId">
-
+                                                    <label class="cr-test-option" for="@checkboxId">
                                                         <input type="checkbox"
                                                                name="selectedTestRequestIds"
                                                                value="@testRequest.TestRequestId"
@@ -838,9 +846,9 @@
                                                             </span>
 
                                                             <span class="cr-test-names">
-                                                                @if (testNames.Any())
+                                                                @if (verifiedTestNames.Any())
                                                                 {
-                                                                    @string.Join(", ", testNames)
+                                                                    @string.Join(", ", verifiedTestNames)
                                                                 }
                                                                 else
                                                                 {
@@ -849,9 +857,11 @@
 
                                                                 <br />
                                                                 <i class="far fa-calendar-alt"></i>
-                                                                Completed request:
-                                                                @(testRequest.RequestDate.ToLocalTime()
-                                                                    .ToString("dd MMM yyyy"))
+                                                                Released
+                                                                @(testRequest.ReleasedToPatientDate?
+                                                                    .ToLocalTime()
+                                                                    .ToString("dd MMM yyyy HH:mm")
+                                                                    ?? "—")
                                                             </span>
                                                         </span>
                                                     </label>
@@ -864,11 +874,10 @@
                                         <div class="cr-alert cr-alert-info">
                                             <i class="fas fa-info-circle"></i>
                                             <div>
-                                                <strong>No completed test requests available.</strong>
-                                                You can still submit your consent
-                                                decision. Approval should only grant
-                                                access permitted by your consent
-                                                settings.
+                                                <strong>No released test results available.</strong>
+                                                You can still approve this request. Once your
+                                                doctor releases results to you, you can share them
+                                                by revoking the consent and granting a new one.
                                             </div>
                                         </div>
                                     }
@@ -880,8 +889,7 @@
                                         </h4>
 
                                         <p class="cr-help-text">
-                                            Choose how long the consent should
-                                            remain active.
+                                            Choose how long the consent should remain active.
                                         </p>
 
                                         <div class="cr-form-row">
@@ -922,10 +930,10 @@
                                         <i class="fas fa-lock"></i>
                                         <div>
                                             <strong>Your privacy matters.</strong>
-                                            Review the request and duration
-                                            carefully before approving. Only
-                                            access permitted by the application's
-                                            consent rules should be granted.
+                                            Review the request and duration carefully before
+                                            approving. Only the released test results you
+                                            select are shared. You can share them later by
+                                            revoking and re-granting consent.
                                         </div>
                                     </div>
 
@@ -944,10 +952,7 @@
                                       onsubmit="return confirm('Are you sure you want to reject this consent request? No access will be granted through this request.');">
 
                                     @Html.AntiForgeryToken()
-
-                                    <input type="hidden"
-                                           name="requestId"
-                                           value="@request.Id" />
+                                    <input type="hidden" name="requestId" value="@request.Id" />
 
                                     <div class="cr-actions">
                                         <button type="submit"
@@ -965,9 +970,8 @@
                                     <div>
                                         <strong>Request approved</strong>
                                         <br />
-                                        You approved this request. Review the
-                                        active consent and permitted access on
-                                        your existing Consent page.
+                                        You approved this request. Review the active consent
+                                        and permitted access on your Consent page.
                                     </div>
                                 </div>
                             }
@@ -978,8 +982,8 @@
                                     <div>
                                         <strong>Request rejected</strong>
                                         <br />
-                                        You rejected this request. No access
-                                        was granted through this request.
+                                        You rejected this request. No access was granted
+                                        through this request.
                                     </div>
                                 </div>
                             }
@@ -1000,6 +1004,7 @@
         }
     </section>
 
+    <!-- BOTTOM HELP -->
     <div class="cr-bottom-help">
         <div class="cr-help-card">
             <h4>
@@ -1015,7 +1020,7 @@
 
                 <div class="cr-step">
                     <span class="cr-step-number">2</span>
-                    <span>Select any completed test requests you want to share, if available.</span>
+                    <span>Optionally select released test results to share.</span>
                 </div>
 
                 <div class="cr-step">
@@ -1037,11 +1042,10 @@
             </h4>
 
             <p>
-                You decide whether to grant access. Review every request
-                carefully and choose an expiry period that suits you.
-                Rejecting a request does not grant access through that
-                request. You can review your consent on the existing
-                Consent page.
+                You decide whether to grant access and what to share. Review every
+                request carefully and choose an expiry period that suits you.
+                You can approve without sharing any results and update the share
+                later by revoking and re-granting consent.
             </p>
         </div>
     </div>

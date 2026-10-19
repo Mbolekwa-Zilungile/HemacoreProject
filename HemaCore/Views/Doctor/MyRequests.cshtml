@@ -158,6 +158,12 @@
         color: #991b1b;
     }
 
+    /* NEW: released status badge */
+    .status-released {
+        background: #dcfce7;
+        color: #166534;
+    }
+
     .btn-primary-custom {
         background: #2563eb;
         color: white;
@@ -222,10 +228,6 @@
                 <i class="fas fa-list-alt me-2"></i>
                 My Test Requests
             </h2>
-
-           @*  <p>
-                View and track all submitted laboratory requests
-            </p> *@
         </div>
 
         <a asp-action="CreateTestRequest" asp-controller="Doctor" class="btn-primary-custom">
@@ -328,6 +330,7 @@
                     <option value="Submitted">Submitted</option>
                     <option value="In progress">In Progress</option>
                     <option value="Completed">Completed</option>
+                    <option value="Released by doctor">Released</option>
                     <option value="Cancelled">Cancelled</option>
 
                 </select>
@@ -449,6 +452,13 @@
                                         Completed
                                     </span>
                                 }
+                                else if (request.Status == "Released by doctor")
+                                {
+                                    <span class="badge-custom status-released">
+                                        <i class="fas fa-share-square"></i>
+                                        Released
+                                    </span>
+                                }
                                 else
                                 {
                                     <span class="badge-custom status-cancelled">
@@ -468,7 +478,11 @@
                                     View
                                 </a>
 
-                                @if (request.Status == "Completed" || request.Status == "Released by doctor")
+                                @* CHANGED: allow the doctor to open Results as soon as tests are verified,
+                                   even if the request is still "In progress". Partial release is now supported. *@
+                                @if (request.Status != "Submitted" &&
+                                     request.Status != "Cancelled" &&
+                                     request.Status != "Sample(s) received")
                                 {
                                     <a asp-controller="Doctor" asp-action="Results" asp-route-id="@request.TestRequestId"
                                        class="action-link">
