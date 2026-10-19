@@ -1,73 +1,65 @@
-﻿@model HemaCore.ViewModels.ManagerVM.TestCategoryReportViewModel
+﻿@model HemaCore.ViewModels.ManagerVM.TestsPerformedReportViewModel
 
 @{
-    Layout = "_ManagerLayout";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
     ViewData["Title"] = "Management Reports";
 }
 
+<link rel="stylesheet" href="~/css/doctor.css" />
 <link rel="stylesheet" href="~/css/management-reports.css" />
 
-<div class="reports-container">
+<div class="container mt-4 mb-5">
 
-    <!-- PAGE HEADER -->
-    <div class="reports-header">
-        <div>
-            <h2>
-                <i class="fas fa-chart-bar"></i>
-                Management Reports
-            </h2>
+    <div class="card shadow-sm border-0 p-4">
 
-            <p>
-                Generate and download laboratory management reports.
-            </p>
-        </div>
-
-        <div class="reports-header-icon">
-            <i class="fas fa-file-pdf"></i>
-        </div>
-    </div>
-
-    <!-- REPORT CARD -->
-    <div class="report-card">
-
-        <div class="report-card-header">
-            <div class="report-icon">
-                <i class="fas fa-chart-column"></i>
-            </div>
-
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div>
-                <h4>Tests Performed by Category</h4>
-                <p>PDF management report</p>
+                <h3 class="fw-bold mb-2">Management Reports</h3>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Tests Performed by Category
+                </p>
+            </div>
+
+            <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center"
+                 style="width: 55px; height: 55px;">
+                <i class="fas fa-chart-bar fs-4"></i>
             </div>
         </div>
 
-        <div class="report-card-body">
+        <hr class="text-muted opacity-25 mb-4" />
 
-            <div class="report-description">
-                <i class="fas fa-circle-info"></i>
-
-                <span>
-                    Select a date range to generate a PDF showing
-                    the total number of completed tests grouped
-                    by test category.
-                </span>
+        <!-- ERROR MESSAGE -->
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                @TempData["Error"]
             </div>
+        }
 
-            <form asp-controller="Manager"
-                  asp-action="GenerateTestCategoryReport"
-                  method="post"
-                  id="reportForm">
+        <!-- REPORT FORM -->
+        <form asp-controller="Manager"
+              asp-action="GenerateTestsByCategoryReport"
+              method="get"
+              id="reportForm">
 
-                @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
 
-                <div asp-validation-summary="ModelOnly"
-                     class="validation-summary"></div>
+            <div class="mb-4">
+                <h5 class="fw-bold text-secondary mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Select Reporting Period
+                </h5>
 
-                <div class="date-fields">
+                <div class="row">
 
-                    <div class="form-group">
-                        <label asp-for="StartDate">
-                            <i class="fas fa-calendar"></i>
+                    <!-- START DATE -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StartDate"
+                               class="form-label text-muted">
                             Start Date
                         </label>
 
@@ -75,15 +67,17 @@
                                type="date"
                                class="form-control"
                                id="StartDate"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
                                required />
 
                         <span asp-validation-for="StartDate"
-                              class="field-error"></span>
+                              class="text-danger small"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="EndDate">
-                            <i class="fas fa-calendar-check"></i>
+                    <!-- END DATE -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EndDate"
+                               class="form-label text-muted">
                             End Date
                         </label>
 
@@ -91,55 +85,48 @@
                                type="date"
                                class="form-control"
                                id="EndDate"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
                                required />
 
                         <span asp-validation-for="EndDate"
-                              class="field-error"></span>
+                              class="text-danger small"></span>
                     </div>
 
                 </div>
 
+                <!-- DATE VALIDATION -->
                 <div id="dateError"
-                     class="date-error"
+                     class="alert alert-danger mt-2"
                      role="alert"
                      hidden>
+                    <i class="fas fa-exclamation-triangle me-2"></i>
                     The start date cannot be after the end date.
                 </div>
-
-                <div class="report-actions">
-                    <button type="submit"
-                            class="btn-generate"
-                            id="generateButton">
-
-                        <i class="fas fa-file-pdf"></i>
-                        Generate PDF Report
-                    </button>
-
-                    <button type="reset"
-                            class="btn-reset">
-                        <i class="fas fa-rotate-left"></i>
-                        Reset Dates
-                    </button>
-                </div>
-
-            </form>
-
-            <div class="report-information">
-                <h5>
-                    <i class="fas fa-circle-info"></i>
-                    Report information
-                </h5>
-
-                <ul>
-                    <li>Only completed tests are included.</li>
-                    <li>Tests are grouped by their test category.</li>
-                    <li>The report includes a grand total.</li>
-                    <li>The selected start and end dates are included.</li>
-                    <li>The report is downloaded as a PDF file.</li>
-                </ul>
             </div>
 
-        </div>
+            <hr class="text-muted opacity-25 my-4" />
+
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+
+                <button type="reset"
+                        class="btn btn-outline-secondary"
+                        id="resetButton">
+                    <i class="fas fa-rotate-left me-1"></i>
+                    Reset Dates
+                </button>
+
+                <button type="submit"
+                        class="btn btn-primary-custom"
+                        id="generateButton">
+                    <i class="fas fa-file-pdf me-1"></i>
+                    Generate PDF Report
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
 </div>
@@ -149,61 +136,76 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+
             const form = document.getElementById("reportForm");
             const startDate = document.getElementById("StartDate");
             const endDate = document.getElementById("EndDate");
             const dateError = document.getElementById("dateError");
-            const generateButton =
-                document.getElementById("generateButton");
+            const generateButton = document.getElementById("generateButton");
+
+            const originalButtonHtml =
+                '<i class="fas fa-file-pdf me-1"></i> Generate PDF Report';
 
             function validateDates() {
                 const invalid =
-                    startDate.value &&
-                    endDate.value &&
+                    startDate.value !== "" &&
+                    endDate.value !== "" &&
                     startDate.value > endDate.value;
 
                 dateError.hidden = !invalid;
 
                 startDate.setCustomValidity(
-                    invalid
-                        ? "Start date cannot be after end date."
-                        : ""
+                    invalid ? "Start date cannot be after end date." : ""
                 );
 
                 endDate.setCustomValidity(
-                    invalid
-                        ? "End date cannot be before start date."
-                        : ""
+                    invalid ? "End date cannot be before start date." : ""
                 );
 
                 return !invalid;
             }
 
-            startDate.addEventListener("change", validateDates);
+            function updateEndDateMinimum() {
+                endDate.min = startDate.value || "";
+            }
+
+            startDate.addEventListener("change", function () {
+                updateEndDateMinimum();
+                validateDates();
+            });
+
             endDate.addEventListener("change", validateDates);
 
             form.addEventListener("submit", function (event) {
+
                 if (!validateDates()) {
                     event.preventDefault();
-                    startDate.reportValidity();
+                    endDate.reportValidity();
                     return;
                 }
 
                 generateButton.disabled = true;
+
                 generateButton.innerHTML =
-                    '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+                    '<i class="fas fa-spinner fa-spin me-1"></i> Generating PDF...';
             });
 
             form.addEventListener("reset", function () {
+
                 window.setTimeout(function () {
                     dateError.hidden = true;
+
                     startDate.setCustomValidity("");
                     endDate.setCustomValidity("");
+
+                    updateEndDateMinimum();
+
                     generateButton.disabled = false;
-                    generateButton.innerHTML =
-                        '<i class="fas fa-file-pdf"></i> Generate PDF Report';
+                    generateButton.innerHTML = originalButtonHtml;
                 }, 0);
             });
+
+            updateEndDateMinimum();
         });
     </script>
 }

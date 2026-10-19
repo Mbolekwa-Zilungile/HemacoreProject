@@ -11,8 +11,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-using Twilio.Rest.Trunking.V1;
 using QuestPDF.Infrastructure;
+using System.Reflection.Metadata;
+using Twilio.Rest.Trunking.V1;
 
 namespace HemaCore.Controllers
 {
@@ -3606,173 +3607,365 @@ namespace HemaCore.Controllers
 
         #region
 
+
         [HttpGet]
-        public IActionResult TestCategoryReport()
+        public IActionResult TestsPerformedReport()
         {
-            var model = new TestCategoryReportViewModel
+            return View(new TestsPerformedReportViewModel
             {
                 StartDate = DateTime.Today.AddDays(-30),
                 EndDate = DateTime.Today
-            };
-
-            return View(model);
+            });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GenerateTestCategoryReport(
-            TestCategoryReportViewModel model)
-        {
-            // Validate the selected dates.
-            if (model.StartDate.Date > model.EndDate.Date)
-            {
-                ModelState.AddModelError(
-                    string.Empty,
-                    "Start date cannot be after end date.");
 
-                return View("TestCategoryReport", model);
+
+
+        public async Task<IActionResult> GenerateTestsByCategoryReport(
+            DateTime startDate,
+            DateTime endDate)
+        {
+            // Validate the selected dates
+            if (startDate.Date > endDate.Date)
+            {
+                TempData["Error"] = "The start date cannot be after the end date.";
+                return RedirectToAction("Index");
             }
 
-            DateTime startDate = model.StartDate.Date;
-            DateTime endDateExclusive = model.EndDate.Date.AddDays(1);
+            var startDateTime = startDate.Date;
+            var endDateTime = endDate.Date.AddDays(1);
+            var generatedAt = DateTime.Now;
 
-            // Get completed tests and group them by test category.
-            var results = await _context.TestRequestTestTypes
-                .AsNoTracking()
-                .Where(x =>
-                    x.CompletionDateTime.HasValue &&
-                    x.CompletionDateTime.Value >= startDate &&
-                    x.CompletionDateTime.Value < endDateExclusive &&
-                    x.Status == "Completed")
-                .GroupBy(x => x.TestType.Category.CategoryName)
-                .Select(g => new TestCategoryReportItem
+            // Get verified tests completed within the selected period
+            var performedTests = await (
+                from item in _context.TestRequestTestTypes
+                join type in _context.TestTypes
+                    on item.TestTypeId equals type.TestTypeId
+                join category in _context.TestCategories
+                    on type.CategoryId equals category.CategoryId
+                where item.CompletionDateTime.HasValue
+                    && item.CompletionDateTime.Value >= startDateTime
+                    && item.CompletionDateTime.Value < endDateTime
+                    && item.TestResultId.HasValue
+                    && item.Status == "Verified"
+                select new
                 {
-                    CategoryName = g.Key,
-                    TotalTests = g.Count()
+                    CategoryName = category.CategoryName,
+                    TestTypeName = type.TestTypeName
+                }
+            ).ToListAsync();
+
+            // Group tests by category, then by test type
+            var groupedTests = performedTests
+                .GroupBy(x => x.CategoryName ?? "Uncategorised")
+                .OrderBy(g => g.Key)
+                .Select(category => new
+                {
+                    CategoryName = category.Key,
+
+                    TestTypes = category
+                        .GroupBy(x => x.TestTypeName ?? "Unnamed Test")
+                        .OrderBy(g => g.Key)
+                        .Select(testType => new
+                        {
+                            TestTypeName = testType.Key,
+                            Count = testType.Count()
+                        })
+                        .ToList(),
+
+                    CategoryTotal = category.Count()
                 })
-                .OrderBy(x => x.CategoryName)
-                .ToListAsync();
+                .ToList();
 
-            model.Categories = results;
-            model.GrandTotal = results.Sum(x => x.TotalTests);
+            var grandTotal = performedTests.Count;
 
-            // Generate the PDF.
-            var pdf = Document.Create(document =>
+            // Create the PDF document
+            var document = QuestPDF.Fluent.Document.Create(container =>
             {
-                document.Page(page =>
+                container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(35);
-                    page.DefaultTextStyle(style => style.FontSize(10));
+                    page.DefaultTextStyle(style =>
+                        style.FontFamily("Lato").FontSize(10));
 
-                    page.Header().Column(column =>
+                    // =========================
+                    // HEADER
+                    // =========================
+                    page.Header().Column(header =>
                     {
-                        column.Item()
-                            .Text("HemaCore")
-                            .FontSize(24)
+                        header.Item()
+                            .Background(Colors.Blue.Darken3)
+                            .Padding(18)
+                            .Column(column =>
+                            {
+                                column.Item()
+                                    .Text("HemaCore")
+                                    .FontSize(24)
+                                    .Bold()
+                                    .FontColor(Colors.White);
+
+                                column.Item()
+                                    .Text("LABORATORY MANAGEMENT SYSTEM")
+                                    .FontSize(9)
+                                    .FontColor(Colors.White);
+                            });
+
+                        header.Item()
+                            .PaddingTop(15)
+                            .Text("TESTS PERFORMED BY CATEGORY")
+                            .FontSize(18)
                             .Bold()
-                            .FontColor(Colors.Blue.Darken2);
+                            .FontColor(Colors.Blue.Darken3);
 
-                        column.Item()
-                            .Text("MANAGEMENT REPORT")
-                            .FontSize(17)
-                            .Bold();
-
-                        column.Item()
-                            .Text("Total Tests Performed by Category")
-                            .FontSize(12);
-
-                        column.Item().PaddingTop(5).Text(
-                            $"Period: {startDate:dd MMM yyyy} to " +
-                            $"{model.EndDate.Date:dd MMM yyyy}");
-
-                        column.Item().PaddingVertical(10)
-                            .LineHorizontal(1);
+                        header.Item()
+                            .PaddingTop(4)
+                            .Text("Management Report")
+                            .FontSize(10)
+                            .FontColor(Colors.Grey.Darken1);
                     });
 
-                    page.Content().PaddingVertical(15).Column(column =>
-                    {
-                        column.Item()
-                            .Text($"Grand Total: {model.GrandTotal} tests")
-                            .FontSize(13)
-                            .Bold();
-
-                        column.Item().PaddingTop(15).Table(table =>
+                    // =========================
+                    // REPORT CONTENT
+                    // =========================
+                    page.Content()
+                        .PaddingVertical(15)
+                        .Column(content =>
                         {
-                            table.ColumnsDefinition(columns =>
+                            content.Spacing(12);
+
+                            // REPORT PERIOD
+                            content.Item()
+                                .Border(1)
+                                .BorderColor(Colors.Grey.Lighten2)
+                                .Padding(12)
+                                .Column(column =>
+                                {
+                                    column.Spacing(5);
+
+                                    column.Item()
+                                        .Text("REPORT PERIOD")
+                                        .FontSize(9)
+                                        .Bold()
+                                        .FontColor(Colors.Blue.Darken3);
+
+                                    column.Item()
+                                        .Text(
+                                            $"{startDate:dd MMM yyyy} - " +
+                                            $"{endDate:dd MMM yyyy}")
+                                        .FontSize(11)
+                                        .Bold();
+
+                                    column.Item()
+                                        .Text(
+                                            $"Generated on: {generatedAt:dd MMM yyyy HH:mm}")
+                                        .FontSize(9)
+                                        .FontColor(Colors.Grey.Darken1);
+                                });
+
+                            // SUMMARY CARDS
+                            content.Item().Row(row =>
                             {
-                                columns.RelativeColumn(3);
-                                columns.RelativeColumn(1);
+                                row.RelativeItem()
+                                    .Border(1)
+                                    .BorderColor(Colors.Grey.Lighten2)
+                                    .Padding(12)
+                                    .Column(column =>
+                                    {
+                                        column.Item()
+                                            .Text("TOTAL TESTS PERFORMED")
+                                            .FontSize(9)
+                                            .FontColor(Colors.Grey.Darken1);
+
+                                        column.Item()
+                                            .Text(grandTotal.ToString())
+                                            .FontSize(22)
+                                            .Bold()
+                                            .FontColor(Colors.Blue.Darken3);
+                                    });
+
+                                row.ConstantItem(12);
+
+                                row.RelativeItem()
+                                    .Border(1)
+                                    .BorderColor(Colors.Grey.Lighten2)
+                                    .Padding(12)
+                                    .Column(column =>
+                                    {
+                                        column.Item()
+                                            .Text("TEST CATEGORIES")
+                                            .FontSize(9)
+                                            .FontColor(Colors.Grey.Darken1);
+
+                                        column.Item()
+                                            .Text(groupedTests.Count.ToString())
+                                            .FontSize(22)
+                                            .Bold()
+                                            .FontColor(Colors.Blue.Darken3);
+                                    });
                             });
 
-                            table.Header(header =>
+                            // =========================
+                            // TEST CATEGORY AND TEST TYPE TABLE
+                            // =========================
+                            content.Item().Table(table =>
                             {
-                                header.Cell()
-                                    .Element(ReportCell)
-                                    .Background(Colors.Grey.Lighten3)
-                                    .Text("Test Category").Bold();
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(3);
+                                    columns.RelativeColumn(1);
+                                });
 
-                                header.Cell()
-                                    .Element(ReportCell)
-                                    .Background(Colors.Grey.Lighten3)
+                                // TABLE HEADERS
+                                table.Header(header =>
+                                {
+                                    header.Cell()
+                                        .Background(Colors.Blue.Darken3)
+                                        .Padding(10)
+                                        .Text("")
+                                        .Bold()
+                                        .FontColor(Colors.White);
+
+                                    header.Cell()
+                                        .Background(Colors.Blue.Darken3)
+                                        .Padding(10)
+                                        .AlignRight()
+                                        .Text("NUMBER PERFORMED")
+                                        .Bold()
+                                        .FontColor(Colors.White);
+                                });
+
+                                // NO RESULTS MESSAGE
+                                if (groupedTests.Count == 0)
+                                {
+                                    table.Cell()
+                                        .ColumnSpan(2)
+                                        .Border(1)
+                                        .BorderColor(Colors.Grey.Lighten2)
+                                        .Padding(12)
+                                        .Text(
+                                            "No verified tests were found for the selected period.")
+                                        .FontColor(Colors.Grey.Darken1);
+                                }
+
+                                // LOOP THROUGH TEST CATEGORIES
+                                foreach (var category in groupedTests)
+                                {
+                                    // CATEGORY HEADING
+                                    table.Cell()
+                                        .ColumnSpan(2)
+                                        .Background(Colors.Blue.Lighten3)
+                                        .Padding(10)
+                                        .Text(text =>
+                                        {
+                                            text.Span("TEST CATEGORY: ")
+                                                .Bold()
+                                                .FontColor(Colors.Blue.Darken4);
+
+                                            text.Span(category.CategoryName)
+                                                .Bold()
+                                                .FontColor(Colors.Blue.Darken4);
+                                        });
+
+                                    // LOOP THROUGH TEST TYPES IN THIS CATEGORY
+                                    foreach (var test in category.TestTypes)
+                                    {
+                                        // TEST TYPE NAME
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(10)
+                                            .PaddingLeft(20)
+                                            .Text(text =>
+                                            {
+                                                text.Span(" ")
+                                                    .FontColor(Colors.Grey.Darken1);
+
+                                                text.Span(test.TestTypeName)
+                                                    .Bold();
+                                            });
+
+                                        // NUMBER OF TESTS PERFORMED
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(10)
+                                            .AlignRight()
+                                            .Text(test.Count.ToString());
+                                    }
+
+                                    // CATEGORY SUBTOTAL
+                                    table.Cell()
+                                        .Background(Colors.Grey.Lighten3)
+                                        .Padding(10)
+                                        .Text(
+                                            $"TOTAL FOR {category.CategoryName.ToUpper()}")
+                                        .Bold();
+
+                                    table.Cell()
+                                        .Background(Colors.Grey.Lighten3)
+                                        .Padding(10)
+                                        .AlignRight()
+                                        .Text(category.CategoryTotal.ToString())
+                                        .Bold();
+                                }
+
+                                // GRAND TOTAL
+                                table.Cell()
+                                    .Background(Colors.Blue.Darken3)
+                                    .Padding(11)
+                                    .Text("GRAND TOTAL - ALL CATEGORIES")
+                                    .Bold()
+                                    .FontColor(Colors.White);
+
+                                table.Cell()
+                                    .Background(Colors.Blue.Darken3)
+                                    .Padding(11)
                                     .AlignRight()
-                                    .Text("Total Tests").Bold();
+                                    .Text(grandTotal.ToString())
+                                    .Bold()
+                                    .FontColor(Colors.White);
                             });
 
-                            foreach (var item in results)
-                            {
-                                table.Cell()
-                                    .Element(ReportCell)
-                                    .Text(item.CategoryName);
-
-                                table.Cell()
-                                    .Element(ReportCell)
-                                    .AlignRight()
-                                    .Text(item.TotalTests.ToString());
-                            }
-
-                            table.Cell()
-                                .Element(ReportCell)
-                                .Text("GRAND TOTAL").Bold();
-
-                            table.Cell()
-                                .Element(ReportCell)
-                                .AlignRight()
-                                .Text(model.GrandTotal.ToString()).Bold();
+                            // EXPLANATION
+                           
                         });
 
-                        if (results.Count == 0)
+                    // =========================
+                    // FOOTER
+                    // =========================
+                    page.Footer()
+                        .PaddingTop(8)
+                        .Row(row =>
                         {
-                            column.Item().PaddingTop(15)
-                                .Text("No completed tests were found " +
-                                      "for the selected date range.");
-                        }
-                    });
+                            row.RelativeItem()
+                                .Text("HemaCore | Tests Performed Report")
+                                .FontSize(8)
+                                .FontColor(Colors.Grey.Darken1);
 
-                    page.Footer().AlignCenter().Text(text =>
-                    {
-                        text.Span("HemaCore | Management Report | ");
-                        text.Span(
-                            $"Generated {DateTime.Now:dd MMM yyyy HH:mm}");
-                    });
+                            row.ConstantItem(100)
+                                .AlignRight()
+                                .Text(text =>
+                                {
+                                    text.Span("Page ");
+                                    text.CurrentPageNumber();
+                                    text.Span(" of ");
+                                    text.TotalPages();
+                                });
+                        });
                 });
-            }).GeneratePdf();
+            });
 
-            string fileName =
-                $"TestCategoryReport_{startDate:yyyyMMdd}_" +
-                $"{model.EndDate:yyyyMMdd}.pdf";
+            // Generate and download the PDF
+            var pdfBytes = document.GeneratePdf();
 
-            return File(pdf, "application/pdf", fileName);
+            return File(
+                pdfBytes,
+                "application/pdf",
+                $"Tests_Performed_By_Category_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}.pdf");
         }
 
-        private static IContainer ReportCell(IContainer container)
-        {
-            return container
-                .BorderBottom(1)
-                .BorderColor(Colors.Grey.Lighten2)
-                .PaddingVertical(8)
-                .PaddingHorizontal(5);
-        }
+
 
 
         #endregion

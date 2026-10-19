@@ -5,5 +5,8 @@
         public string CategoryName { get; set; } = string.Empty;
 
         public int TotalTests { get; set; }
+
+        public List<TestTypeReportItem> TestTypes { get; set; }
+            = new();
     }
 }
