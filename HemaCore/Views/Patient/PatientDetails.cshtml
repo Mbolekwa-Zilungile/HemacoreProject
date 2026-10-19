@@ -15,8 +15,154 @@
     var medications =
         ViewBag.Medications as List<HemaCore.Models.PatientMedication>
         ?? new();
+
+    var fullName = string.Join(" ",
+        new[] { Model.Name, Model.Surname }
+            .Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    var addressLine = string.Join(", ",
+        new[]
+        {
+            Model.StreetAddress,
+            Model.Suburb,
+            Model.City,
+            Model.Province,
+            Model.PostalCode
+        }
+        .Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    var safeFileName =
+        (string.IsNullOrWhiteSpace(fullName)
+            ? "patient"
+            : fullName.Trim().Replace(" ", "-").ToLowerInvariant());
 }
 
+<style>
+    /* ----- Read-only detail styling ----- */
+    .detail-label {
+        font-size: .72rem;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: #718096;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        font-size: .95rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-top: .25rem;
+        overflow-wrap: anywhere;
+    }
+
+    .detail-empty {
+        color: #a0aec0;
+        font-weight: 400;
+        font-style: italic;
+    }
+
+    .section-heading {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: .75rem;
+    }
+
+    .detail-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .45rem .75rem;
+        border-radius: 10px;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+        .detail-badge.condition {
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+
+        .detail-badge.allergy {
+            background: #fff5f5;
+            color: #c53030;
+        }
+
+        .detail-badge.medication {
+            background: #f0fff4;
+            color: #276749;
+        }
+
+    .download-bar {
+        display: flex;
+        gap: .75rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+    }
+
+    /* PDF generation: keep the printable card visually clean */
+    #printableDetails {
+        background: #fff;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    /* ----- Print styles: hide chrome, show only the details card ----- */
+    @@media print {
+        body * {
+            visibility: hidden !important;
+        }
+
+        #printableDetails,
+        #printableDetails * {
+            visibility: visible !important;
+        }
+
+        #printableDetails {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 1rem;
+            background: #fff !important;
+            color: #000 !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+            #printableDetails .btn,
+            .download-bar,
+            .section-title,
+            .alert,
+            .app-sidebar,
+            .app-topbar,
+            nav,
+            header,
+            footer {
+                display: none !important;
+            }
+
+            #printableDetails h5,
+            #printableDetails h6 {
+                color: #000 !important;
+            }
+
+            #printableDetails hr {
+                border-color: #ccc !important;
+            }
+
+        .detail-badge {
+            border: 1px solid #999 !important;
+            background: #f5f5f5 !important;
+            color: #000 !important;
+        }
+
+        @@page {
+            margin: 15mm;
+        }
+    }
+</style>
 
 <div class="container-fluid p-4">
 
@@ -24,409 +170,454 @@
 
         <!-- HEADER -->
         <div class="section-title d-flex align-items-center mb-2">
-
             <i class="fas fa-id-card me-2"></i>
-
             <span>My Details</span>
-
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
             <p class="text-muted mb-0">
                 Your personal information and medical history on record.
             </p>
 
-            <a asp-action="EditProfile"
-               class="btn btn-primary-custom">
+            <div class="download-bar">
 
-                <i class="fas fa-edit me-2"></i>
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        id="btnDownloadPdf"
+                        onclick="downloadAsPdf()"
+                        title="Download a PDF copy of your details">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    <span id="btnDownloadPdfText">Download PDF</span>
+                </button>
 
-                Edit Profile
+                <button type="button"
+                        class="btn btn-primary-custom"
+                        onclick="window.print()"
+                        title="Print this page">
+                    <i class="fas fa-print me-2"></i>
+                    Print
+                </button>
 
-            </a>
+                <a asp-action="EditProfile"
+                   class="btn btn-secondary">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Profile
+                </a>
+
+            </div>
 
         </div>
 
+        <div class="alert alert-light border d-flex align-items-center gap-2 mb-4" role="note">
+            <i class="fas fa-lock text-muted"></i>
+            <span class="small text-muted">
+                This page is view-only. To update any details, use
+                <a asp-action="EditProfile" class="fw-semibold">Edit Profile</a>.
+            </span>
+        </div>
 
         <!-- INCOMPLETE PROFILE -->
         @if (string.IsNullOrWhiteSpace(Model.Name)
             || string.IsNullOrWhiteSpace(Model.Surname))
         {
             <div class="alert alert-info">
-
                 <i class="fas fa-info-circle me-2"></i>
-
                 Your profile is incomplete.
-
-                <a asp-action="CompleteProfile"
-                   class="fw-semibold">
-
-                    Complete it now →
-
-                </a>
-
+                <a asp-action="CompleteProfile" class="fw-semibold">Complete it now →</a>
             </div>
         }
 
 
-        <!-- PERSONAL INFORMATION -->
-        <div class="mb-5">
+        <!-- ============ READ-ONLY / PRINTABLE SECTION ============ -->
+        <div id="printableDetails">
 
-            <h5 class="fw-bold mb-3">
+            <!-- Print-only title -->
+            <div class="d-none d-print-block mb-3">
+                <h4 class="mb-1">HemaCore — Patient Details</h4>
+                <div class="text-muted small">
+                    Generated: <span id="printGeneratedAt"></span>
+                </div>
+            </div>
 
-                <i class="fas fa-user-circle me-2"></i>
+            <!-- PERSONAL INFORMATION -->
+            <div class="mb-5">
+                <div class="section-heading">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Personal Information
+                </div>
+                <hr />
 
-                Personal Information
+                <div class="row g-4">
 
-            </h5>
+                    <div class="col-md-6">
+                        <div class="detail-label">First Name</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.Name)
+                                ? "—"
+                                : Model.Name)
+                        </div>
+                    </div>
 
-            <hr />
+                    <div class="col-md-6">
+                        <div class="detail-label">Last Name</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.Surname)
+                                ? "—"
+                                : Model.Surname)
+                        </div>
+                    </div>
 
+                    <div class="col-md-6">
+                        <div class="detail-label">ID Number</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.IDNumber)
+                                ? "—"
+                                : Model.IDNumber)
+                        </div>
+                    </div>
 
-            <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="detail-label">Gender</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.Gender)
+                                ? "—"
+                                : Model.Gender)
+                        </div>
+                    </div>
 
-                <!-- FIRST NAME -->
-                <div class="col-md-6">
+                    <div class="col-md-6">
+                        <div class="detail-label">Date of Birth</div>
+                        <div class="detail-value">
+                            @(Model.DateOfBirth == default
+                                ? "—"
+                                : Model.DateOfBirth.ToString("yyyy-MM-dd"))
+                        </div>
+                    </div>
 
-                    <small class="text-muted text-uppercase fw-semibold">
-                        First Name
-                    </small>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone Number</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                                ? "—"
+                                : Model.PhoneNumber)
+                        </div>
+                    </div>
 
-                    <div class="mt-1 fw-semibold">
-
-                        @(string.IsNullOrWhiteSpace(Model.Name)
-                            ? "—"
-                            : Model.Name)
-
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.User?.Email)
+                                ? "—"
+                                : Model.User!.Email)
+                        </div>
                     </div>
 
                 </div>
+            </div>
 
+            <!-- RESIDENTIAL ADDRESS -->
+            <div class="mb-5">
+                <div class="section-heading">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Residential Address
+                </div>
+                <hr />
 
-                <!-- LAST NAME -->
-                <div class="col-md-6">
+                <div class="row g-4">
 
-                    <small class="text-muted text-uppercase fw-semibold">
-                        Last Name
-                    </small>
+                    <div class="col-md-6">
+                        <div class="detail-label">Street Address</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.StreetAddress)
+                                ? "—"
+                                : Model.StreetAddress)
+                        </div>
+                    </div>
 
-                    <div class="mt-1 fw-semibold">
+                    <div class="col-md-6">
+                        <div class="detail-label">Suburb</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.Suburb)
+                                ? "—"
+                                : Model.Suburb)
+                        </div>
+                    </div>
 
-                        @(string.IsNullOrWhiteSpace(Model.Surname)
-                            ? "—"
-                            : Model.Surname)
+                    <div class="col-md-6">
+                        <div class="detail-label">City / Town</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.City)
+                                ? "—"
+                                : Model.City)
+                        </div>
+                    </div>
 
+                    <div class="col-md-6">
+                        <div class="detail-label">Province</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.Province)
+                                ? "—"
+                                : Model.Province)
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-label">Postal Code</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(Model.PostalCode)
+                                ? "—"
+                                : Model.PostalCode)
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="detail-label">Full Address (single line)</div>
+                        <div class="detail-value">
+                            @(string.IsNullOrWhiteSpace(addressLine)
+                                ? "—"
+                                : addressLine)
+                        </div>
                     </div>
 
                 </div>
+            </div>
 
+            <!-- CONDITIONS -->
+            <div class="mb-5">
+                <div class="section-heading">
+                    <i class="fas fa-notes-medical me-2"></i>
+                    Medical Conditions
+                    <span class="badge bg-primary ms-2">@conditions.Count</span>
+                </div>
+                <hr />
 
-                <!-- ID -->
-                <div class="col-md-6">
-
-                    <small class="text-muted text-uppercase fw-semibold">
-                        ID Number
-                    </small>
-
-                    <div class="mt-1 fw-semibold">
-
-                        @(string.IsNullOrWhiteSpace(Model.IDNumber)
-                            ? "—"
-                            : Model.IDNumber)
-
+                @if (conditions.Any())
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var pc in conditions)
+                        {
+                            <span class="detail-badge condition">
+                                <i class="fas fa-notes-medical"></i>
+                                @pc.Condition?.Name
+                            </span>
+                        }
                     </div>
-
-                </div>
-
-
-                <!-- GENDER -->
-                <div class="col-md-6">
-
-                    <small class="text-muted text-uppercase fw-semibold">
-                        Gender
-                    </small>
-
-                    <div class="mt-1 fw-semibold">
-
-                        @(string.IsNullOrWhiteSpace(Model.Gender)
-                            ? "—"
-                            : Model.Gender)
-
+                }
+                else
+                {
+                    <div class="text-muted detail-empty">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No conditions recorded.
                     </div>
+                }
+            </div>
 
+            <!-- ALLERGIES -->
+            <div class="mb-5">
+                <div class="section-heading">
+                    <i class="fas fa-allergies me-2"></i>
+                    Allergies
+                    <span class="badge bg-danger ms-2">@allergies.Count</span>
                 </div>
+                <hr />
 
-
-                <!-- DOB -->
-                <div class="col-md-6">
-
-                    <small class="text-muted text-uppercase fw-semibold">
-                        Date of Birth
-                    </small>
-
-                    <div class="mt-1 fw-semibold">
-
-                        @(Model.DateOfBirth == default
-                            ? "—"
-                            : Model.DateOfBirth.ToString("yyyy-MM-dd"))
-
+                @if (allergies.Any())
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var pa in allergies)
+                        {
+                            <span class="detail-badge allergy">
+                                <i class="fas fa-allergies"></i>
+                                @pa.Allergy?.Name
+                            </span>
+                        }
                     </div>
-
-                </div>
-
-
-                <!-- PHONE -->
-                <div class="col-md-6">
-
-                    <small class="text-muted text-uppercase fw-semibold">
-                        Phone Number
-                    </small>
-
-                    <div class="mt-1 fw-semibold">
-
-                        @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
-                            ? "—"
-                            : Model.PhoneNumber)
-
+                }
+                else
+                {
+                    <div class="text-muted detail-empty">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No allergies recorded.
                     </div>
+                }
+            </div>
 
+            <!-- MEDICATIONS -->
+            <div class="mb-4">
+                <div class="section-heading">
+                    <i class="fas fa-pills me-2"></i>
+                    Current Medications
+                    <span class="badge bg-success ms-2">@medications.Count</span>
                 </div>
+                <hr />
 
-
-                <!-- ADDRESS -->
-                <div class="col-12">
-                    <h5 class="fw-bold mb-3">Residential Address</h5>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="StreetAddress" class="form-label fw-semibold">
-                        Street Address
-                    </label>
-                    <input asp-for="StreetAddress"
-                           class="form-control"
-                           placeholder="Enter your street address" />
-                    <span asp-validation-for="StreetAddress" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Suburb" class="form-label fw-semibold">
-                        Suburb
-                    </label>
-                    <input asp-for="Suburb"
-                           class="form-control"
-                           placeholder="Enter your suburb" />
-                    <span asp-validation-for="Suburb" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="City" class="form-label fw-semibold">
-                        City
-                    </label>
-                    <input asp-for="City"
-                           class="form-control"
-                           placeholder="Enter your city" />
-                    <span asp-validation-for="City" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Province" class="form-label fw-semibold">
-                        Province
-                    </label>
-                    <select asp-for="Province" class="form-select">
-                        <option value="">-- Select Province --</option>
-                        <option value="Eastern Cape">Eastern Cape</option>
-                        <option value="Free State">Free State</option>
-                        <option value="Gauteng">Gauteng</option>
-                        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                        <option value="Limpopo">Limpopo</option>
-                        <option value="Mpumalanga">Mpumalanga</option>
-                        <option value="Northern Cape">Northern Cape</option>
-                        <option value="North West">North West</option>
-                        <option value="Western Cape">Western Cape</option>
-                    </select>
-                    <span asp-validation-for="Province" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="PostalCode" class="form-label fw-semibold">
-                        Postal Code
-                    </label>
-                    <input asp-for="PostalCode"
-                           class="form-control"
-                           placeholder="Enter 4-digit postal code"
-                           maxlength="4" />
-                    <span asp-validation-for="PostalCode" class="text-danger"></span>
-                </div>
-
-                  
-
-                <!-- EMAIL -->
-                <div class="col-md-6">
-
-                    <small class="text-muted text-uppercase fw-semibold">
-                        Email
-                    </small>
-
-                    <div class="mt-1 fw-semibold">
-
-                        @(Model.User?.Email ?? "—")
-
+                @if (medications.Any())
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var pm in medications)
+                        {
+                            <span class="detail-badge medication">
+                                <i class="fas fa-pills"></i>
+                                @pm.Medication?.Name
+                            </span>
+                        }
                     </div>
+                }
+                else
+                {
+                    <div class="text-muted detail-empty">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No medications recorded.
+                    </div>
+                }
+            </div>
 
-                </div>
-
+            <!-- Print-only footer -->
+            <div class="d-none d-print-block mt-4 text-muted small">
+                This document is a snapshot of your details on record at HemaCore.
+                For the most current information, log in to your HemaCore account.
             </div>
 
         </div>
-
-
-        <!-- CONDITIONS -->
-        <div class="mb-5">
-
-            <h5 class="fw-bold mb-3">
-
-                <i class="fas fa-notes-medical me-2"></i>
-
-                Medical Conditions
-
-                <span class="badge bg-primary ms-2">
-                    @conditions.Count
-                </span>
-
-            </h5>
-
-            <hr />
-
-
-            @if (conditions.Any())
-            {
-                <div class="d-flex flex-wrap gap-2">
-
-                    @foreach (var pc in conditions)
-                    {
-                        <span class="badge bg-primary p-2">
-
-                            <i class="fas fa-notes-medical me-1"></i>
-
-                            @pc.Condition?.Name
-
-                        </span>
-                    }
-
-                </div>
-            }
-            else
-            {
-                <div class="text-muted">
-
-                    <i class="fas fa-info-circle me-2"></i>
-
-                    No conditions recorded.
-
-                </div>
-            }
-
-        </div>
-
-
-        <!-- ALLERGIES -->
-        <div class="mb-5">
-
-            <h5 class="fw-bold mb-3">
-
-                <i class="fas fa-allergies me-2"></i>
-
-                Allergies
-
-                <span class="badge bg-danger ms-2">
-                    @allergies.Count
-                </span>
-
-            </h5>
-
-            <hr />
-
-
-            @if (allergies.Any())
-            {
-                <div class="d-flex flex-wrap gap-2">
-
-                    @foreach (var pa in allergies)
-                    {
-                        <span class="badge bg-danger p-2">
-
-                            <i class="fas fa-allergies me-1"></i>
-
-                            @pa.Allergy?.Name
-
-                        </span>
-                    }
-
-                </div>
-            }
-            else
-            {
-                <div class="text-muted">
-
-                    <i class="fas fa-info-circle me-2"></i>
-
-                    No allergies recorded.
-
-                </div>
-            }
-
-        </div>
-
-
-        <!-- MEDICATIONS -->
-        <div class="mb-4">
-
-            <h5 class="fw-bold mb-3">
-
-                <i class="fas fa-pills me-2"></i>
-
-                Current Medications
-
-                <span class="badge bg-success ms-2">
-                    @medications.Count
-                </span>
-
-            </h5>
-
-            <hr />
-
-
-            @if (medications.Any())
-            {
-                <div class="d-flex flex-wrap gap-2">
-
-                    @foreach (var pm in medications)
-                    {
-                        <span class="badge bg-success p-2">
-
-                            <i class="fas fa-pills me-1"></i>
-
-                            @pm.Medication?.Name
-
-                        </span>
-                    }
-
-                </div>
-            }
-            else
-            {
-                <div class="text-muted">
-
-                    <i class="fas fa-info-circle me-2"></i>
-
-                    No medications recorded.
-
-                </div>
-            }
-
-        </div>
+        <!-- ============ /READ-ONLY SECTION ============ -->
 
     </div>
 
 </div>
+
+
+<!-- PDF generation libraries (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    // ------------------------------------------------------------------
+    // 1) Populate the print timestamp
+    // ------------------------------------------------------------------
+    (function () {
+    var el = document.getElementById("printGeneratedAt");
+    if (el) {
+    var now = new Date();
+    el.textContent =
+    now.toLocaleDateString(undefined, {
+    year: "numeric", month: "long", day: "numeric"
+    }) +
+    " " +
+    now.toLocaleTimeString(undefined, {
+    hour: "2-digit", minute: "2-digit"
+    });
+    }
+    })();
+
+    // ------------------------------------------------------------------
+    // 2) Download PDF (uses html2canvas + jsPDF)
+    // ------------------------------------------------------------------
+    async function downloadAsPdf() {
+    var btn = document.getElementById("btnDownloadPdf");
+    var btnText = document.getElementById("btnDownloadPdfText");
+    var original = btnText ? btnText.textContent : "Download PDF";
+
+    // Sanity check the libs loaded
+    if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+    alert("The PDF library could not be loaded. Please check your internet connection and try again.");
+    return;
+    }
+
+    try {
+    if (btn) { btn.disabled = true; }
+    if (btnText) { btnText.textContent = "Preparing…"; }
+
+    var source = document.getElementById("printableDetails");
+    if (!source) { throw new Error("Nothing to export."); }
+
+    // Temporarily make the section visible / unstyled for capture,
+    // in case the print CSS kicks in (it shouldn't, but be safe).
+    var prevDisplay = source.style.display;
+    source.style.display = "block";
+
+    // Render the card to a canvas at a good resolution
+    var canvas = await html2canvas(source, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    windowWidth: source.scrollWidth
+    });
+
+    source.style.display = prevDisplay;
+
+    var imgData = canvas.toDataURL("image/png");
+    var jsPDF = window.jspdf.jsPDF;
+
+    // A4 portrait in millimetres
+    var pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    var pageWidth = pdf.internal.pageSize.getWidth();   // 210
+    var pageHeight = pdf.internal.pageSize.getHeight(); // 297
+    var margin = 10;
+    var usableWidth = pageWidth - margin * 2;
+
+    // Convert the canvas image to the printable width
+    var imgProps = pdf.getImageProperties(imgData);
+    var imgWidth = usableWidth;
+    var imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    // Multi-page handling
+    var remainingHeight = imgHeight;
+    var position = 0;
+
+    while (remainingHeight > 0) {
+    var sliceHeight = Math.min(remainingHeight, pageHeight - margin * 2);
+
+    // We use addImage with a negative y offset to "scroll" the slice up
+    pdf.addImage(
+    imgData,
+    "PNG",
+    margin,
+    margin - position,
+    imgWidth,
+    imgHeight
+    );
+
+    remainingHeight -= sliceHeight;
+    position += sliceHeight;
+
+    if (remainingHeight > 0) {
+    pdf.addPage();
+    }
+    }
+
+    // Footer with a generation stamp on each page
+    var totalPages = pdf.internal.getNumberOfPages();
+    var stamp = new Date().toLocaleString();
+    for (var i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setFontSize(8);
+    pdf.setTextColor(120);
+    pdf.text(
+    "HemaCore — Patient Details   •   Generated " + stamp +
+    "   •   Page " + i + " of " + totalPages,
+    margin,
+    pageHeight - 5
+    );
+    }
+
+    // Filename
+    var fileName =
+    "hemacore-details-" +
+    @Html.Raw(Json.Serialize(safeFileName)) +
+    "-" +
+    new Date().toISOString().slice(0, 10) +
+    ".pdf";
+
+    pdf.save(fileName);
+
+    } catch (err) {
+    console.error("PDF generation failed:", err);
+    alert("Sorry, the PDF could not be generated. Please try again or use the Print option instead.");
+    } finally {
+    if (btn) { btn.disabled = false; }
+    if (btnText) { btnText.textContent = original; }
+    }
+    }
+</script>

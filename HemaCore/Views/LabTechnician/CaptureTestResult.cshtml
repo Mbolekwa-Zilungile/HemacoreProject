@@ -1,13 +1,17 @@
 ﻿@model HemaCore.Models.TestRequestItem
 
+@using HemaCore.Models
+
 @{
     ViewData["Title"] = "Capture Test Result";
     Layout = "_LabTechnicianLayout";
 
+    // Strongly-typed casts: wrong property names now fail at compile time
+    // instead of throwing RuntimeBinderException in the browser.
     var patient = ViewBag.Patient;
-    var conditions = ViewBag.PatientConditions;
-    var allergies = ViewBag.PatientAllergies;
-    var medications = ViewBag.PatientMedications;
+    var conditions = ViewBag.PatientConditions as IEnumerable<PatientCondition>;
+    var allergies = ViewBag.PatientAllergies as IEnumerable<PatientAllergy>;
+    var medications = ViewBag.PatientMedications as IEnumerable<PatientMedication>;
 }
 
 <style>
@@ -404,21 +408,23 @@
 
             <div class="medical-history-grid">
 
+                <!-- ================================ -->
+                <!-- MEDICATIONS                       -->
+                <!-- Medication.Name (not MedicationName) -->
+                <!-- ================================ -->
                 <div class="medical-history-item">
                     <h6>
                         <i class="fas fa-pills"></i>
                         Medications
                     </h6>
 
-                    @if (medications != null &&
-                         System.Linq.Enumerable.Cast<object>(
-                             (System.Collections.IEnumerable)medications).Any())
+                    @if (medications != null && medications.Any())
                     {
                         <ul>
                             @foreach (var item in medications)
                             {
                                 <li>
-                                    @(item.Medication?.MedicationName
+                                    @(item.Medication?.Name
                                         ?? "Medication details unavailable")
                                 </li>
                             }
@@ -430,21 +436,23 @@
                     }
                 </div>
 
+                <!-- ================================ -->
+                <!-- ALLERGIES                         -->
+                <!-- Allergy.Name (not AllergyName)   -->
+                <!-- ================================ -->
                 <div class="medical-history-item">
                     <h6>
                         <i class="fas fa-allergies"></i>
                         Allergies
                     </h6>
 
-                    @if (allergies != null &&
-                         System.Linq.Enumerable.Cast<object>(
-                             (System.Collections.IEnumerable)allergies).Any())
+                    @if (allergies != null && allergies.Any())
                     {
                         <ul>
                             @foreach (var item in allergies)
                             {
                                 <li>
-                                    @(item.Allergy?.AllergyName
+                                    @(item.Allergy?.Name
                                         ?? "Allergy details unavailable")
                                 </li>
                             }
@@ -456,21 +464,23 @@
                     }
                 </div>
 
+                <!-- ================================ -->
+                <!-- CONDITIONS                        -->
+                <!-- Condition.Name (not ConditionName) -->
+                <!-- ================================ -->
                 <div class="medical-history-item">
                     <h6>
                         <i class="fas fa-notes-medical"></i>
                         Medical Conditions
                     </h6>
 
-                    @if (conditions != null &&
-                         System.Linq.Enumerable.Cast<object>(
-                             (System.Collections.IEnumerable)conditions).Any())
+                    @if (conditions != null && conditions.Any())
                     {
                         <ul>
                             @foreach (var item in conditions)
                             {
                                 <li>
-                                    @(item.Condition?.ConditionName
+                                    @(item.Condition?.Name
                                         ?? "Condition details unavailable")
                                 </li>
                             }
@@ -619,13 +629,13 @@
             <div class="modal-content border-0 shadow">
 
                 <div class="modal-header @(TempData["ResultSuccess"] != null
-                                        ? "bg-success text-white"
-                                        : "bg-danger text-white")">
+                                                             ? "bg-success text-white"
+                                                             : "bg-danger text-white")">
 
                     <h5 class="modal-title" id="resultMessageTitle">
                         <i class="fas @(TempData["ResultSuccess"] != null
-                                                    ? "fa-check-circle"
-                                                    : "fa-exclamation-circle") me-2"></i>
+                                                                               ? "fa-check-circle"
+                                                                               : "fa-exclamation-circle") me-2"></i>
 
                         @(TempData["ResultSuccess"] != null
                             ? "Success"

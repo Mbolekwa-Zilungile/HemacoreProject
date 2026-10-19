@@ -1,5 +1,4 @@
-﻿
-@model HemaCore.ViewModels.RegisterViewModel
+﻿@model HemaCore.ViewModels.RegisterViewModel
 
 @{
     Layout = null;
@@ -39,7 +38,7 @@
                 padding: 20px;
             }
 
-            /* Gender select */
+            /* Generic select styling inside .input-wrapper */
 
             .input-wrapper select {
                 width: 100%;
@@ -107,6 +106,24 @@
                 color: #dc3545;
             }
 
+            /* Small helper note under City / Suburb / Postal */
+
+            .city-help {
+                display: block;
+                margin-top: 5px;
+                margin-left: 5px;
+                font-size: 11px;
+                color: #777;
+            }
+
+            /* Ensure the suggestion dropdowns sit above the glass card */
+
+            .sa-city-dropdown,
+            .sa-suburb-dropdown {
+                z-index: 1050 !important;
+                font-family: 'Poppins', sans-serif;
+            }
+
     </style>
 
 </head>
@@ -139,7 +156,8 @@
 
                 <form asp-controller="Account"
                       asp-action="Register"
-                      method="post">
+                      method="post"
+                      id="registerForm">
 
                     @Html.AntiForgeryToken()
 
@@ -308,7 +326,6 @@
                     </div>
 
 
-                    <!-- ADDRESS -->
                     <!-- STREET ADDRESS -->
                     <div class="form-group">
                         <label>
@@ -328,44 +345,6 @@
                               class="text-danger"></span>
                     </div>
 
-                    <!-- SUBURB -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-map-marker-alt"></i>
-                            Suburb
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-map-marker-alt input-icon"></i>
-                            <input asp-for="Suburb"
-                                   placeholder="e.g. Summerstrand"
-                                   maxlength="100"
-                                   autocomplete="address-level3" />
-                        </div>
-
-                        <span asp-validation-for="Suburb"
-                              class="text-danger"></span>
-                    </div>
-
-                    <!-- CITY -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-city"></i>
-                            City / Town
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-city input-icon"></i>
-                            <input asp-for="City"
-                                   placeholder="e.g. Gqeberha"
-                                   maxlength="100"
-                                   autocomplete="address-level2" />
-                        </div>
-
-                        <span asp-validation-for="City"
-                              class="text-danger"></span>
-                    </div>
-
                     <!-- PROVINCE -->
                     <div class="form-group">
                         <label>
@@ -377,6 +356,7 @@
                             <i class="fas fa-map input-icon"></i>
 
                             <select asp-for="Province"
+                                    id="provinceInput"
                                     autocomplete="address-level1">
                                 <option value="">Select your province</option>
                                 <option value="Eastern Cape">Eastern Cape</option>
@@ -395,6 +375,55 @@
                               class="text-danger"></span>
                     </div>
 
+                    <!-- CITY -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-city"></i>
+                            City / Town
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-city input-icon"></i>
+                            <input asp-for="City"
+                                   id="cityInput"
+                                   placeholder="Type or select a city"
+                                   maxlength="100"
+                                   autocomplete="off" />
+                        </div>
+
+                        <span asp-validation-for="City"
+                              class="text-danger"></span>
+
+                        <small class="city-help">
+                            Start typing to see suggestions; selecting one fills the postal code.
+                            You can also type any city manually.
+                        </small>
+                    </div>
+
+                    <!-- SUBURB -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Suburb
+                        </label>
+
+                        <div class="input-wrapper">
+                            <i class="fas fa-map-marker-alt input-icon"></i>
+                            <input asp-for="Suburb"
+                                   id="suburbInput"
+                                   placeholder="Type or select a suburb"
+                                   maxlength="100"
+                                   autocomplete="off" />
+                        </div>
+
+                        <span asp-validation-for="Suburb"
+                              class="text-danger"></span>
+
+                        <small class="city-help">
+                            Start typing to see suburbs. Selecting one fills city and postal code.
+                        </small>
+                    </div>
+
                     <!-- POSTAL CODE -->
                     <div class="form-group">
                         <label>
@@ -405,6 +434,7 @@
                         <div class="input-wrapper">
                             <i class="fas fa-mail-bulk input-icon"></i>
                             <input asp-for="PostalCode"
+                                   id="postalInput"
                                    placeholder="e.g. 6001"
                                    maxlength="4"
                                    inputmode="numeric"
@@ -413,8 +443,11 @@
 
                         <span asp-validation-for="PostalCode"
                               class="text-danger"></span>
-                    </div>
 
+                        <small class="city-help">
+                            Auto-filled when you pick a city — you can still edit it.
+                        </small>
+                    </div>
 
 
                     <!-- EMAIL -->
@@ -522,262 +555,174 @@
     </div>
 
 
+    <!-- Shared SA cities + postal codes + suburb helper -->
+    <script src="~/js/sa-cities.js"></script>
+
     <script>
 
-            // ==========================================
-            // PASSWORD VISIBILITY
-            // ==========================================
+        // ==========================================
+        // PASSWORD VISIBILITY
+        // ==========================================
 
-            function togglePassword() {
+        function togglePassword() {
 
-                const passwordInput =
-                    document.getElementById('password');
+        const passwordInput =
+        document.getElementById('password');
 
-                const toggleIcon =
-                    document.querySelector('.toggle-password');
+        const toggleIcon =
+        document.querySelector('.toggle-password');
 
-                if (passwordInput.type === 'password') {
+        if (passwordInput.type === 'password') {
 
-                    passwordInput.type = 'text';
+        passwordInput.type = 'text';
 
-                    toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.remove('fa-eye');
 
-                    toggleIcon.classList.add('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye-slash');
 
-                }
-                else {
+        }
+        else {
 
-                    passwordInput.type = 'password';
+        passwordInput.type = 'password';
 
-                    toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.remove('fa-eye-slash');
 
-                    toggleIcon.classList.add('fa-eye');
+        toggleIcon.classList.add('fa-eye');
 
-                }
+        }
 
-            }
+        }
 
 
-            // ==========================================
-            // ID NUMBER -> DATE OF BIRTH
-            // ==========================================
+        // ==========================================
+        // SA CITY + SUBURB AUTOCOMPLETE
+        // ==========================================
 
-            const idNumberInput =
-                document.getElementById('IDNumber');
+        document.addEventListener('DOMContentLoaded', function () {
 
-            const dateOfBirthInput =
-                document.getElementById('DateOfBirth');
+        if (typeof window.attachCityDropdown === 'function') {
+        window.attachCityDropdown('cityInput', 'postalInput', 'provinceInput');
+        }
 
-            const idError =
-                document.getElementById('idError');
+        if (typeof window.attachSuburbDropdown === 'function') {
+        window.attachSuburbDropdown('suburbInput', 'cityInput', 'postalInput', 'provinceInput');
+        }
 
+        });
 
-            idNumberInput.addEventListener('input', function () {
 
-                // Only allow numbers
+        // ==========================================
+        // ID NUMBER -> DATE OF BIRTH
+        // ==========================================
 
-                this.value = this.value.replace(/\D/g, '');
+        const idNumberInput =
+        document.getElementById('IDNumber');
 
+        const dateOfBirthInput =
+        document.getElementById('DateOfBirth');
 
-                const idNumber = this.value;
+        const idError =
+        document.getElementById('idError');
 
 
-                // Clear DOB while ID is incomplete
+        idNumberInput.addEventListener('input', function () {
 
-                if (idNumber.length < 6) {
+        this.value = this.value.replace(/\D/g, '');
 
-                    dateOfBirthInput.value = '';
+        const idNumber = this.value;
 
-                    idError.style.display = 'none';
+        if (idNumber.length < 6) {
+        dateOfBirthInput.value = '';
+        idError.style.display = 'none';
+        return;
+        }
 
-                    return;
+        const yearPart = idNumber.substring(0, 2);
+        const monthPart = idNumber.substring(2, 4);
+        const dayPart = idNumber.substring(4, 6);
 
-                }
+        const yearNumber = parseInt(yearPart);
+        const monthNumber = parseInt(monthPart);
+        const dayNumber = parseInt(dayPart);
 
+        if (monthNumber < 1 || monthNumber > 12) {
+        dateOfBirthInput.value = '';
+        idError.textContent = 'Invalid month in ID number.';
+        idError.style.display = 'block';
+        return;
+        }
 
-                // We need at least the first 6 digits:
-                // YYMMDD
+        if (dayNumber < 1 || dayNumber > 31) {
+        dateOfBirthInput.value = '';
+        idError.textContent = 'Invalid day in ID number.';
+        idError.style.display = 'block';
+        return;
+        }
 
-                const yearPart =
-                    idNumber.substring(0, 2);
-
-                const monthPart =
-                    idNumber.substring(2, 4);
-
-                const dayPart =
-                    idNumber.substring(4, 6);
-
-
-                const yearNumber =
-                    parseInt(yearPart);
-
-                const monthNumber =
-                    parseInt(monthPart);
-
-                const dayNumber =
-                    parseInt(dayPart);
-
-
-                // Validate month
-
-                if (monthNumber < 1 || monthNumber > 12) {
-
-                    dateOfBirthInput.value = '';
-
-                    idError.textContent =
-                        'Invalid month in ID number.';
-
-                    idError.style.display = 'block';
-
-                    return;
-
-                }
-
-
-                // Validate day
-
-                if (dayNumber < 1 || dayNumber > 31) {
-
-                    dateOfBirthInput.value = '';
-
-                    idError.textContent =
-                        'Invalid day in ID number.';
-
-                    idError.style.display = 'block';
-
-                    return;
-
-                }
-
-
-                // Determine the century.
-                //
-                // If the YY is greater than the current
-                // year's last two digits, it is treated
-                // as 19YY.
-                //
-                // Otherwise it is treated as 20YY.
-
-                const currentYear =
-                    new Date().getFullYear();
-
-                const currentYearShort =
-                    currentYear % 100;
-
-
-                let fullYear;
-
-
-                if (yearNumber > currentYearShort) {
-
-                    fullYear = 1900 + yearNumber;
-
-                }
-                else {
-
-                    fullYear = 2000 + yearNumber;
-
-                }
-
-
-                // Create the date
-
-                const date =
-                    new Date(
-                        fullYear,
-                        monthNumber - 1,
-                        dayNumber
-                    );
-
-
-                // Make sure JavaScript didn't roll
-                // an invalid date into another date.
-
-                if (
-                    date.getFullYear() !== fullYear ||
-                    date.getMonth() !== monthNumber - 1 ||
-                    date.getDate() !== dayNumber
-                ) {
-
-                    dateOfBirthInput.value = '';
-
-                    idError.textContent =
-                        'The date in the ID number is invalid.';
-
-                    idError.style.display = 'block';
-
-                    return;
-
-                }
-
-
-                // Format as YYYY-MM-DD
-
-                const formattedDate =
-                    fullYear +
-                    '-' +
-                    String(monthNumber).padStart(2, '0') +
-                    '-' +
-                    String(dayNumber).padStart(2, '0');
-
-
-                dateOfBirthInput.value =
-                    formattedDate;
-
-
-                idError.style.display =
-                    'none';
-
-            });
-
-
-            // ==========================================
-            // FINAL VALIDATION
-            // ==========================================
-
-            document.querySelector('form')
-                .addEventListener('submit', function (event) {
-
-                    const idNumber =
-                        idNumberInput.value;
-
-
-                    if (idNumber.length !== 13) {
-
-                        event.preventDefault();
-
-                        idError.textContent =
-                            'Please enter a valid 13-digit South African ID number.';
-
-                        idError.style.display =
-                            'block';
-
-                        idNumberInput.focus();
-
-                        return;
-
-                    }
-
-
-                    if (!dateOfBirthInput.value) {
-
-                        event.preventDefault();
-
-                        idError.textContent =
-                            'Please enter a valid South African ID number containing a valid date of birth.';
-
-                        idError.style.display =
-                            'block';
-
-                        idNumberInput.focus();
-
-                    }
-
-                });
+        const currentYear = new Date().getFullYear();
+        const currentYearShort = currentYear % 100;
+
+        let fullYear;
+
+        if (yearNumber > currentYearShort) {
+        fullYear = 1900 + yearNumber;
+        }
+        else {
+        fullYear = 2000 + yearNumber;
+        }
+
+        const date = new Date(fullYear, monthNumber - 1, dayNumber);
+
+        if (
+        date.getFullYear() !== fullYear ||
+        date.getMonth() !== monthNumber - 1 ||
+        date.getDate() !== dayNumber
+        ) {
+        dateOfBirthInput.value = '';
+        idError.textContent = 'The date in the ID number is invalid.';
+        idError.style.display = 'block';
+        return;
+        }
+
+        const formattedDate =
+        fullYear + '-' +
+        String(monthNumber).padStart(2, '0') + '-' +
+        String(dayNumber).padStart(2, '0');
+
+        dateOfBirthInput.value = formattedDate;
+        idError.style.display = 'none';
+        });
+
+
+        // ==========================================
+        // FINAL VALIDATION
+        // ==========================================
+
+        document.querySelector('form')
+        .addEventListener('submit', function (event) {
+
+        const idNumber = idNumberInput.value;
+
+        if (idNumber.length !== 13) {
+        event.preventDefault();
+        idError.textContent =
+        'Please enter a valid 13-digit South African ID number.';
+        idError.style.display = 'block';
+        idNumberInput.focus();
+        return;
+        }
+
+        if (!dateOfBirthInput.value) {
+        event.preventDefault();
+        idError.textContent =
+        'Please enter a valid South African ID number containing a valid date of birth.';
+        idError.style.display = 'block';
+        idNumberInput.focus();
+        }
+        });
 
     </script>
 
 </body>
 
 </html>
-
