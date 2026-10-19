@@ -6,11 +6,15 @@
 
     string Duration(double minutes)
     {
-        var d = TimeSpan.FromMinutes(minutes);
-        return d.TotalHours >= 1
-            ? $"{(int)d.TotalHours} h {d.Minutes} min"
-            : $"{d.Minutes} min";
+        minutes = Math.Max(0, minutes);
+        var duration = TimeSpan.FromMinutes(minutes);
+
+        return duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours} h {duration.Minutes} min"
+            : $"{duration.Minutes} min";
     }
+
+    var now = DateTime.Now;
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
@@ -19,19 +23,23 @@
 
     @if (TempData["ResultSuccess"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-3"
+             role="alert">
             <i class="fas fa-check-circle me-2"></i>
             @TempData["ResultSuccess"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-3"
+             role="alert">
             <i class="fas fa-exclamation-circle me-2"></i>
             @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
@@ -44,20 +52,19 @@
             </span>
         </div>
 
-        <a asp-action="ProcessTests" class="btn btn-sm btn-outline-primary">
+        <a asp-action="ProcessTests"
+           class="btn btn-sm btn-outline-primary">
             <i class="fas fa-plus me-1"></i>
             Find more tests
         </a>
     </div>
 
     <p class="text-muted mb-3">
-        These are the tests you have chosen to perform. Start a test when you are
-        ready, or continue one you have already started.
+        Monitor your assigned tests, turnaround deadlines and processing status.
     </p>
 
     <div class="table-responsive">
         <table class="modern-table">
-
             <thead>
                 <tr>
                     <th>Request Number</th>
@@ -66,6 +73,8 @@
                     <th>Category</th>
                     <th>Urgency</th>
                     <th>Turnaround</th>
+                    <th>Expected Completion</th>
+                    <th>Time Remaining</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -75,13 +84,16 @@
                 @if (Model == null || !Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="10" class="text-center text-muted py-4">
                             <i class="fas fa-list-check fa-2x mb-2"></i>
+
                             <div class="fw-semibold">
                                 You have not added any tests yet.
                             </div>
+
                             <small>
-                                Go to Select &amp; Process Tests, view a test's details and add it to My Tests.
+                                Go to Select &amp; Process Tests to find
+                                an available test.
                             </small>
                         </td>
                     </tr>
@@ -90,6 +102,33 @@
                 {
                     @foreach (var test in Model)
                     {
+                        var isInProgress = test.Status == "InProgress";
+                        var isUnderReview = test.Status == "To Be Reviewed";
+
+                        DateTime? deadline = null;
+
+                        if (test.StartDateTime.HasValue &&
+                            test.TestType != null)
+                        {
+                            deadline = test.StartDateTime.Value.AddMinutes(
+                                test.TestType.TurnAroundTime);
+                        }
+
+                        var remaining = deadline.HasValue
+                            ? (deadline.Value - now).TotalMinutes
+                            : (double?)null;
+
+                        var isOverdue = isInProgress &&
+                            remaining.HasValue &&
+                            remaining.Value < 0 &&
+                            !test.CompletionDateTime.HasValue;
+
+                        var isDueSoon = isInProgress &&
+                            remaining.HasValue &&
+                            remaining.Value >= 0 &&
+                            remaining.Value <= 60 &&
+                            !test.CompletionDateTime.HasValue;
+
                         <tr>
                             <td class="fw-semibold blue-text">
                                 #@test.TestRequestId
@@ -100,58 +139,143 @@
                                 @test.TestRequest?.Patient?.Surname
                             </td>
 
-                            <td>@test.TestType?.TestTypeName</td>
+                            <td>
+                                @test.TestType?.TestTypeName
+                            </td>
 
-                            <td>@test.TestType?.Category?.CategoryName</td>
+                            <td>
+                                @test.TestType?.Category?.CategoryName
+                            </td>
 
-                            <td>@test.TestRequest?.Urgency</td>
+                            <td>
+                                @test.TestRequest?.Urgency
+                            </td>
 
                             <td>
                                 @if (test.TestType != null)
                                 {
                                     @Duration(test.TestType.TurnAroundTime)
                                 }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
                             </td>
 
                             <td>
-                                @if (test.Status == "InProgress")
+                                @if (deadline.HasValue)
                                 {
-                                    <span class="badge bg-primary">In Progress</span>
+                                    <div class="fw-semibold">
+                                        @deadline.Value.ToString("dd MMM yyyy")
+                                    </div>
+
+                                    <small class="text-muted">
+                                        @deadline.Value.ToString("HH:mm")
+                                    </small>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark">Not started</span>
+                                    <span class="text-muted">
+                                        Start time unavailable
+                                    </span>
                                 }
                             </td>
 
                             <td>
-                                @if (test.Status == "InProgress")
+                                @if (isOverdue)
+                                {
+                                    <span class="text-danger fw-semibold">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        @Duration(Math.Abs(remaining!.Value)) overdue
+                                    </span>
+                                }
+                                else if (isDueSoon)
+                                {
+                                    <span class="text-warning fw-semibold">
+                                        <i class="fas fa-clock me-1"></i>
+                                        @Duration(remaining!.Value) left
+                                    </span>
+                                }
+                                else if (isInProgress && remaining.HasValue)
+                                {
+                                    <span class="text-success">
+                                        @Duration(remaining.Value) left
+                                    </span>
+                                }
+                                else if (isUnderReview)
+                                {
+                                    <span class="text-muted">
+                                        Review required
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (isOverdue)
+                                {
+                                    <span class="badge bg-danger">Overdue</span>
+                                }
+                                else if (isDueSoon)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        Due Soon
+                                    </span>
+                                }
+                                else if (isInProgress)
+                                {
+                                    <span class="badge bg-primary">
+                                        In Progress
+                                    </span>
+                                }
+                                else if (isUnderReview)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        To Be Reviewed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @test.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (isInProgress)
                                 {
                                     <a asp-action="CaptureTestResult"
                                        asp-route-id="@test.TestRequestTestTypeId"
                                        class="btn btn-sm btn-success">
-                                        <i class="fas fa-arrow-right me-1"></i>
-                                        Continue Test
+                                        <i class="fas fa-file-pen me-1"></i>
+                                        Capture Results
                                     </a>
                                 }
-                                else
+                                else if (isUnderReview)
                                 {
-                                    <form asp-action="StartProcessing"
-                                          asp-route-id="@test.TestRequestTestTypeId"
-                                          method="post">
-                                        <button type="submit" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-play me-1"></i>
-                                            Start Processing
-                                        </button>
-                                    </form>
+                                    <a asp-action="ReviewResults"
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Review Results
+                                    </a>
                                 }
                             </td>
                         </tr>
                     }
                 }
             </tbody>
-
         </table>
+    </div>
+
+    <div class="text-muted small mt-3">
+        <i class="fas fa-info-circle me-1"></i>
+        Deadlines are calculated from the recorded start time and the test's
+        turnaround time. Due Soon means 60 minutes or less remain.
+        Refresh this page to recalculate the displayed time.
     </div>
 
 </div>

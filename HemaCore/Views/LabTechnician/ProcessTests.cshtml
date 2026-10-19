@@ -10,22 +10,7 @@
 
 <div class="content-card">
     
-    @if (ViewBag.DebugCounts != null)
-    {
-        <div class="alert alert-info">
-            <strong>Temporary diagnostic counts</strong>
-
-            <ul class="mb-0">
-                @foreach (var item in
-                    (Dictionary<string, int>)ViewBag.DebugCounts)
-                {
-                    <li>
-                        @item.Key: @item.Value
-                    </li>
-                }
-            </ul>
-        </div>
-    }
+  
    
 
     @if (TempData["ResultSuccess"] != null)

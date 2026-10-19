@@ -1,492 +1,246 @@
-﻿
-@using Microsoft.AspNetCore.Identity
+﻿@using Microsoft.AspNetCore.Identity
 @inject UserManager<HemaCore.Models.Users> UserManager
 
 @{
     var currentUser = await UserManager.GetUserAsync(User);
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 
 <!DOCTYPE html>
-
 <html>
 <head>
-
-    <meta name="viewport" content="width=device-width" />
-
-    <title>@ViewBag.Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HemaCore</title>
 
     <link rel="stylesheet" href="~/css/Layout.css" />
-
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
-
 <body>
-
     <div class="wrapper">
 
-
-        <!-- =========================================
-             SIDEBAR
-             ========================================= -->
-
+        <!-- SIDEBAR -->
         <nav id="sidebar">
 
-
-            <!-- SIDEBAR HEADER -->
-
+            <!-- BRAND AND USER -->
             <div class="sidebar-header">
-
                 <div class="header-top">
-
                     <button id="sidebarToggle"
                             class="toggle-btn"
-                            type="button">
-
+                            type="button"
+                            aria-label="Toggle sidebar">
                         <i class="fas fa-angle-left"></i>
-
                     </button>
 
-
-                    <h3>
-                        HemaCore
-                    </h3>
-
+                    <h3>HemaCore</h3>
                 </div>
-
-
-                <!-- TECHNICIAN NAME -->
 
                 <div class="technician-name">
-
                     <i class="fas fa-user-circle"></i>
-
-                    <span>
-                        @currentUser?.FullName
-                    </span>
-
+                    <span>@(currentUser?.FullName ?? "Lab Technician")</span>
                 </div>
-
             </div>
 
-
-
-            <!-- =========================================
-                 SIDEBAR MENU
-                 ========================================= -->
-
+            <!-- NAVIGATION -->
             <ul class="list-unstyled components">
 
-
-                <!-- =====================================
-                     OVERVIEW
-                     ===================================== -->
-
-                <li class="section-label">
-                    OVERVIEW
-                </li>
-
+                <li class="section-label">OVERVIEW</li>
 
                 <!-- DASHBOARD -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="Index">
-
-                        <i class="fas fa-home"></i>
-
-                        <span class="menu-text">
-                            Dashboard
-                        </span>
-
+                <li class="@(currentAction == "Index" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="Index">
+                        <i class="fas fa-chart-pie"></i>
+                        <span class="menu-text">Dashboard</span>
                     </a>
-
                 </li>
 
-
-
-                <!-- =====================================
-                     TEST PROCESSING
-                     ===================================== -->
-
-                <li class="section-label">
-                    TEST PROCESSING
-                </li>
-
-
+                <li class="section-label">LABORATORY WORK</li>
 
                 <!-- RECEIVE SAMPLES -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReceiveSample" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="ReceiveSample">
-
-                        <i class="fas fa-vial"></i>
-
-                        <span class="menu-text">
-                            Receive Samples
-                        </span>
-
+                <li class="@(currentAction == "ReceiveSample" ||
+                                                  currentAction == "ReceiveSampleDetails"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="ReceiveSample">
+                        <i class="fas fa-inbox"></i>
+                        <span class="menu-text">Receive Samples</span>
                     </a>
-
                 </li>
 
-
-
-                <!-- PROCESS TESTS -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ProcessTests" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="ProcessTests">
-
-                        <i class="fas fa-microscope"></i>
-
-                        <span class="menu-text">
-                            Process Tests
-                        </span>
-
+                <!-- TESTS AWAITING PROCESSING -->
+                <li class="@(currentAction == "ProcessTests" ||
+                                                  currentAction == "StartProcessing"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="ProcessTests">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span class="menu-text">Tests Awaiting Processing</span>
                     </a>
-
                 </li>
 
-               
+                <!-- MY SELECTED TESTS -->
+                <li class="@(currentAction == "MyTests" ||
+                                                  currentAction == "CaptureTestResult"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="MyTests">
+                        <i class="fas fa-list-check"></i>
+                        <span class="menu-text">My Selected Tests</span>
+                    </a>
+                </li>
 
+                <!-- COMPLETED TESTS -->
+                <li class="@(currentAction == "MyCompletedTests"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="MyCompletedTests">
+                        <i class="fas fa-folder-open"></i>
+                        <span class="menu-text">My Completed Tests</span>
+                    </a>
+                </li>
 
+                <li class="section-label">RESULTS MANAGEMENT</li>
 
                 <!-- VERIFY RESULTS -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "VerifyResults" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="VerifyResults">
-
-                        <i class="fas fa-check-double"></i>
-
-                        <span class="menu-text">
-                            Verify Results
-                        </span>
-
+                <li class="@(currentAction == "VerifyResults"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="VerifyResults">
+                        <i class="fas fa-shield-halved"></i>
+                        <span class="menu-text">Verify Results</span>
                     </a>
-
                 </li>
-
-
 
                 <!-- REVIEW RESULTS -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ReviewResults" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="ReviewResults">
-
-                        <i class="fas fa-clipboard-check"></i>
-
-                        <span class="menu-text">
-                            Review Results
-                        </span>
-
+                <li class="@(currentAction == "ReviewResults"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="ReviewResults">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="menu-text">Review Results</span>
                     </a>
-
                 </li>
 
-
-
-                <!-- MY COMPLETED TESTS -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MyCompletedTests" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="MyCompletedTests">
-
-                        <i class="fas fa-check-circle"></i>
-
-                        <span class="menu-text">
-                            My Completed Tests
-                        </span>
-
-                    </a>
-
-                </li>
-
-
-                
-                <!-- MY ACCOUNT -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "TechnicianProfile" ||
-                                 ViewContext.RouteData.Values["action"]?.ToString() == "EditProfile" ||
-                                 ViewContext.RouteData.Values["action"]?.ToString() == "ChangePassword"
-                                 ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="TechnicianProfile">
-
-                        <i class="fas fa-user-circle"></i>
-
-                        <span class="menu-text">
-                            My Account
-                        </span>
-
-                    </a>
-
-                </li>
-                
-                <!-- =====================================
-                     REPORTING
-                     ===================================== -->
-
-                <li class="section-label">
-                    REPORTING
-                </li>
-
-
+                <li class="section-label">REPORTING</li>
 
                 <!-- REPORTS -->
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="Reports">
-
-                        <i class="fas fa-chart-bar"></i>
-
-                        <span class="menu-text">
-                            Reports
-                        </span>
-
+                <li class="@(currentAction == "Reports" ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="Reports">
+                        <i class="fas fa-chart-column"></i>
+                        <span class="menu-text">Reports</span>
                     </a>
+                </li>
 
+                <li class="section-label">ACCOUNT</li>
+
+                <!-- MY ACCOUNT -->
+                <li class="@(currentAction == "TechnicianProfile" ||
+                                                  currentAction == "EditProfile" ||
+                                                  currentAction == "ChangePassword"
+                                                  ? "active" : "")">
+                    <a asp-controller="LabTechnician" asp-action="TechnicianProfile">
+                        <i class="fas fa-id-card"></i>
+                        <span class="menu-text">My Account</span>
+                    </a>
                 </li>
 
             </ul>
 
-
-
-            <!-- =========================================
-                 LOGOUT
-                 ========================================= -->
-
+            <!-- LOGOUT -->
             <div class="logout">
-
                 <a href="#"
                    data-bs-toggle="modal"
                    data-bs-target="#logoutModal">
-
-                    <i class="fas fa-sign-out-alt"></i>
-
-                    <span class="menu-text">
-                        Logout
-                    </span>
-
+                    <i class="fas fa-right-from-bracket"></i>
+                    <span class="menu-text">Logout</span>
                 </a>
-
             </div>
-
 
         </nav>
 
-
-
-        <!-- =========================================
-             MAIN CONTENT
-             ========================================= -->
-
+        <!-- MAIN CONTENT -->
         <div id="content">
-
             @RenderBody()
-
         </div>
-
 
     </div>
 
-
-
-    <!-- =============================================
-         LOGOUT CONFIRMATION MODAL
-         ============================================= -->
-
+    <!-- LOGOUT CONFIRMATION -->
     <div class="modal fade"
          id="logoutModal"
          tabindex="-1"
          aria-labelledby="logoutModalLabel"
          aria-hidden="true">
 
-
         <div class="modal-dialog modal-dialog-centered">
-
-
             <div class="modal-content border-0 shadow">
 
-
-                <!-- MODAL HEADER -->
-
                 <div class="modal-header">
-
-                    <h5 class="modal-title fw-bold"
-                        id="logoutModalLabel">
-
+                    <h5 class="modal-title fw-bold" id="logoutModalLabel">
                         Confirm Logout
-
                     </h5>
-
 
                     <button type="button"
                             class="btn-close"
                             data-bs-dismiss="modal"
-                            aria-label="Close">
-                    </button>
-
+                            aria-label="Close"></button>
                 </div>
-
-
-
-                <!-- MODAL BODY -->
 
                 <div class="modal-body text-center py-4">
-
-
                     <div class="mb-3">
-
-                        <i class="fas fa-sign-out-alt fa-2x text-secondary"></i>
-
+                        <i class="fas fa-right-from-bracket fa-2x text-secondary"></i>
                     </div>
 
-
-                    <h6 class="fw-bold">
-
-                        Are you sure you want to logout?
-
-                    </h6>
-
+                    <h6 class="fw-bold">Are you sure you want to logout?</h6>
 
                     <p class="text-muted mb-0">
-
                         You will be signed out of HemaCore.
-
                     </p>
-
-
                 </div>
 
-
-
-                <!-- MODAL FOOTER -->
-
                 <div class="modal-footer justify-content-center">
-
-
-                    <!-- CANCEL -->
-
                     <button type="button"
                             class="btn btn-secondary"
                             data-bs-dismiss="modal">
-
                         Cancel
-
                     </button>
-
-
-
-                    <!-- LOGOUT -->
 
                     <a asp-controller="Account"
                        asp-action="Logout"
                        class="btn btn-danger">
-
-                        <i class="fas fa-sign-out-alt me-1"></i>
-
+                        <i class="fas fa-right-from-bracket me-1"></i>
                         Logout
-
                     </a>
-
-
                 </div>
 
-
             </div>
-
         </div>
-
     </div>
 
-
-
-    <!-- =============================================
-         SIDEBAR SCRIPT
-         ============================================= -->
-
-    <script>
-
-            const sidebar =
-                document.getElementById("sidebar");
-
-            const content =
-                document.getElementById("content");
-
-            const toggleBtn =
-                document.getElementById("sidebarToggle");
-
-            const icon =
-                toggleBtn.querySelector("i");
-
-
-            toggleBtn.addEventListener("click", function() {
-
-
-                sidebar.classList.toggle("collapsed");
-
-                content.classList.toggle("expanded");
-
-
-                if (sidebar.classList.contains("collapsed")) {
-
-
-                    icon.classList.remove("fa-angle-left");
-
-                    icon.classList.add("fa-angle-right");
-
-
-                }
-                else {
-
-
-                    icon.classList.remove("fa-angle-right");
-
-                    icon.classList.add("fa-angle-left");
-
-                }
-
-            });
-
-    </script>
-
-
-
-    <!-- =============================================
-         BOOTSTRAP JAVASCRIPT
-         ============================================= -->
-
+    <!-- JAVASCRIPT -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const sidebar = document.getElementById("sidebar");
+                const content = document.getElementById("content");
+                const toggleBtn = document.getElementById("sidebarToggle");
 
+                if (!sidebar || !content || !toggleBtn) return;
 
-    <!-- =============================================
-         ADDITIONAL PAGE SCRIPTS
-         ============================================= -->
+                const icon = toggleBtn.querySelector("i");
+
+                toggleBtn.addEventListener("click", function() {
+                    sidebar.classList.toggle("collapsed");
+                    content.classList.toggle("expanded");
+
+                    if (sidebar.classList.contains("collapsed")) {
+                        icon.classList.replace("fa-angle-left", "fa-angle-right");
+                    } else {
+                        icon.classList.replace("fa-angle-right", "fa-angle-left");
+                    }
+                });
+            });
+    </script>
+
     @RenderSection("Scripts", required: false)
 
-
 </body>
-
 </html>
-

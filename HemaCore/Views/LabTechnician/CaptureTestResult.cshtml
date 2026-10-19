@@ -4,6 +4,11 @@
 @{
     ViewData["Title"] = "Capture Test Result";
     Layout = "_LabTechnicianLayout";
+
+    var patient = ViewBag.Patient;
+    var conditions = ViewBag.PatientConditions;
+    var allergies = ViewBag.PatientAllergies;
+    var medications = ViewBag.PatientMedications;
 }
 
 <style>
@@ -26,14 +31,131 @@
         margin-bottom: 8px;
     }
 
-        .result-heading i {
-            color: #75AABA;
-        }
+    .result-heading i {
+        color: #75AABA;
+    }
 
     .result-description {
         color: #718087;
         line-height: 1.6;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
+    }
+
+    .patient-information {
+        background: #f7f9fa;
+        border: 1px solid #dfe7ea;
+        border-radius: 12px;
+        padding: 22px;
+        margin: 20px 0 28px;
+    }
+
+    .patient-information h5 {
+        color: #294b57;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .patient-information h5 i,
+    .medical-history-item h6 i {
+        color: #75AABA;
+        margin-right: 8px;
+    }
+
+    .patient-information h6 {
+        color: #294b57;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .patient-information-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 24px;
+    }
+
+    .patient-information-grid > div {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        overflow-wrap: anywhere;
+    }
+
+    .patient-information-grid span {
+        color: #718087;
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .patient-information-grid strong {
+        color: #294b57;
+        font-size: 14px;
+    }
+
+    .clinical-notes {
+        background: #fff;
+        border: 1px solid #e2e9ec;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 22px;
+    }
+
+    .clinical-notes p {
+        color: #52666e;
+        margin: 8px 0 0;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .medical-history-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .medical-history-item {
+        background: #fff;
+        border: 1px solid #e2e9ec;
+        border-radius: 8px;
+        padding: 15px;
+        overflow-wrap: anywhere;
+    }
+
+    .medical-history-item h6 {
+        color: #294b57;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .medical-history-item ul {
+        padding-left: 18px;
+        margin-bottom: 0;
+    }
+
+    .medical-history-item li,
+    .medical-history-item p {
+        color: #52666e;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .medical-history-item li {
+        padding-bottom: 5px;
+    }
+
+    .context-divider {
+        border-color: #dfe7ea;
+        margin: 22px 0;
+    }
+
+    .read-only-note {
+        color: #718087;
+        font-size: 12px;
+        margin-top: 18px;
+        margin-bottom: 0;
     }
 
     .form-label {
@@ -53,20 +175,21 @@
         font-size: 17px;
     }
 
-        .result-input:focus {
-            border-color: #75AABA;
-            box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
-        }
+    .result-input:focus,
+    .notes-input:focus {
+        border-color: #75AABA;
+        box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
+    }
 
-        .result-input.is-invalid {
-            border-color: #dc3545;
-            background-image: none;
-        }
+    .result-input.is-invalid {
+        border-color: #dc3545;
+        background-image: none;
+    }
 
-        .result-input.is-valid {
-            border-color: #198754;
-            background-image: none;
-        }
+    .result-input.is-valid {
+        border-color: #198754;
+        background-image: none;
+    }
 
     .unit-label {
         background: #f3f7f8;
@@ -145,33 +268,28 @@
         margin: 24px 0;
     }
 
-        .info-card > i {
-            color: #6096a6;
-            font-size: 20px;
-            margin-top: 3px;
-        }
+    .info-card > i {
+        color: #6096a6;
+        font-size: 20px;
+        margin-top: 3px;
+    }
 
-        .info-card strong {
-            color: #315967;
-        }
+    .info-card strong {
+        color: #315967;
+    }
 
-        .info-card p {
-            color: #718087;
-            font-size: 13px;
-            line-height: 1.6;
-            margin: 5px 0 0;
-        }
+    .info-card p {
+        color: #718087;
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 5px 0 0;
+    }
 
     .notes-input {
         border: 1px solid #d8e1e5;
         border-radius: 10px;
         resize: vertical;
     }
-
-        .notes-input:focus {
-            border-color: #75AABA;
-            box-shadow: 0 0 0 .2rem rgba(117, 170, 186, .18);
-        }
 
     .btn-complete {
         background: #477f91;
@@ -182,29 +300,40 @@
         font-weight: 600;
     }
 
-        .btn-complete:hover {
-            background: #356778;
-            border-color: #356778;
-            color: #fff;
-        }
+    .btn-complete:hover {
+        background: #356778;
+        border-color: #356778;
+        color: #fff;
+    }
 
     .btn-back {
         border-radius: 8px;
         padding: 10px 18px;
     }
 
+    @@media (max-width: 768px) {
+        .medical-history-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     @@media (max-width: 576px) {
-        .result-card {
+        .result-card,
+        .patient-information {
             padding: 18px;
+        }
+
+        .patient-information-grid {
+            grid-template-columns: 1fr;
         }
 
         .result-actions {
             flex-direction: column-reverse;
         }
 
-            .result-actions .btn {
-                width: 100%;
-            }
+        .result-actions .btn {
+            width: 100%;
+        }
     }
 </style>
 
@@ -216,9 +345,232 @@
     </div>
 
     <p class="result-description">
-        Enter the laboratory result below. The system will compare
-        the value with the configured normal range and notify you
-        immediately if the result is outside that range.
+        Review the patient's information and relevant medical history before
+        entering the laboratory result.
+    </p>
+
+    @if (patient != null)
+    {
+        <section class="patient-information">
+
+            <h5>
+                <i class="fas fa-user-circle"></i>
+                Patient Information
+            </h5>
+
+            <div class="patient-information-grid">
+
+                <div>
+                    <span>Patient Name</span>
+                    <strong>@patient.Name @patient.Surname</strong>
+                </div>
+
+                <div>
+                    <span>Patient Number</span>
+                    <strong>@patient.PatientID</strong>
+                </div>
+
+                <div>
+                    <span>Date of Birth</span>
+                    <strong>
+                        @(patient.DateOfBirth == null
+                            ? "Not recorded"
+                            : ((DateTime)patient.DateOfBirth).ToString("dd MMM yyyy"))
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Gender</span>
+                    <strong>
+                        @(patient.Gender == null
+                            ? "Not recorded"
+                            : patient.Gender)
+                    </strong>
+                </div>
+
+                <div>
+                    <span>ID Number</span>
+                    <strong>
+                        @(patient.IDNumber == null
+                            ? "Not recorded"
+                            : patient.IDNumber)
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Contact Number</span>
+                    <strong>
+                        @(patient.PhoneNumber == null
+                            ? "Not recorded"
+                            : patient.PhoneNumber)
+                    </strong>
+                </div>
+
+            </div>
+
+            <hr class="context-divider" />
+
+            <h5>
+                <i class="fas fa-file-medical"></i>
+                Test Request Information
+            </h5>
+
+            <div class="patient-information-grid">
+
+                <div>
+                    <span>Request Number</span>
+                    <strong>@Model.TestRequestId</strong>
+                </div>
+
+                <div>
+                    <span>Test Type</span>
+                    <strong>
+                        @(Model.TestType?.TestTypeName ?? "Not recorded")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Urgency</span>
+                    <strong>
+                        @(Model.TestRequest?.Urgency ?? "Not recorded")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Request Date</span>
+                    <strong>
+                        @(Model.TestRequest == null
+                            ? "Not recorded"
+                            : Model.TestRequest.RequestDate.ToString("dd MMM yyyy"))
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Requesting Doctor</span>
+                    <strong>
+                        @(Model.TestRequest?.Doctor == null
+                            ? "Not recorded"
+                            : $"{Model.TestRequest.Doctor.Name} {Model.TestRequest.Doctor.Surname}")
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="clinical-notes">
+                <strong>Doctor's Clinical Notes</strong>
+                <p>
+                    @(string.IsNullOrWhiteSpace(Model.TestRequest?.ClinicalNotes)
+                        ? "No clinical notes recorded."
+                        : Model.TestRequest.ClinicalNotes)
+                </p>
+            </div>
+
+            <div class="medical-history-grid">
+
+                <div class="medical-history-item">
+                    <h6>
+                        <i class="fas fa-pills"></i>
+                        Medications
+                    </h6>
+
+                    @if (medications != null &&
+                         System.Linq.Enumerable.Cast<object>(
+                             (System.Collections.IEnumerable)medications).Any())
+                    {
+                        <ul>
+                            @foreach (var item in medications)
+                            {
+                                <li>
+                                    @(item.Medication?.MedicationName
+                                        ?? "Medication details unavailable")
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No medication details recorded.</p>
+                    }
+                </div>
+
+                <div class="medical-history-item">
+                    <h6>
+                        <i class="fas fa-allergies"></i>
+                        Allergies
+                    </h6>
+
+                    @if (allergies != null &&
+                         System.Linq.Enumerable.Cast<object>(
+                             (System.Collections.IEnumerable)allergies).Any())
+                    {
+                        <ul>
+                            @foreach (var item in allergies)
+                            {
+                                <li>
+                                    @(item.Allergy?.AllergyName
+                                        ?? "Allergy details unavailable")
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No allergy details recorded.</p>
+                    }
+                </div>
+
+                <div class="medical-history-item">
+                    <h6>
+                        <i class="fas fa-notes-medical"></i>
+                        Medical Conditions
+                    </h6>
+
+                    @if (conditions != null &&
+                         System.Linq.Enumerable.Cast<object>(
+                             (System.Collections.IEnumerable)conditions).Any())
+                    {
+                        <ul>
+                            @foreach (var item in conditions)
+                            {
+                                <li>
+                                    @(item.Condition?.ConditionName
+                                        ?? "Condition details unavailable")
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No medical conditions recorded.</p>
+                    }
+                </div>
+
+            </div>
+
+            <p class="read-only-note">
+                <i class="fas fa-lock me-1"></i>
+                Patient and medical history information is displayed for
+                reference and cannot be edited on this page.
+            </p>
+
+        </section>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            Patient information could not be loaded. Please return to the
+            test list and reopen the test.
+        </div>
+    }
+
+    <div class="result-heading">
+        <i class="fas fa-vial"></i>
+        Laboratory Result
+    </div>
+
+    <p class="result-description">
+        Enter the laboratory result below. The system compares the value with
+        the configured normal range and flags results outside that range.
     </p>
 
     <form asp-action="SaveTestResult"
@@ -264,8 +616,7 @@
 
             <div id="resultHelp" class="help-text">
                 <i class="fas fa-info-circle me-1"></i>
-                Numbers and one decimal point are allowed. Letters and
-                other special characters cannot be entered.
+                Enter a numeric result using digits and an optional decimal point.
             </div>
 
             <div id="resultValidation"
@@ -282,7 +633,6 @@
                 </div>
 
                 <div class="range-value">
-
                     @Model.TestType?.NormalRangeMin
                     –
                     @Model.TestType?.NormalRangeMax
@@ -292,12 +642,10 @@
                     {
                         <span>@Model.TestType.UnitOfMeasurement</span>
                     }
-
                 </div>
 
                 <small class="text-muted">
-                    Values below the minimum or above the maximum
-                    will be classified as abnormal.
+                    Values outside the configured range will be classified as abnormal.
                 </small>
 
             </div>
@@ -305,24 +653,17 @@
         </div>
 
         <div class="info-card">
-
             <i class="fas fa-info-circle"></i>
-
             <div>
                 <strong>Automatic Result Classification</strong>
-
                 <p>
-                    The system compares the result with the configured
-                    normal range. A numeric result outside the range
-                    can still be submitted, but it will be flagged
-                    as abnormal.
+                    Results outside the configured normal range can still be
+                    submitted, but will be flagged as abnormal for review.
                 </p>
             </div>
-
         </div>
 
         <div class="mb-4">
-
             <label for="notes" class="form-label">
                 Notes <span class="required">*</span>
             </label>
@@ -336,21 +677,21 @@
                       required></textarea>
 
             <small class="text-muted">
-                Please enter any relevant observations before completing
-                the test.
+                Enter relevant observations before completing the test.
             </small>
-
         </div>
 
         <div class="d-flex justify-content-end gap-2 result-actions">
 
-            <a asp-action="ProcessTests"
+            <a asp-action="MyTests"
                class="btn btn-outline-secondary btn-back">
                 <i class="fas fa-arrow-left me-1"></i>
-                Back to Tests
+                Back to My Tests
             </a>
 
-            <button type="submit" class="btn btn-complete">
+            <button type="submit"
+                    class="btn btn-complete"
+                    disabled="@(patient == null)">
                 <i class="fas fa-check me-1"></i>
                 Complete Test
             </button>
@@ -371,25 +712,20 @@
          aria-hidden="true">
 
         <div class="modal-dialog modal-dialog-centered">
-
             <div class="modal-content border-0 shadow">
 
-                <div class="modal-header
-                    @(TempData["ResultSuccess"] != null
-                        ? "bg-success text-white"
-                        : "bg-danger text-white")">
+                <div class="modal-header @(TempData["ResultSuccess"] != null
+                    ? "bg-success text-white"
+                    : "bg-danger text-white")">
 
                     <h5 class="modal-title" id="resultMessageTitle">
-
-                        <i class="fas
-                        @(TempData["ResultSuccess"] != null
+                        <i class="fas @(TempData["ResultSuccess"] != null
                             ? "fa-check-circle"
                             : "fa-exclamation-circle") me-2"></i>
 
                         @(TempData["ResultSuccess"] != null
                             ? "Success"
                             : "Unable to Save Result")
-
                     </h5>
 
                     <button type="button"
@@ -401,7 +737,6 @@
                 </div>
 
                 <div class="modal-body">
-
                     @if (TempData["ResultSuccess"] != null)
                     {
                         @TempData["ResultSuccess"]
@@ -410,249 +745,169 @@
                     {
                         @TempData["Error"]
                     }
-
                 </div>
 
                 <div class="modal-footer">
-
                     <button type="button"
                             class="btn btn-primary"
                             data-bs-dismiss="modal">
                         OK
                     </button>
-
                 </div>
 
             </div>
-
         </div>
-
     </div>
 }
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-
+    document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById("resultValue");
         const feedback = document.getElementById("resultValidation");
         const form = document.getElementById("resultForm");
 
-        if (!input || !feedback || !form) return;
+        if (input && feedback && form) {
+            const min = Number(input.dataset.normalMin);
+            const max = Number(input.dataset.normalMax);
 
-        const min = Number(input.dataset.normalMin);
-        const max = Number(input.dataset.normalMax);
+            function showFeedback(message, type) {
+                feedback.className = "result-feedback feedback-" + type;
 
-        // Display feedback without interpreting user-entered text as HTML.
-        function showFeedback(message, type) {
+                const icon = document.createElement("i");
+                icon.className = type === "error"
+                    ? "fas fa-exclamation-circle"
+                    : type === "warning"
+                        ? "fas fa-exclamation-triangle"
+                        : "fas fa-check-circle";
 
-            feedback.className = "result-feedback feedback-" + type;
+                const text = document.createElement("span");
+                text.textContent = message;
 
-            const icon = document.createElement("i");
-
-            if (type === "error") {
-                icon.className = "fas fa-exclamation-circle";
-            } else if (type === "warning") {
-                icon.className = "fas fa-exclamation-triangle";
-            } else {
-                icon.className = "fas fa-check-circle";
+                feedback.replaceChildren(icon, text);
             }
 
-            const text = document.createElement("span");
-            text.textContent = message;
-
-            feedback.replaceChildren(icon, text);
-        }
-
-        function hideFeedback() {
-            feedback.className = "result-feedback d-none";
-            feedback.replaceChildren();
-        }
-
-        // Validate the value and show range feedback.
-        function validateResult() {
-
-            const value = input.value.trim();
-
-            input.classList.remove("is-invalid", "is-valid");
-            hideFeedback();
-
-            if (value === "") {
-                return false;
+            function hideFeedback() {
+                feedback.className = "result-feedback d-none";
+                feedback.replaceChildren();
             }
 
-            // Prevent incomplete decimals from being submitted.
-            if (value === "." || value.endsWith(".")) {
-                input.classList.add("is-invalid");
+            function validateResult() {
+                const value = input.value.trim();
 
-                showFeedback(
-                    "Please finish entering the decimal value.",
-                    "error"
-                );
+                input.classList.remove("is-invalid", "is-valid");
+                hideFeedback();
 
-                return false;
-            }
+                if (value === "") return false;
 
-            if (!/^\d+(\.\d+)?$/.test(value)) {
-
-                input.classList.add("is-invalid");
-
-                showFeedback(
-                    "Enter a valid number, for example 12 or 12.5.",
-                    "error"
-                );
-
-                return false;
-            }
-
-            const number = Number(value);
-
-            if (!Number.isFinite(number) || number < 0) {
-
-                input.classList.add("is-invalid");
-
-                showFeedback(
-                    "Please enter a valid number greater than or equal to zero.",
-                    "error"
-                );
-
-                return false;
-            }
-
-            if (
-                !Number.isFinite(min) ||
-                !Number.isFinite(max) ||
-                min > max
-            ) {
-                input.classList.add("is-invalid");
-
-                showFeedback(
-                    "The configured normal range is unavailable or invalid.",
-                    "error"
-                );
-
-                return false;
-            }
-
-            input.classList.add("is-valid");
-
-            if (number < min) {
-
-                showFeedback(
-                    "Below the normal range. The minimum is " +
-                    min + ". This result will be flagged as abnormal.",
-                    "warning"
-                );
-
-            } else if (number > max) {
-
-                showFeedback(
-                    "Above the normal range. The maximum is " +
-                    max + ". This result will be flagged as abnormal.",
-                    "warning"
-                );
-
-            } else {
-
-                showFeedback(
-                    "This value is within the configured normal range.",
-                    "success"
-                );
-
-            }
-
-            return true;
-        }
-
-        // Block invalid characters before they appear in the input.
-        input.addEventListener("beforeinput", function(event) {
-
-            if (event.inputType &&
-                event.inputType.startsWith("delete")) {
-                return;
-            }
-
-            if (event.data == null) {
-                return;
-            }
-
-            const start = input.selectionStart ?? input.value.length;
-            const end = input.selectionEnd ?? input.value.length;
-
-            const proposedValue =
-                input.value.substring(0, start) +
-                event.data +
-                input.value.substring(end);
-
-            // Only digits and at most one decimal point.
-            if (!/^\d*\.?\d*$/.test(proposedValue)) {
-                event.preventDefault();
-            }
-        });
-
-        // Sanitize pasted text and input methods that bypass beforeinput.
-        input.addEventListener("input", function() {
-
-            const originalValue = input.value;
-            const cursor = input.selectionStart ?? originalValue.length;
-
-            let cleanedValue = originalValue.replace(/[^\d.]/g, "");
-
-            const firstDecimal = cleanedValue.indexOf(".");
-
-            if (firstDecimal !== -1) {
-                cleanedValue =
-                    cleanedValue.substring(0, firstDecimal + 1) +
-                    cleanedValue.substring(firstDecimal + 1).replace(/\./g, "");
-            }
-
-            if (cleanedValue !== originalValue) {
-
-                const removedBeforeCursor =
-                    originalValue.substring(0, cursor)
-                        .replace(/[^\d.]/g, "").length;
-
-                input.value = cleanedValue;
-
-                const newCursor = Math.min(
-                    removedBeforeCursor,
-                    cleanedValue.length
-                );
-
-                input.setSelectionRange(newCursor, newCursor);
-            }
-
-            validateResult();
-        });
-
-        // Prevent submission of an empty or invalid result.
-        form.addEventListener("submit", function(event) {
-
-            if (!validateResult()) {
-                event.preventDefault();
-                input.focus();
-
-                if (input.value.trim() === "") {
+                if (!/^\d+(\.\d+)?$/.test(value)) {
+                    input.classList.add("is-invalid");
                     showFeedback(
-                        "Please enter a result value before completing the test.",
-                        "error"
-                    );
+                        "Enter a valid number, for example 12 or 12.5.",
+                        "error");
+                    return false;
                 }
 
-                return;
+                const number = Number(value);
+
+                if (!Number.isFinite(number) || number < 0) {
+                    input.classList.add("is-invalid");
+                    showFeedback(
+                        "Enter a valid number greater than or equal to zero.",
+                        "error");
+                    return false;
+                }
+
+                if (!Number.isFinite(min) ||
+                    !Number.isFinite(max) ||
+                    min > max) {
+                    input.classList.add("is-invalid");
+                    showFeedback(
+                        "The configured normal range is unavailable or invalid.",
+                        "error");
+                    return false;
+                }
+
+                input.classList.add("is-valid");
+
+                if (number < min) {
+                    showFeedback(
+                        "Below the configured normal range. This result will be flagged as abnormal.",
+                        "warning");
+                } else if (number > max) {
+                    showFeedback(
+                        "Above the configured normal range. This result will be flagged as abnormal.",
+                        "warning");
+                } else {
+                    showFeedback(
+                        "This value is within the configured normal range.",
+                        "success");
+                }
+
+                return true;
             }
 
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                form.reportValidity();
-            }
-        });
+            input.addEventListener("beforeinput", function (event) {
+                if (event.inputType &&
+                    event.inputType.startsWith("delete")) return;
 
-        // Automatically display any server response popup.
+                if (event.data == null) return;
+
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+
+                const proposed =
+                    input.value.substring(0, start) +
+                    event.data +
+                    input.value.substring(end);
+
+                if (!/^\d*\.?\d*$/.test(proposed)) {
+                    event.preventDefault();
+                }
+            });
+
+            input.addEventListener("input", function () {
+                const original = input.value;
+                let cleaned = original.replace(/[^\d.]/g, "");
+                const decimal = cleaned.indexOf(".");
+
+                if (decimal !== -1) {
+                    cleaned =
+                        cleaned.substring(0, decimal + 1) +
+                        cleaned.substring(decimal + 1).replace(/\./g, "");
+                }
+
+                if (cleaned !== original) {
+                    input.value = cleaned;
+                }
+
+                validateResult();
+            });
+
+            form.addEventListener("submit", function (event) {
+                if (!validateResult()) {
+                    event.preventDefault();
+                    input.focus();
+
+                    if (input.value.trim() === "") {
+                        showFeedback(
+                            "Please enter a result value before completing the test.",
+                            "error");
+                    }
+
+                    return;
+                }
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    form.reportValidity();
+                }
+            });
+        }
+
         const modalElement = document.getElementById("resultMessageModal");
 
         if (modalElement && window.bootstrap) {
             new bootstrap.Modal(modalElement).show();
         }
-
     });
 </script>

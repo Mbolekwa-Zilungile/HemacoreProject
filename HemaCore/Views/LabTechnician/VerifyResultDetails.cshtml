@@ -1,4 +1,5 @@
-﻿@model HemaCore.Models.TestResult
+﻿
+@model HemaCore.Models.TestResult
 @using HemaCore.Models
 @using System.Linq
 
@@ -7,6 +8,9 @@
     Layout = "_LabTechnicianLayout";
 
     var test = Model.TestRequestTestType.FirstOrDefault();
+    var request = test?.TestRequest;
+    var patient = request?.Patient;
+    var testType = test?.TestType;
 
     var history = ViewBag.TestResultHistory as IEnumerable<TestResultHistory>
                   ?? Enumerable.Empty<TestResultHistory>();
@@ -15,45 +19,208 @@
         .OrderBy(h => h.ActionDateTime)
         .ToList();
 
-    var patientName = test?.TestRequest?.Patient != null
-        ? $"{test.TestRequest.Patient.Name} {test.TestRequest.Patient.Surname}"
+    var conditions = ViewBag.PatientConditions as IEnumerable<PatientCondition>
+                     ?? Enumerable.Empty<PatientCondition>();
+
+    var allergies = ViewBag.PatientAllergies as IEnumerable<PatientAllergy>
+                    ?? Enumerable.Empty<PatientAllergy>();
+
+    var medications = ViewBag.PatientMedications as IEnumerable<PatientMedication>
+                      ?? Enumerable.Empty<PatientMedication>();
+
+    var patientName = patient != null
+        ? $"{patient.Name} {patient.Surname}"
         : "N/A";
+
+    var normalMin = ViewBag.NormalRangeMin;
+    var normalMax = ViewBag.NormalRangeMax;
+    var testUnit = ViewBag.TestUnit as string
+                   ?? testType?.UnitOfMeasurement
+                   ?? "";
+
+    var referenceRange = normalMin != null && normalMax != null
+        ? $"{normalMin} – {normalMax} {testUnit}".Trim()
+        : "Reference range not available";
 }
 
 <div class="verify-page">
 
-    <!-- Page heading -->
     <header class="page-heading">
         <div>
             <h2>Verify test result</h2>
-            <p>Review the recorded result and its history, then verify it or send it back.</p>
+            <p>Review the patient information, medical background and test reference range before making your decision.</p>
         </div>
 
-        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+        <a asp-action="VerifyResults"
+           class="btn btn-outline-secondary">
+            Back to verification list
+        </a>
     </header>
 
     <!-- Patient and test summary -->
-    <section class="summary-bar" aria-label="Patient and test">
+    <section class="summary-bar" aria-label="Patient and test summary">
         <div class="summary-item">
             <span class="label">Patient</span>
             <span class="value">@patientName</span>
         </div>
+
         <div class="summary-item">
             <span class="label">Test</span>
-            <span class="value">@(test?.TestType?.TestTypeName ?? "N/A")</span>
+            <span class="value">@(testType?.TestTypeName ?? "N/A")</span>
         </div>
+
         <div class="summary-item">
-            <span class="label">Recorded</span>
+            <span class="label">Result recorded</span>
             <span class="value">@Model.DateCaptured.ToString("dd MMM yyyy, HH:mm")</span>
         </div>
     </section>
 
-    <!-- Current result -->
+    <!-- Patient demographics -->
+    <section class="verify-card">
+        <div class="card-head">
+            <div>
+                <h5>Patient information</h5>
+                <p>Patient identification and demographic details.</p>
+            </div>
+        </div>
+
+        <div class="patient-info-grid">
+            <div class="info-item">
+                <span class="label">Full name</span>
+                <span class="info-value">@patientName</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Patient ID number</span>
+                <span class="info-value">@(patient?.IDNumber ?? "Not recorded")</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Date of birth</span>
+                <span class="info-value">
+                    @(patient == null
+                        ? "Not recorded"
+                        : patient.DateOfBirth.ToString("dd MMM yyyy"))
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Gender</span>
+                <span class="info-value">@(patient?.Gender ?? "Not recorded")</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Contact number</span>
+                <span class="info-value">@(patient?.PhoneNumber ?? "Not recorded")</span>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Request number</span>
+                <span class="info-value">
+                    @(request == null ? "N/A" : request.TestRequestId.ToString())
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Medical background -->
+    <section class="verify-card">
+        <div class="card-head">
+            <div>
+                <h5>Medical background</h5>
+                <p>Review the medical information recorded for this patient.</p>
+            </div>
+        </div>
+
+        <div class="medical-grid">
+
+            <div class="medical-section">
+                <h6>Medical conditions</h6>
+
+                @if (conditions.Any())
+                {
+                    <ul>
+                        @foreach (var item in conditions)
+                        {
+                            <li>
+                                @(item.Condition?.Name ?? "Condition name unavailable")
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No medical conditions recorded.
+                    </p>
+                }
+            </div>
+
+            <div class="medical-section">
+                <h6>Allergies</h6>
+
+                @if (allergies.Any())
+                {
+                    <ul>
+                        @foreach (var item in allergies)
+                        {
+                            <li>
+                                @(item.Allergy?.Name ?? "Allergy name unavailable")
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No allergies recorded.
+                    </p>
+                }
+            </div>
+
+            <div class="medical-section">
+                <h6>Medications</h6>
+
+                @if (medications.Any())
+                {
+                    <ul>
+                        @foreach (var item in medications)
+                        {
+                            <li>
+                                <strong>
+                                    @(item.Medication?.Name ?? "Medication name unavailable")
+                                </strong>
+
+                                @if (!string.IsNullOrWhiteSpace(item.Dosage))
+                                {
+                                    <span> — @item.Dosage</span>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(item.Frequency))
+                                {
+                                    <span>, @item.Frequency</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-info">
+                        No medications recorded.
+                    </p>
+                }
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Current result and reference range -->
     <section class="verify-card @(Model.IsAbnormal ? "is-abnormal" : "")">
         <div class="card-head">
             <div>
-                <h5>Current result</h5>
-                <p>Latest result recorded for this test.</p>
+                <h5>Current test result</h5>
+                <p>Compare the recorded result with the configured reference range.</p>
             </div>
 
             <span class="flag @(Model.IsAbnormal ? "flag-abnormal" : "flag-normal")">
@@ -63,16 +230,27 @@
 
         <div class="result-layout">
             <div class="result-main">
-                <span class="label">Result value</span>
+                <span class="label">Recorded result</span>
+
                 <div class="result-value @(string.IsNullOrWhiteSpace(Model.ResultValue) ? "is-empty" : "")">
-                    @(string.IsNullOrWhiteSpace(Model.ResultValue) ? "Not recorded" : Model.ResultValue)
+                    @(string.IsNullOrWhiteSpace(Model.ResultValue)
+                        ? "Not recorded"
+                        : $"{Model.ResultValue} {testUnit}".Trim())
+                </div>
+
+                <div class="reference-range">
+                    <span class="label">Normal reference range</span>
+                    <strong>@referenceRange</strong>
+                    <p>Reference range configured for this test type.</p>
                 </div>
             </div>
 
             <div class="result-notes">
                 <span class="label">Result notes</span>
                 <div class="notes-text @(string.IsNullOrWhiteSpace(Model.Notes) ? "is-empty" : "")">
-                    @(string.IsNullOrWhiteSpace(Model.Notes) ? "No notes recorded" : Model.Notes)
+                    @(string.IsNullOrWhiteSpace(Model.Notes)
+                        ? "No notes recorded"
+                        : Model.Notes)
                 </div>
             </div>
         </div>
@@ -86,7 +264,10 @@
                 <p>From capture to verification, oldest first.</p>
             </div>
 
-            <span class="count-pill">@historyRecords.Count @(historyRecords.Count == 1 ? "event" : "events")</span>
+            <span class="count-pill">
+                @historyRecords.Count
+                @(historyRecords.Count == 1 ? "event" : "events")
+            </span>
         </div>
 
         @if (historyRecords.Any())
@@ -120,23 +301,32 @@
                         <div class="timeline-body">
                             <div class="timeline-top">
                                 <strong class="timeline-title">@eventTitle</strong>
-                                <time class="timeline-date">@item.ActionDateTime.ToString("dd MMM yyyy, HH:mm")</time>
+
+                                <time class="timeline-date">
+                                    @item.ActionDateTime.ToString("dd MMM yyyy, HH:mm")
+                                </time>
                             </div>
 
                             <div class="timeline-meta">
                                 <span>
-                                    By @(string.IsNullOrWhiteSpace(technicianName) ? "unknown technician" : technicianName)
+                                    By @(string.IsNullOrWhiteSpace(technicianName)
+                                        ? "Unknown technician"
+                                        : technicianName)
                                 </span>
 
                                 @if (!string.IsNullOrWhiteSpace(item.ResultValue))
                                 {
-                                    <span class="result-chip">Result: @item.ResultValue</span>
+                                    <span class="result-chip">
+                                        Result: @item.ResultValue
+                                    </span>
                                 }
                             </div>
 
                             @if (!string.IsNullOrWhiteSpace(item.ReviewNotes))
                             {
-                                <blockquote class="timeline-note">@item.ReviewNotes</blockquote>
+                                <blockquote class="timeline-note">
+                                    @item.ReviewNotes
+                                </blockquote>
                             }
                         </div>
                     </li>
@@ -155,22 +345,34 @@
     <section class="verify-card decision-card">
         <div class="card-head">
             <div>
-                <h5>Your decision</h5>
-                <p>Verify the result if it is correct. If it needs changing, explain what to correct and send it back.</p>
+                <h5>Verification decision</h5>
+                <p>Verify the result if it is correct, or send it back with a reason for correction.</p>
             </div>
         </div>
 
-        <form asp-action="VerifyResult" method="post" id="decisionForm" class="decision-form">
-            <input type="hidden" name="id" value="@Model.TestResultId" />
+        <form asp-action="VerifyResult"
+              method="post"
+              id="decisionForm"
+              class="decision-form">
 
-            <label for="reviewNotes" class="form-label">Review notes</label>
+            <input type="hidden"
+                   name="id"
+                   value="@Model.TestResultId" />
+
+            <label for="reviewNotes" class="form-label">
+                Review notes
+            </label>
+
             <textarea id="reviewNotes"
                       name="reviewNotes"
                       class="form-control"
                       rows="3"
                       aria-describedby="notesHelp"
-                      placeholder="Required when sending back, for example: the haemoglobin value looks transposed."></textarea>
-            <div id="notesHelp" class="notes-help">Add a note if you send this result back for correction.</div>
+                      placeholder="Explain what needs correcting if you send the result back."></textarea>
+
+            <div id="notesHelp" class="notes-help">
+                A reason is required when sending a result back for correction.
+            </div>
 
             <div class="decision-actions">
                 <button type="submit"
@@ -178,14 +380,14 @@
                         value="SendBack"
                         class="btn btn-outline-danger"
                         formnovalidate>
-                    Send back for correction
+                    Send Back for Correction
                 </button>
 
                 <button type="submit"
                         name="action"
                         value="Verify"
                         class="btn btn-primary">
-                    Verify result
+                    Verify Result
                 </button>
             </div>
         </form>
@@ -194,21 +396,23 @@
 </div>
 
 <script>
-    // Require a note when sending a result back, so the technician knows what to fix.
     (function () {
-        var form = document.getElementById("decisionForm");
-        var notes = document.getElementById("reviewNotes");
-        var help = document.getElementById("notesHelp");
-        if (!form || !notes) return;
+        const form = document.getElementById("decisionForm");
+        const notes = document.getElementById("reviewNotes");
+        const help = document.getElementById("notesHelp");
 
-        var defaultHelp = help.textContent;
+        if (!form || !notes || !help) return;
+
+        const defaultHelp = help.textContent;
 
         form.addEventListener("submit", function (e) {
-            var action = e.submitter ? e.submitter.value : "";
+            const action = e.submitter ? e.submitter.value : "";
+
             if (action === "SendBack" && notes.value.trim() === "") {
                 e.preventDefault();
                 notes.classList.add("is-invalid");
-                help.textContent = "Add a note explaining what needs to be corrected.";
+                help.textContent =
+                    "Enter a reason explaining what needs to be corrected.";
                 help.classList.add("is-error");
                 notes.focus();
             }
@@ -240,7 +444,7 @@
     }
 
     .verify-page {
-        max-width: 960px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 24px 20px 48px;
         min-height: 100vh;
@@ -249,7 +453,6 @@
         line-height: 1.5;
     }
 
-    /* Heading */
     .page-heading {
         display: flex;
         justify-content: space-between;
@@ -258,20 +461,19 @@
         margin-bottom: 20px;
     }
 
-        .page-heading h2 {
-            margin: 0 0 4px;
-            font-size: 24px;
-            font-weight: 600;
-        }
+    .page-heading h2 {
+        margin: 0 0 4px;
+        font-size: 24px;
+        font-weight: 600;
+    }
 
-        .page-heading p {
-            margin: 0;
-            color: var(--ink-soft);
-            font-size: 14px;
-            max-width: 60ch;
-        }
+    .page-heading p,
+    .card-head p {
+        margin: 2px 0 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+    }
 
-    /* Shared label */
     .label {
         display: block;
         margin-bottom: 4px;
@@ -280,11 +482,9 @@
         font-weight: 500;
     }
 
-    /* Summary bar */
     .summary-bar {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0;
         margin-bottom: 16px;
         background: var(--surface);
         border: 1px solid var(--line);
@@ -296,18 +496,18 @@
         min-width: 0;
     }
 
-        .summary-item + .summary-item {
-            border-left: 1px solid var(--line-soft);
-        }
+    .summary-item + .summary-item {
+        border-left: 1px solid var(--line-soft);
+    }
 
-        .summary-item .value {
-            display: block;
-            font-size: 15px;
-            font-weight: 600;
-            overflow-wrap: anywhere;
-        }
+    .summary-item .value,
+    .info-value {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
 
-    /* Cards */
     .verify-card {
         margin-bottom: 16px;
         background: var(--surface);
@@ -325,19 +525,63 @@
         border-bottom: 1px solid var(--line-soft);
     }
 
-        .card-head h5 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
+    .card-head h5 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
 
-        .card-head p {
-            margin: 2px 0 0;
-            color: var(--ink-soft);
-            font-size: 13px;
-        }
+    .patient-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
 
-    /* Current result */
+    .info-item {
+        min-width: 0;
+    }
+
+    .medical-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .medical-section {
+        min-width: 0;
+        padding: 14px;
+        background: #f8f9fa;
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+    }
+
+    .medical-section h6 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .medical-section ul {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .medical-section li {
+        margin-bottom: 6px;
+    }
+
+    .empty-info,
+    .empty-history {
+        margin: 0;
+        padding: 10px 0;
+        color: var(--ink-faint);
+        font-size: 13px;
+    }
+
     .verify-card.is-abnormal {
         border-left: 4px solid var(--danger);
     }
@@ -378,7 +622,27 @@
         max-width: 70ch;
     }
 
-    .flag {
+    .reference-range {
+        margin-top: 18px;
+        padding: 12px;
+        background: #f8f9fa;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+    }
+
+    .reference-range strong {
+        font-size: 16px;
+        overflow-wrap: anywhere;
+    }
+
+    .reference-range p {
+        margin: 5px 0 0;
+        color: var(--ink-soft);
+        font-size: 12px;
+    }
+
+    .flag,
+    .count-pill {
         flex-shrink: 0;
         padding: 3px 10px;
         border-radius: 999px;
@@ -386,7 +650,8 @@
         font-weight: 600;
     }
 
-    .flag-normal {
+    .flag-normal,
+    .count-pill {
         background: #eef1f4;
         color: var(--ink-soft);
     }
@@ -396,20 +661,10 @@
         color: var(--danger);
     }
 
-    /* History timeline */
-    .count-pill {
-        flex-shrink: 0;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #eef1f4;
-        color: var(--ink-soft);
-        font-size: 12px;
-    }
-
     .timeline {
         list-style: none;
         margin: 0;
-        padding: 20px 20px 8px 20px;
+        padding: 20px 20px 8px;
     }
 
     .timeline-item {
@@ -419,19 +674,19 @@
         padding-bottom: 20px;
     }
 
-        .timeline-item::before {
-            content: "";
-            position: absolute;
-            left: 6px;
-            top: 18px;
-            bottom: -2px;
-            width: 2px;
-            background: var(--line);
-        }
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        top: 18px;
+        bottom: -2px;
+        width: 2px;
+        background: var(--line);
+    }
 
-        .timeline-item:last-child::before {
-            display: none;
-        }
+    .timeline-item:last-child::before {
+        display: none;
+    }
 
     .timeline-dot {
         flex-shrink: 0;
@@ -519,11 +774,8 @@
     .empty-history {
         padding: 28px 20px;
         text-align: center;
-        color: var(--ink-faint);
-        font-size: 14px;
     }
 
-    /* Decision */
     .decision-form {
         padding: 20px;
     }
@@ -540,9 +792,9 @@
         resize: vertical;
     }
 
-        #reviewNotes.is-invalid {
-            border-color: var(--danger);
-        }
+    #reviewNotes.is-invalid {
+        border-color: var(--danger);
+    }
 
     .notes-help {
         margin-top: 6px;
@@ -550,10 +802,10 @@
         font-size: 12px;
     }
 
-        .notes-help.is-error {
-            color: var(--danger);
-            font-weight: 500;
-        }
+    .notes-help.is-error {
+        color: var(--danger);
+        font-weight: 500;
+    }
 
     .decision-actions {
         display: flex;
@@ -572,7 +824,6 @@
         outline-offset: 2px;
     }
 
-    /* Responsive */
     @@media (max-width: 768px) {
         .verify-page {
             padding: 14px 12px 32px;
@@ -582,7 +833,10 @@
             flex-direction: column;
         }
 
-        .summary-bar {
+        .summary-bar,
+        .patient-info-grid,
+        .medical-grid,
+        .result-layout {
             grid-template-columns: 1fr;
         }
 
@@ -591,17 +845,12 @@
             border-top: 1px solid var(--line-soft);
         }
 
-        .result-layout {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
         .decision-actions {
             flex-direction: column-reverse;
         }
 
-            .decision-actions .btn {
-                width: 100%;
-            }
+        .decision-actions .btn {
+            width: 100%;
+        }
     }
 </style>
