@@ -740,9 +740,16 @@
                     <span asp-validation-for="StreetAddress" class="validation"></span>
                 </div>
 
+                <!-- PROVINCE -->
                 <div class="form-group">
-                    <label asp-for="Province"><i class="fas fa-map"></i> Province *</label>
-                    <select asp-for="Province" id="province" class="form-control" required>
+                    <label asp-for="Province">
+                        <i class="fas fa-map"></i>
+                        Province *
+                    </label>
+
+                    <select asp-for="Province"
+                            id="provinceInput"
+                            class="form-control">
                         <option value="">Select province</option>
                         <option value="Eastern Cape">Eastern Cape</option>
                         <option value="Free State">Free State</option>
@@ -754,42 +761,70 @@
                         <option value="North West">North West</option>
                         <option value="Western Cape">Western Cape</option>
                     </select>
-                    <span asp-validation-for="Province" class="validation"></span>
+
+                    <span asp-validation-for="Province"
+                          class="validation"></span>
                 </div>
 
+                <!-- CITY -->
                 <div class="form-group">
-                    <label asp-for="City"><i class="fas fa-city"></i> City / Town *</label>
-                    <select asp-for="City"
-                            id="city"
-                            class="form-control"
-                            data-current-city="@Model.City"
-                            required
-                            disabled>
-                        <option value="">Select province first</option>
-                    </select>
-                    <span asp-validation-for="City" class="validation"></span>
-                    <small style="color:#718096;font-size:.78rem;margin-top:5px;">
-                        Select a province first to see its cities and towns.
+                    <label asp-for="City">
+                        <i class="fas fa-city"></i>
+                        City / Town *
+                    </label>
+
+                    <input asp-for="City"
+                           id="cityInput"
+                           class="form-control"
+                           placeholder="Type or select a city"
+                           autocomplete="off" />
+
+                    <span asp-validation-for="City"
+                          class="validation"></span>
+
+                    <small style="color:#718096; font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-info-circle"></i>
+                        Start typing to see suggestions; selecting one fills the postal code.
+                        You may also type any city/town manually.
                     </small>
                 </div>
 
+                <!-- SUBURB -->
                 <div class="form-group">
                     <label asp-for="Suburb"><i class="fas fa-map-marker-alt"></i> Suburb</label>
-                    <input asp-for="Suburb" class="form-control" placeholder="e.g. Walmer" />
+                    <input asp-for="Suburb"
+                           id="suburbInput"
+                           class="form-control"
+                           placeholder="Type or select a suburb"
+                           autocomplete="off" />
                     <span asp-validation-for="Suburb" class="validation"></span>
+                    <small style="color:#718096; font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-info-circle"></i>
+                        Start typing to see suburbs. Selecting one fills city and postal code.
+                    </small>
                 </div>
 
+                <!-- POSTAL CODE -->
                 <div class="form-group">
-                    <label asp-for="PostalCode"><i class="fas fa-mail-bulk"></i> Postal Code *</label>
+                    <label asp-for="PostalCode">
+                        <i class="fas fa-mail-bulk"></i>
+                        Postal Code *
+                    </label>
+
                     <input asp-for="PostalCode"
-                           id="postalCode"
+                           id="postalInput"
                            class="form-control"
                            placeholder="e.g. 6070"
                            maxlength="4"
-                           inputmode="numeric"
-                           aria-describedby="postalCodeError" />
-                    <span id="postalCodeError" class="validation" role="alert"></span>
-                    <span asp-validation-for="PostalCode" class="validation"></span>
+                           inputmode="numeric" />
+
+                    <span asp-validation-for="PostalCode"
+                          class="validation"></span>
+
+                    <small style="color:#718096; font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-info-circle"></i>
+                        Auto-filled when you pick a city — you can still edit it.
+                    </small>
                 </div>
             </div>
         </div>
@@ -1076,108 +1111,28 @@
         const phoneNumber = document.getElementById("phoneNumber");
         const phoneError = document.getElementById("phoneError");
 
-        const postalCode = document.getElementById("postalCode");
-        const postalCodeError = document.getElementById("postalCodeError");
+        const postalCode = document.getElementById("postalInput");
 
-        const provinceSelect = document.getElementById("province");
-        const citySelect = document.getElementById("city");
+        const provinceSelect = document.getElementById("provinceInput");
+        const cityInput = document.getElementById("cityInput");
 
-        const citiesByProvince = {
-            "Eastern Cape": [
-                "Gqeberha", "East London", "Mthatha", "Bhisho",
-                "Qonce (King William's Town)", "Kariega (Uitenhage)",
-                "Komani (Queenstown)", "Graaff-Reinet", "Cradock",
-                "Jeffreys Bay", "Humansdorp", "Port Alfred", "Butterworth",
-                "Mdantsane", "Stutterheim", "Fort Beaufort", "Lusikisiki"
-            ],
-            "Free State": [
-                "Bloemfontein", "Welkom", "Bethlehem", "Sasolburg",
-                "Kroonstad", "Parys", "Harrismith", "Phuthaditjhaba",
-                "Virginia", "Ficksburg", "Ladybrand", "Heilbron",
-                "Frankfort", "Bothaville", "Boshof"
-            ],
-            "Gauteng": [
-                "Johannesburg", "Pretoria", "Soweto", "Centurion", "Midrand",
-                "Sandton", "Randburg", "Roodepoort", "Benoni", "Boksburg",
-                "Germiston", "Kempton Park", "Vereeniging", "Vanderbijlpark",
-                "Springs", "Nigel", "Alberton", "Tembisa", "Krugersdorp"
-            ],
-            "KwaZulu-Natal": [
-                "Durban", "Pietermaritzburg", "Richards Bay", "Newcastle",
-                "Ladysmith", "Pinetown", "Umhlanga", "Ballito", "Empangeni",
-                "Port Shepstone", "Howick", "Kokstad", "Vryheid", "Dundee",
-                "KwaDukuza", "Margate"
-            ],
-            "Limpopo": [
-                "Polokwane", "Thohoyandou", "Tzaneen", "Lephalale", "Musina",
-                "Makhado", "Giyani", "Mokopane", "Phalaborwa", "Bela-Bela",
-                "Modimolle", "Burgersfort", "Hoedspruit"
-            ],
-            "Mpumalanga": [
-                "Mbombela", "eMalahleni (Witbank)", "Secunda", "Middelburg",
-                "Ermelo", "Standerton", "Barberton", "White River", "Hazyview",
-                "Malelane", "Komatipoort", "Bethal", "Mashishing (Lydenburg)",
-                "Sabie"
-            ],
-            "Northern Cape": [
-                "Kimberley", "Upington", "Springbok", "De Aar", "Kuruman",
-                "Kathu", "Prieska", "Postmasburg", "Calvinia", "Carnarvon",
-                "Port Nolloth", "Colesberg", "Douglas"
-            ],
-            "North West": [
-                "Mahikeng", "Rustenburg", "Potchefstroom", "Klerksdorp",
-                "Brits", "Vryburg", "Zeerust", "Lichtenburg", "Orkney",
-                "Stilfontein", "Hartbeespoort", "Wolmaransstad",
-                "Schweizer-Reneke"
-            ],
-            "Western Cape": [
-                "Cape Town", "Stellenbosch", "George", "Paarl", "Worcester",
-                "Mossel Bay", "Oudtshoorn", "Knysna", "Hermanus", "Swellendam",
-                "Beaufort West", "Malmesbury", "Vredenburg", "Saldanha",
-                "Ceres", "Robertson", "Wellington", "Somerset West", "Strand",
-                "Bellville", "Caledon", "Plettenberg Bay"
-            ]
-        };
-
-        // CITY DROPDOWN
-        function updateCityDropdown(selectedCity = "") {
-            const province = provinceSelect.value;
-            const cities = citiesByProvince[province] || [];
-
-            citySelect.innerHTML = "";
-
-            const placeholder = document.createElement("option");
-            placeholder.value = "";
-            placeholder.textContent = province
-                ? "Select city / town"
-                : "Select province first";
-
-            citySelect.appendChild(placeholder);
-
-            cities.forEach(function (city) {
-                const option = document.createElement("option");
-                option.value = city;
-                option.textContent = city;
-                citySelect.appendChild(option);
-            });
-
-            citySelect.disabled = !province;
-
-            if (cities.includes(selectedCity)) {
-                citySelect.value = selectedCity;
-            } else {
-                citySelect.value = "";
-            }
+        // ------------------------------------------------------------
+        // CITY + SUBURB AUTOCOMPLETE
+        // ------------------------------------------------------------
+        if (typeof window.attachCityDropdown === "function") {
+            window.attachCityDropdown("cityInput", "postalInput", "provinceInput");
         }
 
-        updateCityDropdown(citySelect.dataset.currentCity || "");
+        if (typeof window.attachSuburbDropdown === "function") {
+            window.attachSuburbDropdown("suburbInput", "cityInput", "postalInput", "provinceInput");
+        }
 
-        provinceSelect.addEventListener("change", function () {
-            updateCityDropdown("");
-        });
-
+        // ------------------------------------------------------------
         // VALIDATION HELPERS
+        // ------------------------------------------------------------
         function setError(input, errorElement, message) {
+            if (!input || !errorElement) return;
+
             errorElement.textContent = message;
             errorElement.style.display = message ? "block" : "none";
 
@@ -1190,8 +1145,9 @@
             input.setAttribute("aria-invalid", message ? "true" : "false");
         }
 
-        // SOUTH AFRICAN ID NUMBER
         function validateID() {
+            if (!idNumber || !dateOfBirth || !idError) return true;
+
             const value = idNumber.value.trim();
 
             if (!value) {
@@ -1256,8 +1212,9 @@
             return true;
         }
 
-        // PHONE NUMBER
         function validatePhone() {
+            if (!phoneNumber || !phoneError) return true;
+
             const value = phoneNumber.value.trim();
 
             if (!value) {
@@ -1276,36 +1233,41 @@
             return true;
         }
 
-        // POSTAL CODE
         function validatePostalCode() {
+            if (!postalCode) return true;
+
             const value = postalCode.value.trim();
 
             if (!value) {
-                setError(postalCode, postalCodeError,
-                    "Please enter the postal code.");
+                postalCode.classList.add("input-invalid");
                 return false;
             }
 
             if (!/^\d{4}$/.test(value)) {
-                setError(postalCode, postalCodeError,
-                    "Postal code must contain exactly 4 digits. Letters and symbols are not allowed.");
+                postalCode.classList.add("input-invalid");
                 return false;
             }
 
-            setError(postalCode, postalCodeError, "");
+            postalCode.classList.remove("input-invalid");
+            postalCode.classList.add("input-valid");
             return true;
         }
 
-        idNumber.addEventListener("input", validateID);
-        idNumber.addEventListener("blur", validateID);
+        if (idNumber) {
+            idNumber.addEventListener("input", validateID);
+            idNumber.addEventListener("blur", validateID);
+        }
 
-        phoneNumber.addEventListener("input", validatePhone);
-        phoneNumber.addEventListener("blur", validatePhone);
+        if (phoneNumber) {
+            phoneNumber.addEventListener("input", validatePhone);
+            phoneNumber.addEventListener("blur", validatePhone);
+        }
 
-        postalCode.addEventListener("input", validatePostalCode);
-        postalCode.addEventListener("blur", validatePostalCode);
+        if (postalCode) {
+            postalCode.addEventListener("input", validatePostalCode);
+            postalCode.addEventListener("blur", validatePostalCode);
+        }
 
-        // FORM SUBMISSION VALIDATION
         form.addEventListener("submit", function (event) {
             const idValid = validateID();
             const phoneValid = validatePhone();
@@ -1313,18 +1275,18 @@
 
             let addressValid = true;
 
-            if (!provinceSelect.value) {
+            if (provinceSelect && !provinceSelect.value) {
                 provinceSelect.classList.add("input-invalid");
                 addressValid = false;
-            } else {
+            } else if (provinceSelect) {
                 provinceSelect.classList.remove("input-invalid");
             }
 
-            if (!citySelect.value || citySelect.disabled) {
-                citySelect.classList.add("input-invalid");
+            if (cityInput && !cityInput.value.trim()) {
+                cityInput.classList.add("input-invalid");
                 addressValid = false;
-            } else {
-                citySelect.classList.remove("input-invalid");
+            } else if (cityInput) {
+                cityInput.classList.remove("input-invalid");
             }
 
             if (!idValid || !phoneValid || !postalValid || !addressValid) {
@@ -1346,12 +1308,14 @@
             '[data-valmsg-for="IDNumber"]'
         );
 
-        if (idServerError && idServerError.textContent.trim()) {
+        if (idServerError && idServerError.textContent.trim() && idNumber) {
             idNumber.classList.add("input-invalid");
             idNumber.setAttribute("aria-invalid", "true");
         }
 
-        // MEDICAL HISTORY PICKERS
+        // ------------------------------------------------------------
+        // MEDICAL HISTORY PICKERS (unchanged)
+        // ------------------------------------------------------------
         document.querySelectorAll("[data-history-picker]").forEach(function (picker) {
             const searchInput = picker.querySelector(".history-search-input");
             const categoryList = picker.querySelector("[data-category-list]");
@@ -1493,7 +1457,6 @@
                     !shouldShowItems
                 );
 
-                // First find all items matching the current search/category.
                 const matchingOptions = options.filter(function (option) {
                     const name = (
                         option.dataset.itemName || ""
@@ -1505,8 +1468,6 @@
                         name.includes(query) ||
                         category.includes(query);
 
-                    // Searching looks across all categories.
-                    // Clicking a category filters to that category.
                     const matchesCategory = searching
                         ? true
                         : categorySelected &&
@@ -1517,12 +1478,10 @@
                         matchesCategory;
                 });
 
-                // Only show the first 3 matching items initially.
                 matchingOptions.forEach(function (option, index) {
                     option.hidden = index >= visibleLimit;
                 });
 
-                // Hide items that do not match the search/category.
                 options.forEach(function (option) {
                     if (!matchingOptions.includes(option)) {
                         option.hidden = true;
@@ -1532,7 +1491,6 @@
                 emptyMessage.hidden =
                     !shouldShowItems || matchingOptions.length > 0;
 
-                // Show the button only when there are more than 3 matches.
                 showMoreButton.hidden =
                     !shouldShowItems ||
                     matchingOptions.length <= ITEMS_PER_BATCH;
@@ -1582,10 +1540,8 @@
                 }).length;
 
                 if (visibleLimit >= matchingCount) {
-                    // Collapse back to the first 3.
                     visibleLimit = ITEMS_PER_BATCH;
                 } else {
-                    // Reveal 3 more each time.
                     visibleLimit += ITEMS_PER_BATCH;
                 }
 
@@ -1635,7 +1591,6 @@
                     const id = option.dataset.itemId;
                     const name = option.dataset.itemName || "";
 
-                    // Preserve the original form field names.
                     const hiddenInput = document.createElement("input");
                     hiddenInput.type = "hidden";
                     hiddenInput.name = inputName;
@@ -1681,7 +1636,6 @@
             });
 
             searchInput.addEventListener("input", function () {
-                // A search checks all categories, not only the last selected one.
                 activeCategory = "";
                 visibleLimit = ITEMS_PER_BATCH;
 
@@ -1689,7 +1643,6 @@
                 filterOptions();
             });
 
-            // Initial state: no available items displayed.
             renderCategories();
             filterOptions();
             renderSelectedItems();
@@ -1699,4 +1652,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/sa-cities.js"></script>
 }

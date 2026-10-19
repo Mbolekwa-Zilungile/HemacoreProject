@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HemaCore.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260930070504_AddPatientReports")]
-    partial class AddPatientReports
+    [Migration("20261019070545_new")]
+    partial class @new
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -306,6 +306,40 @@ namespace HemaCore.Migrations
                     b.ToTable("ConsentMedications");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PatientID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientID", "DoctorId", "Status");
+
+                    b.ToTable("ConsentRequests");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -585,9 +619,10 @@ namespace HemaCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientID"));
 
-                    b.Property<string>("Address")
+                    b.Property<string>("City")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -607,6 +642,25 @@ namespace HemaCore.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Province")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("StreetAddress")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Suburb")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Surname")
                         .IsRequired()
@@ -755,7 +809,8 @@ namespace HemaCore.Migrations
 
                     b.Property<string>("Barcode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("DateTimeReceived")
                         .HasColumnType("datetime2");
@@ -763,8 +818,23 @@ namespace HemaCore.Migrations
                     b.Property<int?>("LabTechnicianId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RejectedByLabTechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RejectedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("SampleTypeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("TestRequestId")
                         .HasColumnType("int");
@@ -992,6 +1062,57 @@ namespace HemaCore.Migrations
                     b.HasKey("TestResultId");
 
                     b.ToTable("TestResults");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResultHistory", b =>
+                {
+                    b.Property<int>("TestResultHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TestResultHistoryId"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("ActionDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsAbnormal")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LabTechnicianId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ResultNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResultValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TestRequestTestTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TestResultHistoryId");
+
+                    b.HasIndex("LabTechnicianId");
+
+                    b.HasIndex("TestRequestTestTypeId");
+
+                    b.ToTable("TestResultHistories");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestResultVerification", b =>
@@ -1394,6 +1515,25 @@ namespace HemaCore.Migrations
                     b.Navigation("Medication");
                 });
 
+            modelBuilder.Entity("HemaCore.Models.ConsentRequest", b =>
+                {
+                    b.HasOne("HemaCore.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("HemaCore.Models.Users", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("HemaCore.Models.ConsentTestRequest", b =>
                 {
                     b.HasOne("HemaCore.Models.Consent", "Consent")
@@ -1658,6 +1798,24 @@ namespace HemaCore.Migrations
                     b.Navigation("TestResult");
 
                     b.Navigation("TestType");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.TestResultHistory", b =>
+                {
+                    b.HasOne("HemaCore.Models.LabTechnician", "LabTechnician")
+                        .WithMany()
+                        .HasForeignKey("LabTechnicianId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("HemaCore.Models.TestRequestItem", "TestRequestItem")
+                        .WithMany()
+                        .HasForeignKey("TestRequestTestTypeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("LabTechnician");
+
+                    b.Navigation("TestRequestItem");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestResultVerification", b =>

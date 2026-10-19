@@ -1,5 +1,4 @@
-﻿
-using HemaCore.Data;
+﻿using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Models.ViewModels;
 using HemaCore.ViewModels;
@@ -32,12 +31,11 @@ namespace HemaCore.Controllers
         // LAB TECHNICIAN DASHBOARD
         // ==========================================
 
-
         public async Task<IActionResult> Index(
-     string? urgency,
-     int? categoryId,
-     string? dueStatus,
-     int? requestNumber)
+            string? urgency,
+            int? categoryId,
+            string? dueStatus,
+            int? requestNumber)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -59,17 +57,14 @@ namespace HemaCore.Controllers
 
             var now = DateTime.Now;
 
-            // Categories for the filter dropdown.
             ViewBag.TestCategories = await _context.TestCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
 
-            // Tests assigned to the logged-in technician.
             var myTests = _context.TestRequestTestTypes
                 .Where(t => t.LabTechnicianId == technician.LabTechnicianId);
 
-            // Requests that still have samples waiting to be received.
             var samplesAwaitingReceipt = await _context.TestRequests
                 .CountAsync(r =>
                     r.Status == "Submitted" &&
@@ -79,8 +74,6 @@ namespace HemaCore.Controllers
                         s.Status != "Cancelled" &&
                         !s.DateTimeReceived.HasValue));
 
-            // Unassigned tests are available for processing only when
-            // the request has samples and every sample has been received.
             var qualifiedTestTypeIds = await _context.TechnicianTestTypes
                 .Where(tt => tt.LabTechnicianId == technician.LabTechnicianId)
                 .Select(tt => tt.TestTypeId)
@@ -99,10 +92,8 @@ namespace HemaCore.Controllers
                         s.SampleTypeId == t.TestType.SampleTypeId &&
                         s.DateTimeReceived != null));
 
-            // The card count is never filtered.
             var waitingToBeSelected = await waitingToBeSelectedQuery.CountAsync();
 
-            // Apply the dropdown filters to the table only.
             var filteredQuery = waitingToBeSelectedQuery;
 
             if (!string.IsNullOrWhiteSpace(urgency))
@@ -152,7 +143,6 @@ namespace HemaCore.Controllers
                 })
                 .ToListAsync();
 
-            // Due time is calculated, so it is filtered after loading.
             if (dueStatus == "Overdue")
             {
                 availableTests = availableTests
@@ -169,7 +159,6 @@ namespace HemaCore.Controllers
                     .ToList();
             }
 
-            // Retrieve assigned tests and their related patient and category.
             var workload = await myTests
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
@@ -195,14 +184,12 @@ namespace HemaCore.Controllers
 
                     Status = t.Status,
 
-                    // Assumes TurnAroundTime is stored in hours.
                     DueTime = t.StartDateTime.HasValue
                         ? t.StartDateTime.Value.AddHours(t.TestType.TurnAroundTime)
                         : (DateTime?)null
                 })
                 .ToListAsync();
 
-            // Count tests that are currently being processed by this technician.
             var mySelectedTests = await myTests
                 .CountAsync(t =>
                     t.Status == "InProgress" &&
@@ -217,7 +204,6 @@ namespace HemaCore.Controllers
                         tt.LabTechnicianId == technician.LabTechnicianId &&
                         tt.TestTypeId == t.TestTypeId));
 
-            // Results returned to THIS technician for correction.
             var waitingReview = await _context.TestResultVerifications
                 .CountAsync(v =>
                     v.Status == "To Be Reviewed" &&
@@ -227,7 +213,6 @@ namespace HemaCore.Controllers
                         t.LabTechnicianId == technician.LabTechnicianId &&
                         t.Status == "To Be Reviewed"));
 
-            // Only count unfinished tests for overdue and nearing-turnaround KPIs.
             var unfinishedStatuses = new[]
             {
                 "Submitted",
@@ -246,7 +231,6 @@ namespace HemaCore.Controllers
                 t.DueTime.Value <= now.AddHours(2) &&
                 unfinishedStatuses.Contains(t.Status));
 
-            // STAT tests that are not yet finished.
             var urgentTests = workload.Count(t =>
                 t.Urgency == "STAT" &&
                 unfinishedStatuses.Contains(t.Status));
@@ -277,7 +261,6 @@ namespace HemaCore.Controllers
 
                 AvailableTests = availableTests,
 
-                // Keep the chosen filters selected in the dropdowns.
                 FilterUrgency = urgency,
                 FilterCategoryId = categoryId,
                 FilterDueStatus = dueStatus,
@@ -286,11 +269,11 @@ namespace HemaCore.Controllers
 
             return View(dashboard);
         }
+
+
         // ==========================================
         // RECEIVE SAMPLES
         // ==========================================
-
-
 
         public async Task<IActionResult> ReceiveSample()
         {
@@ -314,18 +297,8 @@ namespace HemaCore.Controllers
         }
 
 
-
-        // ==========================================
-        // RECEIVE SAMPLE - DETAILS
-        // ==========================================
-
-       
-// ==========================================
-// RECEIVE SAMPLE - DETAILS
-// ==========================================
-
-[HttpGet]
-public async Task<IActionResult> ReceiveSampleDetails(int id)
+        [HttpGet]
+        public async Task<IActionResult> ReceiveSampleDetails(int id)
         {
             var testRequest = await _context.TestRequests
                 .Include(t => t.Patient)
@@ -346,103 +319,88 @@ public async Task<IActionResult> ReceiveSampleDetails(int id)
         }
 
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+                return NotFound("Lab technician profile not found.");
+
+            var sample = await _context.Samples
+                .Include(s => s.TestRequest)
+                    .ThenInclude(r => r.Samples)
+                .FirstOrDefaultAsync(s => s.SampleId == sampleId);
+
+            if (sample == null)
+                return NotFound("Sample not found.");
+
+            if (sample.Status == "Rejected")
+            {
+                TempData["SampleError"] =
+                    "This sample has been rejected and cannot be received.";
+
+                return RedirectToAction(
+                    nameof(ReceiveSampleDetails),
+                    new { id = sample.TestRequestId });
+            }
+
+            if (sample.Status == "Received" || sample.DateTimeReceived.HasValue)
+            {
+                TempData["SampleError"] = "This sample has already been received.";
+
+                return RedirectToAction(
+                    nameof(ReceiveSampleDetails),
+                    new { id = sample.TestRequestId });
+            }
+
+            sample.Status = "Received";
+            sample.DateTimeReceived = DateTime.Now;
+            sample.LabTechnicianId = technician.LabTechnicianId;
+
+            bool allReceived = sample.TestRequest.Samples.All(s =>
+                s.Status == "Received" ||
+                (s.SampleId == sample.SampleId &&
+                 s.DateTimeReceived.HasValue));
+
+            if (allReceived)
+            {
+                sample.TestRequest.Status = "SamplesReceived";
+
+                TempData["SampleReceivedSuccess"] =
+                    $"All samples for Request #{sample.TestRequestId} have been received.";
+            }
+            else
+            {
+                TempData["SampleReceivedSuccess"] =
+                    $"Sample {sample.Barcode} has been received.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(
+                nameof(ReceiveSampleDetails),
+                new { id = sample.TestRequestId });
+        }
 
 
+        // ==========================================
+        // PROCESS TESTS
+        // ==========================================
 
-
-       [HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ConfirmReceiveSample(int sampleId)
-{
-    var user = await _userManager.GetUserAsync(User);
-
-    if (user == null)
-        return RedirectToAction("Login", "Account");
-
-    var technician = await _context.LabTechnicians
-        .FirstOrDefaultAsync(t => t.UserId == user.Id);
-
-    if (technician == null)
-        return NotFound("Lab technician profile not found.");
-
-    var sample = await _context.Samples
-        .Include(s => s.TestRequest)
-            .ThenInclude(r => r.Samples)
-        .FirstOrDefaultAsync(s => s.SampleId == sampleId);
-
-    if (sample == null)
-        return NotFound("Sample not found.");
-
-    if (sample.Status == "Rejected")
-    {
-        TempData["SampleError"] =
-            "This sample has been rejected and cannot be received.";
-
-        return RedirectToAction(
-            nameof(ReceiveSampleDetails),
-            new { id = sample.TestRequestId });
-    }
-
-    if (sample.Status == "Received" || sample.DateTimeReceived.HasValue)
-    {
-        TempData["SampleError"] = "This sample has already been received.";
-
-        return RedirectToAction(
-            nameof(ReceiveSampleDetails),
-            new { id = sample.TestRequestId });
-    }
-
-    sample.Status = "Received";
-    sample.DateTimeReceived = DateTime.Now;
-    sample.LabTechnicianId = technician.LabTechnicianId;
-
-    bool allReceived = sample.TestRequest.Samples.All(s =>
-        s.Status == "Received" ||
-        (s.SampleId == sample.SampleId &&
-         s.DateTimeReceived.HasValue));
-
-    if (allReceived)
-    {
-        sample.TestRequest.Status = "SamplesReceived";
-
-        TempData["SampleReceivedSuccess"] =
-            $"All samples for Request #{sample.TestRequestId} have been received.";
-    }
-    else
-    {
-        TempData["SampleReceivedSuccess"] =
-            $"Sample {sample.Barcode} has been received.";
-    }
-
-    await _context.SaveChangesAsync();
-
-    return RedirectToAction(
-        nameof(ReceiveSampleDetails),
-        new { id = sample.TestRequestId });
-}
-       
-
-
-        // The time a technician finishes work. Change 16:30 if needed.
-     //   private static readonly TimeSpan ShiftEnd = new TimeSpan(16, 30, 0);
-
-
-        // ======================================================================
-        // STEP 1 - PROCESS TESTS (tests waiting to be selected)
-        // ======================================================================
-
-      
-// ==========================================
-// PROCESS TESTS
-// Includes temporary diagnostic counts
-// ==========================================
-
-[HttpGet]
-public async Task<IActionResult> ProcessTests(
-    string urgency,
-    int? categoryId,
-    int? requestNumber,
-    DateTime? dueDate)
+        [HttpGet]
+        public async Task<IActionResult> ProcessTests(
+            string urgency,
+            int? categoryId,
+            int? requestNumber,
+            DateTime? dueDate)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -459,7 +417,6 @@ public async Task<IActionResult> ProcessTests(
                 return NotFound("Lab technician profile not found.");
             }
 
-            // Get the test types this technician is qualified to perform.
             var qualifiedTestTypeIds =
                 await _context.TechnicianTestTypes
                     .Where(tt =>
@@ -468,63 +425,42 @@ public async Task<IActionResult> ProcessTests(
                     .Distinct()
                     .ToListAsync();
 
-            // Base query: all existing test records.
             var allTests = _context.TestRequestTestTypes
                 .AsNoTracking();
 
-            // Diagnostic stage 1: tests still submitted.
             var submittedTests = allTests
                 .Where(t => t.Status == "Submitted");
 
-            // Diagnostic stage 2: tests not yet assigned.
             var unassignedTests = submittedTests
                 .Where(t => t.LabTechnicianId == null);
 
-            // Diagnostic stage 3: request is in an eligible state.
             var readyRequests = unassignedTests
                 .Where(t =>
                     t.TestRequest.Status == "Submitted" ||
                     t.TestRequest.Status == "SamplesReceived" ||
                     t.TestRequest.Status == "InProgress");
 
-            // Diagnostic stage 4: technician is qualified.
             var qualifiedTests = readyRequests
                 .Where(t =>
                     qualifiedTestTypeIds.Contains(t.TestTypeId));
 
-            // Diagnostic stage 5: required sample has been received.
             var receivedSampleTests = qualifiedTests
                 .Where(t => _context.Samples.Any(s =>
                     s.TestRequestId == t.TestRequestId &&
                     s.SampleTypeId == t.TestType.SampleTypeId &&
                     s.DateTimeReceived.HasValue));
 
-            // TEMPORARY DIAGNOSTICS
             ViewBag.DebugCounts = new Dictionary<string, int>
             {
-                ["All test records"] =
-                    await allTests.CountAsync(),
-
-                ["Submitted tests"] =
-                    await submittedTests.CountAsync(),
-
-                ["Unassigned submitted tests"] =
-                    await unassignedTests.CountAsync(),
-
-                ["Tests with eligible request status"] =
-                    await readyRequests.CountAsync(),
-
-                ["Tests matching technician qualifications"] =
-                    await qualifiedTests.CountAsync(),
-
-                ["Tests with required sample received"] =
-                    await receivedSampleTests.CountAsync(),
-
-                ["Technician qualifications configured"] =
-                    qualifiedTestTypeIds.Count
+                ["All test records"] = await allTests.CountAsync(),
+                ["Submitted tests"] = await submittedTests.CountAsync(),
+                ["Unassigned submitted tests"] = await unassignedTests.CountAsync(),
+                ["Tests with eligible request status"] = await readyRequests.CountAsync(),
+                ["Tests matching technician qualifications"] = await qualifiedTests.CountAsync(),
+                ["Tests with required sample received"] = await receivedSampleTests.CountAsync(),
+                ["Technician qualifications configured"] = qualifiedTestTypeIds.Count
             };
 
-            // Actual Process Tests query.
             var query = _context.TestRequestTestTypes
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
@@ -546,7 +482,6 @@ public async Task<IActionResult> ProcessTests(
                     )
                 );
 
-            // Apply the existing filters.
             if (!string.IsNullOrWhiteSpace(urgency))
             {
                 query = query.Where(t =>
@@ -568,7 +503,7 @@ public async Task<IActionResult> ProcessTests(
             if (dueDate.HasValue)
             {
                 query = query.Where(t =>
-                   t.TestRequest.RequestDate.AddHours(t.TestType.TurnAroundTime)
+                    t.TestRequest.RequestDate.AddHours(t.TestType.TurnAroundTime)
                         .Date == dueDate.Value.Date);
             }
 
@@ -584,10 +519,9 @@ public async Task<IActionResult> ProcessTests(
         }
 
 
-        // ======================================================================
-        // STEP 1 + 2 - TEST DETAILS ("View Details": turnaround + consumables)
-        // ======================================================================
-
+        // ==========================================
+        // TEST DETAILS
+        // ==========================================
 
         [HttpGet]
         public async Task<IActionResult> TestDetails(int id)
@@ -657,8 +591,7 @@ public async Task<IActionResult> ProcessTests(
                 .ToListAsync();
 
             var now = DateTime.Now;
-            var expectedFinish =
-      now.AddHours(test.TestType.TurnAroundTime);
+            var expectedFinish = now.AddHours(test.TestType.TurnAroundTime);
 
             ViewBag.Consumables = consumables;
             ViewBag.ExpectedFinish = expectedFinish;
@@ -669,11 +602,10 @@ public async Task<IActionResult> ProcessTests(
             return View(test);
         }
 
-        // ======================================================================
-        // STEP 3 - ADD TO MY TESTS (saved against the technician, NOT in progress)
-        // ======================================================================
 
-
+        // ==========================================
+        // ADD TO MY TESTS
+        // ==========================================
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -690,7 +622,6 @@ public async Task<IActionResult> ProcessTests(
             if (technician == null)
                 return NotFound("Lab technician profile not found.");
 
-            // Protect test selection and stock deduction.
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(
                     System.Data.IsolationLevel.Serializable);
@@ -704,7 +635,6 @@ public async Task<IActionResult> ProcessTests(
             if (test == null)
                 return NotFound("Test could not be found.");
 
-            // Only unassigned, submitted tests can be accepted.
             if (test.Status != "Submitted" ||
                 test.LabTechnicianId != null)
             {
@@ -724,7 +654,6 @@ public async Task<IActionResult> ProcessTests(
                 return RedirectToAction(nameof(ProcessTests));
             }
 
-            // Confirm that this technician is qualified for the test.
             var isAssignedTestType =
                 await _context.TechnicianTestTypes.AnyAsync(tt =>
                     tt.LabTechnicianId == technician.LabTechnicianId &&
@@ -738,7 +667,6 @@ public async Task<IActionResult> ProcessTests(
                 return RedirectToAction(nameof(ProcessTests));
             }
 
-            // Confirm that the required sample has been received.
             var requiredSampleReceived =
                 await _context.Samples.AnyAsync(s =>
                     s.TestRequestId == test.TestRequestId &&
@@ -753,7 +681,6 @@ public async Task<IActionResult> ProcessTests(
                 return RedirectToAction(nameof(ProcessTests));
             }
 
-            // Load consumables and check stock before accepting the test.
             var consumables = await _context.TestTypeConsumables
                 .Include(tc => tc.Consumable)
                 .Where(tc => tc.TestTypeId == test.TestTypeId)
@@ -776,8 +703,6 @@ public async Task<IActionResult> ProcessTests(
 
             var now = DateTime.Now;
 
-            // Atomically assign the test and start processing.
-            // Only one technician can successfully claim it.
             var claimed = await _context.TestRequestTestTypes
                 .Where(t =>
                     t.TestRequestTestTypeId == id &&
@@ -798,18 +723,15 @@ public async Task<IActionResult> ProcessTests(
                 return RedirectToAction(nameof(ProcessTests));
             }
 
-            // Keep the tracked entity consistent with the database.
             test.Status = "InProgress";
             test.LabTechnicianId = technician.LabTechnicianId;
             test.StartDateTime = now;
 
-            // Deduct consumables once, when the technician accepts the test.
             foreach (var item in consumables)
             {
                 item.Consumable.QuantityInHand -= item.QuantityNeeded;
             }
 
-            // Move the request into progress when the test is accepted.
             if (test.TestRequest.Status == "Submitted" ||
                 test.TestRequest.Status == "SamplesReceived")
             {
@@ -827,11 +749,10 @@ public async Task<IActionResult> ProcessTests(
             return RedirectToAction(nameof(MyTests));
         }
 
-        // ======================================================================
-        // STEP 4 - MY TESTS (accepted tests: not started + in progress)
-        // ======================================================================
 
-
+        // ==========================================
+        // MY TESTS
+        // ==========================================
 
         [HttpGet]
         public async Task<IActionResult> MyTests(
@@ -863,7 +784,6 @@ public async Task<IActionResult> ProcessTests(
 
             var now = DateTime.Now;
 
-            // Optional filter used by the dashboard "Urgent Tests" card.
             if (!string.IsNullOrWhiteSpace(urgency))
             {
                 tests = tests
@@ -871,7 +791,6 @@ public async Task<IActionResult> ProcessTests(
                     .ToList();
             }
 
-            // Due time = when you accepted the test + turnaround hours.
             if (dueStatus == "Overdue")
             {
                 tests = tests
@@ -895,15 +814,32 @@ public async Task<IActionResult> ProcessTests(
 
             return View(tests);
         }
-        // ======================================================================
-        // STEP 4 - START PROCESSING (from My Tests; then on to Capture Result)
-        // ======================================================================
 
 
-
+        // ==========================================
+        // CAPTURE TEST RESULT
+        // ==========================================
+        // FIX: Strongly-typed ViewBag data + null-safe patient lookup.
+        // Property names on PatientAllergy.Allergy, PatientCondition.Condition,
+        // PatientMedication.Medication are "Name" per the models.
         [HttpGet]
-public async Task<IActionResult> CaptureTestResult(int id)
+        public async Task<IActionResult> CaptureTestResult(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+            {
+                return NotFound("Lab technician profile not found.");
+            }
+
             var test = await _context.TestRequestTestTypes
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Doctor)
@@ -918,7 +854,23 @@ public async Task<IActionResult> CaptureTestResult(int id)
 
             if (test == null)
             {
-                return NotFound();
+                return NotFound("Test could not be found.");
+            }
+
+            if (test.LabTechnicianId != technician.LabTechnicianId)
+            {
+                TempData["Error"] =
+                    "You are not authorised to capture the result for this test.";
+
+                return RedirectToAction(nameof(MyTests));
+            }
+
+            if (test.Status != "InProgress")
+            {
+                TempData["Error"] =
+                    "This test is not currently being processed.";
+
+                return RedirectToAction(nameof(MyTests));
             }
 
             var patientId = await _context.TestRequests
@@ -940,44 +892,49 @@ public async Task<IActionResult> CaptureTestResult(int id)
                 })
                 .FirstOrDefaultAsync();
 
+            // Default empty collections so the view never receives null.
+            ViewBag.Patient = patient;
+            ViewBag.PatientConditions = new List<PatientCondition>();
+            ViewBag.PatientAllergies = new List<PatientAllergy>();
+            ViewBag.PatientMedications = new List<PatientMedication>();
+
             if (patient == null)
             {
-                return NotFound("Patient record not found.");
+                TempData["Error"] =
+                    "Patient record could not be found. Please return to your test list.";
+
+                return View(test);
             }
 
-            ViewBag.Patient = patient;
-
-            var conditions = await _context.PatientConditions
+            ViewBag.PatientConditions = await _context.PatientConditions
                 .Include(x => x.Condition)
                 .Where(x => x.PatientID == patientId)
                 .ToListAsync();
 
-            var allergies = await _context.PatientAllergies
+            ViewBag.PatientAllergies = await _context.PatientAllergies
                 .Include(x => x.Allergy)
                 .Where(x => x.PatientID == patientId)
                 .ToListAsync();
 
-            var medications = await _context.PatientMedications
+            ViewBag.PatientMedications = await _context.PatientMedications
                 .Include(x => x.Medication)
                 .Where(x => x.PatientID == patientId)
                 .ToListAsync();
-
-            ViewBag.PatientConditions = conditions;
-            ViewBag.PatientAllergies = allergies;
-            ViewBag.PatientMedications = medications;
 
             return View(test);
         }
 
 
+        // ==========================================
+        // SAVE TEST RESULT
+        // ==========================================
 
-
-        
-[HttpPost]
-public async Task<IActionResult> SaveTestResult(
-    int testRequestTestTypeId,
-    string resultValue,
-    string notes)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveTestResult(
+            int testRequestTestTypeId,
+            string resultValue,
+            string notes)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -1073,12 +1030,10 @@ public async Task<IActionResult> SaveTestResult(
 
             await _context.SaveChangesAsync();
 
-            // Link the saved result to the test.
             test.TestResultId = testResult.TestResultId;
             test.Status = "Completed";
             test.CompletionDateTime = DateTime.Now;
 
-            // Record the result capture in the history table.
             AddTestResultHistory(
                 test,
                 technician.LabTechnicianId,
@@ -1087,7 +1042,6 @@ public async Task<IActionResult> SaveTestResult(
                 "Completed",
                 testResult);
 
-            // Check whether all tests for this request are completed.
             bool allTestsCompleted =
                 !await _context.TestRequestTestTypes
                     .AnyAsync(t =>
@@ -1109,77 +1063,13 @@ public async Task<IActionResult> SaveTestResult(
             return RedirectToAction(nameof(MyTests));
         }
 
+
+        // ==========================================
+        // VERIFY RESULTS
+        // ==========================================
+
         public async Task<IActionResult> VerifyResults()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
-            }
-
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
-
-            if (technician == null)
-            {
-                return NotFound(
-                    "Lab technician profile not found.");
-            }
-
-            var tests =
-                await _context.TestRequestTestTypes
-                    .Include(t => t.TestRequest)
-                        .ThenInclude(r => r.Patient)
-                    .Include(t => t.TestType)
-                    .Include(t => t.TestResult)
-                    .Where(t =>
-                        t.Status == "Completed" &&
-                        t.TestResultId != null &&
-                        t.LabTechnicianId !=
-                            technician.LabTechnicianId &&
-                        _context.TechnicianTestTypes
-                            .Any(tt =>
-                                tt.LabTechnicianId ==
-                                    technician.LabTechnicianId &&
-                                tt.TestTypeId ==
-                                    t.TestTypeId))
-                    .ToListAsync();
-
-            var results =
-                tests
-                    .Where(t =>
-                        t.TestResult != null)
-                    .Select(t =>
-                        t.TestResult!)
-                    .Distinct()
-                    .ToList();
-
-            foreach (var result in results)
-            {
-                result.TestRequestTestType =
-                    tests
-                        .Where(t =>
-                            t.TestResultId ==
-                            result.TestResultId)
-                        .ToList();
-            }
-
-            return View(results);
-        }
-
-
-
-
-
-        public async Task<IActionResult> VerifyResultDetails(int id)
-        {
-            // Get the currently logged-in user.
             var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
@@ -1187,7 +1077,6 @@ public async Task<IActionResult> SaveTestResult(
                 return RedirectToAction("Login", "Account");
             }
 
-            // Get the lab technician profile.
             var technician = await _context.LabTechnicians
                 .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
@@ -1196,7 +1085,57 @@ public async Task<IActionResult> SaveTestResult(
                 return NotFound("Lab technician profile not found.");
             }
 
-            // Load the result, test, request and patient.
+            var tests = await _context.TestRequestTestTypes
+                .Include(t => t.TestRequest)
+                    .ThenInclude(r => r.Patient)
+                .Include(t => t.TestType)
+                .Include(t => t.TestResult)
+                .Where(t =>
+                    t.Status == "Completed" &&
+                    t.TestResultId != null &&
+                    t.LabTechnicianId != technician.LabTechnicianId &&
+                    _context.TechnicianTestTypes
+                        .Any(tt =>
+                            tt.LabTechnicianId == technician.LabTechnicianId &&
+                            tt.TestTypeId == t.TestTypeId))
+                .ToListAsync();
+
+            var results = tests
+                .Where(t => t.TestResult != null)
+                .Select(t => t.TestResult!)
+                .Distinct()
+                .ToList();
+
+            foreach (var result in results)
+            {
+                result.TestRequestTestType =
+                    tests
+                        .Where(t =>
+                            t.TestResultId == result.TestResultId)
+                        .ToList();
+            }
+
+            return View(results);
+        }
+
+
+        public async Task<IActionResult> VerifyResultDetails(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            if (technician == null)
+            {
+                return NotFound("Lab technician profile not found.");
+            }
+
             var result = await _context.TestResults
                 .Include(r => r.TestRequestTestType)
                     .ThenInclude(t => t.TestRequest)
@@ -1225,7 +1164,6 @@ public async Task<IActionResult> SaveTestResult(
                 return NotFound("Patient information could not be found.");
             }
 
-            // Prevent a technician from verifying their own result.
             if (test.LabTechnicianId == technician.LabTechnicianId)
             {
                 TempData["Error"] =
@@ -1234,7 +1172,6 @@ public async Task<IActionResult> SaveTestResult(
                 return RedirectToAction(nameof(VerifyResults));
             }
 
-            // Confirm that this technician is qualified to verify the test type.
             var canVerify = await _context.TechnicianTestTypes
                 .AnyAsync(tt =>
                     tt.LabTechnicianId == technician.LabTechnicianId &&
@@ -1248,7 +1185,6 @@ public async Task<IActionResult> SaveTestResult(
                 return RedirectToAction(nameof(VerifyResults));
             }
 
-            // Only allow results currently awaiting verification.
             if (test.Status != "Completed")
             {
                 TempData["Error"] =
@@ -1257,30 +1193,25 @@ public async Task<IActionResult> SaveTestResult(
                 return RedirectToAction(nameof(VerifyResults));
             }
 
-            // Make the configured reference range available to the view.
             ViewBag.NormalRangeMin = test.TestType?.NormalRangeMin;
             ViewBag.NormalRangeMax = test.TestType?.NormalRangeMax;
             ViewBag.TestUnit = test.TestType?.UnitOfMeasurement;
 
-            // Load the patient's medical conditions.
             ViewBag.PatientConditions = await _context.PatientConditions
                 .Include(pc => pc.Condition)
                 .Where(pc => pc.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Load the patient's allergies.
             ViewBag.PatientAllergies = await _context.PatientAllergies
                 .Include(pa => pa.Allergy)
                 .Where(pa => pa.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Load the patient's medications.
             ViewBag.PatientMedications = await _context.PatientMedications
                 .Include(pm => pm.Medication)
                 .Where(pm => pm.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Load the review history for this specific test.
             ViewBag.TestResultHistory = await _context.TestResultHistories
                 .Include(h => h.LabTechnician)
                     .ThenInclude(t => t.User)
@@ -1289,16 +1220,15 @@ public async Task<IActionResult> SaveTestResult(
                 .OrderBy(h => h.ActionDateTime)
                 .ToListAsync();
 
-            // Display the result, patient information and history.
             return View(result);
         }
 
 
         [HttpPost]
-public async Task<IActionResult> VerifyResult(
-    int id,
-    string action,
-    string reviewNotes)
+        public async Task<IActionResult> VerifyResult(
+            int id,
+            string action,
+            string reviewNotes)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -1391,7 +1321,6 @@ public async Task<IActionResult> VerifyResult(
                     verification.ReviewNotes = reviewNotes ?? "";
                 }
 
-                // Record successful verification.
                 AddTestResultHistory(
                     test,
                     technician.LabTechnicianId,
@@ -1404,7 +1333,8 @@ public async Task<IActionResult> VerifyResult(
                 await _context.SaveChangesAsync();
 
                 TempData["ResultSuccess"] =
-    "Test result has been successfully verified.";
+                    "Test result has been successfully verified.";
+
                 return RedirectToAction(nameof(VerifyResults));
             }
 
@@ -1445,7 +1375,6 @@ public async Task<IActionResult> VerifyResult(
                     verification.ReviewNotes = reviewNotes;
                 }
 
-                // Record why the result was sent back.
                 AddTestResultHistory(
                     test,
                     technician.LabTechnicianId,
@@ -1458,99 +1387,67 @@ public async Task<IActionResult> VerifyResult(
                 await _context.SaveChangesAsync();
 
                 TempData["ResultSuccess"] =
-    "Test result has been sent back to the original technician for review.";
+                    "Test result has been sent back to the original technician for review.";
+
                 return RedirectToAction(nameof(VerifyResults));
             }
 
             return BadRequest("Invalid verification action.");
         }
 
+
         // ==========================================
-        // REVIEW TEST RESULTS - LIST
+        // REVIEW RESULTS
         // ==========================================
 
         public async Task<IActionResult> ReviewResults()
         {
-            var user =
-                await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
             if (user == null)
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login", "Account");
             }
 
-            var technician =
-                await _context.LabTechnicians
-                    .FirstOrDefaultAsync(t =>
-                        t.UserId == user.Id);
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
             if (technician == null)
             {
-                return NotFound(
-                    "Lab technician profile not found.");
+                return NotFound("Lab technician profile not found.");
             }
 
-            var verifications =
-                await _context.TestResultVerifications
-                    .Include(v =>
-                        v.TestResult)
-                    .Where(v =>
-                        v.Status ==
-                            "To Be Reviewed" &&
-                        v.TestResult != null &&
-                        _context.TestRequestTestTypes
-                            .Any(t =>
-                                t.TestResultId ==
-                                    v.TestResultId &&
-                                t.LabTechnicianId ==
-                                    technician.LabTechnicianId &&
-                                t.Status ==
-                                    "To Be Reviewed"))
-                    .ToListAsync();
+            var verifications = await _context.TestResultVerifications
+                .Include(v => v.TestResult)
+                .Where(v =>
+                    v.Status == "To Be Reviewed" &&
+                    v.TestResult != null &&
+                    _context.TestRequestTestTypes
+                        .Any(t =>
+                            t.TestResultId == v.TestResultId &&
+                            t.LabTechnicianId == technician.LabTechnicianId &&
+                            t.Status == "To Be Reviewed"))
+                .ToListAsync();
 
-            foreach (var verification in
-                verifications)
+            foreach (var verification in verifications)
             {
                 if (verification.TestResult != null)
                 {
-                    verification.TestResult
-                        .TestRequestTestType =
-                        await _context
-                            .TestRequestTestTypes
-                            .Include(t =>
-                                t.TestRequest)
-                                .ThenInclude(r =>
-                                    r.Patient)
-                            .Include(t =>
-                                t.TestType)
+                    verification.TestResult.TestRequestTestType =
+                        await _context.TestRequestTestTypes
+                            .Include(t => t.TestRequest)
+                                .ThenInclude(r => r.Patient)
+                            .Include(t => t.TestType)
                             .Where(t =>
-                                t.TestResultId ==
-                                    verification
-                                        .TestResult
-                                        .TestResultId &&
-                                t.LabTechnicianId ==
-                                    technician
-                                        .LabTechnicianId &&
-                                t.Status ==
-                                    "To Be Reviewed")
+                                t.TestResultId == verification.TestResult.TestResultId &&
+                                t.LabTechnicianId == technician.LabTechnicianId &&
+                                t.Status == "To Be Reviewed")
                             .ToListAsync();
                 }
             }
 
             return View(verifications);
         }
-
-
-        // ==========================================
-        // REVIEW RESULT - DETAILS
-        // ==========================================
-
-
-        // ==========================================
-        // REVIEW RESULT - DETAILS
-        // ==========================================
 
 
         [HttpGet]
@@ -1571,7 +1468,6 @@ public async Task<IActionResult> VerifyResult(
                 return NotFound("Lab technician profile not found.");
             }
 
-            // Find the review record using its verification ID.
             var verification = await _context.TestResultVerifications
                 .Include(v => v.TestResult)
                 .FirstOrDefaultAsync(v =>
@@ -1585,7 +1481,6 @@ public async Task<IActionResult> VerifyResult(
 
             var result = verification.TestResult;
 
-            // Find the test assigned to the logged-in technician.
             var test = await _context.TestRequestTestTypes
                 .Include(t => t.TestRequest)
                     .ThenInclude(r => r.Patient)
@@ -1603,7 +1498,6 @@ public async Task<IActionResult> VerifyResult(
                     "The associated test could not be found for this technician.");
             }
 
-            // Populate the result navigation collection for the view.
             result.TestRequestTestType = new List<TestRequestItem> { test };
 
             var patient = test.TestRequest?.Patient;
@@ -1613,30 +1507,25 @@ public async Task<IActionResult> VerifyResult(
                 return NotFound("Patient information could not be found.");
             }
 
-            // Patient medical conditions.
             ViewBag.PatientConditions = await _context.PatientConditions
                 .Include(pc => pc.Condition)
                 .Where(pc => pc.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Patient allergies.
             ViewBag.PatientAllergies = await _context.PatientAllergies
                 .Include(pa => pa.Allergy)
                 .Where(pa => pa.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Patient medications.
             ViewBag.PatientMedications = await _context.PatientMedications
                 .Include(pm => pm.Medication)
                 .Where(pm => pm.PatientID == patient.PatientID)
                 .ToListAsync();
 
-            // Test reference range and unit.
             ViewBag.NormalRangeMin = test.TestType.NormalRangeMin;
             ViewBag.NormalRangeMax = test.TestType.NormalRangeMax;
             ViewBag.TestUnit = test.TestType.UnitOfMeasurement;
 
-            // History belongs to the test, not directly to the result.
             ViewBag.TestResultHistory = await _context.TestResultHistories
                 .Include(h => h.LabTechnician)
                     .ThenInclude(t => t.User)
@@ -1650,10 +1539,10 @@ public async Task<IActionResult> VerifyResult(
 
 
         [HttpPost]
-public async Task<IActionResult> CompleteReview(
-    int id,
-    string resultValue,
-    string notes)
+        public async Task<IActionResult> CompleteReview(
+            int id,
+            string resultValue,
+            string notes)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -1748,7 +1637,6 @@ public async Task<IActionResult> CompleteReview(
                 numericResult < normalMin ||
                 numericResult > normalMax;
 
-            // Update the existing result with the corrected values.
             result.ResultValue = resultValue.Trim();
             result.Notes = notes?.Trim() ?? "";
             result.IsAbnormal = isAbnormal;
@@ -1760,7 +1648,6 @@ public async Task<IActionResult> CompleteReview(
             verification.Status = "Resubmitted";
             verification.VerificationDateTime = DateTime.Now;
 
-            // Record the corrected result in the history table.
             AddTestResultHistory(
                 test,
                 technician.LabTechnicianId,
@@ -1778,16 +1665,17 @@ public async Task<IActionResult> CompleteReview(
             return RedirectToAction(nameof(ReviewResults));
         }
 
+
         // ==========================================
         // REPORTS
         // ==========================================
 
         public async Task<IActionResult> Reports(
-    DateTime? fromDate,
-    DateTime? toDate,
-    string testType,
-    string status,
-    string urgency)
+            DateTime? fromDate,
+            DateTime? toDate,
+            string testType,
+            string status,
+            string urgency)
         {
             var query = _context.TestRequestTestTypes
                 .AsNoTracking()
@@ -1913,7 +1801,6 @@ public async Task<IActionResult> CompleteReview(
         // EXPORT REPORT PDF
         // ==========================================
 
-
         [HttpGet]
         public async Task<IActionResult> ExportReportPdf(
             DateTime? fromDate,
@@ -1933,7 +1820,6 @@ public async Task<IActionResult> CompleteReview(
                 .Include(t => t.LabTechnician)
                 .AsQueryable();
 
-            // The report date range is based on completion date.
             if (fromDate.HasValue)
             {
                 var start = fromDate.Value.Date;
@@ -1969,7 +1855,6 @@ public async Task<IActionResult> CompleteReview(
                     t.TestRequest.Urgency == urgency);
             }
 
-            // Most recently completed tests appear first.
             var tests = await query
                 .OrderByDescending(t => t.CompletionDateTime)
                 .ThenBy(t => t.TestRequestId)
@@ -2060,13 +1945,11 @@ public async Task<IActionResult> CompleteReview(
             {
                 documentContainer.Page(page =>
                 {
-                    // Landscape allows the report columns to remain readable.
                     page.Size(PageSizes.A4.Landscape());
                     page.Margin(30);
                     page.DefaultTextStyle(style =>
                         style.FontSize(9).FontColor("#263238"));
 
-                    // HEADER: appears on every page.
                     page.Header().Column(header =>
                     {
                         header.Item()
@@ -2093,7 +1976,6 @@ public async Task<IActionResult> CompleteReview(
                         {
                             column.Spacing(10);
 
-                            // REPORT TITLE
                             column.Item().Text(
                                 "Lab Technician Test Processing Report")
                                 .FontSize(17)
@@ -2105,7 +1987,6 @@ public async Task<IActionResult> CompleteReview(
                                 $"at {generatedAt:HH:mm}")
                                 .FontSize(9);
 
-                            // REPORT CRITERIA
                             column.Item()
                                 .Border(1)
                                 .BorderColor("#D9E0E5")
@@ -2137,7 +2018,6 @@ public async Task<IActionResult> CompleteReview(
                                         $"{(string.IsNullOrWhiteSpace(urgency) ? "All" : urgency)}");
                                 });
 
-                            // SUMMARY
                             column.Item()
                                 .PaddingTop(2)
                                 .Text("SUMMARY")
@@ -2194,7 +2074,6 @@ public async Task<IActionResult> CompleteReview(
                                             : "N/A");
                             });
 
-                            // DETAILED RECORDS
                             column.Item()
                                 .PaddingTop(4)
                                 .Text("TEST DETAILS")
@@ -2229,20 +2108,19 @@ public async Task<IActionResult> CompleteReview(
                                         cols.ConstantColumn(75);
                                     });
 
-                                    // QuestPDF repeats this header on new pages.
                                     table.Header(header =>
                                     {
                                         string[] headings =
                                         {
-                                    "Request",
-                                    "Patient",
-                                    "Test type",
-                                    "Technician",
-                                    "Urgency",
-                                    "Status",
-                                    "Result",
-                                    "Completed",
-                                    "Turnaround"
+                                            "Request",
+                                            "Patient",
+                                            "Test type",
+                                            "Technician",
+                                            "Urgency",
+                                            "Status",
+                                            "Result",
+                                            "Completed",
+                                            "Turnaround"
                                         };
 
                                         foreach (var heading in headings)
@@ -2309,7 +2187,6 @@ public async Task<IActionResult> CompleteReview(
                             }
                         });
 
-                    // FOOTER: appears on every page.
                     page.Footer()
                         .PaddingTop(8)
                         .BorderTop(1)
@@ -2349,10 +2226,10 @@ public async Task<IActionResult> CompleteReview(
                 $"HemaCore_LabTechnicianReport_{generatedAt:yyyyMMdd_HHmmss}.pdf");
         }
 
+
         // ==========================================
         // MY COMPLETED TESTS
         // ==========================================
-
 
         public async Task<IActionResult> MyCompletedTests()
         {
@@ -2380,12 +2257,10 @@ public async Task<IActionResult> CompleteReview(
 
             foreach (var test in completedTests)
             {
-                // Load the request without loading the full Patient entity.
                 test.TestRequest = await _context.TestRequests
                     .FirstOrDefaultAsync(r =>
                         r.TestRequestId == test.TestRequestId);
 
-                // Load the test type separately.
                 test.TestType = await _context.TestTypes
                     .FirstOrDefaultAsync(tt =>
                         tt.TestTypeId == test.TestTypeId);
@@ -2394,8 +2269,8 @@ public async Task<IActionResult> CompleteReview(
             return View(completedTests);
         }
 
- 
-public async Task<IActionResult> CompletedTestDetails(int id)
+
+        public async Task<IActionResult> CompletedTestDetails(int id)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -2440,15 +2315,8 @@ public async Task<IActionResult> CompletedTestDetails(int id)
         }
 
 
-
-
         // ==========================================
-        // MY ACCOUNT - VIEW PROFILE
-        // ==========================================
-
-
-        // ==========================================
-        // MY ACCOUNT - TECHNICIAN PROFILE
+        // MY ACCOUNT
         // ==========================================
 
         [HttpGet]
@@ -2461,9 +2329,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            // Split the stored FullName into Name and Surname.
-            // The first word is treated as the name; the remaining
-            // words are treated as the surname.
             var fullName = (user.FullName ?? "").Trim();
             var nameParts = fullName.Split(
                 ' ',
@@ -2482,10 +2347,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             return View(model);
         }
 
-
-        // ==========================================
-        // MY ACCOUNT - EDIT PROFILE (GET)
-        // ==========================================
 
         [HttpGet]
         public async Task<IActionResult> EditProfile()
@@ -2516,10 +2377,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
         }
 
 
-        // ==========================================
-        // MY ACCOUNT - EDIT PROFILE (POST)
-        // ==========================================
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(
@@ -2537,7 +2394,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            // Check whether another user already uses this email.
             var existingUser = await _userManager.FindByEmailAsync(
                 model.Email.Trim());
 
@@ -2550,7 +2406,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return View(model);
             }
 
-            // Combine Name and Surname for the existing FullName field.
             user.FullName =
                 $"{model.Name.Trim()} {model.Surname.Trim()}".Trim();
 
@@ -2572,7 +2427,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return View(model);
             }
 
-            // Update the linked LabTechnician record.
             var technician = await _context.LabTechnicians
                 .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
@@ -2590,20 +2444,12 @@ public async Task<IActionResult> CompletedTestDetails(int id)
         }
 
 
-        // ==========================================
-        // MY ACCOUNT - CHANGE PASSWORD (GET)
-        // ==========================================
-
         [HttpGet]
         public IActionResult ChangePassword()
         {
             return View(new ChangePasswordViewModel());
         }
 
-
-        // ==========================================
-        // MY ACCOUNT - CHANGE PASSWORD (POST)
-        // ==========================================
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -2622,8 +2468,6 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 return RedirectToAction("Login", "Account");
             }
 
-            // Identity checks the current password and enforces
-            // the configured password requirements.
             var result = await _userManager.ChangePasswordAsync(
                 user,
                 model.CurrentPassword,
@@ -2647,6 +2491,10 @@ public async Task<IActionResult> CompletedTestDetails(int id)
             return RedirectToAction(nameof(TechnicianProfile));
         }
 
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
 
         private void AddTestResultHistory(
             TestRequestItem test,
@@ -2746,10 +2594,10 @@ public async Task<IActionResult> CompletedTestDetails(int id)
                 new { id = sample.TestRequestId });
         }
 
-      
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> RejectSample(int sampleId, string rejectionReason)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectSample(int sampleId, string rejectionReason)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -2806,10 +2654,8 @@ public async Task<IActionResult> RejectSample(int sampleId, string rejectionReas
                     new { id = sample.TestRequestId });
             }
 
-            // Save the required status value.
             sample.Status = "Cancelled";
 
-            // Keep the existing database columns for compatibility.
             sample.RejectionReason = rejectionReason;
             sample.RejectedDateTime = DateTime.Now;
             sample.RejectedByLabTechnicianId = technician.LabTechnicianId;
@@ -2822,6 +2668,5 @@ public async Task<IActionResult> RejectSample(int sampleId, string rejectionReas
             return RedirectToAction(nameof(ReceiveSampleDetails),
                 new { id = sample.TestRequestId });
         }
-
     }
-    }
+}
