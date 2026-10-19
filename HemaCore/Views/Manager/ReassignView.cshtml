@@ -1,0 +1,277 @@
+﻿@model HemaCore.ViewModels.ManagerVM.ReassignTechnicianViewModel
+
+@{
+    ViewData["Title"] = "Reassign Technician";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="container mt-4 mb-5">
+
+    <div class="card shadow-sm border-0 p-4">
+
+        <!-- PAGE HEADER -->
+        <div class="mb-4">
+
+            <h3 class="fw-bold mb-2">
+                Reassign Technician
+            </h3>
+
+            <p class="text-muted mb-0">
+                Transfer test type responsibilities to another qualified
+                technician before deactivation.
+            </p>
+
+        </div>
+
+        <hr class="mt-0 mb-4" />
+
+        <!-- NOTIFICATIONS -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show"
+                 role="alert">
+                @TempData["Success"]
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show"
+                 role="alert">
+                @TempData["Error"]
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- ORIGINAL TECHNICIAN -->
+        <div class="bg-light rounded-3 p-4 mb-4">
+
+            <h5 class="fw-semibold mb-3">
+                Original Technician
+            </h5>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="rounded-circle bg-white border d-flex
+                    align-items-center justify-content-center"
+                     style="width: 48px; height: 48px; flex-shrink: 0;">
+
+                    <i class="bi bi-person-gear fs-4 text-secondary"></i>
+
+                </div>
+
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        @Model.TechnicianName
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Review and reassign the technician's remaining
+                        test type responsibilities.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ASSIGNMENTS -->
+        <div class="mb-3">
+
+            <h5 class="fw-semibold mb-1">
+                Test Type Assignments
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Select an eligible active technician for each test type
+                that requires reassignment.
+            </p>
+
+        </div>
+
+        @if (Model.TestTypes == null || !Model.TestTypes.Any())
+        {
+            <div class="border rounded-3 p-5 text-center">
+
+                <i class="bi bi-check-circle text-success"
+                   style="font-size: 2.5rem;"></i>
+
+                <h5 class="fw-bold mt-3">
+                    No Reassignment Required
+                </h5>
+
+                <p class="text-muted mb-4">
+                    All remaining test types are covered, or no
+                    assignments remain.
+                </p>
+
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info py-3" role="status">
+
+                <i class="bi bi-info-circle me-2"></i>
+
+                <strong>@Model.TestTypes.Count</strong>
+                test type(s) require reassignment.
+
+            </div>
+
+            @foreach (var testType in Model.TestTypes)
+            {
+                <div class="border rounded-3 mb-3">
+
+                    <div class="p-4">
+
+                        <div class="d-flex justify-content-between
+                            align-items-center flex-wrap gap-2 mb-3">
+
+                            <h6 class="fw-bold mb-0">
+                                @testType.TestTypeName
+                            </h6>
+
+                            @if (testType.AvailableTechnicians == null ||
+                                 !testType.AvailableTechnicians.Any())
+                            {
+                                <span class="badge bg-warning-subtle text-dark">
+                                    No Replacement Available
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-secondary border">
+                                    Replacement Available
+                                </span>
+                            }
+
+                        </div>
+
+                        @if (testType.AvailableTechnicians == null ||
+                             !testType.AvailableTechnicians.Any())
+                        {
+                            <div class="alert alert-warning mb-0"
+                                 role="alert">
+
+                                <div class="d-flex align-items-start gap-2">
+
+                                    <i class="bi bi-exclamation-triangle mt-1"></i>
+
+                                    <div>
+                                        <strong>
+                                            No eligible technician found
+                                        </strong>
+
+                                        <p class="small mb-0 mt-1">
+                                            Add or activate a qualified
+                                            technician for this test type.
+                                            The existing assignment remains
+                                            unchanged until a replacement
+                                            becomes available.
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-controller="Manager"
+                                  asp-action="ReassignTechnician"
+                                  method="post">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden"
+                                       name="technicianId"
+                                       value="@Model.TechnicianId" />
+
+                                <input type="hidden"
+                                       name="testTypeId"
+                                       value="@testType.TestTypeId" />
+
+                                <div class="row align-items-end">
+
+                                    <div class="col-md-8 mb-3 mb-md-0">
+
+                                        <label for="technician-@testType.TestTypeId"
+                                               class="form-label fw-semibold">
+                                            Replacement Technician
+                                        </label>
+
+                                        <select id="technician-@testType.TestTypeId"
+                                                name="newTechnicianId"
+                                                class="form-select"
+                                                required>
+
+                                            <option value="">
+                                                -- Select a technician --
+                                            </option>
+
+                                            @foreach (var replacement in
+                                                testType.AvailableTechnicians)
+                                            {
+                                                <option value="@replacement.LabTechnicianId">
+                                                    @replacement.Name
+                                                    @replacement.Surname
+                                                    (@replacement.EmployeeNumber)
+                                                </option>
+                                            }
+
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-4">
+
+                                        <button type="submit"
+                                                class="btn btn-primary-custom btn-sm w-100">
+
+                                            <i class="bi bi-arrow-left-right me-1"></i>
+                                            Reassign Technician
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </form>
+                        }
+
+                    </div>
+
+                </div>
+            }
+        }
+
+        <!-- FOOTER -->
+        <div class="d-flex justify-content-between align-items-center
+            flex-wrap gap-3 mt-4 pt-4 border-top">
+
+            <a asp-action="LabTechnician"
+               class="btn btn-outline-secondary">
+
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Technicians
+
+            </a>
+
+
+        </div>
+
+    </div>
+
+</div>

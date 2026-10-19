@@ -1145,87 +1145,128 @@ namespace HemaCore.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> AssignTechnicianToTestType(int testTypeId)
+        public async Task<IActionResult> AssignTechnicianToTestTypes(int testTypeId)
         {
             var testType = await _context.TestTypes
                 .FirstOrDefaultAsync(t => t.TestTypeId == testTypeId);
 
             if (testType == null)
             {
-                return NotFound();
+                TempData["Error"] = "Test type not found.";
+                return RedirectToAction("TestTypes");
             }
 
-            ViewBag.TestTypeId = testType.TestTypeId;
-            ViewBag.TestTypeName = testType.TestTypeName;
+            var assignedTechnicianIds = await _context.TechnicianTestTypes
+                .Where(x => x.TestTypeId == testTypeId)
+                .Select(x => x.LabTechnicianId)
+                .ToListAsync();
 
-            ViewBag.Technicians = new SelectList(
-                await _context.LabTechnicians
-                    .Where(t => t.IsActive)
-                    .OrderBy(t => t.Name)
-                    .ToListAsync(),
-                "LabTechnicianId",
-                "Name"
-            );
+            var availableTechnicians = await _context.LabTechnicians
+                .Where(t => t.IsActive &&
+                            !assignedTechnicianIds.Contains(t.LabTechnicianId))
+                .OrderBy(t => t.Name)
+                .ThenBy(t => t.Surname)
+                .ToListAsync();
 
-            return View();
+            var viewModel = new HemaCore.ViewModels.ManagerVM
+                .AssignTechnicianViewModel
+            {
+                TestTypeId = testType.TestTypeId,
+                TestTypeName = testType.TestTypeName,
+                AvailableTechnicians = availableTechnicians
+            };
+
+            return View("AssignTechnicianToTestTypes", viewModel);
         }
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignTechnicianToTestTypes(
-            int testTypeId,
-            int labTechnicianId)
+            HemaCore.ViewModels.ManagerVM.AssignTechnicianViewModel model)
         {
-            var testTypeExists = await _context.TestTypes
-                .AnyAsync(t => t.TestTypeId == testTypeId);
+            var testType = await _context.TestTypes
+                .FirstOrDefaultAsync(t => t.TestTypeId == model.TestTypeId);
 
-            if (!testTypeExists)
+            if (testType == null)
             {
-                return NotFound();
+                TempData["Error"] = "Test type not found.";
+                return RedirectToAction("TestTypes");
             }
 
-            var technician = await _context.LabTechnicians
-                .FirstOrDefaultAsync(t =>
-                    t.LabTechnicianId == labTechnicianId &&
-                    t.IsActive);
+            var selectedIds = model.SelectedTechnicianIds?
+                .Distinct()
+                .ToList() ?? new List<int>();
 
-            if (technician == null)
+            if (!selectedIds.Any())
             {
-                TempData["Error"] = "Please select a valid active technician.";
-
+                TempData["Error"] = "Please select at least one technician.";
                 return RedirectToAction(
-                    nameof(AssignTechnicianToTestType),
-                    new { testTypeId });
+                    "AssignTechnicianToTestTypes",
+                    new { testTypeId = model.TestTypeId });
             }
 
-            var alreadyAssigned = await _context.TechnicianTestTypes
-                .AnyAsync(x =>
-                    x.TestTypeId == testTypeId &&
-                    x.LabTechnicianId == labTechnicianId);
+            var activeTechnicianIds = await _context.LabTechnicians
+                .Where(t => t.IsActive && selectedIds.Contains(t.LabTechnicianId))
+                .Select(t => t.LabTechnicianId)
+                .ToListAsync();
 
-            if (alreadyAssigned)
+            if (activeTechnicianIds.Count != selectedIds.Count)
             {
                 TempData["Error"] =
-                    "This technician is already assigned to this test type.";
+                    "One or more selected technicians are invalid or inactive.";
 
                 return RedirectToAction(
-                    nameof(AssignTechnicianToTestType),
-                    new { testTypeId });
+                    "AssignTechnicianToTestTypes",
+                    new { testTypeId = model.TestTypeId });
             }
 
-            _context.TechnicianTestTypes.Add(new TechnicianTestType
+            var alreadyAssignedIds = await _context.TechnicianTestTypes
+                .Where(x => x.TestTypeId == model.TestTypeId &&
+                            selectedIds.Contains(x.LabTechnicianId))
+                .Select(x => x.LabTechnicianId)
+                .ToListAsync();
+
+            var newAssignments = selectedIds
+                .Except(alreadyAssignedIds)
+                .Select(technicianId => new TechnicianTestType
+                {
+                    TestTypeId = model.TestTypeId,
+                    LabTechnicianId = technicianId
+                })
+                .ToList();
+
+            if (!newAssignments.Any())
             {
-                TestTypeId = testTypeId,
-                LabTechnicianId = labTechnicianId
-            });
+                TempData["Error"] =
+                    "All selected technicians are already assigned to this test type.";
 
-            await _context.SaveChangesAsync();
+                return RedirectToAction(
+                    "AssignTechnicianToTestTypes",
+                    new { testTypeId = model.TestTypeId });
+            }
 
-            TempData["Success"] =
-                $"Technician {technician.Name} {technician.Surname} assigned successfully.";
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
 
-            return RedirectToAction("TestTypeDetails", new { id = testTypeId });
+            try
+            {
+                _context.TechnicianTestTypes.AddRange(newAssignments);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] =
+                    $"{newAssignments.Count} technician(s) assigned successfully.";
+
+                return RedirectToAction(
+                    "TestTypeDetails",
+                    new { id = model.TestTypeId });
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         #endregion
 
@@ -3242,6 +3283,7 @@ namespace HemaCore.Controllers
             return RedirectToAction(nameof(LabTechnician));
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteTechnician(int id)
@@ -3265,8 +3307,6 @@ namespace HemaCore.Controllers
                 .ToListAsync();
 
             // Find test types without another active technician
-            var testTypesNeedingReassignment = new List<string>();
-
             foreach (var testType in assignedTestTypes)
             {
                 var hasOtherActiveTechnician =
@@ -3278,32 +3318,262 @@ namespace HemaCore.Controllers
 
                 if (!hasOtherActiveTechnician)
                 {
-                    testTypesNeedingReassignment.Add(
-                        testType.TestTypeName);
+                    TempData["Warning"] =
+                        $"The test type '{testType.TestTypeName}' " +
+                        "needs another active technician before this " +
+                        "technician can be deactivated.";
+
+                    // Redirect to the reassignment page for this test type
+                    return RedirectToAction(
+                        "ReassignView",
+                        new
+                        {
+                            testTypeId = testType.TestTypeId,
+                            technicianId = id
+                        });
                 }
             }
 
-            // Stop deactivation if reassignment is required
-            if (testTypesNeedingReassignment.Any())
-            {
-                TempData["Error"] =
-                    "This technician cannot be deactivated because the following test types " +
-                    "have no other active technician: " +
-                    string.Join(", ", testTypesNeedingReassignment) +
-                    ". Please reassign these test types first.";
-
-                return RedirectToAction(nameof(LabTechnician));
-            }
-
-            // Deactivate technician
+            // All test types have another active technician
             technician.IsActive = false;
 
             await _context.SaveChangesAsync();
 
             TempData["Success"] =
-                $"Technician {technician.Name} {technician.Surname} has been deactivated successfully.";
+                $"Technician {technician.Name} {technician.Surname} " +
+                "has been deactivated successfully.";
 
             return RedirectToAction(nameof(LabTechnician));
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ReassignTechnician(
+            int testTypeId, int technicianId)
+        {
+            var testType = await _context.TestTypes
+                .FirstOrDefaultAsync(t => t.TestTypeId == testTypeId);
+
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t => t.LabTechnicianId == technicianId);
+
+            if (testType == null || technician == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.TestTypeId = testTypeId;
+            ViewBag.TestTypeName = testType.TestTypeName;
+            ViewBag.TechnicianId = technicianId;
+            ViewBag.TechnicianName =
+                $"{technician.Name} {technician.Surname}";
+
+            // Only active technicians who are not the technician
+            // being deactivated and are not already assigned
+            var availableTechnicians = await _context.LabTechnicians
+                .Where(t => t.IsActive && t.LabTechnicianId != technicianId)
+                .Where(t => !_context.TechnicianTestTypes.Any(tt =>
+                    tt.TestTypeId == testTypeId &&
+                    tt.LabTechnicianId == t.LabTechnicianId))
+                .ToListAsync();
+
+            return View(availableTechnicians);
+        }
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> ReassignView(int technicianId)
+        {
+            var technician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t =>
+                    t.LabTechnicianId == technicianId);
+
+            if (technician == null)
+            {
+                TempData["Error"] = "Technician not found.";
+                return RedirectToAction("LabTechnician");
+            }
+
+            // Get ALL test types for this technician that have
+            // no other active technician assigned.
+            var testTypes = await _context.TechnicianTestTypes
+                .Where(x => x.LabTechnicianId == technicianId)
+                .Where(x => !_context.TechnicianTestTypes.Any(other =>
+                    other.TestTypeId == x.TestTypeId &&
+                    other.LabTechnicianId != technicianId &&
+                    other.LabTechnician.IsActive))
+                .Select(x => new
+                {
+                    x.TestTypeId,
+                    TestTypeName = x.TestType.TestTypeName
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var viewModel =
+                new HemaCore.ViewModels.ManagerVM.ReassignTechnicianViewModel
+                {
+                    TechnicianId = technician.LabTechnicianId,
+                    TechnicianName =
+                        $"{technician.Name} {technician.Surname}"
+                };
+
+            // Build a separate replacement list for every test type.
+            foreach (var testType in testTypes)
+            {
+                var alreadyAssignedIds = await _context.TechnicianTestTypes
+                    .Where(x => x.TestTypeId == testType.TestTypeId)
+                    .Select(x => x.LabTechnicianId)
+                    .ToListAsync();
+
+                var availableTechnicians = await _context.LabTechnicians
+                    .Where(t =>
+                        t.IsActive &&
+                        t.LabTechnicianId != technicianId &&
+                        !alreadyAssignedIds.Contains(t.LabTechnicianId))
+                    .OrderBy(t => t.Name)
+                    .ThenBy(t => t.Surname)
+                    .ToListAsync();
+
+                viewModel.TestTypes.Add(
+                    new HemaCore.ViewModels.ManagerVM.ReassignTestTypeViewModel
+                    {
+                        TestTypeId = testType.TestTypeId,
+                        TestTypeName = testType.TestTypeName,
+                        AvailableTechnicians = availableTechnicians
+                    });
+            }
+
+            return View("ReassignView", viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReassignTechnician(
+     int testTypeId,
+     int technicianId,
+     int newTechnicianId)
+        {
+            if (technicianId == newTechnicianId)
+            {
+                TempData["Error"] = "Select a different technician.";
+
+                return RedirectToAction(
+                    "ReassignView",
+                    new { technicianId });
+            }
+
+            var oldTechnician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t =>
+                    t.LabTechnicianId == technicianId);
+
+            var newTechnician = await _context.LabTechnicians
+                .FirstOrDefaultAsync(t =>
+                    t.LabTechnicianId == newTechnicianId &&
+                    t.IsActive);
+
+            if (oldTechnician == null || newTechnician == null)
+            {
+                TempData["Error"] =
+                    "The original technician or active replacement technician could not be found.";
+
+                return RedirectToAction(
+                    "ReassignView",
+                    new { technicianId });
+            }
+
+            var assignment = await _context.TechnicianTestTypes
+                .FirstOrDefaultAsync(x =>
+                    x.TestTypeId == testTypeId &&
+                    x.LabTechnicianId == technicianId);
+
+            if (assignment == null)
+            {
+                TempData["Error"] =
+                    "The test type assignment was not found.";
+
+                return RedirectToAction(
+                    "ReassignView",
+                    new { technicianId });
+            }
+
+            var alreadyAssigned = await _context.TechnicianTestTypes
+                .AnyAsync(x =>
+                    x.TestTypeId == testTypeId &&
+                    x.LabTechnicianId == newTechnicianId);
+
+            if (alreadyAssigned)
+            {
+                TempData["Error"] =
+                    "The replacement technician is already assigned to this test type.";
+
+                return RedirectToAction(
+                    "ReassignView",
+                    new { technicianId });
+            }
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Transfer the selected test type.
+                _context.TechnicianTestTypes.Remove(assignment);
+
+                _context.TechnicianTestTypes.Add(
+                    new TechnicianTestType
+                    {
+                        TestTypeId = testTypeId,
+                        LabTechnicianId = newTechnicianId
+                    });
+
+                await _context.SaveChangesAsync();
+
+                // Check whether the original technician still has
+                // ANY test type assignments.
+                var remainingAssignments = await _context
+                    .TechnicianTestTypes
+                    .AnyAsync(x =>
+                        x.LabTechnicianId == technicianId);
+
+                if (remainingAssignments)
+                {
+                    // Keep the technician active until all assignments
+                    // have been transferred.
+                    oldTechnician.IsActive = true;
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    TempData["Success"] =
+                        "Test type reassigned successfully. " +
+                        "The technician remains active because other " +
+                        "test type assignments still need to be reassigned.";
+
+                    return RedirectToAction(
+                        "ReassignView",
+                        new { technicianId });
+                }
+
+                // No assignments remain, so the technician can
+                // safely be deactivated.
+                oldTechnician.IsActive = false;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] =
+                    "All test type assignments have been reassigned. " +
+                    "The original technician has been deactivated.";
+
+                return RedirectToAction("LabTechnician");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         [HttpPost]

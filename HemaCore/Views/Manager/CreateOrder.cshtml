@@ -10,8 +10,8 @@
 <style>
 
     /* =====================================================
-           SHOW / HIDE BUTTON
-           ===================================================== */
+               SHOW / HIDE BUTTON
+               ===================================================== */
 
     #toggleConsumables {
         border-radius: 20px;
@@ -43,8 +43,8 @@
 
 
     /* =====================================================
-           SEARCH
-           ===================================================== */
+               SEARCH
+               ===================================================== */
 
     #consumableSearch {
         border-radius: 8px;
@@ -52,8 +52,8 @@
 
 
     /* =====================================================
-           CONSUMABLE CARD
-           ===================================================== */
+               CONSUMABLE CARD
+               ===================================================== */
 
     .consumable-card {
         border-radius: 8px;
@@ -68,8 +68,8 @@
 
 
     /* =====================================================
-           NO CONSUMABLES MESSAGE
-           ===================================================== */
+               NO CONSUMABLES MESSAGE
+               ===================================================== */
 
     .no-consumables-message {
         border: 1px dashed #ced4da;
@@ -87,8 +87,8 @@
 
 
     /* =====================================================
-           CONSUMABLE COUNT
-           ===================================================== */
+               CONSUMABLE COUNT
+               ===================================================== */
 
     #consumableCount {
         font-size: 0.8rem;
@@ -416,7 +416,7 @@
         There was a problem loading consumables
         for
         <strong>
-        ${selectedSupplierName}
+        ${escapeHtml(selectedSupplierName)}
         </strong>.
         </p>
 
@@ -489,7 +489,7 @@
         let filteredConsumables =
         allConsumables.filter(function (item) {
 
-        return item.consumableName
+        return String(item.consumableName || "")
         .toLowerCase()
         .includes(searchText);
 
@@ -554,9 +554,7 @@
         were found for
 
         <strong>
-        ${escapeHtml(
-        selectedSupplierName
-        )}
+        ${escapeHtml(selectedSupplierName)}
         </strong>.
 
         </p>
@@ -594,9 +592,7 @@
         available for
 
         <strong>
-        ${escapeHtml(
-        selectedSupplierName
-        )}
+        ${escapeHtml(selectedSupplierName)}
         </strong>.
 
         </p>
@@ -659,8 +655,7 @@
         // This is important for model binding
         // after searching.
 
-        let index =
-        item.originalIndex;
+        let index = item.originalIndex;
 
 
         html += `
@@ -672,9 +667,7 @@
 
         <h6 class="mb-1">
 
-        ${escapeHtml(
-        item.consumableName
-        )}
+        ${escapeHtml(item.consumableName)}
 
         </h6>
 
@@ -685,6 +678,19 @@
 
         <b>
         ${item.quantityInHand}
+        </b>
+
+        </p>
+
+
+        <!-- REORDER LEVEL: ADDED -->
+
+        <p class="mb-1 small">
+
+        Reorder Level:
+
+        <b>
+        ${item.reorderLevel ?? item.ReorderLevel ?? 0}
         </b>
 
         </p>
@@ -703,20 +709,17 @@
         </p>
 
 
-        <!--
-        Hidden ID
-        -->
+        <!-- Hidden ID -->
 
         <input type="hidden"
         name="Items[${index}].ConsumableID"
         value="${item.consumableID}" />
 
 
-        <!--
-        Quantity
-        -->
+        <!-- Quantity -->
 
-        <label class="small mb-1">
+        <label class="small mb-1"
+        for="quantity_${index}">
 
         Quantity
 
@@ -724,9 +727,9 @@
 
 
         <input type="number"
+        id="quantity_${index}"
         name="Items[${index}].Quantity"
-        class="form-control
-        form-control-sm"
+        class="form-control form-control-sm"
         min="0"
         value="0" />
 
