@@ -149,3 +149,24 @@ body {
         margin-right: 0;
         font-size: 1.3rem;
     }
+    /*new css for alerts patient*/
+.notification-badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.6em;
+    color: #fff !important;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}

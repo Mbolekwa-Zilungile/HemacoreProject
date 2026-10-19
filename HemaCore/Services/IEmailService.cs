@@ -1,4 +1,5 @@
-﻿namespace HemaCore.Services
+﻿
+namespace HemaCore.Services
 {
     public interface IEmailService
     {
@@ -22,7 +23,14 @@
             string patientName,
             string patientSurname);
 
-        // NEW: notifies the patient that the doctor has released verified results.
+        Task SendVerifiedResultsEmailAsync(
+            string doctorEmail,
+            string doctorName,
+            string patientName,
+            int testRequestId,
+            byte[] pdfBytes);
+
+        // Notifies the patient that the doctor has released verified results.
         Task SendResultsReleasedEmailAsync(
             string patientEmail,
             string patientName,

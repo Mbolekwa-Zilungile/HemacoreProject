@@ -1,9 +1,23 @@
-﻿
-@model HemaCore.Models.Patient
+﻿@model HemaCore.Models.Patient
+@using Microsoft.AspNetCore.Identity
+@using HemaCore.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<HemaCore.Models.Users> UserManager
+@inject AppDbContext Context
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewBag.Title = "Patient Dashboard";
+
+    // Fetch pending consent requests for the notification banner
+    var currentUser = await UserManager.GetUserAsync(User);
+    var pendingConsentCount = 0;
+
+    if (currentUser != null)
+    {
+        pendingConsentCount = await Context.ConsentRequests
+            .CountAsync(r => r.PatientID == currentUser.Id && r.Status == "Pending");
+    }
 }
 
 <div class="patient-dashboard">
@@ -22,8 +36,8 @@
 
             <h1>
                 Welcome@(Model != null && !string.IsNullOrWhiteSpace(Model.Name)
-                                    ? ", " + Model.Name
-                                    : "")
+                                                    ? ", " + Model.Name
+                                                    : "")
             </h1>
 
             <p>
@@ -38,6 +52,32 @@
         </div>
 
     </div>
+
+
+    <!-- =========================================================
+         ACTION REQUIRED: CONSENT REQUESTS
+    ========================================================= -->
+    @if (pendingConsentCount > 0)
+    {
+        <div class="profile-alert" style="border-left-color: #dc2626; background: #fff5f5; margin-bottom: 28px;">
+            <div class="profile-alert-icon" style="background: #fee2e2; color: #dc2626;">
+                <i class="fas fa-bell"></i>
+            </div>
+
+            <div class="profile-alert-content">
+                <strong style="color: #991b1b;">Action Required</strong>
+                <span style="color: #7f1d1d;">
+                    You have <strong>@pendingConsentCount</strong> doctor(s) requesting access to your medical records.
+                    Please review these requests to approve or deny them.
+                </span>
+            </div>
+
+            <a asp-controller="Patient" asp-action="ConsentRequests" class="profile-alert-action" style="background: #dc2626;">
+                Review Requests
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    }
 
 
     <!-- =========================================================
@@ -292,8 +332,8 @@
 <style>
 
     /* =========================================================
-           GENERAL
-        ========================================================= */
+               GENERAL
+            ========================================================= */
 
     .patient-dashboard {
         width: 100%;
@@ -305,8 +345,8 @@
 
 
     /* =========================================================
-           HERO
-        ========================================================= */
+               HERO
+            ========================================================= */
 
     .dashboard-hero {
         position: relative;
@@ -396,8 +436,8 @@
 
 
     /* =========================================================
-           PROFILE ALERT
-        ========================================================= */
+               PROFILE ALERT
+            ========================================================= */
 
     .profile-alert {
         display: flex;
@@ -471,8 +511,8 @@
 
 
     /* =========================================================
-           SECTION HEADINGS
-        ========================================================= */
+               SECTION HEADINGS
+            ========================================================= */
 
     .section-heading {
         margin-bottom: 18px;
@@ -510,8 +550,8 @@
 
 
     /* =========================================================
-           DASHBOARD GRID
-        ========================================================= */
+               DASHBOARD GRID
+            ========================================================= */
 
     .dashboard-grid {
         display: grid;
@@ -521,8 +561,8 @@
 
 
     /* =========================================================
-           DASHBOARD CARDS
-        ========================================================= */
+               DASHBOARD CARDS
+            ========================================================= */
 
     .dashboard-card {
         position: relative;
@@ -597,8 +637,8 @@
 
 
     /* =========================================================
-           CARD COLORS
-        ========================================================= */
+               CARD COLORS
+            ========================================================= */
 
     .details-icon {
         background: #eef2ff;
@@ -637,8 +677,8 @@
 
 
     /* =========================================================
-           ACCOUNT PANEL
-        ========================================================= */
+               ACCOUNT PANEL
+            ========================================================= */
 
     .account-panel {
         display: flex;
@@ -715,8 +755,8 @@
 
 
     /* =========================================================
-           RESPONSIVE
-        ========================================================= */
+               RESPONSIVE
+            ========================================================= */
 
     @@media (max-width: 1000px) {
 
@@ -800,4 +840,3 @@
     }
 
 </style>
-
