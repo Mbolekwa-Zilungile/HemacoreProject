@@ -1,0 +1,93 @@
+﻿
+@model HemaCore.Models.SampleType
+
+@{
+    ViewData["Title"] = "Sample Type Details";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- PAGE HEADER -->
+    <div class="section-title d-flex align-items-center">
+        <i class="fas fa-vial me-2"></i>
+        <span>Sample Type Details</span>
+    </div>
+
+    <!-- SAMPLE TYPE INFORMATION -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Sample Type Information
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Sample Type Name</label>
+                    <div class="fw-semibold">
+                        @Model.SampleName
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Description</label>
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.Description)
+                            ? "No description provided"
+                            : Model.Description)
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSOCIATED TEST TYPES -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-flask me-2"></i>
+                Test Types Using This Sample
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            @if (Model.TestTypes != null && Model.TestTypes.Any())
+            {
+                <ul class="mb-0">
+                    @foreach (var test in Model.TestTypes)
+                    {
+                        <li class="mb-2">
+                            @test.TestTypeName
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    No test types use this sample type.
+                </p>
+            }
+
+        </div>
+    </div>
+    <!-- BACK BUTTON -->
+    <div class="d-flex justify-content-start mt-4">
+        <a asp-action="SampleTypes"
+           asp-controller="Manager"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back
+        </a>
+    </div>
+</div>

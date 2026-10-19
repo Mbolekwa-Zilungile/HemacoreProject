@@ -282,14 +282,8 @@ namespace HemaCore.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
 
-            // =====================================================
-            // Supplier
-            // =====================================================
 
-            modelbuilder.Entity<Supplier>()
-                .Ignore(s => s.Suppliers);
-
-
+           
             // =====================================================
             // Alert Decimal Precision
             // =====================================================

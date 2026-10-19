@@ -47,13 +47,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="text-muted">Category ID</label>
-                    <div class="fw-semibold">
-                        @Model.CategoryId
-                    </div>
-                </div>
-
+            
                 <div class="col-md-6 mb-3">
                     <label class="text-muted">Description</label>
                     <div class="fw-semibold">
@@ -81,7 +75,7 @@
         </div>
     </div>
 
-    <!-- ASSOCIATED TEST TYPES -->
+    <!-- ASSOCIATED TEST TYPES: ACCORDION -->
     <div class="card shadow-sm mb-4">
 
         <div class="card-header">
@@ -101,129 +95,126 @@
 
             @if (testTypes != null && testTypes.Count > 0)
             {
-                <div class="row">
+                var accordionId = $"testTypesAccordion_{Model.CategoryId}";
+
+                <div class="accordion" id="@accordionId">
 
                     @foreach (var test in testTypes)
                     {
-                        <div class="col-lg-6 mb-3">
+                        var headingId = $"heading_{test.TestTypeId}";
+                        var collapseId = $"collapse_{test.TestTypeId}";
 
-                            <div class="card h-100 border shadow-sm">
+                        <div class="accordion-item">
 
-                                <!-- TEST TYPE HEADER -->
-                                <div class="card-header d-flex justify-content-between align-items-center">
+                            <!-- ACCORDION HEADER -->
+                            <h2 class="accordion-header" id="@headingId">
 
-                                    <h6 class="mb-0 fw-bold">
-                                        <i class="fas fa-microscope me-2 text-primary"></i>
-                                        @test.TestTypeName
-                                    </h6>
+                                <button class="accordion-button collapsed"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#@collapseId"
+                                        aria-expanded="false"
+                                        aria-controls="@collapseId">
 
-                                    @if (test.IsActive)
-                                    {
-                                        <span class="badge bg-success">
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">
-                                            Inactive
-                                        </span>
-                                    }
+                                    <div class="d-flex align-items-center justify-content-between w-100 me-3">
 
-                                </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-microscope text-primary me-3"></i>
 
-                                <!-- IMPORTANT TEST DETAILS -->
-                                <div class="card-body">
-
-                                    <div class="mb-3">
-                                        <small class="text-muted d-block">
-                                            Sample Type
-                                        </small>
-
-                                        <div class="fw-semibold">
-                                            @if (test.SampleType != null)
-                                            {
-                                                <i class="fas fa-vial me-1 text-primary"></i>
-                                                @test.SampleType.SampleName
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">
-                                                    Not assigned
-                                                </span>
-                                            }
+                                            <span class="fw-bold">
+                                                @test.TestTypeName
+                                            </span>
                                         </div>
+
+                                        <span class="badge @(test.IsActive ? "bg-success" : "bg-danger")">
+                                            @(test.IsActive ? "Active" : "Inactive")
+                                        </span>
+
                                     </div>
 
-                                    <div class="row">
+                                </button>
 
-                                        <div class="col-6 mb-3">
-                                            <small class="text-muted d-block">
+                            </h2>
+
+                            <!-- ACCORDION CONTENT -->
+                            <div id="@collapseId"
+                                 class="accordion-collapse collapse"
+                                 aria-labelledby="@headingId"
+                                 data-bs-parent="#@accordionId">
+
+                                <div class="accordion-body">
+
+                                    <div class="row g-3">
+
+                                        <!-- SAMPLE TYPE -->
+                                        <div class="col-md-4">
+
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-vial me-1"></i>
+                                                Sample Type
+                                            </small>
+
+                                            <div class="fw-semibold">
+                                                @(test.SampleType?.SampleName ?? "Not assigned")
+                                            </div>
+
+                                        </div>
+
+                                        <!-- NORMAL RANGE -->
+                                        <div class="col-md-4">
+
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-chart-line me-1"></i>
                                                 Normal Range
                                             </small>
 
                                             <div class="fw-semibold">
-                                                @test.NormalRangeMin -
-                                                @test.NormalRangeMax
+                                                @test.NormalRangeMin - @test.NormalRangeMax
+
+                                                @if (!string.IsNullOrWhiteSpace(test.UnitOfMeasurement))
+                                                {
+                                                    <span class="text-muted">
+                                                        @test.UnitOfMeasurement
+                                                    </span>
+                                                }
                                             </div>
 
-                                            @if (!string.IsNullOrWhiteSpace(test.UnitOfMeasurement))
-                                            {
-                                                <small class="text-muted">
-                                                    @test.UnitOfMeasurement
-                                                </small>
-                                            }
                                         </div>
 
-                                        <div class="col-6 mb-3">
-                                            <small class="text-muted d-block">
+                                        <!-- TURNAROUND TIME -->
+                                        <div class="col-md-4">
+
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-clock me-1"></i>
                                                 Turnaround Time
                                             </small>
 
-                                            <span class="badge bg-info text-dark mt-1">
-                                                @test.TurnAroundTime min
-                                            </span>
-                                        </div>
-
-                                        <div class="col-12 mb-2">
-                                            <small class="text-muted d-block">
-                                                Unit of Measurement
-                                            </small>
-
-                                            <div class="fw-semibold">
-                                                @(string.IsNullOrWhiteSpace(test.UnitOfMeasurement)
-                                                    ? "Not specified"
-                                                    : test.UnitOfMeasurement)
+                                            <div>
+                                                <span class="badge bg-info text-dark">
+                                                    @test.TurnAroundTime min
+                                                </span>
                                             </div>
+
                                         </div>
 
                                     </div>
 
-                                </div>
+                                    <!-- ACTION BUTTONS -->
+                                    <div class="d-flex justify-content-end gap-2 mt-4">
 
-                                <!-- ACTIONS -->
-                                <div class="card-footer bg-transparent text-end">
+                                        
 
-                                    <a asp-action="DetailsTestType"
-                                       asp-controller="Manager"
-                                       asp-route-id="@test.TestTypeId"
-                                       class="btn btn-sm btn-outline-info me-1"
-                                       title="View test type details">
-                                        <i class="fas fa-eye me-1"></i>
-                                        Details
-                                    </a>
+                                        <a asp-action="EditTestType"
+                                           asp-controller="Manager"
+                                           asp-route-id="@test.TestTypeId"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Edit
+                                        </a>
 
-                                    <a asp-action="EditTestType"
-                                       asp-controller="Manager"
-                                       asp-route-id="@test.TestTypeId"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Edit test type">
-                                        <i class="fas fa-edit me-1"></i>
-                                        Edit
-                                    </a>
+                                    </div>
 
                                 </div>
-
                             </div>
 
                         </div>
@@ -249,7 +240,7 @@
            asp-controller="Manager"
            class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-1"></i>
-            Back to Test Categories
+            Back 
         </a>
 
         <a asp-action="EditCategory"

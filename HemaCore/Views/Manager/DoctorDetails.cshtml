@@ -1,0 +1,81 @@
+﻿@model HemaCore.Models.Doctor
+
+@{
+    ViewData["Title"] = "Doctor Details";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <div class="section-title d-flex align-items-center">
+        <i class="fas fa-user-md me-2"></i>
+        <span>Doctor Details</span>
+    </div>
+
+    <!-- Doctor Information -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Doctor Information
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Full Name</label>
+                    <div class="fw-semibold">
+                        @(Model.User != null
+                            ? $"{Model.User.FullName}"
+                            : "Not available")
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">HPCSA Number</label>
+                    <div class="fw-semibold">
+                        @Model.HPCSANumber
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Email Address</label>
+                    <div class="fw-semibold">
+                        @(Model.User?.Email ?? "Not available")
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Phone Number</label>
+                    <div class="fw-semibold">
+                        @(Model.PhoneNumber ?? "Not available")
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Status</label>
+                    <div>
+                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                </div>
+               
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="d-flex justify-content-start mt-4">
+        <a asp-controller="Manager"
+           asp-action="Doctors"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back 
+        </a>
+    </div>
+
+</div>

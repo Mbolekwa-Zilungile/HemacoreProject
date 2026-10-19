@@ -3,84 +3,55 @@
 @{
     ViewData["Title"] = "Technician Details";
     Layout = "_ManagerLayout";
+
+    var technicianTests = Model.TechnicianTests;
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <div class="content-card">
 
-    <!-- HEADER -->
+    <!-- PAGE HEADER -->
     <div class="section-title d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center">
             <i class="fas fa-user-cog me-2"></i>
             <span>Lab Technician Details</span>
         </div>
 
-        <a asp-action="Technicians"
+        <a asp-action="EditTechnician"
            asp-controller="Manager"
-           class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i>
-            Back to Technicians
+           asp-route-id="@Model.LabTechnicianId"
+           class="btn btn-primary-custom btn-sm">
+            <i class="fas fa-edit me-1"></i>
+            Edit Technician
         </a>
     </div>
 
-    <!-- ALERT MESSAGES -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show mt-3"
-             role="alert">
-            @TempData["Success"]
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close">
-            </button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show mt-3"
-             role="alert">
-            @TempData["Error"]
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close">
-            </button>
-        </div>
-    }
-
     <!-- PERSONAL INFORMATION -->
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
+    <div class="card shadow-sm mb-4">
 
-            <h5 class="mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
                 <i class="fas fa-id-card me-2"></i>
                 Personal Information
             </h5>
+        </div>
 
-            <div class="row g-4">
+        <div class="card-body">
+
+            <div class="row">
 
                 <!-- FULL NAME -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        Full Name
-                    </label>
-
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Full Name</label>
                     <div class="fw-semibold">
                         @Model.Surname?.ToUpper() @Model.Name?.ToUpper()
                     </div>
                 </div>
 
                 <!-- ID NUMBER -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        ID Number
-                    </label>
-
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">ID Number</label>
                     <div class="fw-semibold">
                         @(string.IsNullOrWhiteSpace(Model.IDNumber)
                             ? "Not provided"
@@ -89,11 +60,8 @@
                 </div>
 
                 <!-- EMPLOYEE NUMBER -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        Employee Number
-                    </label>
-
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Employee Number</label>
                     <div class="fw-semibold">
                         @(string.IsNullOrWhiteSpace(Model.EmployeeNumber)
                             ? "Not provided"
@@ -102,11 +70,8 @@
                 </div>
 
                 <!-- PHONE NUMBER -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        Phone Number
-                    </label>
-
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Phone Number</label>
                     <div class="fw-semibold">
                         @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
                             ? "Not provided"
@@ -115,10 +80,8 @@
                 </div>
 
                 <!-- EMAIL ADDRESS -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        Email Address
-                    </label>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Email Address</label>
 
                     @if (!string.IsNullOrWhiteSpace(Model.User?.Email))
                     {
@@ -136,75 +99,161 @@
                     }
                 </div>
 
-                <!-- ASSIGNED TEST COUNT -->
-                <div class="col-md-6">
-                    <label class="text-muted small d-block mb-1">
-                        Assigned Test Types
-                    </label>
-
-                    <div class="fw-semibold">
-                        @(Model.TechnicianTests?.Count() ?? 0)
+                <!-- TECHNICIAN STATUS -->
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Technician Status</label>
+                    <div>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactive</span>
+                        }
                     </div>
                 </div>
 
             </div>
 
-            <hr class="my-4" />
+        </div>
+    </div>
 
-            <!-- ASSIGNED TEST TYPES -->
-            <h5 class="mb-3">
-                <i class="fas fa-microscope me-2"></i>
-                Assigned Test Types
-            </h5>
+    <!-- ASSIGNED TEST TYPES -->
+    <div class="card shadow-sm mb-4">
 
-            @if (Model.TechnicianTests != null &&
-                 Model.TechnicianTests.Any())
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-vials me-2"></i>
+                    Assigned Test Types
+                </h5>
+
+                <span class="badge bg-primary">
+                    @(technicianTests?.Count() ?? 0)
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            @if (technicianTests != null && technicianTests.Any())
             {
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach (var assignment in Model.TechnicianTests)
+                var accordionId = $"technicianTestsAccordion_{Model.LabTechnicianId}";
+
+                <div class="accordion" id="@accordionId">
+
+                    @foreach (var assignment in technicianTests)
                     {
-                        <span class="badge bg-info text-dark p-2">
-                            <i class="fas fa-vial me-1"></i>
-                            @(assignment.TestType?.TestTypeName
-                                ?? "Unknown Test Type")
-                        </span>
+                        var testTypeId = assignment.TestType?.TestTypeId;
+                        var testName = assignment.TestType?.TestTypeName
+                            ?? "Unknown Test Type";
+
+                        var headingId = $"heading_{Model.LabTechnicianId}_{testTypeId}";
+                        var collapseId = $"collapse_{Model.LabTechnicianId}_{testTypeId}";
+
+                        <div class="accordion-item">
+
+                            <!-- ACCORDION HEADER -->
+                            <h2 class="accordion-header" id="@headingId">
+
+                                <button class="accordion-button collapsed"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#@collapseId"
+                                        aria-expanded="false"
+                                        aria-controls="@collapseId">
+
+                                    <div class="d-flex align-items-center w-100 me-3">
+                                        <i class="fas fa-microscope text-primary me-3"></i>
+
+                                        <span class="fw-bold">
+                                            @testName
+                                        </span>
+                                    </div>
+
+                                </button>
+
+                            </h2>
+
+                            <!-- ACCORDION CONTENT -->
+                            <div id="@collapseId"
+                                 class="accordion-collapse collapse"
+                                 aria-labelledby="@headingId"
+                                 data-bs-parent="#@accordionId">
+
+                                <div class="accordion-body">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-vial me-1"></i>
+                                                Test Type
+                                            </small>
+
+                                            <div class="fw-semibold">
+                                                @testName
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-user-check me-1"></i>
+                                                Assignment
+                                            </small>
+
+                                            <div>
+                                                <span class="badge bg-info text-dark">
+                                                    Assigned
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
                     }
+
                 </div>
 
                 <p class="text-muted mt-3 mb-0">
                     Total assigned test types:
-                    <strong>@Model.TechnicianTests.Count()</strong>
+                    <strong>@technicianTests.Count()</strong>
                 </p>
             }
             else
             {
-                <div class="alert alert-light border mb-0">
+                <div class="alert alert-info mb-0">
                     <i class="fas fa-info-circle me-2"></i>
                     No test types have been assigned to this technician.
                 </div>
             }
 
-            <!-- ACTION BUTTONS -->
-            <div class="d-flex flex-wrap gap-2 mt-4">
-
-                <a asp-action="EditTechnician"
-                   asp-controller="Manager"
-                   asp-route-id="@Model.LabTechnicianId"
-                   class="btn btn-primary-custom btn-sm">
-                    <i class="fas fa-edit me-1"></i>
-                    Edit Technician
-                </a>
-
-                <a asp-action="Technicians"
-                   asp-controller="Manager"
-                   class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Back to List
-                </a>
-
-            </div>
-
         </div>
+    </div>
+
+    <!-- BOTTOM BUTTONS -->
+    <div class="d-flex justify-content-between mt-4">
+
+        <a asp-action="LabTechnician"
+           asp-controller="Manager"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back
+        </a>
+
+        <a asp-action="EditTechnician"
+           asp-controller="Manager"
+           asp-route-id="@Model.LabTechnicianId"
+           class="btn btn-primary-custom">
+            <i class="fas fa-edit me-1"></i>
+            Edit Technician
+        </a>
+
     </div>
 
 </div>

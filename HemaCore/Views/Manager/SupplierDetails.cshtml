@@ -1,0 +1,115 @@
+﻿@model HemaCore.Models.Supplier
+
+@{
+    ViewData["Title"] = "Supplier Details";
+    Layout = "_ManagerLayout";
+}
+
+<link rel="stylesheet" href="~/css/doctor.css" />
+
+<div class="content-card">
+
+    <!-- PAGE HEADER -->
+    <div class="section-title d-flex align-items-center">
+        <i class="fas fa-truck me-2"></i>
+        <span>Supplier Details</span>
+    </div>
+
+    <!-- SUPPLIER INFORMATION -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Supplier Information
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Supplier Name</label>
+                    <div class="fw-semibold">
+                        @Model.SupplierName
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Contact Person</label>
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.ContactPerson)
+                            ? "Not provided"
+                            : Model.ContactPerson)
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Email Address</label>
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(Model.Email)
+                            ? "Not provided"
+                            : Model.Email)
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted">Supplier Status</label>
+                    <div>
+                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CONSUMABLES SUPPLIED -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-boxes me-2"></i>
+                Consumables Supplied
+                <span class="badge bg-primary ms-2">
+                    @(Model.Consumables?.Count ?? 0)
+                </span>
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            @if (Model.Consumables != null && Model.Consumables.Any())
+            {
+                <ul class="mb-0">
+                    @foreach (var consumable in Model.Consumables)
+                    {
+                        <li class="mb-2">
+                            @consumable.ConsumableName
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    No consumables are associated with this supplier.
+                </p>
+            }
+
+        </div>
+    </div>
+
+  <!-- BACK BUTTON -->
+    <div class="d-flex justify-content-start mt-3">
+        <a asp-action="Suppliers"
+           asp-controller="Manager"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back
+        </a>
+    </div>
+
+</div>

@@ -13,7 +13,8 @@ namespace HemaCore.Models
         public string Email { get; set; }
         public bool IsActive { get; set; }
 
-        public ICollection<Supplier> Suppliers { get; set; } = new List<Supplier>();
+        public ICollection<Consumable> Consumables { get; set; }
+           = new List<Consumable>();
 
     }
 }

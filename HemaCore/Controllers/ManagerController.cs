@@ -307,7 +307,8 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> CategoryDetails(int id)
         {
             var category = await _context.TestCategories
-                .Include(c => c.TestTypes)
+                .Include(c => c.TestTypes.Where(t => t.IsActive))
+                    .ThenInclude(t => t.SampleType)
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
 
             if (category == null)
@@ -318,6 +319,7 @@ namespace HemaCore.Controllers
 
             return View(category);
         }
+
         #endregion
 
         #region TestTypes
@@ -1082,35 +1084,37 @@ namespace HemaCore.Controllers
         }
 
 
+
         public async Task<IActionResult> DeleteTestType(int id)
         {
             var testType = await _context.TestTypes
                 .Include(t => t.TechnicianTestType)
-                .Include(t => t.TestTypeConsumables)
                 .FirstOrDefaultAsync(t => t.TestTypeId == id);
 
             if (testType == null)
             {
                 return NotFound();
             }
-            bool hasTechnicians = testType.TechnicianTestType.Any();
 
-            bool hasConsumables = testType.TestTypeConsumables.Any();
+            // TODO: Replace with the actual query for ongoing test requests.
+            // This must check active requests, not technician assignments.
+            bool hasOngoingTests = false;
 
-            if (hasTechnicians)
+            if (hasOngoingTests)
             {
                 TempData["Error"] =
-                    $"Cannot delete {testType.TestTypeName} because it is linked to technicians.";
+                    $"Cannot deactivate {testType.TestTypeName} because it is linked to ongoing test requests.";
 
                 return RedirectToAction("TestTypes");
             }
 
-
+            // Soft delete: retain technician links and historical records.
             testType.IsActive = false;
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"{testType.TestTypeName} deleted successfully.";
+            TempData["Success"] =
+                $"{testType.TestTypeName} has been deactivated successfully.";
 
             return RedirectToAction("TestTypes");
         }
@@ -1126,18 +1130,7 @@ namespace HemaCore.Controllers
             {
                 return NotFound();
             }
-            bool hasTechnicians = testType.TechnicianTestType.Any();
-
-            bool hasConsumables = testType.TestTypeConsumables.Any();
-
-            if (hasTechnicians)
-            {
-                TempData["Error"] =
-                    $"Cannot delete {testType.TestTypeName} because it is linked to technicians.";
-
-                return RedirectToAction("TestTypes");
-            }
-
+          
 
             testType.IsActive = true;
 
@@ -1427,6 +1420,23 @@ namespace HemaCore.Controllers
             TempData["Success"] = $"{sample.SampleName} activated successfully.";
 
             return RedirectToAction("InactiveSampleTypes");
+        }
+
+        // GET: Manager/SampleTypeDetails/5
+        public async Task<IActionResult> SampleTypeDetails(int id)
+        {
+            var sampleType = await _context.SampleTypes
+                .Include(s => s.TestTypes)
+                .Where(s => s.IsActive)
+                .FirstOrDefaultAsync(s => s.SampleTypeId == id);
+
+            if (sampleType == null)
+            {
+                TempData["Error"] = "Sample type not found.";
+                return RedirectToAction("SampleTypes");
+            }
+
+            return View(sampleType);
         }
         #endregion
 
@@ -1884,7 +1894,7 @@ namespace HemaCore.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] =
-                $"{supplier.SupplierName} has been deactivated successfully.";
+                $"{supplier.SupplierName} is deactivated successfully. Please assign a new supplier to the affected consumables to ensure uninterrupted stock replenishment";
 
             return RedirectToAction("Suppliers");
         }
@@ -1909,8 +1919,99 @@ namespace HemaCore.Controllers
             TempData["Success"] =
                 $"{supplier.SupplierName} has been activated successfully.";
 
-            return RedirectToAction("Suppliers");
+            return RedirectToAction("InactiveSuppliers");
         }
+
+        public async Task<IActionResult> SupplierDetails(int id)
+        {
+            var supplier = await _context.Suppliers
+                .Include(s => s.Consumables)
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            return View(supplier);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> AddSupplierConsumables(int supplierId)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == supplierId);
+
+            if (supplier == null)
+                return NotFound();
+
+            if (!supplier.IsActive)
+                return BadRequest("Cannot assign consumables to an inactive supplier.");
+
+            await LoadAvailableConsumables(supplierId);
+
+            return View(supplier);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddSupplierConsumables(
+            int supplierId, int consumableId)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.SupplierId == supplierId);
+
+            if (supplier == null)
+                return NotFound();
+
+            if (!supplier.IsActive)
+                return BadRequest("Cannot assign consumables to an inactive supplier.");
+
+            var consumable = await _context.Consumables
+                .FirstOrDefaultAsync(c => c.ConsumableId == consumableId);
+
+            if (consumable == null)
+            {
+                ModelState.AddModelError("", "Please select a valid consumable.");
+                await LoadAvailableConsumables(supplierId);
+                return View(supplier);
+            }
+
+            if (consumable.SupplierId != null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "This consumable is already assigned to a supplier.");
+
+                await LoadAvailableConsumables(supplierId);
+                return View(supplier);
+            }
+
+            consumable.SupplierId = supplierId;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Consumable assigned to " +
+                                  supplier.SupplierName + " successfully.";
+
+            return RedirectToAction("SupplierDetails", new { id = supplierId });
+        }
+
+        private async Task LoadAvailableConsumables(int supplierId)
+        {
+            var availableConsumables = await _context.Consumables
+                .Where(c => c.SupplierId == null)
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
+
+            ViewBag.AvailableConsumables = new SelectList(
+                availableConsumables,
+                "ConsumableId",
+                "ConsumableName"
+            );
+        }
+
 
         #endregion
 
@@ -2767,7 +2868,17 @@ namespace HemaCore.Controllers
 
             return Json(doctors);
         }
+        public async Task<IActionResult> DoctorDetails(int id)
+        {
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.DoctorId == id);
 
+            if (doctor == null)
+                return NotFound();
+
+            return View(doctor);
+        }
         #endregion
 
         #region LabTechnician
