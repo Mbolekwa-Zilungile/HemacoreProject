@@ -1,6 +1,7 @@
 ﻿using HemaCore.Data;
 using HemaCore.Models;
 using HemaCore.Models.ViewModels;
+using HemaCore.Services;
 using HemaCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,12 +19,16 @@ namespace HemaCore.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<Users> _userManager;
 
+        private readonly IEmailService _emailService;
+
         public LabTechnicianController(
             AppDbContext context,
-            UserManager<Users> userManager)
+            UserManager<Users> userManager,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
 
@@ -295,6 +300,7 @@ namespace HemaCore.Controllers
 
             return View(testRequests);
         }
+
 
 
         [HttpGet]
@@ -1294,6 +1300,7 @@ namespace HemaCore.Controllers
             var verification = await _context.TestResultVerifications
                 .FirstOrDefaultAsync(v => v.TestResultId == result.TestResultId);
 
+
             if (action == "Verify")
             {
                 test.Status = "Verified";
@@ -1330,10 +1337,235 @@ namespace HemaCore.Controllers
                     result,
                     reviewNotes);
 
+                // Save the verification first.
                 await _context.SaveChangesAsync();
 
-                TempData["ResultSuccess"] =
-                    "Test result has been successfully verified.";
+                // Check whether every test in this request is verified.
+                int requestId = test.TestRequestId;
+
+                bool allTestsVerified = await _context.TestRequestTestTypes
+                    .Where(t => t.TestRequestId == requestId)
+                    .AnyAsync()
+                    &&
+                    await _context.TestRequestTestTypes
+                        .Where(t => t.TestRequestId == requestId)
+                        .AllAsync(t => t.Status == "Verified");
+
+                if (allTestsVerified)
+                {
+                    // Load the request, patient, doctor and all test results.
+                    var request = await _context.TestRequests
+                        .Include(r => r.Patient)
+                        .Include(r => r.Doctor)
+                            .ThenInclude(d => d.User)
+                        .FirstOrDefaultAsync(r => r.TestRequestId == requestId);
+
+                    var requestTests = await _context.TestRequestTestTypes
+                        .Include(t => t.TestType)
+                        .Include(t => t.TestResult)
+                        .Where(t => t.TestRequestId == requestId)
+                        .ToListAsync();
+
+                    if (request == null)
+                    {
+                        TempData["Error"] =
+                            "The results were verified, but the request could not be found for emailing.";
+
+                        return RedirectToAction(nameof(VerifyResults));
+                    }
+
+                    var doctorEmailResult = await _context.Database
+     .SqlQuery<string>($"""
+        SELECT Email AS [Value]
+        FROM dbo.Doctors
+        WHERE DoctorId = {request.DoctorId}
+    """)
+     .FirstOrDefaultAsync();
+
+                    string doctorEmail = doctorEmailResult ?? "";
+
+                    string doctorName = (
+                        (request.Doctor?.Name ?? "") + " " +
+                        (request.Doctor?.Surname ?? "")
+                    ).Trim();
+
+                    string patientName = (
+                        (request.Patient?.Name ?? "") + " " +
+                        (request.Patient?.Surname ?? "")
+                    ).Trim();
+
+                    if (string.IsNullOrWhiteSpace(doctorEmail))
+                    {
+                        TempData["Error"] =
+                            "All tests are verified, but the requesting doctor's email address is missing.";
+
+                        return RedirectToAction(nameof(VerifyResults));
+                    }
+
+                    // Generate a PDF containing this request's results only.
+                    var document = Document.Create(container =>
+                    {
+                        container.Page(page =>
+                        {
+                            page.Size(PageSizes.A4);
+                            page.Margin(35);
+                            page.DefaultTextStyle(style => style.FontSize(10));
+
+                            page.Header().Column(header =>
+                            {
+                                header.Item()
+                                    .Text("HEMACORE")
+                                    .FontSize(20)
+                                    .Bold();
+
+                                header.Item()
+                                    .Text("Verified Laboratory Results")
+                                    .FontSize(15)
+                                    .Bold();
+                            });
+
+                            page.Content()
+                                .PaddingVertical(15)
+                                .Column(column =>
+                                {
+                                    column.Spacing(8);
+
+                                    column.Item().Text(
+                                        $"Request number: {requestId}");
+
+                                    column.Item().Text(
+                                        $"Patient: {patientName}");
+
+                                    column.Item().Text(
+                                        $"Requesting doctor: {doctorName}");
+
+                                    column.Item().Text(
+                                        $"Request date: {request.RequestDate:dd MMM yyyy}");
+
+                                    column.Item().Text(
+                                        $"Urgency: {request.Urgency}");
+
+                                    column.Item()
+                                        .PaddingTop(10)
+                                        .Text("Test Results")
+                                        .FontSize(13)
+                                        .Bold();
+
+                                    column.Item().Table(table =>
+                                    {
+                                        table.ColumnsDefinition(columns =>
+                                        {
+                                            columns.RelativeColumn(2);
+                                            columns.RelativeColumn(2);
+                                            columns.RelativeColumn(1);
+                                            columns.RelativeColumn(2);
+                                        });
+
+                                        table.Header(header =>
+                                        {
+                                            foreach (var heading in new[]
+                                            {
+                                    "Test",
+                                    "Result",
+                                    "Unit",
+                                    "Normal range"
+                                            })
+                                            {
+                                                header.Cell()
+                                                    .Background(Colors.Grey.Lighten3)
+                                                    .Padding(5)
+                                                    .Text(heading)
+                                                    .Bold();
+                                            }
+                                        });
+
+                                        foreach (var item in requestTests)
+                                        {
+                                            string normalRange =
+                                                item.TestType?.NormalRangeMin != null &&
+                                                item.TestType?.NormalRangeMax != null
+                                                    ? $"{item.TestType.NormalRangeMin} - {item.TestType.NormalRangeMax}"
+                                                    : "N/A";
+
+                                            table.Cell()
+                                                .Padding(5)
+                                                .Text(item.TestType?.TestTypeName ?? "N/A");
+
+                                            var resultCell = table.Cell().Padding(5);
+
+                                            string resultValue =
+                                                item.TestResult?.ResultValue ?? "N/A";
+
+                                            if (item.TestResult?.IsAbnormal == true)
+                                            {
+                                                resultCell.Text(
+                                                    $"{resultValue} (Abnormal)")
+                                                    .FontColor(Colors.Red.Darken2)
+                                                    .Bold();
+                                            }
+                                            else
+                                            {
+                                                resultCell.Text(resultValue);
+                                            }
+
+                                            table.Cell()
+                                                .Padding(5)
+                                                .Text(item.TestType?.UnitOfMeasurement ?? "N/A");
+
+                                            table.Cell()
+                                                .Padding(5)
+                                                .Text(normalRange);
+                                        }
+                                    });
+
+                                    column.Item()
+                                        .PaddingTop(12)
+                                        .Text(
+                                            "These results have been verified by the laboratory. " +
+                                            "The requesting doctor must review and release them " +
+                                            "to the patient through HemaCore.");
+
+                                    column.Item()
+                                        .Text("Confidential medical information.")
+                                        .Italic();
+                                });
+
+                            page.Footer()
+                                .AlignCenter()
+                                .Text("HemaCore | Verified Laboratory Results");
+                        });
+                    });
+
+                    byte[] pdfBytes = document.GeneratePdf();
+
+                    // Email the PDF to the requesting doctor.
+                    try
+                    {
+                        await _emailService.SendVerifiedResultsEmailAsync(
+                            doctorEmail,
+                            string.IsNullOrWhiteSpace(doctorName)
+                                ? "Doctor"
+                                : doctorName,
+                            string.IsNullOrWhiteSpace(patientName)
+                                ? "Patient"
+                                : patientName,
+                            requestId,
+                            pdfBytes);
+
+                        TempData["ResultSuccess"] =
+                            "All tests are verified. The results PDF has been emailed to the requesting doctor.";
+                    }
+                    catch (Exception)
+                    {
+                        TempData["Error"] =
+                            "All tests are verified, but the email could not be sent. Please check the email configuration.";
+                    }
+                }
+                else
+                {
+                    TempData["ResultSuccess"] =
+                        "Test result has been successfully verified.";
+                }
 
                 return RedirectToAction(nameof(VerifyResults));
             }
