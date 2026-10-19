@@ -3,12 +3,16 @@ using HemaCore.Models;
 using HemaCore.Models.Enums;
 using HemaCore.Services;
 using HemaCore.ViewModels.ManagerVM;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 using Twilio.Rest.Trunking.V1;
+using QuestPDF.Infrastructure;
 
 namespace HemaCore.Controllers
 {
@@ -156,7 +160,7 @@ namespace HemaCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult>AddCategory(TestCategory category)
+        public async Task<IActionResult> AddCategory(TestCategory category)
         {
             if (!ModelState.IsValid)
             {
@@ -164,8 +168,8 @@ namespace HemaCore.Controllers
             }
 
             var existingCategory = await _context.TestCategories.FirstOrDefaultAsync(x => x.CategoryName == category.CategoryName);
-            
-            if(existingCategory != null)
+
+            if (existingCategory != null)
             {
                 ModelState.AddModelError("CategoryName", "This category already exist.");
                 return View(category);
@@ -176,7 +180,7 @@ namespace HemaCore.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"{category.CategoryName} added successfully.";
-           return RedirectToAction("TestCategories");
+            return RedirectToAction("TestCategories");
         }
 
         public IActionResult EditCategory(int id)
@@ -259,7 +263,7 @@ namespace HemaCore.Controllers
             }
 
             bool hasTestTypes = _context.TestTypes
-                .Any(t => t.CategoryId== id);
+                .Any(t => t.CategoryId == id);
 
             if (hasTestTypes)
             {
@@ -530,7 +534,7 @@ namespace HemaCore.Controllers
             await _context.SaveChangesAsync();
 
 
-          
+
             var selectedConsumables = model.Consumables?
                 .Where(c => c.IsSelected)
                 .ToList()
@@ -1307,7 +1311,7 @@ namespace HemaCore.Controllers
 
             var existingsampletype = await _context.SampleTypes.FirstOrDefaultAsync(x => x.SampleName == sampletype.SampleName);
 
-            if(existingsampletype != null)
+            if (existingsampletype != null)
             {
                 ModelState.AddModelError("SampleName", "The sample type already exists");
                 return View(sampletype);
@@ -1368,7 +1372,7 @@ namespace HemaCore.Controllers
         }
 
 
-       
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeactivateSampleType(int id)
@@ -1398,7 +1402,7 @@ namespace HemaCore.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] =$"{sample.SampleName} deleted successfully.";
+            TempData["Success"] = $"{sample.SampleName} deleted successfully.";
 
             return RedirectToAction("SampleTypes");
         }
@@ -1464,7 +1468,7 @@ namespace HemaCore.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Suppliers = await _context.Suppliers
-                    .Where(x=> x.IsActive)
+                    .Where(x => x.IsActive)
                     .OrderBy(x => x.SupplierName)
                     .ToListAsync();
 
@@ -1472,7 +1476,7 @@ namespace HemaCore.Controllers
             }
             var existinGCONSUMABLE = await _context.Consumables.FirstOrDefaultAsync(x => x.ConsumableName == consumable.ConsumableName);
 
-            if(existinGCONSUMABLE != null)
+            if (existinGCONSUMABLE != null)
             {
                 ModelState.AddModelError("ConsumableName", "The consumable already exist.");
                 return View(consumable);
@@ -1480,7 +1484,7 @@ namespace HemaCore.Controllers
             var supplier = await _context.Suppliers
                 .FirstOrDefaultAsync(x => x.SupplierId == consumable.SupplierId && x.IsActive);
 
-            if(supplier == null)
+            if (supplier == null)
             {
                 ModelState.AddModelError("SupplierId", "Please select a valid supplier.");
                 ViewBag.Suppliers = await _context.Suppliers
@@ -1675,7 +1679,7 @@ namespace HemaCore.Controllers
                 return NotFound();
             }
 
-   
+
             consumable.IsActive = true;
 
             // Save the change to the database
@@ -1744,7 +1748,7 @@ namespace HemaCore.Controllers
 
             var existingSupplier = await _context.Suppliers.FirstOrDefaultAsync(x => x.SupplierName == supplier.SupplierName);
 
-            if(existingSupplier != null)
+            if (existingSupplier != null)
             {
                 ModelState.AddModelError("SupplierName", "Supplier already exist.");
                 return View(supplier);
@@ -1766,7 +1770,7 @@ namespace HemaCore.Controllers
 
         }
 
-     
+
 
         [HttpGet]
         public async Task<IActionResult> EditSupplier(int id)
@@ -1873,7 +1877,7 @@ namespace HemaCore.Controllers
                 return NotFound();
             }
 
-          
+
             supplier.IsActive = false;
 
             await _context.SaveChangesAsync();
@@ -2363,7 +2367,7 @@ namespace HemaCore.Controllers
             return View(doctor);
         }
 
-  
+
         public async Task<IActionResult> InactiveDoctors()
         {
             var doctor = await _context.Doctors
@@ -2532,7 +2536,7 @@ namespace HemaCore.Controllers
                        .Substring(0, 8);
         }
 
-     
+
         [HttpGet]
         public async Task<IActionResult> EditDoctor(int id)
         {
@@ -2562,7 +2566,7 @@ namespace HemaCore.Controllers
 
 
 
-      
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -3599,6 +3603,180 @@ namespace HemaCore.Controllers
             return RedirectToAction(nameof(InactiveLabTechnician));
         }
         #endregion
+
+        #region
+
+        [HttpGet]
+        public IActionResult TestCategoryReport()
+        {
+            var model = new TestCategoryReportViewModel
+            {
+                StartDate = DateTime.Today.AddDays(-30),
+                EndDate = DateTime.Today
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateTestCategoryReport(
+            TestCategoryReportViewModel model)
+        {
+            // Validate the selected dates.
+            if (model.StartDate.Date > model.EndDate.Date)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Start date cannot be after end date.");
+
+                return View("TestCategoryReport", model);
+            }
+
+            DateTime startDate = model.StartDate.Date;
+            DateTime endDateExclusive = model.EndDate.Date.AddDays(1);
+
+            // Get completed tests and group them by test category.
+            var results = await _context.TestRequestTestTypes
+                .AsNoTracking()
+                .Where(x =>
+                    x.CompletionDateTime.HasValue &&
+                    x.CompletionDateTime.Value >= startDate &&
+                    x.CompletionDateTime.Value < endDateExclusive &&
+                    x.Status == "Completed")
+                .GroupBy(x => x.TestType.Category.CategoryName)
+                .Select(g => new TestCategoryReportItem
+                {
+                    CategoryName = g.Key,
+                    TotalTests = g.Count()
+                })
+                .OrderBy(x => x.CategoryName)
+                .ToListAsync();
+
+            model.Categories = results;
+            model.GrandTotal = results.Sum(x => x.TotalTests);
+
+            // Generate the PDF.
+            var pdf = Document.Create(document =>
+            {
+                document.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(35);
+                    page.DefaultTextStyle(style => style.FontSize(10));
+
+                    page.Header().Column(column =>
+                    {
+                        column.Item()
+                            .Text("HemaCore")
+                            .FontSize(24)
+                            .Bold()
+                            .FontColor(Colors.Blue.Darken2);
+
+                        column.Item()
+                            .Text("MANAGEMENT REPORT")
+                            .FontSize(17)
+                            .Bold();
+
+                        column.Item()
+                            .Text("Total Tests Performed by Category")
+                            .FontSize(12);
+
+                        column.Item().PaddingTop(5).Text(
+                            $"Period: {startDate:dd MMM yyyy} to " +
+                            $"{model.EndDate.Date:dd MMM yyyy}");
+
+                        column.Item().PaddingVertical(10)
+                            .LineHorizontal(1);
+                    });
+
+                    page.Content().PaddingVertical(15).Column(column =>
+                    {
+                        column.Item()
+                            .Text($"Grand Total: {model.GrandTotal} tests")
+                            .FontSize(13)
+                            .Bold();
+
+                        column.Item().PaddingTop(15).Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell()
+                                    .Element(ReportCell)
+                                    .Background(Colors.Grey.Lighten3)
+                                    .Text("Test Category").Bold();
+
+                                header.Cell()
+                                    .Element(ReportCell)
+                                    .Background(Colors.Grey.Lighten3)
+                                    .AlignRight()
+                                    .Text("Total Tests").Bold();
+                            });
+
+                            foreach (var item in results)
+                            {
+                                table.Cell()
+                                    .Element(ReportCell)
+                                    .Text(item.CategoryName);
+
+                                table.Cell()
+                                    .Element(ReportCell)
+                                    .AlignRight()
+                                    .Text(item.TotalTests.ToString());
+                            }
+
+                            table.Cell()
+                                .Element(ReportCell)
+                                .Text("GRAND TOTAL").Bold();
+
+                            table.Cell()
+                                .Element(ReportCell)
+                                .AlignRight()
+                                .Text(model.GrandTotal.ToString()).Bold();
+                        });
+
+                        if (results.Count == 0)
+                        {
+                            column.Item().PaddingTop(15)
+                                .Text("No completed tests were found " +
+                                      "for the selected date range.");
+                        }
+                    });
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("HemaCore | Management Report | ");
+                        text.Span(
+                            $"Generated {DateTime.Now:dd MMM yyyy HH:mm}");
+                    });
+                });
+            }).GeneratePdf();
+
+            string fileName =
+                $"TestCategoryReport_{startDate:yyyyMMdd}_" +
+                $"{model.EndDate:yyyyMMdd}.pdf";
+
+            return File(pdf, "application/pdf", fileName);
+        }
+
+        private static IContainer ReportCell(IContainer container)
+        {
+            return container
+                .BorderBottom(1)
+                .BorderColor(Colors.Grey.Lighten2)
+                .PaddingVertical(8)
+                .PaddingHorizontal(5);
+        }
+
+
+        #endregion
     }
 }
+
 
