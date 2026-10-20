@@ -1,195 +1,305 @@
-﻿@model HemaCore.ViewModels.ManagerVM.ManagerProfileVM
+﻿
+@model HemaCore.ViewModels.ManagerVM.ManagerProfileVM
 
 @{
-    ViewData["Title"] = "Edit Manager";
-    Layout = "_ManagerLayout";
+    ViewData["Title"] = "Manage Profile";
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/doctor.css" asp-append-version="true" />
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
     <div class="card shadow-sm p-4">
 
         <!-- HEADER -->
-        <div class="mb-4">
-            <h3 class="fw-bold">
-                Edit Manager Profile
-            </h3>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                     style="width:58px;height:58px;min-width:58px;">
+                    <i class="fas fa-user-edit fa-lg"></i>
+                </div>
 
-            <p class="text-muted">
-                Update your personal information and password below.
-            </p>
+                <div>
+                    <h2 class="mb-1 fw-bold">Manage Profile</h2>
+                    <p class="text-muted mb-0">
+                        Update your personal information and password below.
+                    </p>
+                </div>
+            </div>
+
+            <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">
+                <i class="fas fa-user-shield me-1"></i> Manager
+            </span>
         </div>
 
-        <!-- ALERT MESSAGES -->
+        <hr />
+
+        <!-- SUCCESS MESSAGE -->
         @if (TempData["Success"] != null)
         {
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
                 @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                        aria-label="Close"></button>
             </div>
         }
 
+        <!-- ERROR MESSAGE -->
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
                 @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                        aria-label="Close"></button>
             </div>
         }
 
-        <!-- FORM -->
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"
+             role="alert"></div>
+
         <form asp-controller="Manager"
               asp-action="ManagerProfile"
               method="post">
 
             @Html.AntiForgeryToken()
 
-            <!-- MANAGER ID -->
             <input asp-for="Id" type="hidden" />
 
-            <!-- VALIDATION -->
-            <div asp-validation-summary="All"
-                 class="text-danger mb-3">
-            </div>
-
             <!-- MANAGER INFORMATION -->
-            <h5 class="mb-3 text-secondary">
-                Manager Information
-            </h5>
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-user text-secondary me-2"></i>
+                    Manager Information
+                </h5>
 
-            <div class="row">
+                <div class="row g-3">
 
-                <!-- FULL NAME -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="FullName"
-                           class="form-label">
-                    </label>
+                    <!-- FULL NAME -->
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label fw-semibold">
+                            Full Name <span class="text-danger">*</span>
+                        </label>
 
-                    <input asp-for="FullName"
-                           class="form-control"
-                           placeholder="Enter full name" />
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user text-secondary"></i>
+                            </span>
+                            <input asp-for="FullName"
+                                   class="form-control"
+                                   placeholder="Enter your full name"
+                                   autocomplete="name" />
+                        </div>
 
-                    <span asp-validation-for="FullName"
-                          class="text-danger small">
-                    </span>
-                </div>
+                        <span asp-validation-for="FullName"
+                              class="text-danger small"></span>
+                    </div>
 
-                <!-- PHONE NUMBER -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="PhoneNumber"
-                           class="form-label">
-                    </label>
+                    <!-- PHONE NUMBER -->
 
-                    <input asp-for="PhoneNumber"
-                           class="form-control"
-                           placeholder="Enter phone number" />
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label">
+                            Phone Number <span class="text-danger">*</span>
+                        </label>
 
-                    <span asp-validation-for="PhoneNumber"
-                          class="text-danger small">
-                    </span>
-                </div>
+                        <input asp-for="PhoneNumber"
+                               id="PhoneNumber"
+                               type="tel"
+                               class="form-control"
+                               placeholder="0821234567"
+                               maxlength="12"
+                               inputmode="tel"
+                               autocomplete="tel"
+                               required
+                               pattern="^(?:(?:\+27|27)[6-8][0-9]{8}|0[6-8][0-9]{8})$"
+                               title="Enter a valid South African mobile number, e.g. 0821234567 or +27821234567." />
 
-            </div>
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger"></span>
+                    </div>
 
-            <!-- EMAIL -->
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label asp-for="Email"
-                           class="form-label">
-                    </label>
+                    <script>
+                                            document.addEventListener("DOMContentLoaded", function () {
+                                                const phoneInput = document.getElementById("PhoneNumber");
 
-                    <input asp-for="Email"
-                           type="email"
-                           class="form-control"
-                           placeholder="Enter email address" />
+                                                if (!phoneInput) return;
 
-                    <span asp-validation-for="Email"
-                          class="text-danger small">
-                    </span>
+                                                phoneInput.addEventListener("input", function () {
+                                                    let value = this.value;
+
+                                                    // Allow digits and a leading + only.
+                                                    value = value.replace(/[^\d+]/g, "");
+                                                    value = value.replace(/(?!^)\+/g, "");
+
+                                                    // Local format: 10 digits; international format: up to 12 characters.
+                                                    const maxLength = value.startsWith("+") ? 12 : 10;
+
+                                                    this.value = value.slice(0, maxLength);
+                                                });
+                                            });
+                    </script>
+
+
+                    <!-- EMAIL -->
+                    <div class="col-12">
+                        <label asp-for="Email" class="form-label fw-semibold">
+                            Email Address <span class="text-danger">*</span>
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope text-secondary"></i>
+                            </span>
+                            <input asp-for="Email"
+                                   type="email"
+                                   class="form-control"
+                                   placeholder="Enter your email address"
+                                   autocomplete="email" />
+                        </div>
+
+                        <span asp-validation-for="Email"
+                              class="text-danger small"></span>
+                    </div>
+
                 </div>
             </div>
 
             <hr class="my-4" />
 
-            <!-- PASSWORD SECTION -->
-            <h5 class="mb-3 text-secondary">
-                Change Password
-            </h5>
+            <!-- CHANGE PASSWORD -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-2">
+                    <i class="fas fa-lock text-secondary me-2"></i>
+                    Change Password
+                </h5>
 
-            <p class="text-muted small">
-                Leave these fields blank if you do not want to change your password.
-            </p>
+                <p class="text-muted small mb-3">
+                    Leave these fields blank if you do not want to change your password.
+                </p>
 
-            <div class="row">
+                <div class="row g-3">
 
-                <!-- CURRENT PASSWORD -->
-                <div class="col-md-12 mb-3">
-                    <label asp-for="CurrentPassword"
-                           class="form-label">
-                    </label>
+                    <!-- CURRENT PASSWORD -->
+                    <div class="col-12">
+                        <label asp-for="CurrentPassword"
+                               class="form-label fw-semibold">
+                            Current Password
+                        </label>
 
-                    <input asp-for="CurrentPassword"
-                           type="password"
-                           class="form-control"
-                           placeholder="Enter current password"
-                           autocomplete="current-password" />
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock text-secondary"></i>
+                            </span>
 
-                    <span asp-validation-for="CurrentPassword"
-                          class="text-danger small">
-                    </span>
+                            <input asp-for="CurrentPassword"
+                                   type="password"
+                                   class="form-control password-field"
+                                   id="CurrentPassword"
+                                   autocomplete="current-password"
+                                   placeholder="Enter current password" />
+
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePassword('CurrentPassword', this)"
+                                    aria-label="Show or hide current password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="CurrentPassword"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- NEW PASSWORD -->
+                    <div class="col-md-6">
+                        <label asp-for="NewPassword"
+                               class="form-label fw-semibold">
+                            New Password
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock text-secondary"></i>
+                            </span>
+
+                            <input asp-for="NewPassword"
+                                   type="password"
+                                   class="form-control password-field"
+                                   id="NewPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Enter new password" />
+
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePassword('NewPassword', this)"
+                                    aria-label="Show or hide new password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="NewPassword"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- CONFIRM NEW PASSWORD -->
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmNewPassword"
+                               class="form-label fw-semibold">
+                            Confirm New Password
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock text-secondary"></i>
+                            </span>
+
+                            <input asp-for="ConfirmNewPassword"
+                                   type="password"
+                                   class="form-control password-field"
+                                   id="ConfirmNewPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Confirm new password" />
+
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePassword('ConfirmNewPassword', this)"
+                                    aria-label="Show or hide confirmation password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+
+                        <span asp-validation-for="ConfirmNewPassword"
+                              class="text-danger small"></span>
+                    </div>
+
                 </div>
 
-                <!-- NEW PASSWORD -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="NewPassword"
-                           class="form-label">
-                    </label>
-
-                    <input asp-for="NewPassword"
-                           type="password"
-                           class="form-control"
-                           placeholder="Enter new password"
-                           autocomplete="new-password" />
-
-                    <span asp-validation-for="NewPassword"
-                          class="text-danger small">
-                    </span>
+                <div class="alert alert-info mt-3 mb-0 small">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Use a strong password that meets your application's password requirements.
                 </div>
-
-                <!-- CONFIRM PASSWORD -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="ConfirmNewPassword"
-                           class="form-label">
-                    </label>
-
-                    <input asp-for="ConfirmNewPassword"
-                           type="password"
-                           class="form-control"
-                           placeholder="Confirm new password"
-                           autocomplete="new-password" />
-
-                    <span asp-validation-for="ConfirmNewPassword"
-                          class="text-danger small">
-                    </span>
-                </div>
-
             </div>
 
-            <!-- BUTTONS -->
-            <div class="d-flex justify-content-between mt-4">
+            <hr class="my-4" />
 
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <a asp-controller="Manager"
-                   asp-action="Index"
+                   asp-action="ManagerDetails"
                    class="btn btn-outline-secondary">
-                    ← Back
+                    <i class="fas fa-arrow-left me-2"></i> Back
                 </a>
 
-                <button type="submit"
-                        class="btn btn-primary-custom btn-sm">
-                    <i class="fas fa-save me-1"></i>
-                    Save Changes
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Save Changes
                 </button>
-
             </div>
+
+            <p class="text-muted small text-center mt-4 mb-0">
+                <i class="fas fa-eye me-1"></i>
+                Click the eye icon to show or hide a password.
+            </p>
 
         </form>
     </div>
@@ -197,4 +307,23 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector("i");
+
+            if (!input || !icon) return;
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
 }
