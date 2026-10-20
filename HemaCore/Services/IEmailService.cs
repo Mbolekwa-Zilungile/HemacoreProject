@@ -1,4 +1,7 @@
 ﻿
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 namespace HemaCore.Services
 {
     public interface IEmailService
@@ -30,12 +33,16 @@ namespace HemaCore.Services
             int testRequestId,
             byte[] pdfBytes);
 
-        // Notifies the patient that the doctor has released verified results.
         Task SendResultsReleasedEmailAsync(
             string patientEmail,
             string patientName,
             string patientSurname,
             int testRequestId,
             int verifiedResultCount);
+
+        // Sends a password-reset email to the user.
+        Task SendPasswordResetEmailAsync(
+            string email,
+            string resetLink);
     }
 }
