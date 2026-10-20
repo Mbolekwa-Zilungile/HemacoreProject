@@ -65,6 +65,7 @@
             font-size: .875rem;
             color: #334155;
             background: #fff;
+            box-sizing: border-box;
         }
 
             .search-field input:focus {
@@ -104,6 +105,11 @@
             color: #fff;
         }
 
+        .btn-primary:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
     .btn-outline {
         background: #fff;
         color: #2c7da0;
@@ -115,33 +121,56 @@
             color: #1f5068;
         }
 
+    /* Status badges matching the Consent Requests page */
     .search-result {
         display: none;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        border-radius: 8px;
-        font-size: .875rem;
+        align-items: center;
+        gap: .5rem;
+        width: fit-content;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 7px 11px;
+        margin-bottom: 1.25rem;
+        border-radius: 20px;
+        font-size: .8rem;
+        line-height: 1.5;
+        font-weight: 600;
+        overflow-wrap: anywhere;
     }
 
         .search-result.info {
-            display: block;
-            background: #e0f2fe;
-            color: #075985;
+            display: inline-flex;
+            background: #fff3d6;
+            color: #986500;
         }
 
         .search-result.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
+            display: inline-flex;
+            background: #eaf8ef;
+            color: #15803d;
         }
 
         .search-result.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
+            display: inline-flex;
+            background: #fff0f0;
+            color: #dc2626;
         }
 
+    .search-result-icon {
+        flex: 0 0 auto;
+        font-size: .9rem;
+    }
+
+    #searchResultMessage {
+        min-width: 0;
+    }
+
     .consent-form {
+        display: none;
+        margin-top: .85rem;
+    }
+
+    .result-action {
         display: none;
         margin-top: .85rem;
     }
@@ -279,7 +308,10 @@
         white-space: nowrap;
     }
 
-    .badge-condition, .badge-allergy, .badge-medication, .badge-more {
+    .badge-condition,
+    .badge-allergy,
+    .badge-medication,
+    .badge-more {
         display: inline-block;
         padding: .2rem .6rem;
         border-radius: 20px;
@@ -399,6 +431,26 @@
         margin-bottom: 1rem;
     }
 
+    .patient-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        z-index: 10;
+        white-space: nowrap;
+    }
+
+        .patient-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            z-index: 11;
+        }
+
     @@media (max-width: 1000px) {
         .stats-row {
             grid-template-columns: repeat(2, 1fr);
@@ -416,18 +468,20 @@
             min-width: 0;
         }
 
-        .search-flex > .btn-primary, .search-flex > .btn-outline {
+        .search-flex > .btn-primary,
+        .search-flex > .btn-outline {
             width: 100%;
         }
 
-        .actions {
+        .patient-actions {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .action-btn {
-            width: 100%;
-        }
+            .patient-actions a {
+                width: 100%;
+                box-sizing: border-box;
+            }
     }
 
     @@media (max-width: 500px) {
@@ -435,49 +489,44 @@
             grid-template-columns: 1fr;
         }
     }
-
-    .patient-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        position: relative;
-        z-index: 10;
-    }
-
-        .patient-actions a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 12px;
-            cursor: pointer;
-            pointer-events: auto;
-            position: relative;
-            z-index: 11;
-        }
 </style>
 
 <div class="patients-container">
     <div class="page-header">
-        <h1><i class="fas fa-users" style="color:#2c7da0;"></i> Patient Directory</h1>
+        <h1>
+            <i class="fas fa-users" style="color:#2c7da0;"></i>
+            Patient Directory
+        </h1>
         <p>Search using a complete South African ID number, or select a patient below.</p>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="search-result success" style="display:block;">@TempData["Success"]</div>
+        <div class="search-result success" style="display:inline-flex;">
+            <i class="search-result-icon fas fa-check-circle" aria-hidden="true"></i>
+            @TempData["Success"]
+        </div>
     }
+
     @if (TempData["Error"] != null)
     {
-        <div class="search-result error" style="display:block;">@TempData["Error"]</div>
+        <div class="search-result error" style="display:inline-flex;">
+            <i class="search-result-icon fas fa-times-circle" aria-hidden="true"></i>
+            @TempData["Error"]
+        </div>
     }
 
     <div class="search-card">
         <div class="search-flex">
             <div class="search-field">
-                <input type="text" id="patientSearch"
+                <input type="text"
+                       id="patientSearch"
                        placeholder="Enter full 13-digit ID number"
-                       maxlength="13" inputmode="numeric" autocomplete="off"
+                       maxlength="13"
+                       inputmode="numeric"
+                       autocomplete="off"
                        aria-describedby="searchHelp" />
+
                 <div class="search-help" id="searchHelp">
                     Enter all 13 digits. Partial ID numbers are not accepted.
                 </div>
@@ -487,50 +536,77 @@
                 <i class="fas fa-search"></i> Search
             </button>
 
-            <a asp-action="AddPatient" asp-controller="Doctor" class="btn-outline">
+            <a asp-action="AddPatient"
+               asp-controller="Doctor"
+               class="btn-outline">
                 <i class="fas fa-user-plus"></i> New Patient
             </a>
         </div>
     </div>
 
-    <div id="searchResult" class="search-result" role="status" aria-live="polite">
+    <div id="searchResult"
+         class="search-result"
+         role="status"
+         aria-live="polite">
+
         <div id="searchResultMessage"></div>
 
-        <div id="patientDetailsAction" style="display:none; margin-top:.75rem;">
+        <div id="patientDetailsAction" class="result-action">
             <a id="viewSearchedPatient" class="btn-primary" href="#">
                 <i class="fas fa-eye"></i> View Patient Details
             </a>
         </div>
 
-        <form id="consentRequestForm" method="post"
+        <div id="addPatientAction" class="result-action">
+            <a id="addNewPatientLink" class="btn-primary" href="#">
+                <i class="fas fa-user-plus"></i> Add New Patient
+            </a>
+        </div>
+
+        <form id="consentRequestForm"
+              method="post"
               action="@Url.Action("RequestConsent", "Doctor")"
               class="consent-form">
+
             @Html.AntiForgeryToken()
+
             <input type="hidden" id="consentPatientId" name="patientId" />
+
             <button type="submit" class="btn-primary">
-                <i class="fas fa-paper-plane"></i> Request Consent
+                <i class="fas fa-paper-plane"></i> Request Patient Consent
             </button>
         </form>
     </div>
 
     <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-icon" style="background:#e0f2fe;"><i class="fas fa-users" style="color:#0284c7;"></i></div>
+            <div class="stat-icon" style="background:#e0f2fe;">
+                <i class="fas fa-users" style="color:#0284c7;"></i>
+            </div>
             <div class="stat-number">@totalPatients</div>
             <div class="stat-label">Total Patients</div>
         </div>
+
         <div class="stat-card">
-            <div class="stat-icon" style="background:#dcfce7;"><i class="fas fa-flask" style="color:#16a34a;"></i></div>
+            <div class="stat-icon" style="background:#dcfce7;">
+                <i class="fas fa-flask" style="color:#16a34a;"></i>
+            </div>
             <div class="stat-number">@totalRequests</div>
             <div class="stat-label">Test Requests</div>
         </div>
+
         <div class="stat-card">
-            <div class="stat-icon" style="background:#fee2e2;"><i class="fas fa-heartbeat" style="color:#dc2626;"></i></div>
+            <div class="stat-icon" style="background:#fee2e2;">
+                <i class="fas fa-heartbeat" style="color:#dc2626;"></i>
+            </div>
             <div class="stat-number">@patientsWithConditions</div>
             <div class="stat-label">With Conditions</div>
         </div>
+
         <div class="stat-card">
-            <div class="stat-icon" style="background:#fef3c7;"><i class="fas fa-pills" style="color:#d97706;"></i></div>
+            <div class="stat-icon" style="background:#fef3c7;">
+                <i class="fas fa-pills" style="color:#d97706;"></i>
+            </div>
             <div class="stat-number">@patientsOnMedication</div>
             <div class="stat-label">On Medication</div>
         </div>
@@ -539,10 +615,16 @@
     @if (Model == null || !Model.Any())
     {
         <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="empty-icon">
+                <i class="fas fa-user-slash"></i>
+            </div>
+
             <h3>No registered patients found</h3>
             <p>Search for an existing patient or add a new patient.</p>
-            <a asp-action="AddPatient" asp-controller="Doctor" class="btn-primary">
+
+            <a asp-action="AddPatient"
+               asp-controller="Doctor"
+               class="btn-primary">
                 <i class="fas fa-user-plus"></i> Add Patient
             </a>
         </div>
@@ -563,13 +645,19 @@
                         <th style="text-align:center;">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @foreach (var patient in Model.OrderBy(p => p.FullName))
                     {
                         var fullName = patient.FullName ?? "";
-                        var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        var nameParts = fullName.Split(
+                            ' ',
+                            StringSplitOptions.RemoveEmptyEntries
+                        );
+
                         var initials = nameParts.Length >= 2
-                            ? nameParts[0].Substring(0, 1).ToUpper() + nameParts[^1].Substring(0, 1).ToUpper()
+                            ? nameParts[0].Substring(0, 1).ToUpper()
+                                + nameParts[^1].Substring(0, 1).ToUpper()
                             : nameParts.Length == 1
                                 ? nameParts[0].Substring(0, 1).ToUpper()
                                 : "?";
@@ -578,9 +666,16 @@
                             <td>
                                 <div class="patient-info">
                                     <div class="patient-avatar">@initials</div>
+
                                     <div class="patient-details">
-                                        <span class="patient-name">@patient.FullName</span>
-                                        <span class="patient-email">@patient.Email</span>
+                                        <span class="patient-name">
+                                            @patient.FullName
+                                        </span>
+
+                                        <span class="patient-email">
+                                            @patient.Email
+                                        </span>
+
                                         <span class="request-count">
                                             <i class="fas fa-flask"></i>
                                             @patient.RequestCount request@(patient.RequestCount != 1 ? "s" : "")
@@ -588,14 +683,22 @@
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="patient-id">@patient.IDNumber</span></td>
-                            <td><span class="empty-badge">Not available</span></td>
+
+                            <td>
+                                <span class="patient-id">@patient.IDNumber</span>
+                            </td>
+
+                            <td>
+                                <span class="empty-badge">Not available</span>
+                            </td>
+
                             <td>
                                 <div class="contact-cell">
                                     <i class="fas fa-phone"></i>
                                     <span>@patient.PhoneNumber</span>
                                 </div>
                             </td>
+
                             <td>
                                 @if (patient.Conditions?.Any() == true)
                                 {
@@ -603,9 +706,12 @@
                                     {
                                         <span class="badge-condition">@condition</span>
                                     }
+
                                     if (patient.Conditions.Count > 2)
                                     {
-                                        <span class="badge-more">+@(patient.Conditions.Count - 2)</span>
+                                        <span class="badge-more">
+                                            +@(patient.Conditions.Count - 2)
+                                        </span>
                                     }
                                 }
                                 else
@@ -613,6 +719,7 @@
                                     <span class="empty-badge">—</span>
                                 }
                             </td>
+
                             <td>
                                 @if (patient.Allergies?.Any() == true)
                                 {
@@ -620,9 +727,12 @@
                                     {
                                         <span class="badge-allergy">@allergy</span>
                                     }
+
                                     if (patient.Allergies.Count > 2)
                                     {
-                                        <span class="badge-more">+@(patient.Allergies.Count - 2)</span>
+                                        <span class="badge-more">
+                                            +@(patient.Allergies.Count - 2)
+                                        </span>
                                     }
                                 }
                                 else
@@ -630,6 +740,7 @@
                                     <span class="empty-badge">—</span>
                                 }
                             </td>
+
                             <td>
                                 @if (patient.Medications?.Any() == true)
                                 {
@@ -637,9 +748,12 @@
                                     {
                                         <span class="badge-medication">@medication</span>
                                     }
+
                                     if (patient.Medications.Count > 2)
                                     {
-                                        <span class="badge-more">+@(patient.Medications.Count - 2)</span>
+                                        <span class="badge-more">
+                                            +@(patient.Medications.Count - 2)
+                                        </span>
                                     }
                                 }
                                 else
@@ -647,8 +761,8 @@
                                     <span class="empty-badge">—</span>
                                 }
                             </td>
+
                             <td>
-                                
                                 <div class="patient-actions">
                                     <a asp-controller="Doctor"
                                        asp-action="PatientDetails"
@@ -671,7 +785,6 @@
                                         History
                                     </a>
                                 </div>
-                                ```
                             </td>
                         </tr>
                     }
@@ -687,89 +800,200 @@
         const searchButton = document.getElementById("searchPatientButton");
         const resultPanel = document.getElementById("searchResult");
         const resultMessage = document.getElementById("searchResultMessage");
+
         const consentForm = document.getElementById("consentRequestForm");
         const consentPatientId = document.getElementById("consentPatientId");
+
         const detailsAction = document.getElementById("patientDetailsAction");
         const viewPatientLink = document.getElementById("viewSearchedPatient");
 
+        const addPatientAction = document.getElementById("addPatientAction");
+        const addNewPatientLink = document.getElementById("addNewPatientLink");
+
         const searchUrl = '@Url.Action("SearchPatientById", "Doctor")';
         const detailsUrl = '@Url.Action("PatientDetails", "Doctor")';
+        const addPatientUrl = '@Url.Action("AddPatient", "Doctor")';
+
+        let activeController = null;
+        let searchSequence = 0;
 
         function resetSearchResults() {
             resultPanel.className = "search-result";
             resultPanel.style.display = "none";
             resultMessage.textContent = "";
+
             consentForm.style.display = "none";
             detailsAction.style.display = "none";
+            addPatientAction.style.display = "none";
+
             consentPatientId.value = "";
             viewPatientLink.href = "#";
+            addNewPatientLink.href = "#";
         }
 
         function showMessage(message, type) {
             resultPanel.className = "search-result " + type;
-            resultPanel.style.display = "block";
-            resultMessage.textContent = message;
+            resultPanel.style.display = "inline-flex";
+
+            const icon = document.createElement("i");
+            icon.className = "search-result-icon fas " +
+                (type === "success"
+                    ? "fa-check-circle"
+                    : type === "error"
+                        ? "fa-times-circle"
+                        : "fa-clock");
+
+            icon.setAttribute("aria-hidden", "true");
+
+            resultMessage.textContent = "";
+            resultMessage.appendChild(icon);
+            resultMessage.appendChild(document.createTextNode(" " + message));
+        }
+
+        function buildUrl(baseUrl, parameter, value) {
+            const url = new URL(baseUrl, window.location.origin);
+            url.searchParams.set(parameter, value);
+            return url.pathname + url.search;
         }
 
         async function runSearch() {
             const idNumber = searchInput.value.trim();
+            const currentSequence = ++searchSequence;
+
+            if (activeController) {
+                activeController.abort();
+                activeController = null;
+            }
+
             resetSearchResults();
 
             if (!/^[0-9]{13}$/.test(idNumber)) {
-                showMessage("Please enter the full 13-digit ID number.", "error");
+                showMessage(
+                    "Please enter the complete 13-digit South African ID number.",
+                    "error"
+                );
+
                 searchInput.focus();
                 return;
             }
 
+            activeController = new AbortController();
+
             searchButton.disabled = true;
-            searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+            searchButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
             showMessage("Searching for patient...", "info");
 
             try {
                 const response = await fetch(
                     searchUrl + "?idNumber=" + encodeURIComponent(idNumber),
-                    { method: "GET", headers: { "Accept": "application/json" } }
+                    {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json"
+                        },
+                        signal: activeController.signal
+                    }
                 );
 
-                if (!response.ok) {
-                    throw new Error("The search could not be completed. Please try again.");
-                }
-
-                const data = await response.json();
-
-                if (!data.found) {
-                    showMessage(data.message || "No patient was found with this ID number.", "error");
+                if (currentSequence !== searchSequence) {
                     return;
                 }
 
-                if (data.hasConsent) {
-                    showMessage("Patient found. You have active consent to access this patient's records.", "success");
+                let data = {};
 
-                    if (data.patientId !== null && data.patientId !== undefined) {
-                        const url = new URL(detailsUrl, window.location.origin);
-                        url.searchParams.set("id", data.patientId);
-                        viewPatientLink.href = url.pathname + url.search;
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
+
+                if (currentSequence !== searchSequence) {
+                    return;
+                }
+
+                // Patient does not exist.
+                if (response.status === 404 || data.found === false) {
+                    showMessage(
+                        data.message ||
+                        "Patient not found. This ID number is not registered in HemaCore.",
+                        "error"
+                    );
+
+                    addNewPatientLink.href =
+                        buildUrl(addPatientUrl, "idNumber", idNumber);
+
+                    addPatientAction.style.display = "block";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message ||
+                        "The search could not be completed. Please try again."
+                    );
+                }
+
+                if (data.found !== true) {
+                    throw new Error(
+                        data.message ||
+                        "The server returned an unexpected response. Please try again."
+                    );
+                }
+
+                const patientId = data.patientId;
+
+                // Patient exists and consent is active.
+                if (data.hasConsent === true) {
+                    showMessage(
+                        "Patient found. You have active consent to access this patient's records.",
+                        "success"
+                    );
+
+                    if (patientId !== null && patientId !== undefined) {
+                        viewPatientLink.href =
+                            buildUrl(detailsUrl, "id", patientId);
+
                         detailsAction.style.display = "block";
                     }
+
                     return;
                 }
 
+                // Patient exists, but consent is not active.
                 showMessage(
-                    data.message || "Patient found, but you do not have active consent. Please request consent from the patient.",
+                    data.message ||
+                    "Patient found, but you do not have active consent. Request consent before accessing this patient's medical records.",
                     "info"
                 );
 
-                if (data.patientId !== null && data.patientId !== undefined) {
-                    consentPatientId.value = data.patientId;
+                if (patientId !== null && patientId !== undefined) {
+                    consentPatientId.value = patientId;
                     consentForm.style.display = "block";
                 }
             }
             catch (error) {
-                showMessage(error.message || "An error occurred while searching.", "error");
+                if (error.name === "AbortError") {
+                    return;
+                }
+
+                if (currentSequence === searchSequence) {
+                    showMessage(
+                        error.message ||
+                        "An error occurred while searching. Please try again.",
+                        "error"
+                    );
+                }
             }
             finally {
-                searchButton.disabled = false;
-                searchButton.innerHTML = '<i class="fas fa-search"></i> Search';
+                if (currentSequence === searchSequence) {
+                    searchButton.disabled = false;
+                    searchButton.innerHTML =
+                        '<i class="fas fa-search"></i> Search';
+
+                    activeController = null;
+                }
             }
         }
 
@@ -783,8 +1007,20 @@
         });
 
         searchInput.addEventListener("input", function () {
-            resetSearchResults();
             this.value = this.value.replace(/[^0-9]/g, "").slice(0, 13);
+
+            searchSequence++;
+
+            if (activeController) {
+                activeController.abort();
+                activeController = null;
+            }
+
+            searchButton.disabled = false;
+            searchButton.innerHTML =
+                '<i class="fas fa-search"></i> Search';
+
+            resetSearchResults();
         });
     })();
 </script>

@@ -43,7 +43,7 @@ ViewData["Title"] = "Login";
                     </div>
                 }
 
-                <form method="post" action="/Account/Login">
+                <form method="post" asp-action="Login">
                     <div class="form-group">
                         <label><i class="fas fa-envelope"></i> Email Address</label>
                         <div class="input-wrapper">
@@ -66,7 +66,7 @@ ViewData["Title"] = "Login";
                             <input type="checkbox" name="rememberMe" />
                             <span>Remember me</span>
                         </label>
-                        <a href="/Account/ForgotPassword" class="forgot-link">Forgot Password?</a>
+                        <a asp-action="ForgotPassword" class="forgot-link">Forgot Password?</a>
                     </div>
 
                     <button type="submit" class="login-btn">

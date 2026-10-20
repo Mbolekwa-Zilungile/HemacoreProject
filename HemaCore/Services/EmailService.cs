@@ -2,8 +2,11 @@
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HemaCore.Services
 {
@@ -16,12 +19,31 @@ namespace HemaCore.Services
             _configuration = configuration;
         }
 
+        private string GetRequiredSetting(string key)
+        {
+            var value = _configuration[key];
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException(
+                    $"Missing email configuration setting: {key}");
+            }
+
+            return value;
+        }
+
         private async Task SendEmailAsync(MimeMessage message)
         {
-            var smtpHost = _configuration["EmailSettings:SmtpHost"];
-            var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]!);
-            var username = _configuration["EmailSettings:Username"];
-            var password = _configuration["EmailSettings:Password"];
+            var smtpHost = GetRequiredSetting("EmailSettings:SmtpHost");
+            var smtpPortText = GetRequiredSetting("EmailSettings:SmtpPort");
+            var username = GetRequiredSetting("EmailSettings:Username");
+            var password = GetRequiredSetting("EmailSettings:Password");
+
+            if (!int.TryParse(smtpPortText, out var smtpPort))
+            {
+                throw new InvalidOperationException(
+                    "EmailSettings:SmtpPort must be a valid port number.");
+            }
 
             using var smtp = new SmtpClient();
 
@@ -30,9 +52,18 @@ namespace HemaCore.Services
                 smtpPort,
                 SecureSocketOptions.StartTls);
 
-            await smtp.AuthenticateAsync(username, password);
-            await smtp.SendAsync(message);
-            await smtp.DisconnectAsync(true);
+            try
+            {
+                await smtp.AuthenticateAsync(username, password);
+                await smtp.SendAsync(message);
+            }
+            finally
+            {
+                if (smtp.IsConnected)
+                {
+                    await smtp.DisconnectAsync(true);
+                }
+            }
         }
 
         private MimeMessage CreateMessage(
@@ -40,12 +71,28 @@ namespace HemaCore.Services
             string recipientEmail,
             string subject)
         {
-            var senderEmail = _configuration["EmailSettings:SenderEmail"];
-            var senderName = _configuration["EmailSettings:SenderName"];
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+            {
+                throw new InvalidOperationException(
+                    "The recipient email address is missing.");
+            }
+
+            var senderEmail =
+                GetRequiredSetting("EmailSettings:SenderEmail");
+
+            var senderName =
+                _configuration["EmailSettings:SenderName"] ?? "HemaCore";
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(senderName, senderEmail));
-            message.To.Add(new MailboxAddress(recipientName, recipientEmail));
+
+            message.From.Add(
+                new MailboxAddress(senderName, senderEmail));
+
+            message.To.Add(
+                new MailboxAddress(
+                    recipientName ?? string.Empty,
+                    recipientEmail));
+
             message.Subject = subject;
 
             return message;
@@ -59,7 +106,9 @@ namespace HemaCore.Services
             string role)
         {
             var message = CreateMessage(
-                name, email, "Welcome to HemaCore");
+                $"{name} {surname}",
+                email,
+                "Welcome to HemaCore");
 
             message.Body = new TextPart("html")
             {
@@ -79,6 +128,54 @@ namespace HemaCore.Services
             await SendEmailAsync(message);
         }
 
+        public async Task SendPasswordResetEmailAsync(
+            string email,
+            string resetLink)
+        {
+            if (string.IsNullOrWhiteSpace(resetLink))
+            {
+                throw new ArgumentException(
+                    "The password reset link is required.",
+                    nameof(resetLink));
+            }
+
+            if (!Uri.TryCreate(resetLink, UriKind.Absolute, out var resetUri) ||
+                (resetUri.Scheme != Uri.UriSchemeHttps &&
+                 resetUri.Scheme != Uri.UriSchemeHttp))
+            {
+                throw new ArgumentException(
+                    "The password reset link must be a valid HTTP or HTTPS URL.",
+                    nameof(resetLink));
+            }
+
+            var message = CreateMessage(
+                email,
+                email,
+                "Reset Your HemaCore Password");
+
+            var safeResetLink =
+                System.Net.WebUtility.HtmlEncode(resetLink);
+
+            message.Body = new TextPart("html")
+            {
+                Text = $@"
+                <html><body>
+                    <h2>Password Reset Request</h2>
+                    <p>We received a request to reset your HemaCore password.</p>
+                    <p>
+                        <a href=""{safeResetLink}"">
+                            Reset My Password
+                        </a>
+                    </p>
+                    <p>If you did not request this, you can ignore this email.</p>
+                    <p>For your security, use the reset link only once and do not share it.</p>
+                    <p>Regards,<br /><strong>HemaCore</strong></p>
+                </body></html>"
+            };
+
+            await SendEmailAsync(message);
+        }
+
         public async Task SendConsentGrantedEmailAsync(
             string doctorEmail,
             string doctorName,
@@ -86,13 +183,16 @@ namespace HemaCore.Services
             string patientSurname,
             List<string> sharedConditions)
         {
-            var conditionsHtml = sharedConditions != null && sharedConditions.Any()
+            var conditionsHtml =
+                sharedConditions != null && sharedConditions.Any()
                 ? string.Join("", sharedConditions.Select(condition =>
                     $"<li>{System.Net.WebUtility.HtmlEncode(condition)}</li>"))
                 : "<li>No medical conditions were shared.</li>";
 
             var message = CreateMessage(
-                doctorName, doctorEmail, "Patient Consent Granted - HemaCore");
+                doctorName,
+                doctorEmail,
+                "Patient Consent Granted - HemaCore");
 
             message.Body = new TextPart("html")
             {
@@ -119,7 +219,9 @@ namespace HemaCore.Services
             string patientSurname)
         {
             var message = CreateMessage(
-                doctorName, doctorEmail, "Patient Consent Revoked - HemaCore");
+                doctorName,
+                doctorEmail,
+                "Patient Consent Revoked - HemaCore");
 
             message.Body = new TextPart("html")
             {
@@ -150,7 +252,9 @@ namespace HemaCore.Services
                 patientEmail,
                 $"Your test results are ready (Request #{testRequestId}) - HemaCore");
 
-            var resultWord = verifiedResultCount == 1 ? "result" : "results";
+            var resultWord = verifiedResultCount == 1
+                ? "result"
+                : "results";
 
             message.Body = new TextPart("html")
             {

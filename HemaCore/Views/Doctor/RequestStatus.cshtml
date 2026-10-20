@@ -15,8 +15,6 @@
 
     var currentStatus = (Model.Status ?? "").Trim();
 
-    // Normalize status values so that "InProgress" and "In Progress"
-    // are treated as the same status.
     string NormalizeStatus(string? status)
     {
         return (status ?? "")
@@ -37,308 +35,379 @@
             normalized == NormalizeStatus(s));
     }
 
-    // Determine the current progress step.
     var currentIndex = normalizedStatus switch
     {
         "submitted" => 0,
-
         "samplesreceived" => 1,
         "samplereceived" => 1,
-
         "inprogress" => 2,
-
         "completed" => 3,
-
         "releasedbydoctor" => 4,
         "released" => 4,
-
         _ => 0
     };
 
-    // Cancelled requests should not appear to be progressing.
     var isCancelled = IsStatus(currentStatus, "Cancelled");
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-<div class="fade-in">
+<div class="rs-page">
 
-    <!-- PAGE HEADER -->
-    <div class="page-header">
-        <h2>
-            <i class="fas fa-tasks"></i>
-            Test Request #@Model.TestRequestId
-        </h2>
+    <!-- HEADER -->
+    <div class="rs-header">
+        <div>
+            <span class="rs-eyebrow">
+                <i class="fas fa-tasks"></i>
+                Doctor Portal
+            </span>
 
-        <p>Track the progress of this test request</p>
+            <h1>Test Request #@Model.TestRequestId</h1>
+
+            <p>
+                Track the progress of this test request, review sample
+                information and check the status of your requested tests.
+            </p>
+        </div>
+
+        <div class="rs-header-icon">
+            <i class="fas fa-file-medical-alt"></i>
+        </div>
     </div>
 
-    <!-- PROGRESS BAR -->
-    <div class="request-progress-card">
+    <!-- PROGRESS TRACKER -->
+    <section class="rs-card rs-progress-card">
+        <div class="rs-section-heading">
+            <div class="rs-heading-icon">
+                <i class="fas fa-route"></i>
+            </div>
+            <div>
+                <h2>Request Progress</h2>
+                <p>Follow each stage of your laboratory request.</p>
+            </div>
+        </div>
 
         @if (isCancelled)
         {
-            <div class="cancelled-notice">
+            <div class="rs-cancelled-notice" role="status">
                 <i class="fas fa-times-circle"></i>
-                This test request has been cancelled.
+                <div>
+                    <strong>Request Cancelled</strong>
+                    <p>This test request has been cancelled.</p>
+                </div>
             </div>
         }
         else
         {
-            <div class="progress-steps">
+            <div class="rs-progress-scroll">
+                <div class="rs-progress-steps">
+                    @for (int i = 0; i < statuses.Length; i++)
+                    {
+                        var isCompleted = i <= currentIndex;
 
-                @for (int i = 0; i < statuses.Length; i++)
-                {
-                    var isCompleted = i <= currentIndex;
+                        <div class="rs-progress-step">
 
-                    <div class="progress-step">
-
-                        @if (i < statuses.Length - 1)
-                        {
-                            <div class="progress-line @(i < currentIndex ? "completed" : "")"></div>
-                        }
-
-                        <div class="progress-circle @(isCompleted ? "completed" : "")">
-                            @if (isCompleted)
+                            @if (i < statuses.Length - 1)
                             {
-                                <i class="fas fa-check"></i>
+                                <div class="rs-progress-line @(i < currentIndex ? "completed" : "")"></div>
                             }
-                            else
-                            {
-                                <span>@(i + 1)</span>
-                            }
+
+                            <div class="rs-progress-circle @(isCompleted ? "completed" : "")">
+                                @if (isCompleted)
+                                {
+                                    <i class="fas fa-check"></i>
+                                }
+                                else
+                                {
+                                    <span>@(i + 1)</span>
+                                }
+                            </div>
+
+                            <span class="rs-progress-label @(isCompleted ? "completed" : "")">
+                                @statuses[i]
+                            </span>
                         </div>
-
-                        <div class="progress-label @(isCompleted ? "completed" : "")">
-                            @statuses[i]
-                        </div>
-
-                    </div>
-                }
-
+                    }
+                </div>
             </div>
         }
-
-    </div>
+    </section>
 
     <!-- REQUEST INFORMATION -->
-    <div class="info-grid">
+    <div class="rs-info-grid">
 
-        <!-- PATIENT -->
-        <div class="info-card">
-            <label>
+        <div class="rs-info-card">
+            <div class="rs-info-icon rs-icon-blue">
                 <i class="fas fa-user"></i>
-                Patient Name
-            </label>
-
-            <div class="info-value">
-                @Model.PatientName
+            </div>
+            <div class="rs-info-content">
+                <span class="rs-info-label">Patient Name</span>
+                <div class="rs-info-value">@Model.PatientName</div>
             </div>
         </div>
 
-        <!-- REQUEST DATE -->
-        <div class="info-card">
-            <label>
-                <i class="fas fa-calendar"></i>
-                Request Date
-            </label>
-
-            <div class="info-value">
-                @Model.RequestDate
+        <div class="rs-info-card">
+            <div class="rs-info-icon rs-icon-purple">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="rs-info-content">
+                <span class="rs-info-label">Request Date</span>
+                <div class="rs-info-value">@Model.RequestDate</div>
             </div>
         </div>
 
-        <!-- URGENCY -->
-        <div class="info-card">
-            <label>
+        <div class="rs-info-card">
+            <div class="rs-info-icon rs-icon-orange">
                 <i class="fas fa-flag"></i>
-                Urgency
-            </label>
-
-            <div class="info-value">
-                @if (IsStatus(Model.Urgency, "Routine"))
-                {
-                    <span class="badge badge-routine">Routine</span>
-                }
-                else if (IsStatus(Model.Urgency, "Urgent"))
-                {
-                    <span class="badge badge-urgent">Urgent</span>
-                }
-                else if (IsStatus(Model.Urgency, "STAT"))
-                {
-                    <span class="badge badge-stat">STAT</span>
-                }
-                else
-                {
-                    <span class="badge badge-routine">@Model.Urgency</span>
-                }
+            </div>
+            <div class="rs-info-content">
+                <span class="rs-info-label">Urgency</span>
+                <div class="rs-info-value">
+                    @if (IsStatus(Model.Urgency, "Routine"))
+                    {
+                        <span class="rs-status rs-status-routine">
+                            <i class="fas fa-circle"></i> Routine
+                        </span>
+                    }
+                    else if (IsStatus(Model.Urgency, "Urgent"))
+                    {
+                        <span class="rs-status rs-status-urgent">
+                            <i class="fas fa-exclamation-circle"></i> Urgent
+                        </span>
+                    }
+                    else if (IsStatus(Model.Urgency, "STAT"))
+                    {
+                        <span class="rs-status rs-status-stat">
+                            <i class="fas fa-exclamation-triangle"></i> STAT
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="rs-status rs-status-routine">
+                            @(string.IsNullOrWhiteSpace(Model.Urgency) ? "Unknown" : Model.Urgency)
+                        </span>
+                    }
+                </div>
             </div>
         </div>
 
-        <!-- CURRENT STATUS -->
-        <div class="info-card">
-            <label>
+        <div class="rs-info-card">
+            <div class="rs-info-icon rs-icon-green">
                 <i class="fas fa-info-circle"></i>
-                Current Status
-            </label>
-
-            <div class="info-value">
-
-                @if (IsStatus(currentStatus, "Submitted"))
-                {
-                    <span class="badge badge-submitted">Submitted</span>
-                }
-                else if (IsStatus(currentStatus, "SamplesReceived", "Sample(s) received", "SampleReceived"))
-                {
-                    <span class="badge badge-samplesreceived">Samples Received</span>
-                }
-                else if (IsStatus(currentStatus, "InProgress"))
-                {
-                    <span class="badge badge-inprogress">In Progress</span>
-                }
-                else if (IsStatus(currentStatus, "Completed"))
-                {
-                    <span class="badge badge-completed">Completed</span>
-                }
-                else if (IsStatus(currentStatus, "Released by doctor", "Released"))
-                {
-                    <span class="badge badge-releasedbydoctor">Released</span>
-                }
-                else if (isCancelled)
-                {
-                    <span class="badge badge-cancelled">Cancelled</span>
-                }
-                else
-                {
-                    <span class="badge badge-submitted">
-                        @(string.IsNullOrWhiteSpace(currentStatus) ? "Unknown" : currentStatus)
-                    </span>
-                }
-
+            </div>
+            <div class="rs-info-content">
+                <span class="rs-info-label">Current Status</span>
+                <div class="rs-info-value">
+                    @if (IsStatus(currentStatus, "Submitted"))
+                    {
+                        <span class="rs-status rs-status-submitted">
+                            <i class="fas fa-clock"></i> Submitted
+                        </span>
+                    }
+                    else if (IsStatus(currentStatus, "SamplesReceived", "Sample(s) received", "SampleReceived"))
+                    {
+                        <span class="rs-status rs-status-samples">
+                            <i class="fas fa-vial"></i> Samples Received
+                        </span>
+                    }
+                    else if (IsStatus(currentStatus, "InProgress"))
+                    {
+                        <span class="rs-status rs-status-progress">
+                            <i class="fas fa-spinner"></i> In Progress
+                        </span>
+                    }
+                    else if (IsStatus(currentStatus, "Completed"))
+                    {
+                        <span class="rs-status rs-status-completed">
+                            <i class="fas fa-check-circle"></i> Completed
+                        </span>
+                    }
+                    else if (IsStatus(currentStatus, "Released by doctor", "Released"))
+                    {
+                        <span class="rs-status rs-status-released">
+                            <i class="fas fa-check-double"></i> Released
+                        </span>
+                    }
+                    else if (isCancelled)
+                    {
+                        <span class="rs-status rs-status-cancelled">
+                            <i class="fas fa-times-circle"></i> Cancelled
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="rs-status rs-status-submitted">
+                            @(string.IsNullOrWhiteSpace(currentStatus) ? "Unknown" : currentStatus)
+                        </span>
+                    }
+                </div>
             </div>
         </div>
 
     </div>
 
     <!-- REQUESTED TESTS -->
-    <div class="section-title">
-        <i class="fas fa-microscope"></i>
-        Requested Tests
-    </div>
-
-    @if (Model.TestItems != null && Model.TestItems.Any())
-    {
-        <div class="table-responsive">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Test Name</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach (var item in Model.TestItems)
-                    {
-                        <tr>
-                            <td>
-                                <strong>@item.TestTypeName</strong>
-                            </td>
-
-                            <td>
-                                @if (IsStatus(item.Status, "Submitted"))
-                                {
-                                    <span class="badge badge-submitted">Submitted</span>
-                                }
-                                else if (IsStatus(item.Status, "InProgress"))
-                                {
-                                    <span class="badge badge-inprogress">In Progress</span>
-                                }
-                                else if (IsStatus(item.Status, "Completed"))
-                                {
-                                    <span class="badge badge-completed">Completed - Awaiting Verification</span>
-                                }
-                                else if (IsStatus(item.Status, "Verified"))
-                                {
-                                    <span class="badge badge-verified">Verified</span>
-                                }
-                                else if (IsStatus(item.Status, "To Be Reviewed"))
-                                {
-                                    <span class="badge badge-review">To Be Reviewed</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-submitted">
-                                        @(string.IsNullOrWhiteSpace(item.Status) ? "Unknown" : item.Status)
-                                    </span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <section class="rs-section">
+        <div class="rs-section-heading">
+            <div class="rs-heading-icon">
+                <i class="fas fa-microscope"></i>
+            </div>
+            <div>
+                <h2>Requested Tests</h2>
+                <p>Review the current status of each requested laboratory test.</p>
+            </div>
         </div>
-    }
-    else
-    {
-        <p class="empty-message">
-            No test types have been recorded for this request.
-        </p>
-    }
+
+        @if (Model.TestItems != null && Model.TestItems.Any())
+        {
+            <div class="rs-table-wrapper">
+                <table class="rs-table">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.TestItems)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="rs-table-primary">
+                                        <span class="rs-table-icon">
+                                            <i class="fas fa-flask"></i>
+                                        </span>
+                                        <strong>@item.TestTypeName</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (IsStatus(item.Status, "Submitted"))
+                                    {
+                                        <span class="rs-status rs-status-submitted">
+                                            <i class="fas fa-clock"></i> Submitted
+                                        </span>
+                                    }
+                                    else if (IsStatus(item.Status, "InProgress"))
+                                    {
+                                        <span class="rs-status rs-status-progress">
+                                            <i class="fas fa-spinner"></i> In Progress
+                                        </span>
+                                    }
+                                    else if (IsStatus(item.Status, "Completed"))
+                                    {
+                                        <span class="rs-status rs-status-completed">
+                                            <i class="fas fa-check-circle"></i> Completed - Awaiting Verification
+                                        </span>
+                                    }
+                                    else if (IsStatus(item.Status, "Verified"))
+                                    {
+                                        <span class="rs-status rs-status-released">
+                                            <i class="fas fa-check-double"></i> Verified
+                                        </span>
+                                    }
+                                    else if (IsStatus(item.Status, "To Be Reviewed"))
+                                    {
+                                        <span class="rs-status rs-status-review">
+                                            <i class="fas fa-eye"></i> To Be Reviewed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="rs-status rs-status-submitted">
+                                            @(string.IsNullOrWhiteSpace(item.Status) ? "Unknown" : item.Status)
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="rs-empty-state">
+                <div class="rs-empty-icon">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <h3>No tests recorded</h3>
+                <p>No test types have been recorded for this request.</p>
+            </div>
+        }
+    </section>
 
     <!-- SAMPLES -->
-    <div class="section-title samples-title">
-        <i class="fas fa-vial"></i>
-        Samples Collected
-    </div>
-
-    @if (Model.Samples != null && Model.Samples.Any())
-    {
-        <div class="table-responsive">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Barcode</th>
-                        <th>Sample Type</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach (var sample in Model.Samples)
-                    {
-                        <tr>
-                            <td>
-                                <strong>
-                                    <i class="fas fa-barcode barcode-icon"></i>
-                                    @sample.Barcode
-                                </strong>
-                            </td>
-
-                            <td>@sample.SampleTypeName</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <section class="rs-section">
+        <div class="rs-section-heading">
+            <div class="rs-heading-icon rs-heading-icon-teal">
+                <i class="fas fa-vial"></i>
+            </div>
+            <div>
+                <h2>Samples Collected</h2>
+                <p>View the barcodes and sample types associated with this request.</p>
+            </div>
         </div>
-    }
-    else
-    {
-        <p class="empty-message">
-            No samples recorded yet.
-        </p>
-    }
+
+        @if (Model.Samples != null && Model.Samples.Any())
+        {
+            <div class="rs-table-wrapper">
+                <table class="rs-table">
+                    <thead>
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Sample Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sample in Model.Samples)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="rs-table-primary">
+                                        <span class="rs-table-icon rs-barcode-icon">
+                                            <i class="fas fa-barcode"></i>
+                                        </span>
+                                        <strong>@sample.Barcode</strong>
+                                    </div>
+                                </td>
+                                <td>@sample.SampleTypeName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="rs-empty-state">
+                <div class="rs-empty-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <h3>No samples recorded</h3>
+                <p>No samples have been recorded for this request yet.</p>
+            </div>
+        }
+    </section>
 
     <!-- VIEW RESULTS -->
     @if (!isCancelled &&
          IsStatus(currentStatus, "Completed", "Released by doctor", "Released"))
     {
-        <div class="results-button-container">
+        <div class="rs-results-card">
+            <div class="rs-results-icon">
+                <i class="fas fa-file-medical-alt"></i>
+            </div>
+            <div class="rs-results-content">
+                <h3>Test Results</h3>
+                <p>
+                    View the available results associated with this test request.
+                </p>
+            </div>
             <a asp-controller="Doctor"
                asp-action="Results"
                asp-route-id="@Model.TestRequestId"
-               class="btn-primary-custom">
-
-                <i class="fas fa-file-medical-alt"></i>
+               class="rs-button rs-button-primary">
+                <i class="fas fa-eye"></i>
                 View Full Results
             </a>
         </div>
@@ -348,17 +417,24 @@
     @if (!isCancelled &&
          IsStatus(currentStatus, "Submitted", "SamplesReceived", "Sample(s) received", "SampleReceived"))
     {
-        <div class="cancel-card">
-
-            <div class="section-title cancel-title">
-                <i class="fas fa-times-circle"></i>
-                Cancel Request
+        <section class="rs-cancel-card">
+            <div class="rs-section-heading">
+                <div class="rs-heading-icon rs-heading-icon-red">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div>
+                    <h2>Cancel Request</h2>
+                    <p>Cancel a request that has not yet been processed by the laboratory.</p>
+                </div>
             </div>
 
-            <p class="cancel-description">
-                You can only cancel a request if it has not yet been
-                processed by the laboratory. Please provide a reason.
-            </p>
+            <div class="rs-cancel-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>
+                    Please provide a reason for cancellation. Make sure you have
+                    selected the correct request before continuing.
+                </p>
+            </div>
 
             <form asp-controller="Doctor"
                   asp-action="CancelRequest"
@@ -370,7 +446,7 @@
                        name="id"
                        value="@Model.TestRequestId" />
 
-                <div class="form-group">
+                <div class="rs-form-group">
                     <label for="reason">
                         <i class="fas fa-comment-alt"></i>
                         Reason for Cancellation
@@ -378,28 +454,28 @@
 
                     <textarea id="reason"
                               name="reason"
-                              rows="3"
-                              placeholder="Enter the reason for cancelling this request..."
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="Explain why this test request needs to be cancelled..."
                               required></textarea>
                 </div>
 
-                <div class="cancel-button-container">
-                    <button type="submit" class="cancel-button">
+                <div class="rs-cancel-actions">
+                    <button type="submit" class="rs-button rs-button-danger"
+                            onclick="return confirm('Are you sure you want to cancel this test request?');">
                         <i class="fas fa-times"></i>
                         Cancel This Request
                     </button>
                 </div>
-
             </form>
-        </div>
+        </section>
     }
 
     <!-- BACK BUTTON -->
-    <div class="back-button-container">
+    <div class="rs-back-container">
         <a asp-action="MyRequests"
            asp-controller="Doctor"
-           class="btn-outline-custom">
-
+           class="rs-button rs-button-outline">
             <i class="fas fa-arrow-left"></i>
             Back to My Requests
         </a>
@@ -408,427 +484,664 @@
 </div>
 
 <style>
-    .fade-in {
-        animation: fadeInUp 0.5s ease;
-    }
-
-    /* PAGE HEADER */
-    .page-header {
-        margin-bottom: 2rem;
-    }
-
-        .page-header h2 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-            .page-header h2 i {
-                -webkit-text-fill-color: #667eea;
-            }
-
-        .page-header p {
-            margin: 6px 0 0;
-            color: #718096;
-            font-size: 14px;
-        }
-
-    /* PROGRESS CARD */
-    .request-progress-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        border-radius: 24px;
-        padding: 2rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-        .request-progress-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-        }
-
-    .progress-steps {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+    .rs-page {
         width: 100%;
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 28px 30px 40px;
+        box-sizing: border-box;
+        color: #273244;
+        font-family: "Segoe UI", Arial, sans-serif;
+        animation: rsFadeIn .4s ease;
     }
 
-    .progress-step {
+        .rs-page * {
+            box-sizing: border-box;
+        }
+
+    .rs-header {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        flex: 1;
-        position: relative;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 25px;
     }
 
-    .progress-line {
-        position: absolute;
-        top: 18px;
-        left: 50%;
-        width: 100%;
-        height: 3px;
-        background: #e2e8f0;
-        z-index: 0;
+    .rs-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 7px;
+        color: #3157c7;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
     }
 
-        .progress-line.completed {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
+    .rs-header h1 {
+        margin: 0;
+        color: #172033;
+        font-size: 29px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
 
-    .progress-circle {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        background: #e2e8f0;
-        color: white;
+    .rs-header p {
+        max-width: 650px;
+        margin: 7px 0 0;
+        color: #718096;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .rs-header-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 0.85rem;
-        z-index: 1;
-        position: relative;
+        width: 62px;
+        height: 62px;
+        flex: 0 0 62px;
+        border-radius: 16px;
+        color: #3157c7;
+        background: #eef2ff;
+        font-size: 25px;
     }
 
-        .progress-circle.completed {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-    .progress-label {
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #718096;
-        text-align: center;
+    .rs-card,
+    .rs-info-card,
+    .rs-results-card,
+    .rs-cancel-card,
+    .rs-empty-state {
+        background: #fff;
+        border: 1px solid #e7ebf1;
+        border-radius: 15px;
+        box-shadow: 0 5px 18px rgba(15, 23, 42, .045);
     }
 
-        .progress-label.completed {
-            color: #667eea;
-        }
+    .rs-progress-card {
+        padding: 24px;
+        margin-bottom: 20px;
+    }
 
-    .cancelled-notice {
-        padding: 1rem;
+    .rs-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .rs-heading-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 43px;
+        height: 43px;
+        flex: 0 0 43px;
         border-radius: 12px;
-        background: #fed7d7;
-        color: #c53030;
+        color: #3157c7;
+        background: #eef2ff;
+        font-size: 18px;
+    }
+
+    .rs-heading-icon-teal {
+        color: #167d8d;
+        background: #e8f7f8;
+    }
+
+    .rs-heading-icon-red {
+        color: #c62828;
+        background: #fff0f0;
+    }
+
+    .rs-section-heading h2 {
+        margin: 0 0 4px;
+        color: #172033;
+        font-size: 16px;
+        font-weight: 750;
+    }
+
+    .rs-section-heading p {
+        margin: 0;
+        color: #8a94a6;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    /* Progress tracker */
+
+    .rs-progress-scroll {
+        width: 100%;
+        overflow-x: auto;
+        padding: 8px 0 2px;
+    }
+
+    .rs-progress-steps {
+        display: flex;
+        align-items: flex-start;
+        width: 100%;
+        min-width: 490px;
+    }
+
+    .rs-progress-step {
+        position: relative;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .rs-progress-line {
+        position: absolute;
+        z-index: 0;
+        top: 17px;
+        left: 50%;
+        width: 100%;
+        height: 3px;
+        background: #e5e9f0;
+    }
+
+        .rs-progress-line.completed {
+            background: #3157c7;
+        }
+
+    .rs-progress-circle {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 3px solid #e5e9f0;
+        border-radius: 50%;
+        color: #8a94a6;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+        .rs-progress-circle.completed {
+            border-color: #3157c7;
+            color: #fff;
+            background: #3157c7;
+        }
+
+    .rs-progress-label {
+        margin-top: 10px;
+        color: #8a94a6;
+        font-size: 11px;
         font-weight: 600;
         text-align: center;
     }
 
-    /* INFORMATION CARDS */
-    .info-grid {
+        .rs-progress-label.completed {
+            color: #3157c7;
+        }
+
+    .rs-cancelled-notice {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 17px;
+        color: #b42318;
+        background: #fff3f3;
+        border: 1px solid #f2cccc;
+        border-radius: 12px;
+    }
+
+        .rs-cancelled-notice > i {
+            font-size: 25px;
+        }
+
+        .rs-cancelled-notice strong {
+            font-size: 14px;
+        }
+
+        .rs-cancelled-notice p {
+            margin: 4px 0 0;
+            font-size: 12px;
+        }
+
+    /* Information cards */
+
+    .rs-info-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
     }
 
-    .info-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        border-radius: 20px;
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    .rs-info-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+        padding: 19px;
+        transition: box-shadow .2s ease, transform .2s ease;
     }
 
-        .info-card:hover {
+        .rs-info-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .07);
         }
 
-        .info-card label {
-            display: block;
-            color: #718096;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
+    .rs-info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        border-radius: 12px;
+        font-size: 18px;
+    }
 
-            .info-card label i {
-                color: #667eea;
-                margin-right: 0.35rem;
-            }
+    .rs-icon-blue {
+        color: #3157c7;
+        background: #eef2ff;
+    }
 
-    .info-value {
+    .rs-icon-purple {
+        color: #6d4bd8;
+        background: #f1edff;
+    }
+
+    .rs-icon-orange {
+        color: #b7791f;
+        background: #fff5df;
+    }
+
+    .rs-icon-green {
+        color: #15803d;
+        background: #eaf8ef;
+    }
+
+    .rs-info-content {
+        min-width: 0;
+    }
+
+    .rs-info-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #8a94a6;
+        font-size: 11px;
         font-weight: 600;
-        color: #2d3748;
     }
 
-    /* TABLES */
-    .modern-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
+    .rs-info-value {
+        color: #273244;
+        font-size: 13px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    /* Rounded badges */
+
+    .rs-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        max-width: 100%;
+        padding: 6px 10px;
         border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        margin-bottom: 1rem;
+        font-size: 10px;
+        font-weight: 750;
+        line-height: 1.4;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        vertical-align: middle;
     }
 
-        .modern-table thead th {
-            background: #f7fafc;
-            color: #667eea;
-            font-weight: 600;
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 2px solid #e9ecef;
+        .rs-status i {
+            font-size: 10px;
         }
 
-        .modern-table tbody td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #eef1f3;
-            color: #2d3748;
+    .rs-status-routine,
+    .rs-status-submitted {
+        color: #526174;
+        background: #edf0f5;
+    }
+
+    .rs-status-urgent,
+    .rs-status-review {
+        color: #986500;
+        background: #fff3d6;
+    }
+
+    .rs-status-stat,
+    .rs-status-cancelled {
+        color: #b42318;
+        background: #fde9eb;
+    }
+
+    .rs-status-samples {
+        color: #986500;
+        background: #fff3d6;
+    }
+
+    .rs-status-progress {
+        color: #3157c7;
+        background: #eef2ff;
+    }
+
+    .rs-status-completed,
+    .rs-status-released {
+        color: #15803d;
+        background: #eaf8ef;
+    }
+
+    /* Tables */
+
+    .rs-section {
+        margin-bottom: 30px;
+    }
+
+    .rs-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        background: #fff;
+        border: 1px solid #e7ebf1;
+        border-radius: 14px;
+        box-shadow: 0 5px 18px rgba(15, 23, 42, .035);
+    }
+
+    .rs-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+        .rs-table thead th {
+            padding: 15px 19px;
+            color: #66758a;
+            background: #f7f9fc;
+            border-bottom: 1px solid #e7ebf1;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .025em;
         }
 
-        .modern-table tbody tr:last-child td {
+        .rs-table tbody td {
+            padding: 15px 19px;
+            color: #526174;
+            border-bottom: 1px solid #edf0f4;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        .rs-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        .modern-table tbody tr:hover {
-            background: #f0f4ff;
+        .rs-table tbody tr {
+            transition: background .2s ease;
         }
 
-    .barcode-icon {
-        color: #667eea;
-        margin-right: 0.4rem;
-    }
+            .rs-table tbody tr:hover {
+                background: #f9fbff;
+            }
 
-    /* SECTION TITLES */
-    .section-title {
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
-        color: #2d3748;
-        font-size: 1.15rem;
-        font-weight: 600;
+    .rs-table-primary {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 11px;
+        color: #344054;
     }
 
-        .section-title i {
-            color: #667eea;
+        .rs-table-primary strong {
+            font-size: 12px;
+            overflow-wrap: anywhere;
         }
 
-    .samples-title {
-        margin-top: 1.5rem;
+    .rs-table-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border-radius: 10px;
+        color: #3157c7;
+        background: #eef2ff;
+        font-size: 14px;
     }
 
-    .empty-message {
-        color: #718096;
-        margin-bottom: 1.5rem;
+    .rs-barcode-icon {
+        color: #167d8d;
+        background: #e8f7f8;
     }
 
-    /* BADGES */
-    .badge {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
+    /* Empty states */
+
+    .rs-empty-state {
+        padding: 35px 20px;
+        text-align: center;
+        box-shadow: none;
     }
 
-    .badge-routine {
-        background: #edf2f7;
-        color: #4a5568;
+    .rs-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 12px;
+        border-radius: 14px;
+        color: #7d8797;
+        background: #f1f4f8;
+        font-size: 20px;
     }
 
-    .badge-urgent {
-        background: #feebc8;
-        color: #c05621;
+    .rs-empty-state h3 {
+        margin: 0 0 6px;
+        color: #344054;
+        font-size: 14px;
+        font-weight: 750;
     }
 
-    .badge-stat {
-        background: #fed7d7;
-        color: #c53030;
+    .rs-empty-state p {
+        margin: 0;
+        color: #8a94a6;
+        font-size: 12px;
+        line-height: 1.7;
     }
 
-    .badge-submitted {
-        background: #e2e8f0;
-        color: #4a5568;
+    /* Results */
+
+    .rs-results-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
     }
 
-    .badge-samplesreceived {
-        background: #faf089;
-        color: #975a16;
+    .rs-results-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+        border-radius: 12px;
+        color: #15803d;
+        background: #eaf8ef;
+        font-size: 19px;
     }
 
-    .badge-inprogress {
-        background: #bee3f8;
-        color: #2b6cb0;
+    .rs-results-content {
+        flex: 1;
+        min-width: 0;
     }
 
-    .badge-completed {
-        background: #c6f6d5;
-        color: #276749;
-    }
+        .rs-results-content h3 {
+            margin: 0 0 5px;
+            color: #263246;
+            font-size: 14px;
+            font-weight: 750;
+        }
 
-    .badge-releasedbydoctor,
-    .badge-verified {
-        background: #c6f6d5;
-        color: #276749;
-    }
+        .rs-results-content p {
+            margin: 0;
+            color: #8a94a6;
+            font-size: 11px;
+            line-height: 1.6;
+        }
 
-    .badge-review {
-        background: #feebc8;
-        color: #975a16;
-    }
+    /* Buttons */
 
-    .badge-cancelled {
-        background: #fed7d7;
-        color: #c53030;
-    }
-
-    /* RESULTS BUTTON */
-    .results-button-container {
-        margin-top: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .btn-primary-custom {
+    .rs-button {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        justify-content: center;
+        gap: 8px;
+        min-height: 41px;
+        padding: 10px 17px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 750;
         text-decoration: none;
-        padding: 0.65rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
     }
 
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            color: white;
+        .rs-button:hover {
+            transform: translateY(-1px);
             text-decoration: none;
         }
 
-    /* CANCEL REQUEST */
-    .cancel-card {
-        background: linear-gradient(135deg, #ffffff 0%, #fff8f8 100%);
-        border-radius: 24px;
-        padding: 1.5rem 2rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        margin-top: 2rem;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        border-left: 4px solid #e53e3e;
+    .rs-button-primary {
+        color: #fff;
+        background: #3157c7;
     }
 
-    .cancel-title {
-        margin-top: 0;
-        color: #e53e3e;
-    }
-
-        .cancel-title i {
-            color: #e53e3e;
+        .rs-button-primary:hover {
+            color: #fff;
+            background: #2647a7;
         }
 
-    .cancel-description {
-        color: #718096;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
+    .rs-button-outline {
+        color: #526174;
+        background: #fff;
+        border-color: #dce2ea;
     }
 
-    .cancel-card .form-group {
-        margin-bottom: 1rem;
+        .rs-button-outline:hover {
+            color: #3157c7;
+            background: #f5f8ff;
+            border-color: #bdcaf2;
+        }
+
+    /* Cancellation */
+
+    .rs-cancel-card {
+        padding: 24px;
+        margin-bottom: 25px;
+        border-color: #f0dede;
     }
 
-        .cancel-card .form-group label {
+        .rs-cancel-card .rs-section-heading {
+            margin-bottom: 17px;
+        }
+
+    .rs-cancel-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 13px 15px;
+        margin-bottom: 20px;
+        color: #9b2c2c;
+        background: #fff4f4;
+        border: 1px solid #f2d1d1;
+        border-radius: 10px;
+    }
+
+        .rs-cancel-warning i {
+            margin-top: 2px;
+            font-size: 16px;
+        }
+
+        .rs-cancel-warning p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+    .rs-form-group {
+        margin-bottom: 17px;
+    }
+
+        .rs-form-group label {
             display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #2d3748;
+            margin-bottom: 8px;
+            color: #344054;
+            font-size: 12px;
+            font-weight: 750;
         }
 
-            .cancel-card .form-group label i {
-                margin-right: 0.35rem;
-                color: #e53e3e;
+            .rs-form-group label i {
+                margin-right: 5px;
+                color: #c62828;
             }
 
-    .cancel-card textarea {
-        width: 100%;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
-        resize: vertical;
-        font-family: inherit;
-        box-sizing: border-box;
-        transition: all 0.3s ease;
-    }
-
-        .cancel-card textarea:hover {
-            border-color: #cbd5e0;
+        .rs-form-group textarea {
+            display: block;
+            width: 100%;
+            min-height: 100px;
+            padding: 12px 14px;
+            color: #344054;
+            background: #fff;
+            border: 1px solid #dce2ea;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 12px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color .2s, box-shadow .2s;
         }
 
-        .cancel-card textarea:focus {
-            outline: none;
-            border-color: #e53e3e;
-            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
-        }
+            .rs-form-group textarea::placeholder {
+                color: #a0a9b7;
+            }
 
-    .cancel-button-container {
+            .rs-form-group textarea:focus {
+                outline: none;
+                border-color: #c62828;
+                box-shadow: 0 0 0 3px rgba(198, 40, 40, .08);
+            }
+
+    .rs-cancel-actions {
         display: flex;
         justify-content: flex-end;
     }
 
-    .cancel-button {
-        background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
-        color: white;
-        border: none;
-        padding: 0.7rem 1.8rem;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .rs-button-danger {
+        color: #b42318;
+        background: #fff;
+        border-color: #efc6c6;
     }
 
-        .cancel-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
+        .rs-button-danger:hover {
+            color: #b42318;
+            background: #fff0f0;
         }
 
-    /* BACK BUTTON */
-    .back-button-container {
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
+    .rs-back-container {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 5px;
     }
 
-    .btn-outline-custom {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #718096;
-        border: 2px solid #e2e8f0;
-        background: white;
-        text-decoration: none;
-        padding: 0.6rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-        .btn-outline-custom:hover {
-            background: #f7fafc;
-            border-color: #cbd5e0;
-            color: #4a5568;
-            transform: translateY(-2px);
-            text-decoration: none;
-        }
-
-    /* ANIMATION AND MOBILE */
-    @@keyframes fadeInUp {
+    @@keyframes rsFadeIn {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(8px);
         }
 
         to {
@@ -837,38 +1150,120 @@
         }
     }
 
-    @@media (max-width: 768px) {
-        .info-grid {
+    /* Responsive layout */
+
+    @@media (max-width: 850px) {
+        .rs-page {
+            padding: 24px 20px 35px;
+        }
+
+        .rs-info-grid {
             grid-template-columns: 1fr;
+            gap: 12px;
         }
 
-        .request-progress-card {
-            padding: 1rem;
-            overflow-x: auto;
+        .rs-results-card {
+            flex-wrap: wrap;
         }
 
-        .progress-steps {
-            min-width: 600px;
+        .rs-results-content {
+            flex-basis: calc(100% - 65px);
         }
 
-        .table-responsive {
-            overflow-x: auto;
+        .rs-results-card .rs-button {
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .rs-page {
+            padding: 18px 14px 30px;
         }
 
-        .modern-table {
-            min-width: 600px;
+        .rs-header {
+            align-items: flex-start;
+            gap: 12px;
         }
 
-        .cancel-card {
-            padding: 1.25rem;
+            .rs-header h1 {
+                font-size: 23px;
+            }
+
+            .rs-header p {
+                font-size: 12px;
+            }
+
+        .rs-header-icon {
+            width: 45px;
+            height: 45px;
+            flex-basis: 45px;
+            border-radius: 12px;
+            font-size: 19px;
         }
 
-        .cancel-button-container {
+        .rs-progress-card,
+        .rs-cancel-card {
+            padding: 17px;
+        }
+
+        .rs-section-heading {
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .rs-heading-icon {
+            width: 37px;
+            height: 37px;
+            flex-basis: 37px;
+            font-size: 15px;
+        }
+
+        .rs-section-heading h2 {
+            font-size: 14px;
+        }
+
+        .rs-section-heading p {
+            font-size: 11px;
+        }
+
+        .rs-info-card {
+            padding: 15px;
+        }
+
+        .rs-table {
+            min-width: 440px;
+        }
+
+            .rs-table thead th,
+            .rs-table tbody td {
+                padding: 12px;
+            }
+
+        .rs-results-card {
+            padding: 16px;
+        }
+
+        .rs-cancel-actions {
             justify-content: stretch;
         }
 
-        .cancel-button {
+            .rs-cancel-actions .rs-button {
+                width: 100%;
+            }
+
+        .rs-back-container .rs-button {
             width: 100%;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .rs-page {
+            animation: none;
+        }
+
+        .rs-info-card,
+        .rs-button {
+            transition: none;
         }
     }
 </style>
