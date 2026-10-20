@@ -19,16 +19,24 @@ namespace HemaCore.Controllers
 {
     public class ManagerController : Controller
     {
-        private AppDbContext _context;
+
+        private readonly AppDbContext _context;
         private readonly UserManager<Users> _userManager;
+        private readonly SignInManager<Users> _signInManager;
         private readonly IEmailService _emailService;
 
-        public ManagerController(AppDbContext context, UserManager<Users> userManager, IEmailService emailService)
+        public ManagerController(
+            AppDbContext context,
+            UserManager<Users> userManager,
+            SignInManager<Users> signInManager,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _signInManager = signInManager;
             _emailService = emailService;
         }
+
 
         #region Index
         public async Task<IActionResult> Index()
@@ -4114,6 +4122,7 @@ namespace HemaCore.Controllers
         }
 
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ManagerProfile(ManagerProfileVM model)
@@ -4121,7 +4130,7 @@ namespace HemaCore.Controllers
             bool changingPassword =
                 !string.IsNullOrWhiteSpace(model.NewPassword);
 
-            // Password fields are optional when not changing the password.
+            // Password fields are optional unless changing the password.
             if (!changingPassword)
             {
                 ModelState.Remove(nameof(model.CurrentPassword));
@@ -4134,7 +4143,7 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Find the manager's existing Identity account.
+            // Find the manager's Identity account.
             var manager = await _userManager.FindByIdAsync(model.Id);
 
             if (manager == null ||
@@ -4144,9 +4153,18 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Check whether another account uses this email.
+            if (string.IsNullOrWhiteSpace(model.Email))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "Email address is required.");
+
+                return View(model);
+            }
+
             var newEmail = model.Email.Trim();
 
+            // Prevent another account from using this email.
             var existingUser = await _userManager.FindByEmailAsync(newEmail);
 
             if (existingUser != null && existingUser.Id != manager.Id)
@@ -4158,7 +4176,7 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Validate password fields only if a new password was entered.
+            // Validate the password only if a new password was entered.
             if (changingPassword)
             {
                 if (string.IsNullOrWhiteSpace(model.CurrentPassword))
@@ -4187,7 +4205,7 @@ namespace HemaCore.Controllers
                 }
             }
 
-            // Update the manager's profile details.
+            // Update the manager's personal information.
             manager.FullName = model.FullName.Trim();
             manager.PhoneNumber = model.PhoneNumber;
 
@@ -4204,7 +4222,8 @@ namespace HemaCore.Controllers
             }
 
             // Update the email address.
-            var emailResult = await _userManager.SetEmailAsync(manager, newEmail);
+            var emailResult = await _userManager.SetEmailAsync(
+                manager, newEmail);
 
             if (!emailResult.Succeeded)
             {
@@ -4218,21 +4237,22 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // Keep the username in sync with the email address.
-            var usernameResult =
-                await _userManager.SetUserNameAsync(manager, newEmail);
+            // Keep the username synchronized with the email.
+            var usernameResult = await _userManager.SetUserNameAsync(
+                manager, newEmail);
 
             if (!usernameResult.Succeeded)
             {
                 foreach (var error in usernameResult.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(
+                        string.Empty, error.Description);
                 }
 
                 return View(model);
             }
 
-            // Change the password only if the manager entered a new password.
+            // Change the password only when requested.
             if (changingPassword)
             {
                 var passwordResult = await _userManager.ChangePasswordAsync(
@@ -4251,6 +4271,15 @@ namespace HemaCore.Controllers
 
                     return View(model);
                 }
+            }
+
+            // Refresh the authentication cookie if this is the
+            // currently signed-in manager.
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser != null && currentUser.Id == manager.Id)
+            {
+                await _signInManager.RefreshSignInAsync(manager);
             }
 
             TempData["Success"] = changingPassword
