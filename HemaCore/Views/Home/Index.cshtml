@@ -1,6 +1,6 @@
 ﻿@{
     Layout = null;
-    ViewData["Title"] = "HemaCore";
+    ViewData["Title"] = "Home - HemaCore";
 }
 
 <!DOCTYPE html>
@@ -9,480 +9,535 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>HemaCore | Hospital Laboratory System</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet" />
+    <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <link rel="stylesheet" href="~/css/home-style.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="~/css/home.css" />
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <header class="navbar">
-        <div class="nav-container">
+    <!-- NAVIGATION -->
+    <nav class="navbar navbar-expand-lg public-navbar">
+        <div class="container">
 
-            <a asp-controller="Home"
-               asp-action="Index"
-               class="brand">
-
-                <div class="brand-icon">
-                    <i class="fa-solid fa-heart-pulse"></i>
-                </div>
-
-                <div>
-                    <strong>HemaCore</strong>
-                    <span>Hospital Laboratory</span>
-                </div>
-
+            <a class="navbar-brand brand-logo"
+               asp-controller="Home"
+               asp-action="Index">
+                <span class="brand-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </span>
+                Hema<span>Core</span>
             </a>
 
-            <nav class="nav-links">
-                <a href="#home">Home</a>
-                <a href="#services">Services</a>
-                <a href="#about">About</a>
-                <a href="#security">Security</a>
-            </nav>
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
 
-            <div class="nav-actions">
-                <a asp-controller="Account"
-                   asp-action="Login"
-                   class="login-link">
-                    Sign In
-                </a>
+            <div class="collapse navbar-collapse" id="mainNavbar">
 
-                <a asp-controller="Account"
-                   asp-action="Register"
-                   class="register-button">
-                    Register
-                </a>
-            </div>
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active"
+                           href="#home">Home</a>
+                    </li>
 
-        </div>
-    </header>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#services">Services</a>
+                    </li>
 
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#about">About Us</a>
+                    </li>
 
-    <!-- HERO -->
-    <main>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#contact">Contact</a>
+                    </li>
+                </ul>
 
-        <section class="hero" id="home">
+                <div class="nav-buttons">
+                    <a class="btn btn-login"
+                       asp-controller="Account"
+                       asp-action="Login">
+                        Login
+                    </a>
 
-            <div class="hero-background">
-                <div class="dot-field"></div>
-                <div class="shape shape-one"></div>
-                <div class="shape shape-two"></div>
-                <div class="shape shape-three"></div>
-                <div class="shape shape-four"></div>
-            </div>
-
-            <div class="hero-container">
-
-                <div class="hero-badge">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    NMB HDL
-                </div>
-
-                <h1 class="hero-title">HemaCore</h1>
-
-                <p class="hero-subtitle">
-                    Next-generation laboratory test request management system
-                    for Nelson Mandela Bay Haematology Diagnostic Laboratories
-                </p>
-
-                <div class="hero-buttons">
-
-                    <a asp-controller="Account"
-                       asp-action="Register"
-                       class="primary-button">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a class="btn btn-register"
+                       asp-controller="Account"
+                       asp-action="Register">
                         Get Started
                     </a>
-
-                    <a href="#about" class="outline-button">
-                        <i class="fa-solid fa-play"></i>
-                        Learn More
-                    </a>
-
                 </div>
 
             </div>
-
-            <a href="#services" class="scroll-indicator">
-                <i class="fa-solid fa-chevron-down"></i>
-            </a>
-
-        </section>
+        </div>
+    </nav>
 
 
-        <!-- SERVICES -->
-        <section class="services section" id="services">
+    <!-- HERO SECTION -->
+    <section class="hero-section" id="home">
+        <div class="container">
+            <div class="row align-items-center g-5">
 
-            <div class="container">
+                <div class="col-lg-6">
 
-                <div class="section-heading">
+                    <div class="hero-badge">
+                        <i class="fas fa-shield-heart"></i>
+                        Healthcare Testing, Made Simpler
+                    </div>
 
-                    <span>OUR SYSTEM</span>
+                    <h1>
+                        Better Testing.
+                        <span>Better Care.</span>
+                    </h1>
 
-                    <h2>
-                        Everything your laboratory
-                        <strong>needs in one place.</strong>
-                    </h2>
-
-                    <p>
-                        HemaCore brings together the essential tools needed
-                        to support efficient laboratory operations.
+                    <p class="hero-description">
+                        Welcome to HemaCore, your digital laboratory
+                        management solution. We help streamline test
+                        requests, manage laboratory samples and make
+                        test results easier to access.
                     </p>
 
-                </div>
+                    <div class="hero-buttons">
+                        <a class="btn btn-primary-custom"
+                           asp-controller="Account"
+                           asp-action="Login">
+                            Access Your Portal
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
 
+                        <a href="#services"
+                           class="btn btn-outline-custom">
+                            Explore Services
+                        </a>
+                    </div>
 
-                <div class="service-grid">
-
-                    <article class="service-card">
-
-                        <div class="service-icon blue-bg">
-                            <i class="fa-solid fa-file-medical"></i>
-                        </div>
-
-                        <span class="service-number">01</span>
-
-                        <h3>Test Requests</h3>
-
-                        <p>
-                            Healthcare providers can submit and monitor
-                            laboratory test requests digitally.
-                        </p>
-
-                    </article>
-
-
-                    <article class="service-card">
-
-                        <div class="service-icon green-bg">
-                            <i class="fa-solid fa-vials"></i>
-                        </div>
-
-                        <span class="service-number">02</span>
-
-                        <h3>Sample Management</h3>
-
-                        <p>
-                            Laboratory staff can track samples throughout
-                            the testing process.
-                        </p>
-
-                    </article>
-
-
-                    <article class="service-card">
-
-                        <div class="service-icon purple-bg">
-                            <i class="fa-solid fa-chart-column"></i>
-                        </div>
-
-                        <span class="service-number">03</span>
-
-                        <h3>Results</h3>
-
-                        <p>
-                            Laboratory results can be recorded, reviewed
-                            and securely accessed.
-                        </p>
-
-                    </article>
-
-
-                    <article class="service-card">
-
-                        <div class="service-icon orange-bg">
-                            <i class="fa-solid fa-users-gear"></i>
-                        </div>
-
-                        <span class="service-number">04</span>
-
-                        <h3>User Management</h3>
-
-                        <p>
-                            Different hospital users receive access based
-                            on their responsibilities.
-                        </p>
-
-                    </article>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ABOUT -->
-        <section class="about section" id="about">
-
-            <div class="container about-container">
-
-                <div class="about-visual">
-
-                    <div class="hospital-panel">
-
-                        <div class="panel-icon">
-                            <i class="fa-solid fa-hospital"></i>
-                        </div>
-
-                        <span>HOSPITAL LABORATORY</span>
-
-                        <h3>
-                            Connected care.
-                            <br />
-                            Better workflow.
-                        </h3>
-
-                        <div class="panel-line"></div>
-
-                        <div class="panel-points">
-
-                            <div>
-                                <i class="fa-solid fa-check"></i>
-                                <span>Centralized laboratory workflow</span>
-                            </div>
-
-                            <div>
-                                <i class="fa-solid fa-check"></i>
-                                <span>Clear communication between teams</span>
-                            </div>
-
-                            <div>
-                                <i class="fa-solid fa-check"></i>
-                                <span>Controlled access to information</span>
-                            </div>
-
-                        </div>
-
+                    <div class="hero-note">
+                        <i class="fas fa-lock"></i>
+                        Designed to support secure laboratory workflows
                     </div>
 
                 </div>
 
+                <div class="col-lg-6">
 
-                <div class="about-content">
+                    <div class="hero-visual">
+
+                        <div class="hero-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1100&q=85"
+                                 alt="Laboratory professional working with diagnostic samples"
+                                 class="hero-image" />
+                        </div>
+
+                        <div class="floating-card floating-card-top">
+                            <div class="floating-icon">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <div>
+                                <strong>Laboratory Services</strong>
+                                <small>Organised testing workflows</small>
+                            </div>
+                        </div>
+
+                        <div class="floating-card floating-card-bottom">
+                            <div class="floating-icon result-icon">
+                                <i class="fas fa-file-medical"></i>
+                            </div>
+                            <div>
+                                <strong>Digital Test Results</strong>
+                                <small>Convenient result management</small>
+                            </div>
+                        </div>
+
+                        <div class="decorative-circle"></div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- BENEFITS SECTION -->
+    <section class="benefits-section">
+        <div class="container">
+
+            <div class="row g-4">
+
+                <div class="col-md-4">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h5>Secure Information</h5>
+                            <p>Support for responsible patient information management.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+                        <div>
+                            <h5>Efficient Workflows</h5>
+                            <p>Keep test requests and laboratory processes organised.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-file-medical-alt"></i>
+                        </div>
+                        <div>
+                            <h5>Result Management</h5>
+                            <p>Help authorised users manage laboratory results.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- SERVICES SECTION -->
+    <section class="services-section" id="services">
+        <div class="container">
+
+            <div class="section-heading text-center">
+                <span class="section-label">WHAT WE OFFER</span>
+
+                <h2>Our Laboratory Services</h2>
+
+                <p>
+                    A connected approach to managing medical laboratory
+                    testing, samples and results.
+                </p>
+            </div>
+
+            <div class="row g-4 mt-3">
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-vials"></i>
+                        </div>
+
+                        <h4>Test Requests</h4>
+
+                        <p>
+                            Support the creation and tracking of laboratory
+                            test requests from authorised healthcare users.
+                        </p>
+
+                        <a asp-controller="Account"
+                           asp-action="Login">
+                            Access Portal
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+
+                        <h4>Sample Management</h4>
+
+                        <p>
+                            Help laboratory staff organise samples and
+                            monitor their progress through the testing process.
+                        </p>
+
+                        <a asp-controller="Account"
+                           asp-action="Login">
+                            Access Portal
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+
+                        <h4>Diagnostic Testing</h4>
+
+                        <p>
+                            Support laboratory technicians with organised
+                            test workflows and result recording.
+                        </p>
+
+                        <a asp-controller="Account"
+                           asp-action="Login">
+                            Access Portal
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+
+                        <h4>Results Management</h4>
+
+                        <p>
+                            Help authorised staff record, verify and manage
+                            laboratory test results.
+                        </p>
+
+                        <a asp-controller="Account"
+                           asp-action="Login">
+                            Access Portal
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ABOUT SECTION -->
+    <section class="about-section" id="about">
+        <div class="container">
+
+            <div class="row align-items-center g-5">
+
+                <div class="col-lg-6">
+                    <div class="about-image-wrapper">
+
+                        <img src="https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=1000&q=85"
+                             alt="Modern medical laboratory"
+                             class="about-image" />
+
+                        <div class="about-caption">
+                            <i class="fas fa-heartbeat"></i>
+                            <div>
+                                <strong>Care Through Technology</strong>
+                                <small>Connected laboratory workflows</small>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
 
                     <span class="section-label">ABOUT HEMACORE</span>
 
-                    <h2>
-                        Built for the people
-                        <strong>behind patient care.</strong>
+                    <h2 class="about-title">
+                        Bringing Laboratory Management Into The Digital Age
                     </h2>
 
-                    <p>
-                        A modern hospital laboratory depends on accurate
-                        information and efficient communication. HemaCore
-                        provides a centralized environment where healthcare
-                        providers and laboratory teams can manage the
-                        laboratory testing workflow.
+                    <p class="about-description">
+                        HemaCore is designed to help medical laboratories
+                        move away from fragmented manual processes towards
+                        a more organised digital environment.
                     </p>
 
-                    <p>
-                        From submitting a test request to processing a
-                        sample and recording results, every stage can be
-                        managed through the system.
-                    </p>
-
-                    <div class="about-checks">
-
-                        <div>
-                            <i class="fa-solid fa-circle-check"></i>
-                            Simple laboratory workflow
-                        </div>
-
-                        <div>
-                            <i class="fa-solid fa-circle-check"></i>
-                            Secure user authentication
-                        </div>
-
-                        <div>
-                            <i class="fa-solid fa-circle-check"></i>
-                            Role-based access
-                        </div>
-
-                        <div>
-                            <i class="fa-solid fa-circle-check"></i>
-                            Centralized records
-                        </div>
-
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Organised test request management</span>
                     </div>
+
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Improved visibility of sample workflows</span>
+                    </div>
+
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Structured laboratory result management</span>
+                    </div>
+
+                    <a href="#contact"
+                       class="btn btn-primary-custom mt-4">
+                        Learn More
+                        <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
 
                 </div>
 
             </div>
+        </div>
+    </section>
 
-        </section>
 
+    <!-- PROCESS SECTION -->
+    <section class="process-section">
+        <div class="container">
 
-        <!-- SECURITY -->
-        <section class="security section" id="security">
+            <div class="section-heading text-center">
+                <span class="section-label">HOW IT WORKS</span>
+                <h2>A Simpler Laboratory Workflow</h2>
+                <p>Bring essential laboratory activities together in one system.</p>
+            </div>
 
-            <div class="container">
+            <div class="row g-4 mt-4">
 
-                <div class="security-box">
-
-                    <div class="security-icon">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-
-                    <div class="security-text">
-
-                        <span>SECURITY</span>
-
-                        <h2>
-                            Your laboratory information
-                            deserves <strong>protection.</strong>
-                        </h2>
-
+                <div class="col-md-4">
+                    <div class="process-card">
+                        <span class="process-number">01</span>
+                        <div class="process-icon">
+                            <i class="fas fa-file-medical"></i>
+                        </div>
+                        <h4>Submit a Request</h4>
                         <p>
-                            HemaCore uses authentication and role-based
-                            access to help ensure that laboratory information
-                            is available only to authorized users.
+                            Authorised healthcare professionals initiate
+                            laboratory test requests.
                         </p>
-
                     </div>
+                </div>
 
-                    <div class="security-list">
-
-                        <div>
-                            <i class="fa-solid fa-check"></i>
-                            Secure authentication
+                <div class="col-md-4">
+                    <div class="process-card">
+                        <span class="process-number">02</span>
+                        <div class="process-icon">
+                            <i class="fas fa-flask"></i>
                         </div>
-
-                        <div>
-                            <i class="fa-solid fa-check"></i>
-                            Role-based permissions
-                        </div>
-
-                        <div>
-                            <i class="fa-solid fa-check"></i>
-                            Protected records
-                        </div>
-
+                        <h4>Process the Sample</h4>
+                        <p>
+                            Laboratory personnel manage samples and
+                            record the required testing information.
+                        </p>
                     </div>
+                </div>
 
+                <div class="col-md-4">
+                    <div class="process-card">
+                        <span class="process-number">03</span>
+                        <div class="process-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <h4>Manage Results</h4>
+                        <p>
+                            Results can be recorded and verified before
+                            being made available to authorised users.
+                        </p>
+                    </div>
                 </div>
 
             </div>
+        </div>
+    </section>
 
-        </section>
 
+    <!-- CALL TO ACTION -->
+    <section class="cta-section" id="contact">
+        <div class="container">
 
-        <!-- CTA -->
-        <section class="cta">
-
-            <div class="container cta-container">
-
-                <div class="cta-icon">
-                    <i class="fa-solid fa-heart-pulse"></i>
-                </div>
-
-                <div class="cta-text">
-
-                    <span>GET STARTED</span>
-
-                    <h2>
-                        Ready to access HemaCore?
-                    </h2>
-
+            <div class="cta-content">
+                <div>
+                    <span class="cta-label">WELCOME TO HEMACORE</span>
+                    <h2>Ready to Access Your Laboratory Portal?</h2>
                     <p>
-                        Sign in to continue or create an account to get started.
+                        Sign in to access the features available for your role.
                     </p>
-
                 </div>
 
-                <div class="cta-buttons">
-
-                    <a asp-controller="Account"
-                       asp-action="Login"
-                       class="primary-button">
-                        Sign In
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-
-                    <a asp-controller="Account"
-                       asp-action="Register"
-                       class="outline-button">
-                        Register
-                    </a>
-
-                </div>
-
+                <a class="btn cta-button"
+                   asp-controller="Account"
+                   asp-action="Login">
+                    Login to HemaCore
+                    <i class="fas fa-arrow-right ms-2"></i>
+                </a>
             </div>
 
-        </section>
-
-    </main>
+        </div>
+    </section>
 
 
     <!-- FOOTER -->
-    <footer>
+    <footer class="public-footer">
+        <div class="container">
 
-        <div class="container footer-container">
+            <div class="row g-4">
 
-            <div class="footer-brand">
+                <div class="col-lg-5">
+                    <a class="navbar-brand brand-logo footer-logo"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        <span class="brand-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </span>
+                        Hema<span>Core</span>
+                    </a>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="brand">
+                    <p class="footer-description">
+                        Supporting more organised medical laboratory
+                        workflows through digital technology.
+                    </p>
+                </div>
 
-                    <div class="brand-icon">
-                        <i class="fa-solid fa-heart-pulse"></i>
-                    </div>
+                <div class="col-6 col-lg-3">
+                    <h5>Quick Links</h5>
+                    <a href="#home">Home</a>
+                    <a href="#services">Services</a>
+                    <a href="#about">About Us</a>
+                    <a href="#contact">Contact</a>
+                </div>
 
-                    <div>
-                        <strong>HemaCore</strong>
-                        <span>Hospital Laboratory</span>
-                    </div>
+                <div class="col-6 col-lg-4">
+                    <h5>Portal Access</h5>
+                    <a asp-controller="Account"
+                       asp-action="Login">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Login
+                    </a>
 
-                </a>
+                    <a asp-controller="Account"
+                       asp-action="Register">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Register
+                    </a>
+                </div>
 
+            </div>
+
+            <div class="footer-bottom">
                 <p>
-                    Hospital Laboratory Test Management System
+                    &copy; @DateTime.Now.Year HemaCore.
+                    All rights reserved.
                 </p>
 
-            </div>
-
-
-            <div class="footer-links">
-
-                <a href="#home">Home</a>
-                <a href="#services">Services</a>
-                <a href="#about">About</a>
-                <a href="#security">Security</a>
-
+                <span>Laboratory Management System</span>
             </div>
 
         </div>
-
-
-        <div class="footer-bottom">
-
-            <div class="container">
-
-                <span>
-                    &copy; @DateTime.Now.Year HemaCore. All rights reserved.
-                </span>
-
-                <span>
-                    Hospital Laboratory Management
-                </span>
-
-            </div>
-
-        </div>
-
     </footer>
+
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
