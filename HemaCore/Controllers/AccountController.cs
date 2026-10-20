@@ -170,7 +170,9 @@ namespace HemaCore.Controllers
         }
 
         // GET: Account/Logout
+        // Logout works from a link (GET) or a form button (POST).
         [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
