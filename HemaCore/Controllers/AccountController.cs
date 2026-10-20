@@ -1,10 +1,10 @@
 ﻿using HemaCore.Data;
 using HemaCore.Models;
+using HemaCore.Services;
 using HemaCore.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Eventing.Reader;
 
 namespace HemaCore.Controllers
 {
@@ -12,13 +12,19 @@ namespace HemaCore.Controllers
     {
         private readonly SignInManager<Users> _signInManager;
         private readonly UserManager<Users> _userManager;
-        private AppDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly AppDbContext _context;
 
-        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager, AppDbContext context)
+        public AccountController(
+            SignInManager<Users> signInManager,
+            UserManager<Users> userManager,
+            AppDbContext context,
+            IEmailService emailService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _context = context;
+            _emailService = emailService;
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -61,50 +67,74 @@ namespace HemaCore.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            return View();
+            return View(new LoginViewModel());
         }
 
+        // POST: Account/Login
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var result = await _signInManager.PasswordSignInAsync(
+                model.Email,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: false);
+
+            if (result.Succeeded)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-                if (result.Succeeded)
+                var user = await _userManager.FindByEmailAsync(model.Email);
+
+                if (user != null)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
                     if (await _userManager.IsInRoleAsync(user, "Admin"))
-                    {
                         return RedirectToAction("Index", "Admin");
-                    }
-                    else if (await _userManager.IsInRoleAsync(user, "Doctor"))
-                    {
+
+                    if (await _userManager.IsInRoleAsync(user, "Doctor"))
                         return RedirectToAction("Index", "Doctor");
-                    }
-                    else if (await _userManager.IsInRoleAsync(user, "LabTechnician"))
-                    {
+
+                    if (await _userManager.IsInRoleAsync(user, "LabTechnician"))
                         return RedirectToAction("Index", "LabTechnician");
-                    }
-                    else if (await _userManager.IsInRoleAsync(user, "Manager"))
-                    {
+
+                    if (await _userManager.IsInRoleAsync(user, "Manager"))
                         return RedirectToAction("Index", "Manager");
-                    }
-                    else if (await _userManager.IsInRoleAsync(user, "Patient"))
-                    {
+
+                    if (await _userManager.IsInRoleAsync(user, "Patient"))
                         return RedirectToAction("Index", "Patient");
-                    }
-                    return RedirectToAction("Index", "Home");
                 }
-                ModelState.AddModelError("", "Invalid login");
+
+                return RedirectToAction("Index", "Home");
             }
+
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "This account has been locked out. Please try again later.");
+            }
+            else if (result.IsNotAllowed)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "This account is not allowed to sign in. Please confirm your email.");
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            }
+
             return View(model);
         }
 
+        // GET: Account/Register
         [HttpGet]
         public IActionResult Register()
         {
             return View(new RegisterViewModel());
         }
+
+        // POST: Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -112,10 +142,12 @@ namespace HemaCore.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Check whether the email is already in use
             if (await _userManager.FindByEmailAsync(model.Email) != null)
             {
-                ModelState.AddModelError(nameof(model.Email), "Email already exists.");
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "Email already exists.");
+
                 return View(model);
             }
 
@@ -128,22 +160,20 @@ namespace HemaCore.Controllers
                 EmailConfirmed = true
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(
+                user,
+                model.Password);
 
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
-                {
                     ModelState.AddModelError(string.Empty, error.Description);
-                }
 
                 return View(model);
             }
 
-            // Assign the Patient role
             await _userManager.AddToRoleAsync(user, "Patient");
 
-            // Create the patient record
             var patient = new Patient
             {
                 Name = model.Name,
@@ -163,10 +193,131 @@ namespace HemaCore.Controllers
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
 
-            // Sign the user in
             await _signInManager.SignInAsync(user, isPersistent: false);
 
             return RedirectToAction("EditProfile", "Patient");
+        }
+
+        // GET: Account/ForgotPassword
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+        // POST: Account/ForgotPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(
+            ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            // Do not reveal whether an account exists.
+            if (user == null)
+                return RedirectToAction(nameof(ForgotPasswordConfirmation));
+
+            var token =
+                await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var resetLink = Url.Action(
+                nameof(ResetPassword),
+                "Account",
+                new
+                {
+                    email = model.Email,
+                    token = token
+                },
+                protocol: Request.Scheme);
+
+            if (string.IsNullOrWhiteSpace(resetLink))
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "We could not create the reset link. Please try again.");
+
+                return View(model);
+            }
+
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(
+                    model.Email,
+                    resetLink);
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "We could not send the reset email right now. Please try again later.");
+
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(ForgotPasswordConfirmation));
+        }
+
+        // GET: Account/ForgotPasswordConfirmation
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // GET: Account/ResetPassword
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(token))
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        // POST: Account/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(
+            ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user == null)
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+
+            var result = await _userManager.ResetPasswordAsync(
+                user,
+                model.Token,
+                model.Password);
+
+            if (result.Succeeded)
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            return View(model);
+        }
+
+        // GET: Account/ResetPasswordConfirmation
+        [HttpGet]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
 
         // GET: Account/Logout
@@ -176,7 +327,7 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Index", "Home");
         }
     }
 }
