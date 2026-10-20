@@ -7,6 +7,7 @@
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
+<link rel="stylesheet" href="~/css/delete.css" />
 
 <div class="content-card">
 
@@ -31,7 +32,6 @@
 
     @* PAGE HEADER *@
     <div class="section-title d-flex align-items-center justify-content-between">
-
         <div class="d-flex align-items-center">
             <i class="fas fa-folder me-2"></i>
             <span>
@@ -44,12 +44,10 @@
            class="btn btn-primary-custom btn-sm">
             + Add Category
         </a>
-
     </div>
 
     @* SEARCH AND STATUS FILTER *@
     <div class="search-toolbar">
-
         <div class="search-box">
             <i class="fas fa-search search-icon"></i>
 
@@ -75,16 +73,13 @@
                 <i class="fas fa-chevron-down dropdown-icon"></i>
             </div>
         </div>
-
     </div>
 
     @* MEDICATION CATEGORY TABLE *@
     <div class="card shadow-sm">
         <div class="card-body p-0">
-
             <div class="table-responsive">
                 <table class="modern-table">
-
                     <thead>
                         <tr>
                             <th>#</th>
@@ -97,7 +92,6 @@
                     </thead>
 
                     <tbody id="categoryTable">
-
                         @if (Model != null && Model.Any())
                         {
                             var number = 1;
@@ -114,7 +108,6 @@
                                 }
 
                                 <tr data-status="@(category.IsActive ? "active" : "inactive")">
-
                                     <td>@number</td>
 
                                     <td class="fw-semibold blue-text">
@@ -160,35 +153,23 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
 
-                                        <form asp-controller="Admin"
-                                              asp-action="ToggleMedicationCategoryStatus"
-                                              asp-route-id="@category.Id"
-                                              method="post"
-                                              class="d-inline">
-
-                                            @Html.AntiForgeryToken()
-
+                                        @* OPEN CONFIRMATION MODAL *@
+                                        <button type="button"
+                                                class="btn btn-sm @(category.IsActive ? "btn-outline-danger" : "btn-outline-success") toggle-medication-category-btn"
+                                                data-id="@category.Id"
+                                                data-name="@category.Name"
+                                                data-active="@category.IsActive.ToString().ToLowerInvariant()"
+                                                title="@(category.IsActive ? "Deactivate Category" : "Activate Category")">
                                             @if (category.IsActive)
                                             {
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        title="Deactivate Category"
-                                                        onclick="return confirm('Are you sure you want to deactivate this category?');">
-                                                    <i class="fas fa-ban"></i>
-                                                </button>
+                                                <i class="fas fa-ban"></i>
                                             }
                                             else
                                             {
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-success"
-                                                        title="Activate Category">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
+                                                <i class="fas fa-check"></i>
                                             }
-
-                                        </form>
+                                        </button>
                                     </td>
-
                                 </tr>
 
                                 number++;
@@ -203,35 +184,84 @@
                                 </td>
                             </tr>
                         }
-
                     </tbody>
-
                 </table>
             </div>
-
         </div>
     </div>
+</div>
 
+@* ACTIVATE / DEACTIVATE CONFIRMATION MODAL *@
+<div id="deleteModal"
+     class="delete-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="deleteModalTitle"
+     aria-hidden="true">
+
+    <div class="delete-box">
+        <div class="delete-icon">
+            <i id="modalIcon" class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <h3 id="deleteModalTitle">Confirm Action</h3>
+
+        <p id="modalActionText">
+            Are you sure you want to change this category's status?
+        </p>
+
+        <p class="delete-item-name" id="deleteMedicationCategoryName"></p>
+
+        <div class="delete-warning" id="modalWarning">
+            Please confirm that you want to continue.
+        </div>
+
+        <div class="delete-buttons">
+            <button type="button"
+                    id="cancelDeleteBtn"
+                    class="cancel-btn">
+                Cancel
+            </button>
+
+            <form id="deleteForm"
+                  asp-controller="Admin"
+                  asp-action="ToggleMedicationCategoryStatus"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       id="deleteMedicationCategoryId"
+                       name="id" />
+
+                <button type="submit"
+                        id="confirmDeleteBtn"
+                        class="confirm-delete-btn">
+                    <i id="confirmButtonIcon" class="fas fa-ban"></i>
+                    <span id="confirmButtonText">Confirm</span>
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
 
+            // SEARCH AND STATUS FILTER
             const searchBox = document.getElementById("searchBox");
             const statusFilter = document.getElementById("statusFilter");
             const categoryTable = document.getElementById("categoryTable");
 
             function filterCategories() {
-
                 const term = searchBox.value.trim().toLowerCase();
                 const status = statusFilter.value;
                 const rows = categoryTable.querySelectorAll("tr");
 
                 let visibleCount = 0;
 
-                rows.forEach(function (row) {
-
+                rows.forEach(function(row) {
                     if (!row.hasAttribute("data-status")) {
                         return;
                     }
@@ -256,23 +286,21 @@
                     document.getElementById("noCategoryResults");
 
                 if (visibleCount === 0) {
-
                     if (!noResults) {
                         noResults = document.createElement("tr");
                         noResults.id = "noCategoryResults";
 
                         noResults.innerHTML = `
-                            <td colspan="6"
-                                class="text-center text-muted py-3">
-                                No medication categories found.
-                            </td>`;
+                                    <td colspan="6"
+                                        class="text-center text-muted py-3">
+                                        No medication categories found.
+                                    </td>`;
 
                         categoryTable.appendChild(noResults);
                     }
 
                     noResults.style.display = "";
-                }
-                else if (noResults) {
+                } else if (noResults) {
                     noResults.remove();
                 }
             }
@@ -280,7 +308,99 @@
             searchBox.addEventListener("input", filterCategories);
             statusFilter.addEventListener("change", filterCategories);
 
+
+            // CONFIRMATION MODAL
+            const modal = document.getElementById("deleteModal");
+            const modalIcon = document.getElementById("modalIcon");
+            const modalTitle = document.getElementById("deleteModalTitle");
+            const modalActionText = document.getElementById("modalActionText");
+            const categoryName = document.getElementById("deleteMedicationCategoryName");
+            const modalWarning = document.getElementById("modalWarning");
+            const categoryIdInput = document.getElementById("deleteMedicationCategoryId");
+            const cancelButton = document.getElementById("cancelDeleteBtn");
+            const confirmButton = document.getElementById("confirmDeleteBtn");
+            const confirmButtonIcon = document.getElementById("confirmButtonIcon");
+            const confirmButtonText = document.getElementById("confirmButtonText");
+            const form = document.getElementById("deleteForm");
+
+            let previousFocus = null;
+
+            function openModal(id, name, isActive, triggerButton) {
+                previousFocus = triggerButton;
+
+                categoryIdInput.value = id;
+                categoryName.textContent = name;
+
+                if (isActive) {
+                    modalTitle.textContent = "Deactivate Category?";
+                    modalActionText.textContent =
+                        "Are you sure you want to deactivate this medication category?";
+                    modalWarning.textContent =
+                        "This category will be marked as inactive. Existing records will remain visible.";
+                    modalIcon.className = "fas fa-exclamation-triangle";
+                    confirmButtonIcon.className = "fas fa-ban";
+                    confirmButtonText.textContent = "Deactivate";
+                } else {
+                    modalTitle.textContent = "Activate Category?";
+                    modalActionText.textContent =
+                        "Are you sure you want to activate this medication category?";
+                    modalWarning.textContent =
+                        "This category will be marked as active again.";
+                    modalIcon.className = "fas fa-check-circle";
+                    confirmButtonIcon.className = "fas fa-check";
+                    confirmButtonText.textContent = "Activate";
+                }
+
+                confirmButton.disabled = false;
+                confirmButton.classList.toggle("deactivate-action", isActive);
+                confirmButton.classList.toggle("activate-action", !isActive);
+
+                modal.classList.add("show");
+                modal.setAttribute("aria-hidden", "false");
+                document.body.classList.add("modal-open");
+
+                cancelButton.focus();
+            }
+
+            function closeModal() {
+                modal.classList.remove("show");
+                modal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("modal-open");
+
+                if (previousFocus) {
+                    previousFocus.focus();
+                }
+            }
+
+            document.querySelectorAll(".toggle-medication-category-btn")
+                .forEach(function(button) {
+                    button.addEventListener("click", function() {
+                        const id = this.dataset.id;
+                        const name = this.dataset.name;
+                        const isActive = this.dataset.active === "true";
+
+                        openModal(id, name, isActive, this);
+                    });
+                });
+
+            cancelButton.addEventListener("click", closeModal);
+
+            modal.addEventListener("click", function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape" && modal.classList.contains("show")) {
+                    closeModal();
+                }
+            });
+
+            form.addEventListener("submit", function() {
+                confirmButton.disabled = true;
+                confirmButtonText.textContent = "Processing...";
+            });
         });
     </script>
 }
-

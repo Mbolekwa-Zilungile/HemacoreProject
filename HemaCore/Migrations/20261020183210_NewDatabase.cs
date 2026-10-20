@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HemaCore.Migrations
 {
     /// <inheritdoc />
-    public partial class @new : Migration
+    public partial class NewDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -343,7 +343,7 @@ namespace HemaCore.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IDNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EmployeeNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(12)", maxLength: 12, nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>

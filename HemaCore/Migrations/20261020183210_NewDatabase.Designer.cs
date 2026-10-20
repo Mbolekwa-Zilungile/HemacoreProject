@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HemaCore.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261020142521_loll")]
-    partial class loll
+    [Migration("20261020183210_NewDatabase")]
+    partial class NewDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -461,7 +461,8 @@ namespace HemaCore.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<string>("Surname")
                         .IsRequired()
