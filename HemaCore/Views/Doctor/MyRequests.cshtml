@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <style>
-
     .page-header h2 {
         font-weight: 700;
         color: #1e293b;
@@ -20,19 +19,19 @@
         margin: 0;
     }
 
+    /* Statistics cards */
     .stat-card {
         background: #fff;
         border-radius: 16px;
         padding: 1.2rem;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         transition: 0.2s ease;
-        cursor: pointer;
     }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
         }
 
     .stat-label {
@@ -47,13 +46,14 @@
         color: #1e293b;
     }
 
+    /* Filters */
     .filter-section {
-        background: white;
+        background: #fff;
         border-radius: 16px;
         padding: 1.5rem;
         border: 1px solid #e2e8f0;
         margin-bottom: 1.5rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
 
         .filter-section h5 {
@@ -68,21 +68,23 @@
         border-radius: 10px;
         border: 1px solid #cbd5e1;
         font-size: 0.9rem;
-        transition: 0.2s;
+        background: #fff;
+        transition: 0.2s ease;
     }
 
         .filter-input:focus {
-            border-color: #2563eb;
+            border-color: #3157c7;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+            box-shadow: 0 0 0 3px rgba(49, 87, 199, 0.13);
         }
 
+    /* Requests table */
     .table-card {
-        background: white;
+        background: #fff;
         border-radius: 16px;
         border: 1px solid #e2e8f0;
         overflow: hidden;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
 
     .table {
@@ -100,6 +102,7 @@
             font-weight: 700;
             padding: 1rem;
             border: none;
+            white-space: nowrap;
         }
 
         .table td {
@@ -113,94 +116,162 @@
             background: #f8fafc;
         }
 
+    /* Rounded status and urgency badges */
     .badge-custom {
-        padding: 0.4rem 0.8rem;
+        padding: 6px 10px;
         border-radius: 999px;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        border: 1px solid transparent;
     }
 
+    /* Urgency colors */
     .urgency-routine {
         background: #e0f2fe;
         color: #0369a1;
+        border-color: #bae6fd;
     }
 
     .urgency-urgent {
         background: #fef3c7;
         color: #b45309;
+        border-color: #fde68a;
     }
 
     .urgency-stat {
-        background: #dc2626;
-        color: white;
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #fecaca;
     }
 
+    /* Submitted - blue */
     .status-submitted {
         background: #dbeafe;
         color: #1d4ed8;
+        border-color: #bfdbfe;
     }
 
+    /* Samples Received - teal */
+    .status-samples-received {
+        background: #ccfbf1;
+        color: #0f766e;
+        border-color: #99f6e4;
+    }
+
+    /* In Progress - yellow */
     .status-progress {
         background: #fef3c7;
         color: #a16207;
+        border-color: #fde68a;
     }
 
+    /* Completed - green */
     .status-completed {
         background: #dcfce7;
         color: #166534;
+        border-color: #bbf7d0;
     }
 
-    .status-cancelled {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    /* NEW: released status badge */
+    /* Released - green */
     .status-released {
         background: #dcfce7;
         color: #166534;
+        border-color: #bbf7d0;
     }
 
+    /* Cancelled - red */
+    .status-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    /* New Request button */
     .btn-primary-custom {
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 0.75rem 1rem;
+        background: #3157c7;
+        color: #fff;
+        border: 1px solid #3157c7;
+        padding: 10px 16px;
         border-radius: 10px;
         font-weight: 600;
+        font-size: 0.88rem;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        white-space: nowrap;
     }
 
         .btn-primary-custom:hover {
-            background: #1d4ed8;
-            color: white;
+            background: #2648ad;
+            border-color: #2648ad;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(49, 87, 199, 0.18);
         }
 
+    /* View and Results buttons */
     .action-link {
-        color: #2563eb;
+        color: #3157c7;
+        background: #eef2ff;
+        border: 1px solid #dbe4ff;
         text-decoration: none;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        margin-right: 1rem;
+        padding: 7px 11px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-right: 5px;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        transition: all 0.2s ease;
     }
 
         .action-link:hover {
-            text-decoration: underline;
+            background: #3157c7;
+            border-color: #3157c7;
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-1px);
         }
 
+    /* Clear button */
+    .filter-section .btn-secondary {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+        .filter-section .btn-secondary:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-color: #94a3b8;
+        }
+
+    /* Empty state */
     .empty-state {
-        background: white;
+        background: #fff;
         border-radius: 16px;
         padding: 4rem 2rem;
         text-align: center;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
 
         .empty-state i {
@@ -217,6 +288,48 @@
             color: #94a3b8;
         }
 
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .page-header {
+            align-items: flex-start !important;
+            gap: 12px;
+        }
+
+            .page-header h2 {
+                font-size: 1.35rem;
+            }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .filter-section {
+            padding: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.8rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .btn-primary-custom {
+            padding: 9px 12px;
+            font-size: 0.8rem;
+        }
+
+        .action-link {
+            padding: 6px 9px;
+            font-size: 0.75rem;
+            margin-right: 3px;
+        }
+
+        .badge-custom {
+            font-size: 0.7rem;
+            padding: 5px 8px;
+        }
+    }
 </style>
 
 <div class="container-fluid fade-in">
@@ -230,29 +343,30 @@
             </h2>
         </div>
 
-        <a asp-action="CreateTestRequest" asp-controller="Doctor" class="btn-primary-custom">
+        <a asp-action="CreateTestRequest"
+           asp-controller="Doctor"
+           class="btn-primary-custom">
             <i class="fas fa-plus"></i>
             New Request
         </a>
     </div>
 
-    <!-- STATS -->
+    <!-- STATISTICS -->
     <div class="row mb-4">
 
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-6 mb-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Total Requests</div>
                         <div class="stat-number">@Model.Requests.Count</div>
                     </div>
-
                     <i class="fas fa-file-medical fa-2x text-primary"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-6 mb-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -261,13 +375,12 @@
                             @Model.Requests.Count(r => r.Status == "In progress")
                         </div>
                     </div>
-
                     <i class="fas fa-spinner fa-2x text-warning"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-6 mb-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -276,13 +389,12 @@
                             @Model.Requests.Count(r => r.Status == "Completed")
                         </div>
                     </div>
-
                     <i class="fas fa-check-circle fa-2x text-success"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 col-6 mb-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -291,7 +403,6 @@
                             @Model.Requests.Count(r => r.Urgency == "STAT")
                         </div>
                     </div>
-
                     <i class="fas fa-bolt fa-2x text-danger"></i>
                 </div>
             </div>
@@ -310,8 +421,7 @@
         <div class="row">
 
             <div class="col-md-4 mb-3">
-                <label class="form-label">Search</label>
-
+                <label class="form-label" for="searchBox">Search</label>
                 <input type="text"
                        class="filter-input"
                        id="searchBox"
@@ -320,42 +430,37 @@
             </div>
 
             <div class="col-md-3 mb-3">
-                <label class="form-label">Status</label>
-
+                <label class="form-label" for="statusFilter">Status</label>
                 <select class="filter-input"
                         id="statusFilter"
                         onchange="filterTable()">
-
                     <option value="">All Status</option>
                     <option value="Submitted">Submitted</option>
+                    <option value="Sample(s) received">Samples Received</option>
                     <option value="In progress">In Progress</option>
                     <option value="Completed">Completed</option>
                     <option value="Released by doctor">Released</option>
                     <option value="Cancelled">Cancelled</option>
-
                 </select>
             </div>
 
             <div class="col-md-3 mb-3">
-                <label class="form-label">Urgency</label>
-
+                <label class="form-label" for="urgencyFilter">Urgency</label>
                 <select class="filter-input"
                         id="urgencyFilter"
                         onchange="filterTable()">
-
                     <option value="">All Urgency</option>
                     <option value="Routine">Routine</option>
                     <option value="Urgent">Urgent</option>
                     <option value="STAT">STAT</option>
-
                 </select>
             </div>
 
             <div class="col-md-2 d-flex align-items-end mb-3">
-                <button class="btn btn-secondary w-100"
+                <button type="button"
+                        class="btn btn-secondary w-100"
                         onclick="clearFilters()">
-
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times me-1"></i>
                     Clear
                 </button>
             </div>
@@ -363,14 +468,11 @@
         </div>
 
         <span class="text-muted" id="resultsCount"></span>
-
     </div>
 
-    <!-- TABLE -->
+    <!-- REQUESTS TABLE -->
     <div class="table-card">
-
         <div class="table-responsive">
-
             <table class="table table-hover">
 
                 <thead>
@@ -404,7 +506,6 @@
                             </td>
 
                             <td>
-
                                 @if (request.Urgency == "Routine")
                                 {
                                     <span class="badge-custom urgency-routine">
@@ -426,11 +527,10 @@
                                         STAT
                                     </span>
                                 }
-
                             </td>
 
+                            <!-- STATUS BADGE -->
                             <td>
-
                                 @if (request.Status == "Submitted")
                                 {
                                     <span class="badge-custom status-submitted">
@@ -438,11 +538,25 @@
                                         Submitted
                                     </span>
                                 }
-                                else if (request.Status == "In progress" || request.Status == "Sample(s) received")
+                                else if (
+                                    request.Status == "Sample(s) received" ||
+                                    request.Status == "Samples Received" ||
+                                    request.Status == "Sample Received" ||
+                                    request.Status == "Samples received")
+                                {
+                                    <span class="badge-custom status-samples-received">
+                                        <i class="fas fa-vial"></i>
+                                        Samples Received
+                                    </span>
+                                }
+                                else if (
+                                    request.Status == "In progress" ||
+                                    request.Status == "In Progress" ||
+                                    request.Status == "InProgress")
                                 {
                                     <span class="badge-custom status-progress">
                                         <i class="fas fa-spinner"></i>
-                                        @request.Status
+                                        In Progress
                                     </span>
                                 }
                                 else if (request.Status == "Completed")
@@ -452,128 +566,158 @@
                                         Completed
                                     </span>
                                 }
-                                else if (request.Status == "Released by doctor")
+                                else if (
+                                    request.Status == "Released by doctor" ||
+                                    request.Status == "Released")
                                 {
                                     <span class="badge-custom status-released">
                                         <i class="fas fa-share-square"></i>
                                         Released
                                     </span>
                                 }
-                                else
+                                else if (request.Status == "Cancelled")
                                 {
                                     <span class="badge-custom status-cancelled">
                                         <i class="fas fa-times-circle"></i>
+                                        Cancelled
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-custom status-submitted">
                                         @request.Status
                                     </span>
                                 }
-
                             </td>
 
+                            <!-- ACTION BUTTONS -->
                             <td>
-
-                                <a asp-controller="Doctor" asp-action="RequestStatus" asp-route-id="@request.TestRequestId"
+                                <a asp-controller="Doctor"
+                                   asp-action="RequestStatus"
+                                   asp-route-id="@request.TestRequestId"
                                    class="action-link">
-
                                     <i class="fas fa-eye"></i>
                                     View
                                 </a>
 
-                                @* CHANGED: allow the doctor to open Results as soon as tests are verified,
-                                   even if the request is still "In progress". Partial release is now supported. *@
+                                @* Preserve the existing Results access conditions. *@
                                 @if (request.Status != "Submitted" &&
                                      request.Status != "Cancelled" &&
-                                     request.Status != "Sample(s) received")
+                                     request.Status != "Sample(s) received" &&
+                                     request.Status != "Samples Received" &&
+                                     request.Status != "Sample Received" &&
+                                     request.Status != "Samples received")
                                 {
-                                    <a asp-controller="Doctor" asp-action="Results" asp-route-id="@request.TestRequestId"
+                                    <a asp-controller="Doctor"
+                                       asp-action="Results"
+                                       asp-route-id="@request.TestRequestId"
                                        class="action-link">
-
                                         <i class="fas fa-file-medical"></i>
                                         Results
                                     </a>
                                 }
-
                             </td>
 
                         </tr>
                     }
 
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
 
     <!-- EMPTY STATE -->
     @if (!Model.Requests.Any())
     {
         <div class="empty-state mt-4">
-
             <i class="fas fa-inbox"></i>
 
             <h4>No Requests Found</h4>
 
-            <p>
-                You have not submitted any test requests yet.
-            </p>
+            <p>You have not submitted any test requests yet.</p>
 
+            <a asp-controller="Doctor"
+               asp-action="CreateTestRequest"
+               class="btn-primary-custom mt-2">
+                <i class="fas fa-plus"></i>
+                Create Your First Request
+            </a>
         </div>
     }
 
 </div>
 
 <script>
-
     function filterTable() {
+        const search = document.getElementById("searchBox").value
+            .toLowerCase()
+            .trim();
 
-        let search = document.getElementById("searchBox").value.toLowerCase();
+        const selectedStatus = document.getElementById("statusFilter").value
+            .toLowerCase()
+            .trim();
 
-        let status = document.getElementById("statusFilter").value.toLowerCase();
+        const selectedUrgency = document.getElementById("urgencyFilter").value
+            .toLowerCase()
+            .trim();
 
-        let urgency = document.getElementById("urgencyFilter").value.toLowerCase();
-
-        let rows = document.querySelectorAll("#requestsTable tr");
-
+        const rows = document.querySelectorAll("#requestsTable tr");
         let visibleCount = 0;
 
         rows.forEach(row => {
+            const searchText = (row.getAttribute("data-search") || "")
+                .toLowerCase();
 
-            let text = row.getAttribute("data-search").toLowerCase();
+            const displayedStatus = (row.cells[4]?.innerText || "")
+                .toLowerCase()
+                .trim();
 
-            let matchSearch = text.includes(search);
+            const displayedUrgency = (row.cells[3]?.innerText || "")
+                .toLowerCase()
+                .trim();
 
-            let matchStatus = status === "" || text.includes(status);
+            const matchSearch = searchText.includes(search);
 
-            let matchUrgency = urgency === "" || text.includes(urgency);
+            let matchStatus = selectedStatus === "";
 
-            let visible = matchSearch && matchStatus && matchUrgency;
+            if (!matchStatus) {
+                if (selectedStatus === "sample(s) received") {
+                    matchStatus = displayedStatus.includes("samples received");
+                } else if (selectedStatus === "in progress") {
+                    matchStatus = displayedStatus.includes("in progress");
+                } else if (selectedStatus === "released by doctor") {
+                    matchStatus = displayedStatus.includes("released");
+                } else {
+                    matchStatus = displayedStatus.includes(selectedStatus);
+                }
+            }
+
+            const matchUrgency =
+                selectedUrgency === "" ||
+                displayedUrgency.includes(selectedUrgency);
+
+            const visible = matchSearch && matchStatus && matchUrgency;
 
             row.style.display = visible ? "" : "none";
 
-            if (visible) visibleCount++;
-
+            if (visible) {
+                visibleCount++;
+            }
         });
 
         document.getElementById("resultsCount").innerText =
             `Showing ${visibleCount} request(s)`;
-
     }
 
     function clearFilters() {
-
         document.getElementById("searchBox").value = "";
-
         document.getElementById("statusFilter").value = "";
-
         document.getElementById("urgencyFilter").value = "";
 
         filterTable();
-
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         filterTable();
     });
-
 </script>
