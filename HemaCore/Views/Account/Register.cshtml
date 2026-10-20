@@ -1,36 +1,22 @@
 ﻿@model HemaCore.ViewModels.RegisterViewModel
-
 @{
     Layout = null;
     ViewData["Title"] = "Register";
 }
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HemaCore - Register</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-
+          rel="stylesheet" />
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link rel="stylesheet"
-          href="~/css/login-style.css" />
-
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/login-style.css" />
     <style>
-
-            .register-container {
-                max-width: 550px;
-                margin: 50px auto;
+            * {
+                box-sizing: border-box;
             }
 
             body {
@@ -38,85 +24,309 @@
                 padding: 20px;
             }
 
-            /* Generic select styling inside .input-wrapper */
-
-            .input-wrapper select {
+            .register-container {
                 width: 100%;
-                height: 100%;
-                border: none;
-                outline: none;
-                background: transparent;
-                padding: 0 45px 0 45px;
-                font-family: 'Poppins', sans-serif;
-                font-size: 14px;
-                color: #333;
-                appearance: none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                cursor: pointer;
+                max-width: 960px;
+                margin: 30px auto;
             }
+
+            .login-card {
+                width: 100%;
+                max-width: 960px;
+                border-radius: 22px;
+            }
+
+            .card-header {
+                padding: 26px 30px 20px;
+                border-radius: 21px 21px 0 0;
+            }
+
+            .card-body {
+                padding: 28px 40px 34px;
+            }
+
+            .registration-progress {
+                margin: 5px 0 28px;
+            }
+
+            .progress-steps {
+                display: flex;
+                justify-content: space-between;
+                position: relative;
+                gap: 10px;
+            }
+
+                .progress-steps::before {
+                    content: "";
+                    position: absolute;
+                    height: 3px;
+                    background: #e2e8f0;
+                    top: 20px;
+                    left: 15%;
+                    right: 15%;
+                    z-index: 0;
+                }
+
+            .progress-step {
+                flex: 1;
+                text-align: center;
+                position: relative;
+                z-index: 1;
+                color: #888;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            .step-number {
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 8px;
+                border-radius: 50%;
+                background: #e9ecef;
+                color: #666;
+                border: 3px solid #fff;
+                font-size: 15px;
+                font-weight: 700;
+                transition: all 0.25s ease;
+            }
+
+            .progress-step.active .step-number,
+            .progress-step.completed .step-number {
+                background: #176b87;
+                color: #fff;
+            }
+
+            .progress-step.active {
+                color: #176b87;
+                font-weight: 700;
+            }
+
+            .progress-step.completed .step-number {
+                background: #198754;
+            }
+
+            .progress-track {
+                height: 5px;
+                background: #e9ecef;
+                border-radius: 10px;
+                overflow: hidden;
+                margin-top: 18px;
+            }
+
+            .progress-track-fill {
+                height: 100%;
+                width: 0;
+                background: #176b87;
+                border-radius: 10px;
+                transition: width 0.3s ease;
+            }
+
+            .step-heading {
+                margin-bottom: 22px;
+            }
+
+                .step-heading h3 {
+                    font-size: 20px;
+                    margin: 0 0 7px;
+                    color: #263238;
+                }
+
+                .step-heading p {
+                    margin: 0;
+                    font-size: 13px;
+                    color: #777;
+                    line-height: 1.6;
+                }
+
+            .form-step {
+                display: none;
+                animation: stepFadeIn 0.25s ease;
+            }
+
+                .form-step.active {
+                    display: block;
+                }
+
+            @@keyframes stepFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(6px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0 22px;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+                min-width: 0;
+            }
+
+                .form-group.full-width {
+                    grid-column: 1 / -1;
+                }
+
+                .form-group label {
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #374151;
+                    margin-bottom: 8px;
+                }
+
+                    .form-group label i {
+                        margin-right: 5px;
+                        color: #176b87;
+                    }
 
             .input-wrapper {
                 position: relative;
+                display: flex;
+                align-items: center;
+                width: 100%;
+                min-height: 52px;
+                border: 1px solid #d8dee5;
+                border-radius: 10px;
+                background: #fff;
+                transition: border-color 0.2s, box-shadow 0.2s;
             }
 
-                .input-wrapper select:focus {
+                .input-wrapper:focus-within {
+                    border-color: #176b87;
+                    box-shadow: 0 0 0 3px rgba(23, 107, 135, 0.12);
+                }
+
+                .input-wrapper input,
+                .input-wrapper select {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 50px;
+                    padding: 12px 14px 12px 42px;
+                    border: none;
                     outline: none;
-                }
-
-                .input-wrapper select:invalid {
-                    color: #999;
-                }
-
-                .input-wrapper select option {
+                    background: transparent;
+                    border-radius: 10px;
+                    font-family: 'Poppins', sans-serif;
+                    font-size: 13px;
                     color: #333;
-                    background: #fff;
                 }
 
-            .gender-arrow {
+                .input-wrapper select {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    cursor: pointer;
+                    padding-right: 38px;
+                }
+
+                    .input-wrapper select:invalid {
+                        color: #999;
+                    }
+
+                    .input-wrapper select option {
+                        color: #333;
+                        background: #fff;
+                    }
+
+            .input-icon {
                 position: absolute;
-                right: 18px;
+                left: 14px;
                 top: 50%;
                 transform: translateY(-50%);
-                color: #999;
+                color: #8b98a5;
+                font-size: 14px;
                 pointer-events: none;
-                font-size: 13px;
+                z-index: 1;
             }
 
-            /* Date of birth automatically generated */
+            .select-arrow {
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #8b98a5;
+                font-size: 12px;
+                pointer-events: none;
+            }
+
+            .toggle-password {
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                color: #8b98a5;
+                z-index: 2;
+                padding: 8px;
+            }
+
+            .input-wrapper input.has-toggle {
+                padding-right: 46px;
+            }
 
             #DateOfBirth {
-                background-color: #f5f5f5;
+                background: #f4f6f8;
                 cursor: not-allowed;
             }
 
-            .dob-help {
+            .help-text {
                 display: block;
-                margin-top: 5px;
-                margin-left: 5px;
+                margin: 6px 2px 0;
                 font-size: 11px;
+                line-height: 1.6;
                 color: #777;
             }
 
-            .id-error {
+            .id-error,
+            .phone-error {
                 display: none;
-                margin-top: 5px;
-                margin-left: 5px;
+                margin: 7px 2px 0;
                 font-size: 12px;
                 color: #dc3545;
             }
 
-            /* Small helper note under City / Suburb / Postal */
-
-            .city-help {
+            .text-danger,
+            .field-validation-error {
                 display: block;
                 margin-top: 5px;
-                margin-left: 5px;
-                font-size: 11px;
-                color: #777;
+                color: #dc3545;
+                font-size: 12px;
             }
 
-            /* Ensure the suggestion dropdowns sit above the glass card */
+            .input-validation-error {
+                border-color: #dc3545 !important;
+            }
+
+            .validation-summary-valid {
+                display: none !important;
+            }
+
+            .validation-summary-errors {
+                display: block;
+                margin-bottom: 18px;
+                padding: 12px 16px;
+                border: 1px solid #f5c2c7;
+                border-radius: 8px;
+                background: #f8d7da;
+                color: #842029;
+                font-size: 13px;
+            }
+
+                .validation-summary-errors ul {
+                    margin: 0;
+                    padding-left: 20px;
+                }
 
             .sa-city-dropdown,
             .sa-suburb-dropdown {
@@ -124,526 +334,889 @@
                 font-family: 'Poppins', sans-serif;
             }
 
+            /* PROFESSIONAL PHONE FIELD */
+            .phone-input-wrapper {
+                padding-left: 62px;
+            }
+
+            .phone-prefix {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                display: flex;
+                align-items: center;
+                padding: 0 14px;
+                color: #176b87;
+                font-weight: 700;
+                font-size: 14px;
+                border-right: 1px solid #e2e8f0;
+                background: #f4f6f8;
+                border-radius: 9px 0 0 9px;
+                pointer-events: none;
+                user-select: none;
+            }
+
+            .phone-input-wrapper input {
+                padding-left: 14px !important;
+                letter-spacing: 0.5px;
+            }
+
+            .step-navigation {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                margin-top: 24px;
+                padding-top: 20px;
+                border-top: 1px solid #edf0f3;
+            }
+
+                .step-navigation button {
+                    min-height: 46px;
+                    padding: 11px 22px;
+                    border-radius: 9px;
+                    border: none;
+                    font-family: 'Poppins', sans-serif;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: transform 0.2s, background 0.2s;
+                }
+
+                    .step-navigation button:hover {
+                        transform: translateY(-1px);
+                    }
+
+            .btn-previous {
+                background: #eef1f4;
+                color: #374151;
+            }
+
+                .btn-previous:hover {
+                    background: #dfe4e9;
+                }
+
+            .btn-next,
+            .btn-register {
+                background: #176b87;
+                color: #fff;
+            }
+
+                .btn-next:hover,
+                .btn-register:hover {
+                    background: #12566d;
+                }
+
+            .btn-register {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .step-navigation button:focus-visible {
+                outline: 3px solid rgba(23, 107, 135, 0.3);
+                outline-offset: 2px;
+            }
+
+            .register-link {
+                margin-top: 20px;
+                text-align: center;
+                font-size: 13px;
+            }
+
+                .register-link a {
+                    color: #176b87;
+                    font-weight: 600;
+                    text-decoration: none;
+                }
+
+                    .register-link a:hover {
+                        text-decoration: underline;
+                    }
+
+            @@media (min-width: 601px) and (max-width: 1100px) {
+                .form-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    column-gap: 20px;
+                }
+
+                .card-body {
+                    padding: 26px 28px 32px;
+                }
+            }
+
+            @@media (max-width: 600px) {
+                body {
+                    padding: 10px;
+                }
+
+                .register-container {
+                    margin: 15px auto;
+                }
+
+                .card-header {
+                    padding: 22px 15px 16px;
+                    border-radius: 18px 18px 0 0;
+                }
+
+                .login-card {
+                    border-radius: 18px;
+                }
+
+                .card-body {
+                    padding: 20px 17px 25px;
+                }
+
+                .form-grid {
+                    grid-template-columns: 1fr;
+                    column-gap: 0;
+                    gap: 0;
+                }
+
+                .form-group.full-width {
+                    grid-column: auto;
+                }
+
+                .step-heading h3 {
+                    font-size: 18px;
+                }
+
+                .progress-step {
+                    font-size: 10px;
+                }
+
+                .step-number {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 13px;
+                }
+
+                .progress-steps::before {
+                    top: 17px;
+                }
+
+                .step-navigation button {
+                    padding: 10px 15px;
+                    font-size: 12px;
+                }
+
+                .input-wrapper,
+                .input-wrapper input,
+                .input-wrapper select {
+                    min-height: 48px;
+                }
+            }
+
+            @@media (max-width: 360px) {
+                .card-body {
+                    padding: 18px 12px 22px;
+                }
+            }
     </style>
-
 </head>
-
 <body>
-
     <div class="circle circle-1"></div>
     <div class="circle circle-2"></div>
     <div class="circle circle-3"></div>
-
-
     <div class="login-container register-container">
-
         <div class="login-card">
-
             <div class="card-header">
-
                 <div class="logo-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
-
                 <h2>Create Account</h2>
-
                 <p>Join HemaCore today</p>
-
             </div>
-
-
             <div class="card-body">
-
+                <div class="registration-progress">
+                    <div class="progress-steps">
+                        <div class="progress-step active" data-step-indicator="0">
+                            <div class="step-number">1</div>
+                            <span>Personal</span>
+                        </div>
+                        <div class="progress-step" data-step-indicator="1">
+                            <div class="step-number">2</div>
+                            <span>Address</span>
+                        </div>
+                        <div class="progress-step" data-step-indicator="2">
+                            <div class="step-number">3</div>
+                            <span>Account</span>
+                        </div>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-track-fill" id="progressFill"></div>
+                    </div>
+                </div>
                 <form asp-controller="Account"
                       asp-action="Register"
                       method="post"
                       id="registerForm">
-
                     @Html.AntiForgeryToken()
-
-
                     <div asp-validation-summary="All"
-                         class="alert alert-error"
-                         style="display: block;">
+                         class="validation-summary-valid"
+                         role="alert">
                     </div>
-
-
-                    <!-- NAME -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-user"></i>
-                            Full Name
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-user input-icon"></i>
-
-                            <input asp-for="Name"
-                                   placeholder="Enter your first name" />
-
+                    <!-- STEP 1: PERSONAL INFORMATION -->
+                    <section class="form-step active" data-step="0">
+                        <div class="step-heading">
+                            <h3><i class="fas fa-user"></i> Personal Information</h3>
+                            <p>Enter your personal details and South African ID number.</p>
                         </div>
-
-                    </div>
-
-
-                    <!-- SURNAME -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-user"></i>
-                            Surname
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-user input-icon"></i>
-
-                            <input asp-for="Surname"
-                                   placeholder="Enter your surname" />
-
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="Name">
+                                    <i class="fas fa-user"></i> First Name
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input asp-for="Name"
+                                           placeholder="Enter your first name"
+                                           autocomplete="given-name" />
+                                </div>
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Surname">
+                                    <i class="fas fa-user"></i> Surname
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input asp-for="Surname"
+                                           placeholder="Enter your surname"
+                                           autocomplete="family-name" />
+                                </div>
+                                <span asp-validation-for="Surname" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Gender">
+                                    <i class="fas fa-venus-mars"></i> Gender
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-venus-mars input-icon"></i>
+                                    <select asp-for="Gender">
+                                        <option value="">Select your gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+                                <span asp-validation-for="Gender" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="IDNumber">
+                                    <i class="fas fa-id-card"></i> South African ID Number
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-id-card input-icon"></i>
+                                    <input asp-for="IDNumber"
+                                           id="IDNumber"
+                                           placeholder="13-digit ID number"
+                                           maxlength="13"
+                                           inputmode="numeric"
+                                           autocomplete="off" />
+                                </div>
+                                <small class="help-text">
+                                    Your date of birth is extracted automatically from your ID number.
+                                </small>
+                                <small id="idError" class="id-error" role="alert">
+                                    Please enter a valid 13-digit South African ID number.
+                                </small>
+                                <span asp-validation-for="IDNumber" class="text-danger"></span>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="DateOfBirth">
+                                    <i class="fas fa-calendar"></i> Date of Birth
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-calendar input-icon"></i>
+                                    <input asp-for="DateOfBirth"
+                                           id="DateOfBirth"
+                                           type="date"
+                                           readonly
+                                           aria-describedby="dobHelp" />
+                                </div>
+                                <small id="dobHelp" class="help-text">
+                                    Automatically populated from your ID number.
+                                </small>
+                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            </div>
                         </div>
-
-                    </div>
-
-
-                    <!-- GENDER -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-venus-mars"></i>
-                            Gender
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-venus-mars input-icon"></i>
-
-                            <select asp-for="Gender">
-
-                                <option value="">
-                                    Select your gender
-                                </option>
-
-                                <option value="Male">
-                                    Male
-                                </option>
-
-                                <option value="Female">
-                                    Female
-                                </option>
-
-                                <option value="Other">
-                                    Other
-                                </option>
-
-                            </select>
-
+                    </section>
+                    <!-- STEP 2: CONTACT AND ADDRESS -->
+                    <section class="form-step" data-step="1">
+                        <div class="step-heading">
+                            <h3><i class="fas fa-map-marked-alt"></i> Contact &amp; Address</h3>
+                            <p>Provide your contact details and residential address.</p>
                         </div>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label asp-for="PhoneNumber">
+                                    <i class="fas fa-phone"></i> Phone Number
+                                </label>
 
-                    </div>
+                                <!-- Visible field: NO name attribute, so it never posts. -->
+                                <div class="input-wrapper phone-input-wrapper">
+                                    <span class="phone-prefix" aria-hidden="true">+27</span>
+                                    <input id="phoneNumberInput"
+                                           type="tel"
+                                           inputmode="numeric"
+                                           maxlength="11"
+                                           placeholder="82 123 4567"
+                                           autocomplete="tel-national"
+                                           aria-describedby="phoneHelp phoneError" />
+                                </div>
 
+                                <!-- Hidden field: the REAL PhoneNumber that posts. -->
+                                <input type="hidden" asp-for="PhoneNumber" id="phoneNumberHidden" />
 
-                    <!-- ID NUMBER -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-id-card"></i>
-                            ID Number
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-id-card input-icon"></i>
-
-                            <input asp-for="IDNumber"
-                                   id="IDNumber"
-                                   placeholder="13-digit ID number"
-                                   maxlength="13"
-                                   inputmode="numeric"
-                                   autocomplete="off" />
-
+                                <small id="phoneHelp" class="help-text">
+                                    South African numbers only. Enter the <strong>9 digits</strong> after +27
+                                    (e.g. <strong>82 123 4567</strong>).
+                                </small>
+                                <small id="phoneError" class="phone-error" role="alert">
+                                    Enter exactly 9 digits after +27 (e.g. 82 123 4567).
+                                </small>
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="StreetAddress">
+                                    <i class="fas fa-road"></i> Street Address
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-home input-icon"></i>
+                                    <input asp-for="StreetAddress"
+                                           placeholder="e.g. 24 Main Road"
+                                           maxlength="150"
+                                           autocomplete="address-line1" />
+                                </div>
+                                <span asp-validation-for="StreetAddress" class="text-danger"></span>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="Province">
+                                    <i class="fas fa-map"></i> Province
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-map input-icon"></i>
+                                    <select asp-for="Province"
+                                            id="provinceInput"
+                                            autocomplete="address-level1">
+                                        <option value="">Select your province</option>
+                                        <option value="Eastern Cape">Eastern Cape</option>
+                                        <option value="Free State">Free State</option>
+                                        <option value="Gauteng">Gauteng</option>
+                                        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                        <option value="Limpopo">Limpopo</option>
+                                        <option value="Mpumalanga">Mpumalanga</option>
+                                        <option value="Northern Cape">Northern Cape</option>
+                                        <option value="North West">North West</option>
+                                        <option value="Western Cape">Western Cape</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+                                <span asp-validation-for="Province" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="City">
+                                    <i class="fas fa-city"></i> City / Town
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-city input-icon"></i>
+                                    <input asp-for="City"
+                                           id="cityInput"
+                                           placeholder="Type or select a city"
+                                           maxlength="100"
+                                           autocomplete="off" />
+                                </div>
+                                <span asp-validation-for="City" class="text-danger"></span>
+                                <small class="help-text">
+                                    Start typing for suggestions or enter a city manually.
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Suburb">
+                                    <i class="fas fa-map-marker-alt"></i> Suburb
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-map-marker-alt input-icon"></i>
+                                    <input asp-for="Suburb"
+                                           id="suburbInput"
+                                           placeholder="Type or select a suburb"
+                                           maxlength="100"
+                                           autocomplete="off" />
+                                </div>
+                                <span asp-validation-for="Suburb" class="text-danger"></span>
+                                <small class="help-text">
+                                    Selecting a suburb can populate the city and postal code.
+                                </small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="PostalCode">
+                                    <i class="fas fa-mail-bulk"></i> Postal Code
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-mail-bulk input-icon"></i>
+                                    <input asp-for="PostalCode"
+                                           id="postalInput"
+                                           placeholder="e.g. 6001"
+                                           maxlength="4"
+                                           inputmode="numeric"
+                                           autocomplete="postal-code" />
+                                </div>
+                                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                <small class="help-text">
+                                    Automatically populated from address suggestions when available.
+                                    You can edit it manually.
+                                </small>
+                            </div>
                         </div>
-
-                        <small class="dob-help">
-                            Your date of birth will automatically be filled in from your ID number.
-                        </small>
-
-                        <small id="idError"
-                               class="id-error">
-                            Please enter a valid 13-digit South African ID number.
-                        </small>
-
-                    </div>
-
-
-                    <!-- DATE OF BIRTH -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-calendar"></i>
-                            Date of Birth
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-calendar input-icon"></i>
-
-                            <input asp-for="DateOfBirth"
-                                   id="DateOfBirth"
-                                   type="date"
-                                   readonly />
-
+                    </section>
+                    <!-- STEP 3: ACCOUNT CREDENTIALS -->
+                    <section class="form-step" data-step="2">
+                        <div class="step-heading">
+                            <h3><i class="fas fa-shield-alt"></i> Create Your Account</h3>
+                            <p>Enter your email address and create a secure password.</p>
                         </div>
-
-                    </div>
-
-
-                    <!-- PHONE -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-phone"></i>
-                            Phone Number
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-phone input-icon"></i>
-
-                            <input asp-for="PhoneNumber"
-                                   placeholder="+27721234567" />
-
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label asp-for="Email">
+                                    <i class="fas fa-envelope"></i> Email Address
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input asp-for="Email"
+                                           type="email"
+                                           placeholder="you@example.com"
+                                           autocomplete="email" />
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="Password">
+                                    <i class="fas fa-lock"></i> Password
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input asp-for="Password"
+                                           type="password"
+                                           id="password"
+                                           class="has-toggle"
+                                           placeholder="Create a password"
+                                           autocomplete="new-password" />
+                                    <i class="fas fa-eye toggle-password"
+                                       id="togglePassword"
+                                       role="button"
+                                       tabindex="0"
+                                       aria-label="Show password"
+                                       aria-controls="password"></i>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                                <small class="help-text">
+                                    Choose a strong password that you do not use for other accounts.
+                                </small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label asp-for="ConfirmPassword">
+                                    <i class="fas fa-lock"></i> Confirm Password
+                                </label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input asp-for="ConfirmPassword"
+                                           type="password"
+                                           id="confirmPassword"
+                                           class="has-toggle"
+                                           placeholder="Re-enter your password"
+                                           autocomplete="new-password" />
+                                    <i class="fas fa-eye toggle-password"
+                                       id="toggleConfirmPassword"
+                                       role="button"
+                                       tabindex="0"
+                                       aria-label="Show confirm password"
+                                       aria-controls="confirmPassword"></i>
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
                         </div>
-
+                    </section>
+                    <!-- NAVIGATION -->
+                    <div class="step-navigation">
+                        <button type="button"
+                                id="previousButton"
+                                class="btn-previous"
+                                style="visibility: hidden;">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button"
+                                id="nextButton"
+                                class="btn-next">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="submit"
+                                id="registerButton"
+                                class="btn-register"
+                                style="display: none;">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
                     </div>
-
-
-                    <!-- STREET ADDRESS -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-road"></i>
-                            Street Address
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-home input-icon"></i>
-                            <input asp-for="StreetAddress"
-                                   placeholder="e.g. 24 Main Road"
-                                   maxlength="150"
-                                   autocomplete="address-line1" />
-                        </div>
-
-                        <span asp-validation-for="StreetAddress"
-                              class="text-danger"></span>
-                    </div>
-
-                    <!-- PROVINCE -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-map"></i>
-                            Province
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-map input-icon"></i>
-
-                            <select asp-for="Province"
-                                    id="provinceInput"
-                                    autocomplete="address-level1">
-                                <option value="">Select your province</option>
-                                <option value="Eastern Cape">Eastern Cape</option>
-                                <option value="Free State">Free State</option>
-                                <option value="Gauteng">Gauteng</option>
-                                <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                                <option value="Limpopo">Limpopo</option>
-                                <option value="Mpumalanga">Mpumalanga</option>
-                                <option value="Northern Cape">Northern Cape</option>
-                                <option value="North West">North West</option>
-                                <option value="Western Cape">Western Cape</option>
-                            </select>
-                        </div>
-
-                        <span asp-validation-for="Province"
-                              class="text-danger"></span>
-                    </div>
-
-                    <!-- CITY -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-city"></i>
-                            City / Town
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-city input-icon"></i>
-                            <input asp-for="City"
-                                   id="cityInput"
-                                   placeholder="Type or select a city"
-                                   maxlength="100"
-                                   autocomplete="off" />
-                        </div>
-
-                        <span asp-validation-for="City"
-                              class="text-danger"></span>
-
-                        <small class="city-help">
-                            Start typing to see suggestions; selecting one fills the postal code.
-                            You can also type any city manually.
-                        </small>
-                    </div>
-
-                    <!-- SUBURB -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-map-marker-alt"></i>
-                            Suburb
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-map-marker-alt input-icon"></i>
-                            <input asp-for="Suburb"
-                                   id="suburbInput"
-                                   placeholder="Type or select a suburb"
-                                   maxlength="100"
-                                   autocomplete="off" />
-                        </div>
-
-                        <span asp-validation-for="Suburb"
-                              class="text-danger"></span>
-
-                        <small class="city-help">
-                            Start typing to see suburbs. Selecting one fills city and postal code.
-                        </small>
-                    </div>
-
-                    <!-- POSTAL CODE -->
-                    <div class="form-group">
-                        <label>
-                            <i class="fas fa-mail-bulk"></i>
-                            Postal Code
-                        </label>
-
-                        <div class="input-wrapper">
-                            <i class="fas fa-mail-bulk input-icon"></i>
-                            <input asp-for="PostalCode"
-                                   id="postalInput"
-                                   placeholder="e.g. 6001"
-                                   maxlength="4"
-                                   inputmode="numeric"
-                                   autocomplete="postal-code" />
-                        </div>
-
-                        <span asp-validation-for="PostalCode"
-                              class="text-danger"></span>
-
-                        <small class="city-help">
-                            Auto-filled when you pick a city — you can still edit it.
-                        </small>
-                    </div>
-
-
-                    <!-- EMAIL -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-envelope"></i>
-                            Email Address
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-envelope input-icon"></i>
-
-                            <input asp-for="Email"
-                                   type="email"
-                                   placeholder="you@example.com" />
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- PASSWORD -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-lock"></i>
-                            Password
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-lock input-icon"></i>
-
-                            <input asp-for="Password"
-                                   type="password"
-                                   id="password"
-                                   placeholder="Create a password" />
-
-                            <i class="fas fa-eye toggle-password"
-                               onclick="togglePassword()">
-                            </i>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- CONFIRM PASSWORD -->
-
-                    <div class="form-group">
-
-                        <label>
-                            <i class="fas fa-lock"></i>
-                            Confirm Password
-                        </label>
-
-                        <div class="input-wrapper">
-
-                            <i class="fas fa-lock input-icon"></i>
-
-                            <input asp-for="ConfirmPassword"
-                                   type="password"
-                                   id="confirmPassword"
-                                   placeholder="Confirm your password" />
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- REGISTER -->
-
-                    <button type="submit"
-                            class="login-btn">
-
-                        <i class="fas fa-user-plus"></i>
-
-                        Register
-
-                    </button>
-
                 </form>
-
-
                 <div class="register-link">
-
                     <p>
                         Already have an account?
-
-                        <a href="/Account/Login">
-                            Sign In
-                        </a>
+                        <a href="/Account/Login">Sign In</a>
                     </p>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
-
-    <!-- Shared SA cities + postal codes + suburb helper -->
+    <!-- Existing South African address autocomplete -->
     <script src="~/js/sa-cities.js"></script>
-
+    <!-- jQuery validation: retain MVC client-side validation if available -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('registerForm');
+        const steps = Array.from(document.querySelectorAll('.form-step'));
+        const indicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
+        const previousButton = document.getElementById('previousButton');
+        const nextButton = document.getElementById('nextButton');
+        const registerButton = document.getElementById('registerButton');
+        const progressFill = document.getElementById('progressFill');
+        const idNumberInput = document.getElementById('IDNumber');
+        const dateOfBirthInput = document.getElementById('DateOfBirth');
+        const idError = document.getElementById('idError');
+        const phoneNumberInput = document.getElementById('phoneNumberInput');
+        const phoneNumberHidden = document.getElementById('phoneNumberHidden');
+        const phoneError = document.getElementById('phoneError');
+        let currentStep = 0;
 
-        // ==========================================
+        // ------------------------------------------
+        // SOUTH AFRICAN PHONE NUMBER (fixed +27, 9 digits)
+        // ------------------------------------------
+        //
+        // Visible input shows the 9 digits after +27.
+        // Hidden #phoneNumberHidden carries the canonical
+        // +27XXXXXXXXX form that the server binds to
+        // RegisterViewModel.PhoneNumber.
+        //
+        // Server rule: ^\+27\d{9}$
+
+        const PHONE_LOCAL_DIGITS = 9;
+
+        function getPhoneDigits() {
+        return (phoneNumberInput.value || '').replace(/\D/g, '');
+        }
+
+        function formatPhoneDisplay(digits) {
+        if (digits.length <= 2) return digits;
+        if (digits.length <= 5) return digits.slice(0, 2) + ' ' + digits.slice(2);
+        return digits.slice(0, 2) + ' ' + digits.slice(2, 5) + ' ' + digits.slice(5);
+        }
+
+        function syncHiddenPhone() {
+        const digits = getPhoneDigits();
+        phoneNumberHidden.value =
+        digits.length === PHONE_LOCAL_DIGITS ? '+27' + digits : '';
+        }
+
+        function validatePhoneNumber(showError) {
+        const digits = getPhoneDigits();
+
+        if (digits.length === 0) {
+        if (showError) {
+        phoneError.textContent = 'Phone number is required.';
+        phoneError.style.display = 'block';
+        }
+        return false;
+        }
+
+        if (digits.length !== PHONE_LOCAL_DIGITS) {
+        if (showError) {
+        phoneError.textContent =
+        'Enter exactly ' + PHONE_LOCAL_DIGITS +
+        ' digits after +27 (e.g. 82 123 4567).';
+        phoneError.style.display = 'block';
+        }
+        return false;
+        }
+
+        phoneError.style.display = 'none';
+        return true;
+        }
+
+        function extractLocalDigits(raw) {
+        let digits = (raw || '').replace(/\D/g, '');
+
+        if (digits.length > PHONE_LOCAL_DIGITS && digits.startsWith('27')) {
+        digits = digits.substring(2);
+        }
+        if (digits.length > PHONE_LOCAL_DIGITS && digits.startsWith('0')) {
+        digits = digits.substring(1);
+        }
+
+        return digits.slice(0, PHONE_LOCAL_DIGITS);
+        }
+
+        phoneNumberInput.addEventListener('input', function () {
+        const digits = extractLocalDigits(this.value);
+        this.value = formatPhoneDisplay(digits);
+        syncHiddenPhone();
+
+        if (digits.length === PHONE_LOCAL_DIGITS) {
+        phoneError.style.display = 'none';
+        }
+        });
+
+        phoneNumberInput.addEventListener('blur', function () {
+        const digits = getPhoneDigits();
+        this.value = formatPhoneDisplay(digits);
+        syncHiddenPhone();
+        if (digits.length > 0) {
+        validatePhoneNumber(true);
+        }
+        });
+
+        phoneNumberInput.addEventListener('paste', function (e) {
+        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+        if (!pasted) return;
+
+        e.preventDefault();
+
+        const digits = extractLocalDigits(pasted);
+        this.value = formatPhoneDisplay(digits);
+        syncHiddenPhone();
+
+        if (digits.length === PHONE_LOCAL_DIGITS) {
+        phoneError.style.display = 'none';
+        }
+        });
+
+        // Initial sync (in case the model was posted back with a value).
+        syncHiddenPhone();
+
+        // ------------------------------------------
+        // STEP NAVIGATION
+        // ------------------------------------------
+        function showStep(stepIndex) {
+        currentStep = stepIndex;
+
+        steps.forEach(function (step, index) {
+        step.classList.toggle('active', index === stepIndex);
+        });
+
+        indicators.forEach(function (indicator, index) {
+        indicator.classList.toggle('active', index === stepIndex);
+        indicator.classList.toggle('completed', index < stepIndex);
+
+        const number = indicator.querySelector('.step-number');
+        if (number) {
+        number.innerHTML = index < stepIndex
+        ? '<i class="fas fa-check"></i>'
+        : String(index + 1);
+        }
+        });
+
+        previousButton.style.visibility =
+        stepIndex === 0 ? 'hidden' : 'visible';
+        nextButton.style.display =
+        stepIndex === steps.length - 1 ? 'none' : 'inline-block';
+        registerButton.style.display =
+        stepIndex === steps.length - 1 ? 'inline-flex' : 'none';
+        progressFill.style.width =
+        (stepIndex / (steps.length - 1) * 100) + '%';
+
+        const heading = steps[stepIndex].querySelector('h3');
+        if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+        }
+
+        window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+        });
+        }
+
+        // ------------------------------------------
+        // VALIDATE CURRENT STEP BEFORE CONTINUING
+        // ------------------------------------------
+        function validateCurrentStep() {
+        let valid = true;
+
+        const currentFields = steps[currentStep].querySelectorAll(
+        'input, select, textarea'
+        );
+
+        if (window.jQuery && jQuery.validator) {
+        const validator = jQuery(form).data('validator');
+        if (validator) {
+        currentFields.forEach(function (field) {
+        if (!field.disabled && !jQuery(field).valid()) {
+        valid = false;
+        }
+        });
+        }
+        }
+
+        currentFields.forEach(function (field) {
+        if (field.disabled) {
+        return;
+        }
+        if (!field.checkValidity()) {
+        valid = false;
+        field.reportValidity();
+        }
+        });
+
+        if (currentStep === 0 && !validateSouthAfricanId(true)) {
+        valid = false;
+        }
+
+        if (currentStep === 1) {
+        syncHiddenPhone();
+        if (!validatePhoneNumber(true)) {
+        valid = false;
+        }
+        }
+
+        return valid;
+        }
+
+        nextButton.addEventListener('click', function () {
+        if (!validateCurrentStep()) {
+        return;
+        }
+        if (currentStep < steps.length - 1) {
+        showStep(currentStep + 1);
+        }
+        });
+
+        previousButton.addEventListener('click', function () {
+        if (currentStep > 0) {
+        showStep(currentStep - 1);
+        }
+        });
+
+        // ------------------------------------------
         // PASSWORD VISIBILITY
-        // ==========================================
+        // ------------------------------------------
+        function setupPasswordToggle(toggleId, inputId) {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
 
         function togglePassword() {
-
-        const passwordInput =
-        document.getElementById('password');
-
-        const toggleIcon =
-        document.querySelector('.toggle-password');
-
-        if (passwordInput.type === 'password') {
-
-        passwordInput.type = 'text';
-
-        toggleIcon.classList.remove('fa-eye');
-
-        toggleIcon.classList.add('fa-eye-slash');
-
-        }
-        else {
-
-        passwordInput.type = 'password';
-
-        toggleIcon.classList.remove('fa-eye-slash');
-
-        toggleIcon.classList.add('fa-eye');
-
+        const showPassword = input.type === 'password';
+        input.type = showPassword ? 'text' : 'password';
+        toggle.classList.toggle('fa-eye', !showPassword);
+        toggle.classList.toggle('fa-eye-slash', showPassword);
+        toggle.setAttribute(
+        'aria-label',
+        showPassword ? 'Hide password' : 'Show password'
+        );
         }
 
+        toggle.addEventListener('click', togglePassword);
+        toggle.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        togglePassword();
+        }
+        });
         }
 
+        setupPasswordToggle('togglePassword', 'password');
+        setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
 
-        // ==========================================
-        // SA CITY + SUBURB AUTOCOMPLETE
-        // ==========================================
-
-        document.addEventListener('DOMContentLoaded', function () {
-
+        // ------------------------------------------
+        // SOUTH AFRICAN CITY AND SUBURB AUTOCOMPLETE
+        // ------------------------------------------
         if (typeof window.attachCityDropdown === 'function') {
         window.attachCityDropdown('cityInput', 'postalInput', 'provinceInput');
         }
-
         if (typeof window.attachSuburbDropdown === 'function') {
         window.attachSuburbDropdown('suburbInput', 'cityInput', 'postalInput', 'provinceInput');
         }
 
-        });
+        // ------------------------------------------
+        // SOUTH AFRICAN ID NUMBER -> DATE OF BIRTH
+        // ------------------------------------------
+        function validateSouthAfricanId(showError) {
+        const idNumber = idNumberInput.value;
+        let message = '';
 
+        if (idNumber.length !== 13) {
+        message = 'Please enter a valid 13-digit South African ID number.';
+        } else {
+        const yearNumber = parseInt(idNumber.substring(0, 2), 10);
+        const monthNumber = parseInt(idNumber.substring(2, 4), 10);
+        const dayNumber = parseInt(idNumber.substring(4, 6), 10);
 
-        // ==========================================
-        // ID NUMBER -> DATE OF BIRTH
-        // ==========================================
+        const currentYear = new Date().getFullYear();
+        const currentYearShort = currentYear % 100;
 
-        const idNumberInput =
-        document.getElementById('IDNumber');
+        const fullYear = yearNumber > currentYearShort
+        ? 1900 + yearNumber
+        : 2000 + yearNumber;
 
-        const dateOfBirthInput =
-        document.getElementById('DateOfBirth');
+        const date = new Date(fullYear, monthNumber - 1, dayNumber);
 
-        const idError =
-        document.getElementById('idError');
+        if (
+        monthNumber < 1 ||
+        monthNumber > 12 ||
+        dayNumber < 1 ||
+        date.getFullYear() !== fullYear ||
+        date.getMonth() !== monthNumber - 1 ||
+        date.getDate() !== dayNumber
+        ) {
+        message = 'Please enter an ID number containing a valid date of birth.';
+        }
+        }
 
+        if (message) {
+        dateOfBirthInput.value = '';
+        if (showError) {
+        idError.textContent = message;
+        idError.style.display = 'block';
+        }
+        return false;
+        }
+
+        if (!dateOfBirthInput.value) {
+        const yearNumber = parseInt(idNumber.substring(0, 2), 10);
+        const monthNumber = parseInt(idNumber.substring(2, 4), 10);
+        const dayNumber = parseInt(idNumber.substring(4, 6), 10);
+
+        const currentYear = new Date().getFullYear();
+        const currentYearShort = currentYear % 100;
+
+        const fullYear = yearNumber > currentYearShort
+        ? 1900 + yearNumber
+        : 2000 + yearNumber;
+
+        dateOfBirthInput.value =
+        fullYear + '-' +
+        String(monthNumber).padStart(2, '0') + '-' +
+        String(dayNumber).padStart(2, '0');
+        }
+
+        idError.style.display = 'none';
+        return true;
+        }
 
         idNumberInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 13);
 
-        this.value = this.value.replace(/\D/g, '');
-
-        const idNumber = this.value;
-
-        if (idNumber.length < 6) {
+        if (this.value.length < 6) {
         dateOfBirthInput.value = '';
         idError.style.display = 'none';
         return;
         }
 
-        const yearPart = idNumber.substring(0, 2);
-        const monthPart = idNumber.substring(2, 4);
-        const dayPart = idNumber.substring(4, 6);
-
-        const yearNumber = parseInt(yearPart);
-        const monthNumber = parseInt(monthPart);
-        const dayNumber = parseInt(dayPart);
+        const monthNumber = parseInt(this.value.substring(2, 4), 10);
+        const dayNumber = parseInt(this.value.substring(4, 6), 10);
 
         if (monthNumber < 1 || monthNumber > 12) {
         dateOfBirthInput.value = '';
@@ -652,28 +1225,18 @@
         return;
         }
 
-        if (dayNumber < 1 || dayNumber > 31) {
-        dateOfBirthInput.value = '';
-        idError.textContent = 'Invalid day in ID number.';
-        idError.style.display = 'block';
-        return;
-        }
-
+        const yearNumber = parseInt(this.value.substring(0, 2), 10);
         const currentYear = new Date().getFullYear();
         const currentYearShort = currentYear % 100;
 
-        let fullYear;
-
-        if (yearNumber > currentYearShort) {
-        fullYear = 1900 + yearNumber;
-        }
-        else {
-        fullYear = 2000 + yearNumber;
-        }
+        const fullYear = yearNumber > currentYearShort
+        ? 1900 + yearNumber
+        : 2000 + yearNumber;
 
         const date = new Date(fullYear, monthNumber - 1, dayNumber);
 
         if (
+        dayNumber < 1 ||
         date.getFullYear() !== fullYear ||
         date.getMonth() !== monthNumber - 1 ||
         date.getDate() !== dayNumber
@@ -684,45 +1247,81 @@
         return;
         }
 
-        const formattedDate =
+        dateOfBirthInput.value =
         fullYear + '-' +
         String(monthNumber).padStart(2, '0') + '-' +
         String(dayNumber).padStart(2, '0');
 
-        dateOfBirthInput.value = formattedDate;
         idError.style.display = 'none';
         });
 
-
-        // ==========================================
-        // FINAL VALIDATION
-        // ==========================================
-
-        document.querySelector('form')
-        .addEventListener('submit', function (event) {
-
-        const idNumber = idNumberInput.value;
-
-        if (idNumber.length !== 13) {
+        // ------------------------------------------
+        // FINAL FORM SUBMISSION
+        // ------------------------------------------
+        form.addEventListener('submit', function (event) {
+        if (!validateSouthAfricanId(true)) {
         event.preventDefault();
-        idError.textContent =
-        'Please enter a valid 13-digit South African ID number.';
-        idError.style.display = 'block';
+        showStep(0);
         idNumberInput.focus();
         return;
         }
 
-        if (!dateOfBirthInput.value) {
+        syncHiddenPhone();
+
+        if (!validatePhoneNumber(true)) {
         event.preventDefault();
-        idError.textContent =
-        'Please enter a valid South African ID number containing a valid date of birth.';
-        idError.style.display = 'block';
-        idNumberInput.focus();
+        showStep(1);
+        phoneNumberInput.focus();
+        return;
+        }
+
+        for (let index = 0; index < steps.length; index++) {
+        const fields = steps[index].querySelectorAll(
+        'input, select, textarea'
+        );
+        for (const field of fields) {
+        if (field.disabled) {
+        continue;
+        }
+        if (!field.checkValidity()) {
+        event.preventDefault();
+        showStep(index);
+        field.reportValidity();
+        return;
+        }
+        }
+        }
+
+        if (window.jQuery && jQuery.validator) {
+        const validator = jQuery(form).data('validator');
+        if (validator && !jQuery(form).valid()) {
+        event.preventDefault();
+        const invalidField = form.querySelector(
+        '.input-validation-error, .is-invalid'
+        );
+        if (invalidField) {
+        const owningStep = invalidField.closest('.form-step');
+        if (owningStep) {
+        showStep(steps.indexOf(owningStep));
+        }
+        invalidField.focus();
+        }
+        }
         }
         });
 
+        const firstServerError = form.querySelector(
+        '.field-validation-error, .validation-summary-errors'
+        );
+        if (firstServerError) {
+        const owningStep = firstServerError.closest('.form-step');
+        if (owningStep) {
+        showStep(steps.indexOf(owningStep));
+        }
+        }
+
+        showStep(0);
+        });
     </script>
-
 </body>
-
 </html>

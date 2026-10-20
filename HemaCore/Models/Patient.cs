@@ -20,8 +20,11 @@ namespace HemaCore.Models
         [Required]
         public  string IDNumber { get; set; }
 
-        [Required]
-        [RegularExpression(@"^\+27\d{9}$", ErrorMessage = "Phone must be +27XXXXXXXXX")]
+        [Required(ErrorMessage = "Phone number is required.")]
+        [Display(Name = "Phone Number")]
+        [RegularExpression(
+    @"^\+27\s?\d{2}\s?\d{3}\s?\d{4}$",
+    ErrorMessage = "Enter a valid South African phone number in +27 format (e.g. +27 82 123 4567 or +27821234567).")]
         public string PhoneNumber { get; set; }
 
         public DateTime DateOfBirth { get; set; }
