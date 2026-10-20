@@ -54,10 +54,16 @@ namespace HemaCore.Models
         [BindNever]
         public string EmployeeNumber { get; set; }
 
-        [Required(ErrorMessage = "Phone number is required")]
-        [RegularExpression(@"^\+27\d{9}$", ErrorMessage = "Phone number must be in the format +27756455676")]
-        public string PhoneNumber { get; set; }
-
+        [Required(ErrorMessage = "Phone number is required.")]
+        [StringLength(
+     12,
+     MinimumLength = 12,
+     ErrorMessage = "Phone number must be exactly 12 characters.")]
+        [RegularExpression(
+     @"^\+27[0-9]{9}$",
+     ErrorMessage = "Enter a valid South African phone number, e.g. +27756455676.")]
+        [Display(Name = "Phone Number")]
+        public string PhoneNumber { get; set; } = string.Empty;
         [Required]
         public string UserId { get; set; }
 

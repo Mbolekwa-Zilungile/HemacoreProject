@@ -8,145 +8,135 @@
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <div class="container mt-4">
-
     <div class="card shadow-sm p-4">
 
         <div class="mb-4">
-
-            <h3 class="fw-bold">
-                Add New Doctor
-            </h3>
+            <h3 class="fw-bold">Add New Doctor</h3>
 
             <p class="text-muted">
-                Fill in the details below to add a new doctor in the system.
-            </p>     
+                Fill in the details below to add a new doctor to the system.
+            </p>
         </div>
 
-
         <form asp-action="AddDoctor" method="post">
-
             @Html.AntiForgeryToken()
-
 
             <div class="row">
 
                 <!-- NAME -->
-
                 <div class="col-md-6 mb-3">
-
-                    <label asp-for="Name"
-                           class="form-label">
-                    </label>
+                    <label asp-for="Name" class="form-label"></label>
 
                     <input asp-for="Name"
                            class="form-control"
                            placeholder="First name" />
 
                     <span asp-validation-for="Name"
-                          class="text-danger small">
-                    </span>
-
+                          class="text-danger small"></span>
                 </div>
 
-
                 <!-- SURNAME -->
-
                 <div class="col-md-6 mb-3">
-
-                    <label asp-for="Surname"
-                           class="form-label">
-                    </label>
+                    <label asp-for="Surname" class="form-label"></label>
 
                     <input asp-for="Surname"
                            class="form-control"
                            placeholder="Last name" />
 
                     <span asp-validation-for="Surname"
-                          class="text-danger small">
-                    </span>
-
+                          class="text-danger small"></span>
                 </div>
 
             </div>
 
             <div class="row">
 
-
+                <!-- EMAIL -->
                 <div class="col-md-6 mb-3">
-
-                    <label asp-for="Email"
-                           class="form-label">
-                    </label>
+                    <label asp-for="Email" class="form-label"></label>
 
                     <input asp-for="Email"
+                           type="email"
                            class="form-control"
-                           placeholder="Enter email address" />
+                           placeholder="Enter email address"
+                           autocomplete="email" />
 
                     <span asp-validation-for="Email"
-                          class="text-danger small">
-                    </span>
-
+                          class="text-danger small"></span>
                 </div>
 
-
+                <!-- PHONE NUMBER -->
                 <div class="col-md-6 mb-3">
-
-                    <label asp-for="PhoneNumber"
-                           class="form-label">
-                    </label>
+                    <label asp-for="PhoneNumber" class="form-label"></label>
 
                     <input asp-for="PhoneNumber"
+                           id="PhoneNumber"
+                           type="tel"
                            class="form-control"
-                           placeholder="Enter phone number" />
+                           placeholder="+27756455676"
+                           maxlength="12"
+                           minlength="12"
+                           pattern="\+27[0-9]{9}"
+                           inputmode="tel"
+                           autocomplete="tel"
+                           title="Enter +27 followed by exactly 9 digits."
+                           required />
 
                     <span asp-validation-for="PhoneNumber"
-                          class="text-danger small">
-                    </span>
+                          class="text-danger small"></span>
 
+                    <small class="text-muted">
+                        Enter exactly 12 characters: +27 followed by 9 digits.
+                        Only numbers and a leading + are allowed.
+                    </small>
                 </div>
 
             </div>
-
-
 
             <div class="row">
 
-                <!-- HPCSA -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
 
-                <div class="col-md-6 mb-3">
+                        <label asp-for="HPCSANumber" class="form-label"></label>
 
-                    <label asp-for="HPCSANumber"
-                           class="form-label">
-                    </label>
+                        <input asp-for="HPCSANumber"
+                               id="HPCSANumber"
+                               type="text"
+                               class="form-control"
+                               placeholder="e.g. MP0366390"
+                               maxlength="9"
+                               minlength="9"
+                               pattern="[Mm][Pp][0-9]{7}"
+                               title="Enter exactly 9 characters: MP followed by 7 digits. Uppercase and lowercase are accepted."
+                               required />
 
-                    <input asp-for="HPCSANumber"
-                           class="form-control"
-                           placeholder="Enter HPCSA number" />
+                        <span asp-validation-for="HPCSANumber"
+                              class="text-danger small"></span>
 
-                    <span asp-validation-for="HPCSANumber"
-                          class="text-danger small">
-                    </span>
+                        <small class="text-muted">
+                            Enter 9 characters: MP followed by 7 digits.
+                            Uppercase and lowercase are accepted.
+                        </small>
 
-                  
+                    </div>
                 </div>
 
             </div>
 
-
-            <div class="d-flex justify-content-between mt-4">
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex justify-content-between flex-wrap gap-2 mt-4">
 
                 <a asp-action="Doctors"
                    class="btn btn-outline-secondary">
-
-                    ← Back
-
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back
                 </a>
-
 
                 <button type="submit"
                         class="btn btn-primary-custom btn-sm">
+                    <i class="fas fa-user-plus me-1"></i>
                     Add Doctor
-
                 </button>
 
             </div>
@@ -154,12 +144,31 @@
         </form>
 
     </div>
-
 </div>
 
-
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const phoneInput = document.getElementById("PhoneNumber");
+
+            if (!phoneInput) return;
+
+            phoneInput.addEventListener("input", function () {
+                let value = this.value;
+
+                // Keep digits only, temporarily removing all other characters.
+                value = value.replace(/[^0-9]/g, "");
+
+                // Preserve a single leading + if one was entered.
+                if (this.value.startsWith("+")) {
+                    value = "+" + value;
+                }
+
+                // Maximum of 12 characters.
+                this.value = value.slice(0, 12);
+            });
+        });
+    </script>
 }

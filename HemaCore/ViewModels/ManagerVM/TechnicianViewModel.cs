@@ -51,9 +51,16 @@ namespace HemaCore.ViewModels.ManagerVM
 
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "Phone number is required")]
-        [RegularExpression(@"^\+27\d{9}$", ErrorMessage = "Phone number must be in the format +27756455676")]
-        public string PhoneNumber { get; set; }
+        [Required(ErrorMessage = "Phone number is required.")]
+        [StringLength(
+     12,
+     MinimumLength = 1,
+     ErrorMessage = "Phone number cannot exceed 12 characters.")]
+        [RegularExpression(
+     @"^\+?[0-9]{1,11}$",
+     ErrorMessage = "Phone number must contain only digits and an optional leading + sign, with a maximum of 12 characters.")]
+        [Display(Name = "Phone Number")]
+        public string PhoneNumber { get; set; } = string.Empty;
 
         public List<int> SelectedTestTypeIds { get; set; } = new();
 

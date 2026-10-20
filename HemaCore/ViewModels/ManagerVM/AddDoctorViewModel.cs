@@ -18,10 +18,6 @@ namespace HemaCore.ViewModels.ManagerVM
         public string PhoneNumber { get; set; } = string.Empty;
 
 
-        // ==========================
-        // DOCTOR INFORMATION
-        // ==========================
-
         [Required(ErrorMessage = "First name is required.")]
         [StringLength(50, ErrorMessage = "Name can't be longer than 50 characters")]
         public string Name { get; set; } = string.Empty;
@@ -31,9 +27,12 @@ namespace HemaCore.ViewModels.ManagerVM
         [StringLength(50, ErrorMessage = "Surname can't be longer than 50 characters")]
         public string Surname { get; set; } = string.Empty;
 
-
-        [Required(ErrorMessage = "HPCSA number is required.")]
-        [Display(Name = "HPCSA Number")]
+        [Required(ErrorMessage = "HPCSA registration number is required.")]
+        [StringLength(9, MinimumLength = 9,
+    ErrorMessage = "HPCSA number must contain exactly 9 characters.")]
+        [RegularExpression(@"^MP[0-9]{7}$",
+    ErrorMessage = "Enter MP followed by exactly 7 digits, e.g. MP0366390.")]
+        [Display(Name = "HPCSA Registration Number")]
         public string HPCSANumber { get; set; } = string.Empty;
     }
 }

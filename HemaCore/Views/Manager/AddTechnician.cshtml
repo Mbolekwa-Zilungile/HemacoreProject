@@ -104,20 +104,26 @@
                 <!-- ID NUMBER -->
                 <div class="col-md-6 mb-3">
 
-                    <label asp-for="IDNumber"
-                           class="form-label">
-                    </label>
+                    <label asp-for="IDNumber" class="form-label"></label>
 
                     <input asp-for="IDNumber"
+                           id="IDNumber"
+                           type="text"
                            class="form-control"
                            placeholder="Enter 13-digit ID number"
                            maxlength="13"
+                           minlength="13"
                            inputmode="numeric"
-                           autocomplete="off" />
+                           pattern="[0-9]{13}"
+                           autocomplete="off"
+                           required />
 
                     <span asp-validation-for="IDNumber"
-                          class="text-danger small">
-                    </span>
+                          class="text-danger small"></span>
+
+                    <small class="text-muted">
+                        Enter exactly 13 digits. Numbers only.
+                    </small>
 
                 </div>
 
@@ -154,24 +160,32 @@
                 </div>
 
 
-                <!-- PHONE -->
                 <div class="col-md-6 mb-3">
 
-                    <label asp-for="PhoneNumber"
-                           class="form-label">
-                    </label>
+                    <label asp-for="PhoneNumber" class="form-label"></label>
 
                     <input asp-for="PhoneNumber"
+                           id="PhoneNumber"
+                           type="text"
                            class="form-control"
                            placeholder="+27756455676"
-                           autocomplete="tel" />
+                           maxlength="12"
+                           minlength="1"
+                           inputmode="tel"
+                           autocomplete="tel"
+                           pattern="\+?[0-9]{0,11}"
+                           title="Only numbers and one leading + sign are allowed. Maximum 12 characters."
+                           required />
 
                     <span asp-validation-for="PhoneNumber"
-                          class="text-danger small">
-                    </span>
+                          class="text-danger small"></span>
+
+                    <small class="text-muted">
+                        Only numbers and a single leading + sign are allowed.
+                        Maximum 12 characters.
+                    </small>
 
                 </div>
-
             </div>
 
 
@@ -342,191 +356,259 @@
   
 </div>
 
-<!-- ========================= -->
-<!-- JAVASCRIPT -->
-<!-- ========================= -->
-@section Scripts {
 
-   
+
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-
         document.addEventListener("DOMContentLoaded", function () {
 
-            const searchBox =
-                document.getElementById("testTypeSearch");
+            // ==========================================
+            // ID NUMBER VALIDATION
+            // Numbers only, maximum 13 digits
+            // ==========================================
 
-            const clearButton =
-                document.getElementById("clearTestSearch");
+            const idNumberInput = document.getElementById("IDNumber");
 
-            const testItems =
-                document.querySelectorAll(".test-type-item");
+            if (idNumberInput) {
 
-            const checkboxes =
-                document.querySelectorAll(".test-type-checkbox");
+                idNumberInput.addEventListener("input", function () {
 
-            const noResults =
-                document.getElementById("noTestResults");
+                    // Remove all non-numeric characters.
+                    this.value = this.value.replace(/[^0-9]/g, "");
 
-            const visibleCount =
-                document.getElementById("visibleTestCount");
+                    // Limit to 13 digits.
+                    this.value = this.value.slice(0, 13);
 
-            const selectedCount =
-                document.getElementById("selectedTestCount");
+                    this.setCustomValidity("");
+                });
+
+                idNumberInput.addEventListener("paste", function () {
+                    const input = this;
+
+                    setTimeout(function () {
+                        input.value = input.value
+                            .replace(/[^0-9]/g, "")
+                            .slice(0, 13);
+                    }, 0);
+                });
+            }
 
 
-            /*
-             * ============================
-             * SEARCH TEST TYPES
-             * ============================
-             */
+            // ==========================================
+            // PHONE NUMBER VALIDATION
+            // Optional leading + and maximum 12 characters
+            // ==========================================
+
+            const phoneInput = document.getElementById("PhoneNumber");
+
+            if (phoneInput) {
+
+                phoneInput.addEventListener("input", function () {
+
+                    let value = this.value;
+
+                    // Allow digits and the + sign only.
+                    value = value.replace(/[^0-9+]/g, "");
+
+                    // Allow + only at the beginning.
+                    const hasPlus = value.startsWith("+");
+                    value = value.replace(/\+/g, "");
+
+                    if (hasPlus) {
+                        value = "+" + value;
+                    }
+
+                    // Maximum 12 characters, including +.
+                    this.value = value.slice(0, 12);
+
+                    this.setCustomValidity("");
+                });
+
+                phoneInput.addEventListener("paste", function () {
+                    const input = this;
+
+                    setTimeout(function () {
+                        let value = input.value.replace(/[^0-9+]/g, "");
+                        const hasPlus = value.startsWith("+");
+
+                        value = value.replace(/\+/g, "");
+
+                        if (hasPlus) {
+                            value = "+" + value;
+                        }
+
+                        input.value = value.slice(0, 12);
+                        input.setCustomValidity("");
+                    }, 0);
+                });
+            }
+
+
+            // ==========================================
+            // FORM SUBMISSION VALIDATION
+            // ==========================================
+
+            const form = document.querySelector(
+                'form[asp-action="AddTechnician"]'
+            ) || (idNumberInput ? idNumberInput.form : null);
+
+            // The ASP.NET Core form tag helper may not render
+            // asp-action as a literal HTML attribute.
+            const technicianForm = idNumberInput
+                ? idNumberInput.closest("form")
+                : (phoneInput ? phoneInput.closest("form") : null);
+
+            const activeForm = technicianForm || form;
+
+            if (activeForm) {
+
+                activeForm.addEventListener("submit", function (event) {
+
+                    if (idNumberInput) {
+                        idNumberInput.value =
+                            idNumberInput.value.replace(/[^0-9]/g, "").slice(0, 13);
+
+                        if (!/^[0-9]{13}$/.test(idNumberInput.value)) {
+                            event.preventDefault();
+
+                            idNumberInput.setCustomValidity(
+                                "ID Number must contain exactly 13 digits."
+                            );
+
+                            idNumberInput.reportValidity();
+                            idNumberInput.focus();
+                            return;
+                        }
+
+                        idNumberInput.setCustomValidity("");
+                    }
+
+                    if (phoneInput) {
+                        if (!/^\+?[0-9]{1,11}$/.test(phoneInput.value)) {
+                            event.preventDefault();
+
+                            phoneInput.setCustomValidity(
+                                "Enter digits and an optional leading + sign, with a maximum of 12 characters."
+                            );
+
+                            phoneInput.reportValidity();
+                            phoneInput.focus();
+                            return;
+                        }
+
+                        phoneInput.setCustomValidity("");
+                    }
+                });
+            }
+
+
+            // ==========================================
+            // TEST TYPE SEARCH ELEMENTS
+            // ==========================================
+
+            const searchBox = document.getElementById("testTypeSearch");
+            const clearButton = document.getElementById("clearTestSearch");
+            const testItems = document.querySelectorAll(".test-type-item");
+            const checkboxes = document.querySelectorAll(".test-type-checkbox");
+            const noResults = document.getElementById("noTestResults");
+            const visibleCount = document.getElementById("visibleTestCount");
+            const selectedCount = document.getElementById("selectedTestCount");
+
+
+            // ==========================================
+            // SEARCH AND FILTER TEST TYPES
+            // ==========================================
 
             function filterTestTypes() {
 
-                const searchTerm =
-                    searchBox.value
-                        .toLowerCase()
-                        .trim();
+                if (!searchBox) return;
 
+                const searchTerm = searchBox.value.toLowerCase().trim();
                 let numberVisible = 0;
-
 
                 testItems.forEach(function (item) {
 
-                    const testName =
-                        item
-                            .getAttribute("data-test-name")
-                            .toLowerCase();
-
+                    const testName = (
+                        item.getAttribute("data-test-name") || ""
+                    ).toLowerCase();
 
                     if (testName.includes(searchTerm)) {
-
                         item.style.display = "";
-
                         numberVisible++;
-
-                    }
-                    else {
-
+                    } else {
                         item.style.display = "none";
-
                     }
-
                 });
 
-
-                /*
-                 * Update visible count
-                 */
-
-                visibleCount.textContent =
-                    numberVisible;
-
-
-                /*
-                 * Show/hide no results message
-                 */
-
-                if (numberVisible === 0 &&
-                    searchTerm.length > 0) {
-
-                    noResults.style.display = "block";
-
-                }
-                else {
-
-                    noResults.style.display = "none";
-
+                if (visibleCount) {
+                    visibleCount.textContent = numberVisible;
                 }
 
-
-                /*
-                 * Show/hide clear button
-                 */
-
-                if (searchTerm.length > 0) {
-
-                    clearButton.style.display = "block";
-
-                }
-                else {
-
-                    clearButton.style.display = "none";
-
+                if (noResults) {
+                    noResults.style.display =
+                        numberVisible === 0 && searchTerm.length > 0
+                            ? "block"
+                            : "none";
                 }
 
+                if (clearButton) {
+                    clearButton.style.display =
+                        searchTerm.length > 0 ? "block" : "none";
+                }
             }
 
 
-            /*
-             * ============================
-             * SEARCH EVENT
-             * ============================
-             */
+            // ==========================================
+            // SEARCH EVENT
+            // ==========================================
 
             if (searchBox) {
-
-                searchBox.addEventListener(
-                    "input",
-                    filterTestTypes
-                );
-
+                searchBox.addEventListener("input", filterTestTypes);
             }
 
 
-            /*
-             * ============================
-             * CLEAR SEARCH
-             * ============================
-             */
+            // ==========================================
+            // CLEAR SEARCH
+            // ==========================================
 
-            if (clearButton) {
+            if (clearButton && searchBox) {
 
-                clearButton.addEventListener(
-                    "click",
-                    function () {
+                clearButton.addEventListener("click", function () {
 
-                        searchBox.value = "";
+                    searchBox.value = "";
 
-                        filterTestTypes();
+                    filterTestTypes();
 
-                        searchBox.focus();
-
-                    }
-                );
-
+                    searchBox.focus();
+                });
             }
 
 
-            /*
-             * ============================
-             * COUNT SELECTED TESTS
-             * ============================
-             */
+            // ==========================================
+            // COUNT SELECTED TEST TYPES
+            // ==========================================
 
             function updateSelectedCount() {
 
                 let count = 0;
 
                 checkboxes.forEach(function (checkbox) {
-
                     if (checkbox.checked) {
                         count++;
                     }
-
                 });
 
-                selectedCount.textContent = count;
-
+                if (selectedCount) {
+                    selectedCount.textContent = count;
+                }
             }
 
 
-            /*
-             * ============================
-             * CHECKBOX EVENTS
-             * ============================
-             */
+            // ==========================================
+            // CHECKBOX CHANGE EVENTS
+            // ==========================================
 
             checkboxes.forEach(function (checkbox) {
 
@@ -534,19 +616,16 @@
                     "change",
                     updateSelectedCount
                 );
-
             });
 
 
-            /*
-             * ============================
-             * INITIAL COUNT
-             * ============================
-             */
+            // ==========================================
+            // INITIALIZE COUNTS AND SEARCH
+            // ==========================================
 
             updateSelectedCount();
+            filterTestTypes();
 
         });
-
     </script>
 }
