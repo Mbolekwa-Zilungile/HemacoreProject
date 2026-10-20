@@ -318,6 +318,39 @@ namespace HemaCore.Controllers
             return View(category);
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> SearchCategoriesLive(string term = "")
+        {
+            var query = _context.TestCategories
+                .Where(c => c.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(c =>
+                    c.CategoryName.Contains(term) ||
+                    (c.CategoryDescription != null &&
+                     c.CategoryDescription.Contains(term)));
+            }
+
+            var categories = await query
+                .OrderBy(c => c.CategoryName)
+                .Select(c => new
+                {
+                    categoryId = c.CategoryId,
+                    categoryName = c.CategoryName,
+                    categoryDescription = c.CategoryDescription,
+                    isActive = c.IsActive,
+                    testTypeCount = _context.TestTypes.Count(t =>
+                        t.CategoryId == c.CategoryId)
+                })
+                .ToListAsync();
+
+            return Json(categories);
+        }
+
         #endregion
 
         #region TestTypes
@@ -1264,6 +1297,54 @@ namespace HemaCore.Controllers
                 throw;
             }
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> SearchTestTypesLive(string term = "")
+        {
+            var query = _context.TestTypes
+                .Include(t => t.Category)
+                .AsQueryable();
+
+            // Search by test name or category name
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(t =>
+                    t.TestTypeName.Contains(term) ||
+                    (t.Category != null &&
+                     t.Category.CategoryName.Contains(term)));
+            }
+
+            // Return active test types on the active page,
+            // and inactive test types on the inactive page.
+            var currentAction = HttpContext.Request.Headers["Referer"]
+                .ToString();
+
+            bool showInactive = currentAction.Contains(
+                "InactiveTestTypes",
+                StringComparison.OrdinalIgnoreCase);
+
+            query = query.Where(t => t.IsActive != showInactive);
+
+            var testTypes = await query
+                .OrderBy(t => t.TestTypeName)
+                .Select(t => new
+                {
+                    testTypeId = t.TestTypeId,
+                    name = t.TestTypeName,
+                    category = t.Category != null
+                        ? t.Category.CategoryName
+                        : "Not assigned",
+                    turnaround = t.TurnAroundTime,
+                    isActive = t.IsActive
+                })
+                .ToListAsync();
+
+            return Json(testTypes);
+        }
+
         #endregion
 
         #region Sample Type
@@ -1436,6 +1517,56 @@ namespace HemaCore.Controllers
 
             return View(sampleType);
         }
+
+        // =====================================================
+        // LIVE SEARCH SAMPLE TYPES
+        // =====================================================
+
+        [HttpGet]
+        public async Task<IActionResult> SearchSampleTypesLive(
+            string term = "",
+            string status = "active")
+        {
+            var query = _context.SampleTypes.AsQueryable();
+
+            // Filter by active or inactive status.
+            if (string.Equals(
+                status,
+                "inactive",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(s => !s.IsActive);
+            }
+            else
+            {
+                query = query.Where(s => s.IsActive);
+            }
+
+            // Search by sample type name or description.
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(s =>
+                    s.SampleName.Contains(term) ||
+                    (s.Description != null &&
+                     s.Description.Contains(term)));
+            }
+
+            // Return the properties expected by JavaScript.
+            var results = await query
+                .OrderBy(s => s.SampleName)
+                .Select(s => new
+                {
+                    sampleTypeId = s.SampleTypeId,
+                    sampleName = s.SampleName,
+                    description = s.Description,
+                    isActive = s.IsActive
+                })
+                .ToListAsync();
+
+            return Json(results);
+        }
         #endregion
 
         #region Consumable
@@ -1459,6 +1590,63 @@ namespace HemaCore.Controllers
                 .ToListAsync();
             return View(consumables);
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> SearchConsumablesLive(
+            string term = "",
+            string status = "active")
+        {
+            var query = _context.Consumables
+                .Include(c => c.Supplier)
+                .AsQueryable();
+
+            // Filter by active or inactive consumables.
+            if (string.Equals(
+                status,
+                "inactive",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(c => !c.IsActive);
+            }
+            else
+            {
+                query = query.Where(c => c.IsActive);
+            }
+
+            // Search by consumable name or supplier name.
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(c =>
+                    c.ConsumableName.Contains(term) ||
+                    (c.Supplier != null &&
+                     c.Supplier.SupplierName.Contains(term)));
+            }
+
+            var results = await query
+                .OrderBy(c => c.ConsumableName)
+                .Select(c => new
+                {
+                    consumableId = c.ConsumableId,
+                    consumableName = c.ConsumableName,
+
+                    supplierName =
+                        c.Supplier != null && c.Supplier.IsActive
+                            ? c.Supplier.SupplierName
+                            : "",
+
+                    reorderLevel = c.ReorderLevel,
+                    quantityInHand = c.QuantityInHand,
+                    status = c.Status.ToString(),
+                    isActive = c.IsActive
+                })
+                .ToListAsync();
+
+            return Json(results);
+        }
+
 
         public async Task<IActionResult> AddConsumable()
         {
@@ -1721,7 +1909,41 @@ namespace HemaCore.Controllers
 
             return View(suppliers);
         }
+        [HttpGet]
+        public async Task<IActionResult> SearchSupplierLive(string term = "")
+        {
+            var query = _context.Suppliers
+                .Where(s => s.IsActive)
+                .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(s =>
+                    s.SupplierName.Contains(term) ||
+                    (s.ContactPerson != null &&
+                     s.ContactPerson.Contains(term)) ||
+                    (s.Email != null &&
+                     s.Email.Contains(term)));
+            }
+
+            var suppliers = await query
+                .OrderBy(s => s.SupplierName)
+                .Select(s => new
+                {
+                    supplierId = s.SupplierId,
+                    name = s.SupplierName,
+                    contactPerson = s.ContactPerson,
+                    email = s.Email,
+                    totalConsumables = _context.Consumables
+                        .Count(c => c.SupplierId == s.SupplierId),
+                    isActive = s.IsActive
+                })
+                .ToListAsync();
+
+            return Json(suppliers);
+        }
         public async Task<IActionResult> InactiveSuppliers()
         {
             var suppliers = await _context.Suppliers
@@ -2029,6 +2251,45 @@ namespace HemaCore.Controllers
             return View(orders);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SearchOrders(string term = "")
+        {
+            var query = _context.Orders.AsQueryable();
+
+            // Search only by order number.
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+                query = query.Where(o => o.OrderNumber.Contains(term));
+            }
+
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new
+                {
+                    orderId = o.OrderId,
+                    orderNumber = o.OrderNumber,
+                    supplierName = o.Supplier != null
+                        ? o.Supplier.SupplierName
+                        : "Unknown",
+                    orderDate = o.OrderDate,
+                    itemCount = o.OrderItems.Count(),
+                    status = o.Status.ToString()
+                })
+                .ToListAsync();
+
+            var results = orders.Select(o => new
+            {
+                o.orderId,
+                o.orderNumber,
+                o.supplierName,
+                orderDate = o.orderDate.ToString("yyyy-MM-dd"),
+                o.itemCount,
+                o.status
+            });
+
+            return Json(results);
+        }
         public async Task<IActionResult> OrderDetails(int id)
         {
             var order = await _context.Orders
@@ -2467,7 +2728,54 @@ namespace HemaCore.Controllers
             return View(doctor);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SearchDoctorsLive(
+    string term = "",
+    string status = "active")
+        {
+            var query = _context.Doctors
+                .AsQueryable();
 
+            // Filter by active/inactive status.
+            if (status.Equals("inactive", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(d => !d.IsActive);
+            }
+            else
+            {
+                query = query.Where(d => d.IsActive);
+            }
+
+            // Search by name, email, HPCSA number, or phone.
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(d =>
+                    (d.Name != null && d.Name.Contains(term)) ||
+                    (d.Surname != null && d.Surname.Contains(term)) ||
+                    (d.User != null && d.User.Email != null &&
+                        d.User.Email.Contains(term)) ||
+                    (d.HPCSANumber != null && d.HPCSANumber.Contains(term)) ||
+                    (d.PhoneNumber != null && d.PhoneNumber.Contains(term)));
+            }
+
+            var doctors = await query
+                .OrderBy(d => d.Surname)
+                .Select(d => new
+                {
+                    doctorId = d.DoctorId,
+                    name = d.Name,
+                    surname = d.Surname,
+                    email = d.User != null ? d.User.Email : null,
+                    hpcsaNumber = d.HPCSANumber,
+                    phoneNumber = d.PhoneNumber,
+                    isActive = d.IsActive
+                })
+                .ToListAsync();
+
+            return Json(doctors);
+        }
         public async Task<IActionResult> InactiveDoctors()
         {
             var doctor = await _context.Doctors
@@ -2817,55 +3125,6 @@ namespace HemaCore.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> SearchDoctorsLive(
-    string term = "",
-    string status = "All")
-        {
-            var query = _context.Doctors
-                .Include(d => d.User)
-                .AsQueryable();
-
-            // Filter by doctor status
-            if (status == "Active")
-            {
-                query = query.Where(d => d.IsActive);
-            }
-            else if (status == "Inactive")
-            {
-                query = query.Where(d => !d.IsActive);
-            }
-
-            // Search by name, surname or HPCSA number
-            if (!string.IsNullOrWhiteSpace(term))
-            {
-                term = term.Trim();
-
-                query = query.Where(d =>
-                    (d.Name != null && d.Name.Contains(term)) ||
-                    (d.Surname != null && d.Surname.Contains(term)) ||
-                    (d.HPCSANumber != null &&
-                     d.HPCSANumber.Contains(term))
-                );
-            }
-
-            var doctors = await query
-                .OrderBy(d => d.Surname)
-                .ThenBy(d => d.Name)
-                .Select(d => new
-                {
-                    doctorID = d.DoctorId,
-                    name = d.Name,
-                    surname = d.Surname,
-                    email = d.User != null ? d.User.Email : null,
-                    hpcsaNumber = d.HPCSANumber,
-                    phoneNumber = d.PhoneNumber,
-                    isActive = d.IsActive
-                })
-                .ToListAsync();
-
-            return Json(doctors);
-        }
         public async Task<IActionResult> DoctorDetails(int id)
         {
             var doctor = await _context.Doctors
@@ -3688,6 +3947,69 @@ namespace HemaCore.Controllers
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchTechniciansLive(
+    string term = "",
+    string status = "active")
+        {
+            var query = _context.LabTechnicians
+                .AsQueryable();
+
+            // Active or inactive technicians.
+            if (status.Equals("inactive", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(t => !t.IsActive);
+            }
+            else
+            {
+                query = query.Where(t => t.IsActive);
+            }
+
+            // Search technician details.
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                term = term.Trim();
+
+                query = query.Where(t =>
+                    (t.Name != null && t.Name.Contains(term)) ||
+                    (t.Surname != null && t.Surname.Contains(term)) ||
+                    (t.IDNumber != null && t.IDNumber.Contains(term)) ||
+                    (t.EmployeeNumber != null && t.EmployeeNumber.Contains(term)) ||
+                    (t.PhoneNumber != null && t.PhoneNumber.Contains(term)) ||
+                    (t.User != null &&
+                     t.User.Email != null &&
+                     t.User.Email.Contains(term)) ||
+                    t.TechnicianTests.Any(a =>
+                        a.TestType != null &&
+                        a.TestType.TestTypeName.Contains(term)));
+            }
+
+            var technicians = await query
+                .OrderBy(t => t.Surname)
+                .Select(t => new
+                {
+                    labTechnicianId = t.LabTechnicianId,
+                    name = t.Name,
+                    surname = t.Surname,
+                    idNumber = t.IDNumber,
+                    employeeNumber = t.EmployeeNumber,
+                    email = t.User != null ? t.User.Email : null,
+                    phoneNumber = t.PhoneNumber,
+                    isActive = t.IsActive,
+
+                    testTypes = t.TechnicianTests
+                        .Where(a => a.TestType != null)
+                        .Select(a => new
+                        {
+                            testTypeName = a.TestType!.TestTypeName
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return Json(technicians);
         }
 
         [HttpPost]

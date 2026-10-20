@@ -317,8 +317,13 @@
      LIVE SEARCH AND MODAL SCRIPT
      ===================================================== -->
 
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
+        // =====================================================
+        // ELEMENTS
+        // =====================================================
 
         const modal = document.getElementById("deleteModal");
         const sampleIdInput = document.getElementById("deleteSampleTypeId");
@@ -328,8 +333,26 @@
         const confirmButton = document.getElementById("confirmDeactivateBtn");
         const searchBox = document.getElementById("searchBox");
         const tableBody = document.getElementById("sampleTypeTable");
+        const statusFilter = document.getElementById("statusFilter");
 
         let searchTimeout;
+        let currentController = null;
+
+        // Determine which page is currently displayed.
+        const currentAction =
+            '@ViewContext.RouteData.Values["action"]?.ToString()';
+
+        const currentStatus =
+            currentAction === "InactiveSampleTypes"
+                ? "inactive"
+                : "active";
+
+        // Generate correct URLs using MVC routing.
+        const detailsUrlTemplate =
+            '@Url.Action("SampleTypeDetails", "Manager", new { id = "__id__" })';
+
+        const editUrlTemplate =
+            '@Url.Action("EditSampleType", "Manager", new { id = "__id__" })';
 
         // =====================================================
         // OPEN DEACTIVATION MODAL
@@ -339,7 +362,7 @@
 
             const button = event.target.closest(".deactivate-sample-btn");
 
-            if (!button) {
+            if (!button || !modal) {
                 return;
             }
 
@@ -351,6 +374,9 @@
 
             document.body.classList.add("modal-open");
 
+            if (cancelButton) {
+                cancelButton.focus();
+            }
         });
 
         // =====================================================
@@ -358,6 +384,10 @@
         // =====================================================
 
         function closeModal() {
+
+            if (!modal) {
+                return;
+            }
 
             modal.classList.remove("show");
             modal.setAttribute("aria-hidden", "true");
@@ -367,58 +397,58 @@
             sampleIdInput.value = "";
             sampleNameElement.textContent = "";
 
-            confirmButton.disabled = false;
-
-            confirmButton.innerHTML = `
-                <i class="fas fa-ban me-1"></i>
-                Yes, Deactivate
-            `;
+            if (confirmButton) {
+                confirmButton.disabled = false;
+                confirmButton.innerHTML =
+                    '<i class="fas fa-ban me-1"></i> Yes, Deactivate';
+            }
         }
 
-        cancelButton.addEventListener("click", closeModal);
+        if (cancelButton) {
+            cancelButton.addEventListener("click", closeModal);
+        }
 
-        // Close when clicking outside the modal box.
+        // Close when clicking the overlay outside the dialog.
+        if (modal) {
+            modal.addEventListener("click", function (event) {
 
-        modal.addEventListener("click", function (event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+        }
 
-            if (event.target === modal) {
-                closeModal();
-            }
-
-        });
-
-        // Close with Escape.
-
+        // Close when pressing Escape.
         document.addEventListener("keydown", function (event) {
 
             if (
                 event.key === "Escape" &&
+                modal &&
                 modal.classList.contains("show")
             ) {
                 closeModal();
             }
-
         });
 
         // =====================================================
         // PREVENT DOUBLE FORM SUBMISSION
         // =====================================================
 
-        deactivateForm.addEventListener("submit", function (event) {
+        if (deactivateForm) {
+            deactivateForm.addEventListener("submit", function (event) {
 
-            if (!sampleIdInput.value) {
-                event.preventDefault();
-                return;
-            }
+                if (!sampleIdInput.value) {
+                    event.preventDefault();
+                    return;
+                }
 
-            confirmButton.disabled = true;
-
-            confirmButton.innerHTML = `
-                <i class="fas fa-spinner fa-spin me-1"></i>
-                Deactivating...
-            `;
-
-        });
+                if (confirmButton) {
+                    confirmButton.disabled = true;
+                    confirmButton.innerHTML =
+                        '<i class="fas fa-spinner fa-spin me-1"></i> Deactivating...';
+                }
+            });
+        }
 
         // =====================================================
         // HTML ESCAPING
@@ -427,9 +457,163 @@
         function escapeHtml(value) {
 
             const element = document.createElement("div");
-            element.textContent = value ?? "";
+            element.textContent = value == null ? "" : String(value);
 
             return element.innerHTML;
+        }
+
+        // =====================================================
+        // CREATE URL USING MVC ROUTING
+        // =====================================================
+
+        function createActionUrl(template, id) {
+
+            return template.replace(
+                "__id__",
+                encodeURIComponent(String(id))
+            );
+        }
+
+        // =====================================================
+        // DISPLAY EMPTY MESSAGE
+        // =====================================================
+
+        function showMessage(message, className = "text-muted") {
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4"
+                        class="text-center ${className} py-3">
+                        ${escapeHtml(message)}
+                    </td>
+                </tr>
+            `;
+        }
+
+        // =====================================================
+        // RENDER SEARCH RESULTS
+        // =====================================================
+
+        function renderSampleTypes(data) {
+
+            if (!Array.isArray(data) || data.length === 0) {
+                showMessage("No sample types found.");
+                return;
+            }
+
+            let rows = "";
+
+            data.forEach(function (sample) {
+
+                const id =
+                    sample.sampleTypeId ??
+                    sample.SampleTypeId ??
+                    sample.sampleTypeID ??
+                    sample.SampleTypeID;
+
+                const name =
+                    sample.sampleName ??
+                    sample.SampleName ??
+                    "";
+
+                const description =
+                    sample.description ??
+                    sample.Description ??
+                    "";
+
+                const isActive =
+                    sample.isActive ??
+                    sample.IsActive ??
+                    false;
+
+                // Do not render records belonging to the other status.
+                if (
+                    currentStatus === "active" && !isActive ||
+                    currentStatus === "inactive" && isActive
+                ) {
+                    return;
+                }
+
+                if (id == null) {
+                    return;
+                }
+
+                const safeName = escapeHtml(name);
+                const safeDescription = escapeHtml(
+                    description || "No description"
+                );
+
+                const detailsUrl = createActionUrl(
+                    detailsUrlTemplate,
+                    id
+                );
+
+                const editUrl = createActionUrl(
+                    editUrlTemplate,
+                    id
+                );
+
+                rows += `
+                    <tr>
+                        <td class="fw-semibold">
+                            ${safeName}
+                        </td>
+
+                        <td>
+                            ${safeDescription}
+                        </td>
+
+                        <td>
+                            ${
+                                isActive
+                                    ? '<span class="badge bg-success">Active</span>'
+                                    : '<span class="badge bg-danger">Inactive</span>'
+                            }
+                        </td>
+
+                        <td class="text-center">
+
+                            <a href="${detailsUrl}"
+                               class="btn btn-sm btn-outline-info me-1"
+                               title="View sample type">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            <a href="${editUrl}"
+                               class="btn btn-sm btn-outline-primary me-1"
+                               title="Edit sample type">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            ${
+                                isActive
+                                    ? `
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger deactivate-sample-btn"
+                                                data-id="${escapeHtml(id)}"
+                                                data-name="${safeName}"
+                                                title="Deactivate sample type">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                      `
+                                    : ""
+                            }
+
+                        </td>
+                    </tr>
+                `;
+            });
+
+            if (rows === "") {
+                showMessage(
+                    currentStatus === "active"
+                        ? "No active sample types found."
+                        : "No inactive sample types found."
+                );
+                return;
+            }
+
+            tableBody.innerHTML = rows;
         }
 
         // =====================================================
@@ -438,182 +622,94 @@
 
         if (searchBox && tableBody) {
 
-            const originalRows = Array.from(tableBody.children);
-
             searchBox.addEventListener("input", function () {
 
                 const term = this.value.trim();
 
                 clearTimeout(searchTimeout);
 
-                searchTimeout = setTimeout(function () {
+                // Cancel an earlier request if the user keeps typing.
+                if (currentController) {
+                    currentController.abort();
+                    currentController = null;
+                }
 
-                    // Restore original server-rendered rows when cleared.
+                searchTimeout = setTimeout(async function () {
 
+                    // Restore original rows when the search is cleared.
                     if (term === "") {
-                        tableBody.replaceChildren(...originalRows);
+                        window.location.reload();
                         return;
                     }
 
-                    fetch(
-                        '@Url.Action("SearchSampleTypesLive", "Manager")?term=' +
-                        encodeURIComponent(term),
-                        {
+                    currentController = new AbortController();
+
+                    showMessage("Searching sample types...");
+
+                    const url =
+                        '@Url.Action("SearchSampleTypesLive", "Manager")' +
+                        '?term=' + encodeURIComponent(term) +
+                        '&status=' + encodeURIComponent(currentStatus);
+
+                    try {
+
+                        const response = await fetch(url, {
+                            method: "GET",
                             headers: {
                                 "X-Requested-With": "XMLHttpRequest"
-                            }
-                        }
-                    )
-                    .then(function (response) {
+                            },
+                            signal: currentController.signal
+                        });
 
                         if (!response.ok) {
-                            throw new Error("Unable to search sample types.");
-                        }
-
-                        return response.json();
-
-                    })
-                    .then(function (data) {
-
-                        if (!Array.isArray(data) || data.length === 0) {
-
-                            tableBody.innerHTML = `
-                                <tr>
-                                    <td colspan="4"
-                                        class="text-center text-muted py-3">
-                                        No sample types found.
-                                    </td>
-                                </tr>
-                            `;
-
-                            return;
-                        }
-
-                        // Normalize property names returned by the endpoint.
-
-                        const samples = data.map(function (sample) {
-
-                            return {
-                                id:
-                                    sample.sampleTypeId ??
-                                    sample.SampleTypeId ??
-                                    sample.sampleTypeID ??
-                                    sample.SampleTypeID,
-
-                                name:
-                                    sample.sampleName ??
-                                    sample.SampleName ??
-                                    "",
-
-                                description:
-                                    sample.description ??
-                                    sample.Description ??
-                                    "",
-
-                                isActive:
-                                    sample.isActive ??
-                                    sample.IsActive ??
-                                    false
-                            };
-
-                        });
-
-                        // This page shows active sample types only.
-
-                        const activeSamples = samples.filter(function (sample) {
-                            return sample.isActive;
-                        });
-
-                        if (activeSamples.length === 0) {
-
-                            tableBody.innerHTML = `
-                                <tr>
-                                    <td colspan="4"
-                                        class="text-center text-muted py-3">
-                                        No active sample types found.
-                                    </td>
-                                </tr>
-                            `;
-
-                            return;
-                        }
-
-                        let rows = "";
-
-                        activeSamples.forEach(function (sample) {
-
-                            const id = sample.id;
-                            const safeId = encodeURIComponent(id ?? "");
-                            const safeName = escapeHtml(sample.name);
-                            const safeDescription = escapeHtml(
-                                sample.description || "No description"
+                            throw new Error(
+                                "Unable to search sample types."
                             );
+                        }
 
-                            rows += `
-                                <tr>
+                        const data = await response.json();
 
-                                    <td class="fw-semibold">
-                                        ${safeName}
-                                    </td>
+                        renderSampleTypes(data);
 
-                                    <td>
-                                        ${safeDescription}
-                                    </td>
+                    } catch (error) {
 
-                                    <td>
-                                        <span class="badge bg-success">
-                                            Active
-                                        </span>
-                                    </td>
+                        if (error.name === "AbortError") {
+                            return;
+                        }
 
-                                    <td class="text-center">
+                        console.error(
+                            "Sample type search failed:",
+                            error
+                        );
 
-                                        <a href="/Manager/EditSampleType/${safeId}"
-                                           class="btn btn-sm btn-outline-primary me-1"
-                                           title="Edit sample type">
+                        showMessage(
+                            "Search failed. Please try again.",
+                            "text-danger"
+                        );
 
-                                            <i class="fas fa-edit"></i>
+                    } finally {
+                        currentController = null;
+                    }
 
-                                        </a>
+                }, 300);
+            });
+        }
 
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger deactivate-sample-btn"
-                                                data-id="${escapeHtml(id)}"
-                                                data-name="${safeName}"
-                                                title="Deactivate sample type">
+        // =====================================================
+        // STATUS FILTER
+        // =====================================================
 
-                                            <i class="fas fa-ban"></i>
+        // The dropdown navigates to the appropriate MVC action.
+        if (statusFilter) {
+            statusFilter.addEventListener("change", function () {
 
-                                        </button>
-
-                                    </td>
-
-                                </tr>
-                            `;
-                        });
-
-                        tableBody.innerHTML = rows;
-
-                    })
-                    .catch(function (error) {
-
-                        console.error("Sample type search failed:", error);
-
-                        tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="4"
-                                    class="text-center text-danger py-3">
-                                    Search failed. Please try again.
-                                </td>
-                            </tr>
-                        `;
-
-                    });
-
-                }, 250);
-
+                if (this.value) {
+                    window.location.href = this.value;
+                }
             });
 
+            // Prevent duplicate navigation if inline onchange exists.
+            statusFilter.removeAttribute("onchange");
         }
 
     });

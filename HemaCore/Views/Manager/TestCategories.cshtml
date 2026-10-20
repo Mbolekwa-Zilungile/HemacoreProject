@@ -323,6 +323,7 @@
      JAVASCRIPT
      ========================================================= -->
 
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -339,6 +340,23 @@
         const searchBox = document.getElementById("searchBox");
         const categoryTable = document.getElementById("categoryTable");
 
+        if (!modal || !categoryIdInput || !categoryName ||
+            !cancelButton || !deleteForm || !confirmDeleteBtn ||
+            !searchBox || !categoryTable) {
+            console.error("One or more Test Categories page elements are missing.");
+            return;
+        }
+
+        // =====================================================
+        // HTML ESCAPING
+        // =====================================================
+
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = value == null ? "" : String(value);
+            return div.innerHTML;
+        }
+
         // =====================================================
         // OPEN DEACTIVATE MODAL
         // =====================================================
@@ -352,15 +370,19 @@
             const id = button.getAttribute("data-id");
             const name = button.getAttribute("data-name");
 
+            if (!id) return;
+
             categoryIdInput.value = id;
-            categoryName.textContent = name;
+            categoryName.textContent = name || "this category";
 
             modal.classList.add("show");
             document.body.classList.add("modal-open");
+
+            cancelButton.focus();
         });
 
         // =====================================================
-        // CLOSE MODAL
+        // CLOSE DEACTIVATE MODAL
         // =====================================================
 
         function closeModal() {
@@ -373,16 +395,17 @@
 
         cancelButton.addEventListener("click", closeModal);
 
-        // Click outside modal
+        // Close when clicking outside the modal box
         modal.addEventListener("click", function (event) {
             if (event.target === modal) {
                 closeModal();
             }
         });
 
-        // Close using Escape key
+        // Close with Escape key
         document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && modal.classList.contains("show")) {
+            if (event.key === "Escape" &&
+                modal.classList.contains("show")) {
                 closeModal();
             }
         });
@@ -402,20 +425,179 @@
         });
 
         // =====================================================
-        // HTML ESCAPING
-        // =====================================================
-
-        function escapeHtml(value) {
-            const div = document.createElement("div");
-            div.textContent = value ?? "";
-            return div.innerHTML;
-        }
-
-        // =====================================================
-        // LIVE SEARCH
+        // LIVE SEARCH TEST CATEGORIES
+        // Searches category name and description
         // =====================================================
 
         let searchTimeout;
+        let searchController = null;
+
+        async function searchCategories(term) {
+
+            // Cancel the previous request if it is still running
+            if (searchController) {
+                searchController.abort();
+            }
+
+            searchController = new AbortController();
+
+            categoryTable.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Searching test categories...
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const url =
+                    '@Url.Action("SearchCategoriesLive", "Manager")' +
+                    '?term=' + encodeURIComponent(term);
+
+                const response = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    signal: searchController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error("Unable to load test categories.");
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    categoryTable.innerHTML = `
+                        <tr>
+                            <td colspan="5"
+                                class="text-center text-muted py-3">
+                                No active test categories found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let rows = "";
+
+                data.forEach(function (item) {
+
+                    // Support camelCase and PascalCase JSON properties
+                    const id =
+                        item.categoryId ?? item.CategoryId ??
+                        item.categoryID ?? item.CategoryID;
+
+                    const rawName =
+                        item.categoryName ?? item.CategoryName ?? "";
+
+                    const rawDescription =
+                        item.categoryDescription ??
+                        item.CategoryDescription ?? "";
+
+                    const isActive =
+                        item.isActive ?? item.IsActive ?? true;
+
+                    const count =
+                        item.testTypeCount ??
+                        item.TestTypeCount ?? 0;
+
+                    if (id == null) return;
+
+                    const name = escapeHtml(rawName);
+                    const description = escapeHtml(
+                        rawDescription || "No description available"
+                    );
+
+                    const statusBadge = isActive
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-danger">Inactive</span>';
+
+                    const detailsUrl =
+                        '@Url.Action("CategoryDetails", "Manager")' +
+                        '?id=' + encodeURIComponent(id);
+
+                    const editUrl =
+                        '@Url.Action("EditCategory", "Manager")' +
+                        '?id=' + encodeURIComponent(id);
+
+                    rows += `
+                        <tr>
+                            <td class="fw-semibold blue-text">
+                                ${name}
+                            </td>
+
+                            <td>${description}</td>
+
+                            <td>${Number(count) || 0}</td>
+
+                            <td>${statusBadge}</td>
+
+                            <td>
+                                <a href="${detailsUrl}"
+                                   class="btn btn-sm btn-outline-info me-1"
+                                   title="View category">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <a href="${editUrl}"
+                                   class="btn btn-sm btn-outline-primary me-1"
+                                   title="Edit category">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                ${isActive ? `
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger deactivate-category-btn"
+                                            data-id="${escapeHtml(id)}"
+                                            data-name="${name}"
+                                            title="Deactivate category">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                ` : ""}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (rows === "") {
+                    rows = `
+                        <tr>
+                            <td colspan="5"
+                                class="text-center text-muted py-3">
+                                No matching test categories found.
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                categoryTable.innerHTML = rows;
+
+            } catch (error) {
+
+                if (error.name === "AbortError") {
+                    return;
+                }
+
+                console.error("Live category search failed:", error);
+
+                categoryTable.innerHTML = `
+                    <tr>
+                        <td colspan="5"
+                            class="text-center text-danger py-3">
+                            Unable to load test categories.
+                            Please try again.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // =====================================================
+        // SEARCH AS THE USER TYPES
+        // =====================================================
 
         searchBox.addEventListener("input", function () {
 
@@ -424,124 +606,10 @@
             clearTimeout(searchTimeout);
 
             searchTimeout = setTimeout(function () {
-
-                fetch(
-                    '/Manager/SearchCategoriesLive?term=' +
-                    encodeURIComponent(term),
-                    {
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
-                        }
-                    }
-                )
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Unable to search categories.");
-                    }
-
-                    return response.json();
-                })
-                .then(data => {
-
-                    let rows = "";
-
-                    // No search results
-                    if (!Array.isArray(data) || data.length === 0) {
-
-                        rows = `
-                            <tr>
-                                <td colspan="5"
-                                    class="text-center text-muted py-3">
-                                    No categories found.
-                                </td>
-                            </tr>
-                        `;
-
-                    } else {
-
-                        data.forEach(item => {
-
-                            // Support common JSON property casing
-                            const id =
-                                item.categoryId ?? item.categoryID;
-
-                            const name = escapeHtml(
-                                item.categoryName ?? ""
-                            );
-
-                            const description = escapeHtml(
-                                item.categoryDescription ?? ""
-                            );
-
-                            const isActive =
-                                item.isActive ?? item.IsActive ?? false;
-
-                            const testTypeCount =
-                                item.testTypeCount ??
-                                item.TestTypeCount ?? 0;
-
-                            // Status badge
-                            const status = isActive
-                                ? '<span class="badge bg-success">Active</span>'
-                                : '<span class="badge bg-danger">Inactive</span>';
-
-                            rows += `
-                                <tr>
-                                    <td class="fw-semibold blue-text">
-                                        ${name}
-                                    </td>
-
-                                    <td>
-                                        ${description}
-                                    </td>
-
-                                    <td>
-                                        ${testTypeCount}
-                                    </td>
-
-                                    <td>
-                                        ${status}
-                                    </td>
-
-                                    <td>
-                                        <a href="/Manager/EditCategory/${encodeURIComponent(id)}"
-                                           class="btn btn-sm btn-outline-primary me-1"
-                                           title="Edit category">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger deactivate-category-btn"
-                                                data-id="${escapeHtml(id)}"
-                                                data-name="${name}"
-                                                title="Deactivate category">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    categoryTable.innerHTML = rows;
-
-                })
-                .catch(error => {
-                    console.error("Search failed:", error);
-
-                    categoryTable.innerHTML = `
-                        <tr>
-                            <td colspan="5"
-                                class="text-center text-danger py-3">
-                                Unable to load categories. Please try again.
-                            </td>
-                        </tr>
-                    `;
-                });
-
-            }, 250);
-
+                searchCategories(term);
+            }, 300);
         });
 
     });
 </script>
+

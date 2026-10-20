@@ -307,268 +307,200 @@
 <form id="antiForgeryTokenForm" class="d-none">
     @Html.AntiForgeryToken()
 </form>
-
 <script>
+
     document.addEventListener("DOMContentLoaded", function () {
 
-        const modal = document.getElementById("deleteModal");
-        const technicianIdInput = document.getElementById("deleteTechnicianId");
-        const technicianName = document.getElementById("deleteTechnicianName");
-        const cancelButton = document.getElementById("cancelDeleteBtn");
-        const deleteForm = document.getElementById("deleteForm");
-        const confirmButton = document.getElementById("confirmDeleteBtn");
-
-        const searchBox = document.getElementById("searchBox");
+        const searchInput = document.getElementById("searchBox");
         const tableBody = document.getElementById("technicianTable");
+        const statusFilter = document.getElementById("statusFilter");
 
-        const tokenInput = document.querySelector(
-            '#antiForgeryTokenForm input[name="__RequestVerificationToken"]'
-        );
+        const searchUrl = '@Url.Action("SearchTechniciansLive", "Manager")';
 
-        const antiForgeryToken = tokenInput ? tokenInput.value : "";
+        let searchTimeout;
 
-        let debounceTimer;
-        let searchRequestNumber = 0;
+        // Get active/inactive status from the selected dropdown option.
+        function getSelectedStatus() {
+            const selectedOption = statusFilter.options[statusFilter.selectedIndex];
+            const selectedUrl = selectedOption ? selectedOption.value : "";
 
-        // =========================================
-        // OPEN DEACTIVATION MODAL
-        // =========================================
-        document.addEventListener("click", function (event) {
-
-            const button = event.target.closest(".deactivate-technician-btn");
-
-            if (!button) return;
-
-            technicianIdInput.value = button.dataset.id || "";
-            technicianName.textContent = button.dataset.name || "this technician";
-
-            modal.classList.add("show");
-            modal.setAttribute("aria-hidden", "false");
-            document.body.classList.add("modal-open");
-
-            cancelButton.focus();
-        });
-
-        // =========================================
-        // CLOSE MODAL
-        // =========================================
-        function closeModal() {
-
-            modal.classList.remove("show");
-            modal.setAttribute("aria-hidden", "true");
-            document.body.classList.remove("modal-open");
-
-            technicianIdInput.value = "";
-            technicianName.textContent = "";
-
+            return selectedUrl.includes("InactiveLabTechnician")
+                ? "inactive"
+                : "active";
         }
 
-        cancelButton.addEventListener("click", closeModal);
-
-        modal.addEventListener("click", function (event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-
-        document.addEventListener("keydown", function (event) {
-
-            if (event.key === "Escape" && modal.classList.contains("show")) {
-                closeModal();
-            }
-
-        });
-
-        // =========================================
-        // PREVENT DOUBLE SUBMISSION
-        // =========================================
-        deleteForm.addEventListener("submit", function (event) {
-
-            if (!technicianIdInput.value) {
-                event.preventDefault();
-                return;
-            }
-
-            confirmButton.disabled = true;
-            cancelButton.disabled = true;
-
-            confirmButton.innerHTML =
-                '<i class="fas fa-spinner fa-spin me-1"></i> Deactivating...';
-
-        });
-
-        // =========================================
-        // HTML ENCODING FOR SEARCH RESULTS
-        // =========================================
         function escapeHtml(value) {
-
             return String(value ?? "").replace(/[&<>"']/g, function (character) {
-                const entities = {
+                return {
                     "&": "&amp;",
                     "<": "&lt;",
                     ">": "&gt;",
                     '"': "&quot;",
                     "'": "&#39;"
-                };
-
-                return entities[character];
+                }[character];
             });
-
         }
 
-        // =========================================
-        // LIVE SEARCH
-        // =========================================
-        searchBox.addEventListener("input", function () {
+        async function loadTechnicians() {
+            if (!tableBody) return;
 
-            clearTimeout(debounceTimer);
+            const term = searchInput.value.trim();
+            const status = getSelectedStatus();
 
-            const term = searchBox.value.trim();
-            const requestNumber = ++searchRequestNumber;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Searching technicians...
+                    </td>
+                </tr>`;
 
-            debounceTimer = setTimeout(async function () {
+            try {
+                const response = await fetch(
+                    searchUrl +
+                    "?term=" + encodeURIComponent(term) +
+                    "&status=" + encodeURIComponent(status)
+                );
 
-                try {
-
-                    const response = await fetch(
-                        '@Url.Action("SearchTechniciansLive", "Manager")?term=' +
-                        encodeURIComponent(term)
-                    );
-
-                    if (!response.ok) {
-                        throw new Error("Failed to load technicians.");
-                    }
-
-                    const data = await response.json();
-
-                    // Ignore older requests that finish later.
-                    if (requestNumber !== searchRequestNumber) {
-                        return;
-                    }
-
-                    if (!Array.isArray(data) || data.length === 0) {
-
-                        tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="8"
-                                    class="text-center text-muted py-3">
-                                    No technicians found.
-                                </td>
-                            </tr>
-                        `;
-
-                        return;
-                    }
-
-                    let rows = "";
-
-                    data.forEach(function (item) {
-
-                        const id = item.labTechnicianId ?? item.labTechnicianID;
-                        const name = item.name ?? "";
-                        const surname = item.surname ?? "";
-                        const isActive = item.isActive === true;
-
-                        let testTypes = "";
-
-                        if (Array.isArray(item.testTypes) && item.testTypes.length > 0) {
-
-                            testTypes = "<ul class='mb-0 ps-3'>";
-
-                            item.testTypes.forEach(function (test) {
-                                testTypes += `<li>${escapeHtml(test.testTypeName)}</li>`;
-                            });
-
-                            testTypes += "</ul>";
-
-                        } else {
-
-                            testTypes =
-                                "<span class='text-muted'>No test types assigned</span>";
-
-                        }
-
-                        const deactivateButton = isActive ? `
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-danger deactivate-technician-btn"
-                                    data-id="${escapeHtml(id)}"
-                                    data-name="${escapeHtml(name + " " + surname)}"
-                                    title="Deactivate Technician">
-                                <i class="fas fa-ban"></i>
-                            </button>
-                        ` : "";
-
-                        rows += `
-                            <tr>
-                                <td class="fw-semibold blue-text">
-                                    ${escapeHtml(surname).toUpperCase()}
-                                    ${escapeHtml(name).toUpperCase()}
-                                </td>
-
-                                <td>${escapeHtml(item.idNumber)}</td>
-
-                                <td>${escapeHtml(item.employeeNumber)}</td>
-
-                                <td>
-                                    ${item.email
-                                        ? `<a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>`
-                                        : '<span class="text-muted">No email</span>'}
-                                </td>
-
-                                <td>${escapeHtml(item.phoneNumber)}</td>
-
-                                <td>${testTypes}</td>
-
-                                <td>
-                                    ${isActive
-                                        ? '<span class="badge bg-success">Active</span>'
-                                        : '<span class="badge bg-danger">Inactive</span>'}
-                                </td>
-
-                                <td>
-                                    <a href="/Manager/TechnicianDetails/${encodeURIComponent(id)}"
-                                       class="btn btn-sm btn-outline-info me-1"
-                                       title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-
-                                    <a href="/Manager/EditTechnician/${encodeURIComponent(id)}"
-                                       class="btn btn-sm btn-outline-primary me-1"
-                                       title="Edit Technician">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-
-                                    ${deactivateButton}
-                                </td>
-                            </tr>
-                        `;
-
-                    });
-
-                    tableBody.innerHTML = rows;
-
-                } catch (error) {
-
-                    if (requestNumber !== searchRequestNumber) {
-                        return;
-                    }
-
-                    console.error("Technician search error:", error);
-
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="8"
-                                class="text-center text-danger py-3">
-                                Error loading technicians. Please try again.
-                            </td>
-                        </tr>
-                    `;
-
+                if (!response.ok) {
+                    throw new Error("Could not load technicians.");
                 }
 
-            }, 300);
+                const technicians = await response.json();
+                renderTechnicians(technicians);
 
+            } catch (error) {
+                console.error("Technician search error:", error);
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-3">
+                            Failed to load technicians. Please try again.
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        function renderTechnicians(technicians) {
+            if (!technicians || technicians.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-3">
+                            No lab technicians found.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = technicians.map(function (t) {
+                const id = Number(t.labTechnicianId);
+                const fullName =
+                    `${t.surname ?? ""} ${t.name ?? ""}`.trim().toUpperCase();
+
+                const testTypes = Array.isArray(t.testTypes) && t.testTypes.length
+                    ? `<ul class="mb-0 ps-3">${
+                        t.testTypes.map(test =>
+                            `<li>${escapeHtml(test.testTypeName?.toUpperCase())}</li>`
+                        ).join("")
+                    }</ul>`
+                    : '<span class="text-muted">No test types assigned</span>';
+
+                const statusBadge = t.isActive
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-danger">Inactive</span>';
+
+                const deactivateButton = t.isActive
+                    ? `<button type="button"
+                               class="btn btn-sm btn-outline-danger deactivate-technician-btn"
+                               data-id="${id}"
+                               data-name="${escapeHtml(`${t.name ?? ""} ${t.surname ?? ""}`)}"
+                               title="Deactivate Technician">
+                           <i class="fas fa-ban"></i>
+                       </button>`
+                    : "";
+
+                return `
+                    <tr>
+                        <td class="fw-semibold blue-text">${escapeHtml(fullName)}</td>
+                        <td>${escapeHtml(t.idNumber)}</td>
+                        <td>${escapeHtml(t.employeeNumber)}</td>
+                        <td>${
+                            t.email
+                                ? `<a href="mailto:${escapeHtml(t.email)}">${escapeHtml(t.email)}</a>`
+                                : '<span class="text-muted">No email</span>'
+                        }</td>
+                        <td>${escapeHtml(t.phoneNumber)}</td>
+                        <td>${testTypes}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <a href="/Manager/TechnicianDetails/${id}"
+                               class="btn btn-sm btn-outline-info me-1"
+                               title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            <a href="/Manager/EditTechnician/${id}"
+                               class="btn btn-sm btn-outline-primary me-1"
+                               title="Edit Technician">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            ${deactivateButton}
+                        </td>
+                    </tr>`;
+            }).join("");
+        }
+
+        // Live search while typing.
+        searchInput.addEventListener("input", function () {
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(loadTechnicians, 300);
         });
 
+        // Keep the existing dropdown navigation between active and inactive pages.
+        statusFilter.addEventListener("change", function () {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+
+        // Open your existing custom deactivation modal.
+        document.addEventListener("click", function (event) {
+            const button = event.target.closest(".deactivate-technician-btn");
+
+            if (!button) return;
+
+            document.getElementById("deleteTechnicianId").value =
+                button.dataset.id;
+
+            document.getElementById("deleteTechnicianName").textContent =
+                button.dataset.name;
+
+            const modal = document.getElementById("deleteModal");
+
+            modal.style.display = "flex";
+            modal.setAttribute("aria-hidden", "false");
+        });
+
+        // Cancel deactivation.
+        document.getElementById("cancelDeleteBtn").addEventListener("click", function () {
+            const modal = document.getElementById("deleteModal");
+
+            modal.style.display = "none";
+            modal.setAttribute("aria-hidden", "true");
+        });
+
+        // Close modal if the user clicks the overlay.
+        document.getElementById("deleteModal").addEventListener("click", function (event) {
+            if (event.target === this) {
+                this.style.display = "none";
+                this.setAttribute("aria-hidden", "true");
+            }
+        });
+
+        // Load the initial results.
+        loadTechnicians();
     });
+
 </script>

@@ -354,390 +354,355 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
+
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-    $(document).ready(function () {
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
 
+    const modal = document.getElementById("deleteModal");
+    const testIdInput = document.getElementById("deleteTestTypeId");
+    const testNameElement = document.getElementById("deleteTestName");
+    const cancelButton = document.getElementById("cancelDeleteBtn");
+    const deleteForm = document.getElementById("deleteForm");
+    const confirmButton = deleteForm?.querySelector(".confirm-delete-btn");
+    const searchBox = document.getElementById("searchBox");
+    const testTable = document.getElementById("TestTypeTable");
 
-    /* =====================================================
-    OPEN DELETE MODAL
-    ===================================================== */
-
-    $(document).on(
-    "click",
-    ".delete-test-btn",
-    function () {
-
-    var id =
-    $(this).attr("data-id");
-
-    var testName =
-    $(this).attr("data-name");
-
-
-    $("#deleteTestTypeId")
-    .val(id);
-
-
-    $("#deleteTestName")
-    .text(testName);
-
-
-    $("#deleteModal")
-    .addClass("show");
-
-
-    $("body")
-    .addClass("modal-open");
-
+    if (!modal || !testIdInput || !testNameElement ||
+    !cancelButton || !deleteForm || !confirmButton ||
+    !searchBox || !testTable) {
+    console.error("Test Types page elements could not be found.");
+    return;
     }
-    );
 
+    // =====================================================
+    // HELPER: ESCAPE HTML
+    // =====================================================
 
-    /* =====================================================
-    CLOSE DELETE MODAL
-    ===================================================== */
+    function escapeHtml(value) {
+    const element = document.createElement("div");
+    element.textContent = value == null ? "" : String(value);
+    return element.innerHTML;
+    }
+
+    // =====================================================
+    // HELPER: GET PROPERTY WITH DIFFERENT JSON CASING
+    // =====================================================
+
+    function getValue(object, ...keys) {
+    for (const key of keys) {
+    if (object[key] !== undefined && object[key] !== null) {
+    return object[key];
+    }
+    }
+
+    return "";
+    }
+
+    // =====================================================
+    // OPEN DELETE MODAL
+    // Works for both original and dynamically searched rows
+    // =====================================================
+
+    document.addEventListener("click", function (event) {
+
+    const button = event.target.closest(".delete-test-btn");
+
+    if (!button) return;
+
+    const id = button.getAttribute("data-id");
+    const name = button.getAttribute("data-name");
+
+    if (!id) return;
+
+    testIdInput.value = id;
+    testNameElement.textContent = name || "this test type";
+
+    modal.classList.add("show");
+    document.body.classList.add("modal-open");
+
+    cancelButton.focus();
+    });
+
+    // =====================================================
+    // CLOSE DELETE MODAL
+    // =====================================================
 
     function closeDeleteModal() {
+    modal.classList.remove("show");
+    document.body.classList.remove("modal-open");
 
-    $("#deleteModal")
-    .removeClass("show");
-
-
-    $("body")
-    .removeClass("modal-open");
-
-
-    $("#deleteTestTypeId")
-    .val("");
-
-
-    $("#deleteTestName")
-    .text("");
-
+    testIdInput.value = "";
+    testNameElement.textContent = "";
     }
 
+    cancelButton.addEventListener("click", closeDeleteModal);
 
-    /* =====================================================
-    CANCEL
-    ===================================================== */
-
-    $("#cancelDeleteBtn")
-    .on(
-    "click",
-    function () {
-
+    // Click outside modal
+    modal.addEventListener("click", function (event) {
+    if (event.target === modal) {
     closeDeleteModal();
-
     }
-    );
+    });
 
-
-    /* =====================================================
-    CLICK OUTSIDE MODAL
-    ===================================================== */
-
-    $("#deleteModal")
-    .on(
-    "click",
-    function (event) {
-
-    if (event.target === this) {
-
+    // Escape key
+    document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal.classList.contains("show")) {
     closeDeleteModal();
+    }
+    });
 
+    // =====================================================
+    // PREVENT DOUBLE DELETE
+    // =====================================================
+
+    deleteForm.addEventListener("submit", function () {
+    confirmButton.disabled = true;
+
+    confirmButton.innerHTML = `
+    <i class="fas fa-spinner fa-spin me-1"></i>
+    Deleting...
+    `;
+    });
+
+    // =====================================================
+    // LIVE SEARCH TEST TYPES
+    // =====================================================
+
+    let searchTimeout;
+    let searchController = null;
+
+    async function searchTestTypes(term) {
+
+    // Cancel any previous search request
+    if (searchController) {
+    searchController.abort();
     }
 
-    }
-    );
+    searchController = new AbortController();
 
-
-    /* =====================================================
-    ESCAPE KEY
-    ===================================================== */
-
-    $(document)
-    .on(
-    "keydown",
-    function (event) {
-
-    if (event.key === "Escape") {
-
-    if (
-    $("#deleteModal")
-    .hasClass("show")
-    ) {
-
-    closeDeleteModal();
-
-    }
-
-    }
-
-    }
-    );
-
-
-    /* =====================================================
-    LIVE SEARCH
-    ===================================================== */
-
-    $("#searchBox")
-    .on(
-    "input",
-    function () {
-
-    var term =
-    $(this)
-    .val()
-    .trim();
-
-
-    $.ajax({
-
-    url:
-    '@Url.Action("SearchTestTypesLive", "Manager")',
-
-    type: "GET",
-
-    data: {
-    term: term
-    },
-
-
-    success: function (data) {
-
-
-    var tableBody =
-    $("#TestTypeTable");
-
-
-    tableBody.empty();
-
-
-    /* =========================
-    NO RESULTS
-    ========================= */
-
-    if (
-    !data ||
-    data.length === 0
-    ) {
-
-    tableBody.append(`
-
+    testTable.innerHTML = `
     <tr>
-
-    <td colspan="4"
-    class="text-center text-muted py-3">
-
-    No test types found
-
+    <td colspan="5" class="text-center text-muted py-3">
+    <i class="fas fa-spinner fa-spin me-2"></i>
+    Searching test types...
     </td>
-
     </tr>
+    `;
 
-    `);
+    try {
+
+    const url =
+    '@Url.Action("SearchTestTypesLive", "Manager")' +
+    '?term=' + encodeURIComponent(term);
+
+    const response = await fetch(url, {
+    method: "GET",
+    headers: {
+    "X-Requested-With": "XMLHttpRequest"
+    },
+    signal: searchController.signal
+    });
+
+    if (!response.ok) {
+    throw new Error("Unable to search test types.");
+    }
+
+    const data = await response.json();
+
+    let rows = "";
+
+    // No results
+    if (!Array.isArray(data) || data.length === 0) {
+
+    testTable.innerHTML = `
+    <tr>
+    <td colspan="5"
+    class="text-center text-muted py-3">
+    No test types found.
+    </td>
+    </tr>
+    `;
 
     return;
-
     }
 
+    // Build table rows
+    data.forEach(function (test) {
 
-    /* =========================
-    RESULTS
-    ========================= */
+    const id = getValue(
+    test,
+    "testTypeId",
+    "TestTypeId",
+    "testTypeID",
+    "TestTypeID"
+    );
 
-    $.each(
-    data,
-    function (index, test) {
+    if (id === "") return;
 
+    const name = getValue(
+    test,
+    "name",
+    "Name",
+    "testTypeName",
+    "TestTypeName"
+    );
 
-    var testName =
-    test.name ?? "";
+    const category = getValue(
+    test,
+    "category",
+    "Category",
+    "categoryName",
+    "CategoryName"
+    );
 
+    const turnaround = getValue(
+    test,
+    "turnaround",
+    "Turnaround",
+    "turnAroundTime",
+    "TurnAroundTime"
+    );
 
-    var category =
-    test.category ?? "";
+    const isActiveValue = getValue(
+    test,
+    "isActive",
+    "IsActive"
+    );
 
+    const isActive =
+    isActiveValue === true ||
+    isActiveValue === 1 ||
+    String(isActiveValue).toLowerCase() === "true";
 
-    var turnaround =
-    test.turnaround ?? "";
+    const safeName = escapeHtml(name);
+    const safeCategory = escapeHtml(
+    category || "Not assigned"
+    );
 
+    const safeTurnaround = escapeHtml(
+    turnaround === "" ? "N/A" : turnaround
+    );
 
-    var testTypeId =
-    test.testTypeID;
+    const safeId = encodeURIComponent(id);
 
+    const statusBadge = isActive
+    ? '<span class="badge bg-success">Active</span>'
+    : '<span class="badge bg-danger">Inactive</span>';
 
-    /*
-    * Escape HTML
-    */
+    // Generate MVC URLs
+    const detailsUrl =
+    '@Url.Action("TestTypeDetails", "Manager")' +
+    '?id=' + safeId;
 
-    var safeTestName =
-    $("<div>")
-    .text(testName)
-    .html();
+    const editUrl =
+    '@Url.Action("EditTestType", "Manager")' +
+    '?id=' + safeId;
 
-
-    var safeCategory =
-    $("<div>")
-    .text(category)
-    .html();
-
-
-    /*
-    * CREATE ROW
-    */
-
-    var row = `
-
+    rows += `
     <tr>
 
-    <!-- TEST NAME -->
-
     <td class="fw-semibold">
-
-    ${safeTestName}
-
+    ${safeName}
     </td>
 
-
-    <!-- CATEGORY -->
-
     <td>
-
-    <span class="badge bg-info text-dark">
-
+    <span class="fw-semibold">
     ${safeCategory}
-
     </span>
-
     </td>
-
-
-    <!-- TURNAROUND -->
 
     <td>
-
-    <span class="badge bg-secondary">
-
-    ${turnaround} min
-
+    <span class="badge bg-info text-dark">
+    ${safeTurnaround} min
     </span>
-
     </td>
 
-
-    <!-- ACTIONS -->
+    <td>
+    ${statusBadge}
+    </td>
 
     <td class="text-center">
 
-
-    <!-- DETAILS -->
-
-    <a href="/Manager/TestTypeDetails/${testTypeId}"
-    class="btn btn-sm btn-outline-info me-1">
-
-    <i class="fas fa-eye me-1"></i>
-
-    Details
-
+    <a href="${detailsUrl}"
+    class="btn btn-sm btn-outline-info me-1"
+    title="View details">
+    <i class="fas fa-eye"></i>
     </a>
 
-
-    <!-- EDIT -->
-
-    <a href="/Manager/EditTestType/${testTypeId}"
-    class="btn btn-sm btn-outline-primary me-1">
-
-    <i class="fas fa-edit me-1"></i>
-
-    Edit
-
+    <a href="${editUrl}"
+    class="btn btn-sm btn-outline-primary me-1"
+    title="Edit test type">
+    <i class="fas fa-edit"></i>
     </a>
 
-
-    <!-- DELETE -->
-
+    ${isActive ? `
     <button type="button"
     class="btn btn-sm btn-outline-danger delete-test-btn"
-    data-id="${testTypeId}"
-    data-name="${safeTestName}">
-
-    <i class="fas fa-trash-alt me-1"></i>
-
-    Delete
-
+    data-id="${escapeHtml(id)}"
+    data-name="${safeName}"
+    title="Delete test type">
+    <i class="fas fa-ban"></i>
     </button>
-
+    ` : ""}
 
     </td>
 
     </tr>
-
     `;
+    });
 
-
-    tableBody.append(row);
-
-    }
-    );
-
-    },
-
-
-    /* =================================================
-    SEARCH ERROR
-    ================================================= */
-
-    error: function () {
-
-    $("#TestTypeTable")
-    .html(`
-
+    if (rows === "") {
+    testTable.innerHTML = `
     <tr>
-
-    <td colspan="4"
-    class="text-center text-danger py-3">
-
-    Search failed. Please try again.
-
+    <td colspan="5"
+    class="text-center text-muted py-3">
+    No matching test types found.
     </td>
-
     </tr>
-
-    `);
-
+    `;
+    return;
     }
 
+    testTable.innerHTML = rows;
+
+    } catch (error) {
+
+    // Ignore cancelled requests
+    if (error.name === "AbortError") {
+    return;
+    }
+
+    console.error("Test type search failed:", error);
+
+    testTable.innerHTML = `
+    <tr>
+    <td colspan="5"
+    class="text-center text-danger py-3">
+    Unable to load test types. Please try again.
+    </td>
+    </tr>
+    `;
+    }
+    }
+
+    // =====================================================
+    // SEARCH WHEN USER TYPES
+    // =====================================================
+
+    searchBox.addEventListener("input", function () {
+
+    const term = this.value.trim();
+
+    clearTimeout(searchTimeout);
+
+    searchTimeout = setTimeout(function () {
+    searchTestTypes(term);
+    }, 300);
     });
 
-    }
-    );
-
-
-    /* =====================================================
-    PREVENT DOUBLE DELETE
-    ===================================================== */
-
-    $("#deleteForm")
-    .on(
-    "submit",
-    function () {
-
-    $(".confirm-delete-btn")
-    .prop("disabled", true)
-    .html(`
-
-    <i class="fas fa-spinner fa-spin me-1"></i>
-
-    Deleting...
-
-    `);
-
-    }
-    );
-
     });
-
 </script>

@@ -347,398 +347,218 @@
      JAVASCRIPT
      ========================================================= -->
 
+
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    // =====================================================
-    // ELEMENTS
-    // =====================================================
+        const modal = document.getElementById("cancelOrderModal");
+        const orderIdInput = document.getElementById("cancelOrderId");
+        const orderNumber = document.getElementById("cancelOrderNumber");
+        const closeButton = document.getElementById("closeCancelOrderBtn");
+        const cancelForm = document.getElementById("cancelOrderForm");
+        const confirmButton = document.getElementById("confirmCancelOrderBtn");
+        const searchBox = document.getElementById("searchBox");
+        const orderTable = document.getElementById("orderTableBody");
 
-    const modal = document.getElementById("cancelOrderModal");
+        const originalConfirmButtonHtml = confirmButton.innerHTML;
 
-    const orderIdInput =
-        document.getElementById("cancelOrderId");
+        const searchUrl = '@Url.Action("SearchOrders", "Manager")';
+        const detailsUrl = '@Url.Action("OrderDetails", "Manager")';
 
-    const orderNumber =
-        document.getElementById("cancelOrderNumber");
-
-    const closeButton =
-        document.getElementById("closeCancelOrderBtn");
-
-    const cancelForm =
-        document.getElementById("cancelOrderForm");
-
-    const confirmButton =
-        document.getElementById("confirmCancelOrderBtn");
-
-    const searchBox =
-        document.getElementById("searchBox");
-
-    const orderTable =
-        document.getElementById("orderTableBody");
-
-    const originalConfirmButtonHtml =
-        confirmButton.innerHTML;
-
-
-    // =====================================================
-    // OPEN CANCEL MODAL
-    // Delegated click supports AJAX-generated buttons
-    // =====================================================
-
-    document.addEventListener("click", function (event) {
-
-        const button =
-            event.target.closest(".cancel-order-btn");
-
-        if (!button) {
-            return;
+        // Escape HTML to safely display database values.
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = String(value ?? "");
+            return div.innerHTML;
         }
 
-        orderIdInput.value = button.dataset.id;
+        // Open cancellation modal.
+        document.addEventListener("click", function (event) {
+            const button = event.target.closest(".cancel-order-btn");
 
-        orderNumber.textContent =
-            button.dataset.name || "";
+            if (!button) return;
 
-        confirmButton.disabled = false;
+            orderIdInput.value = button.dataset.id;
+            orderNumber.textContent = button.dataset.name || "";
 
-        confirmButton.innerHTML =
-            originalConfirmButtonHtml;
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = originalConfirmButtonHtml;
 
-        modal.classList.add("show");
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open");
+        });
 
-        modal.setAttribute("aria-hidden", "false");
+        // Close cancellation modal.
+        function closeModal() {
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open");
 
-        document.body.classList.add("modal-open");
+            orderIdInput.value = "";
+            orderNumber.textContent = "";
 
-    });
-
-
-    // =====================================================
-    // CLOSE MODAL
-    // =====================================================
-
-    function closeModal() {
-
-        modal.classList.remove("show");
-
-        modal.setAttribute("aria-hidden", "true");
-
-        document.body.classList.remove("modal-open");
-
-        orderIdInput.value = "";
-
-        orderNumber.textContent = "";
-
-        confirmButton.disabled = false;
-
-        confirmButton.innerHTML =
-            originalConfirmButtonHtml;
-
-    }
-
-
-    // =====================================================
-    // KEEP ORDER BUTTON
-    // =====================================================
-
-    closeButton.addEventListener("click", function () {
-
-        closeModal();
-
-    });
-
-
-    // =====================================================
-    // CLICK OUTSIDE MODAL
-    // =====================================================
-
-    modal.addEventListener("click", function (event) {
-
-        if (event.target === modal) {
-
-            closeModal();
-
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = originalConfirmButtonHtml;
         }
 
-    });
+        closeButton.addEventListener("click", closeModal);
 
-
-    // =====================================================
-    // ESCAPE KEY
-    // =====================================================
-
-    document.addEventListener("keydown", function (event) {
-
-        if (
-            event.key === "Escape" &&
-            modal.classList.contains("show")
-        ) {
-            closeModal();
-        }
-
-    });
-
-
-    // =====================================================
-    // PREVENT DOUBLE SUBMISSION
-    // =====================================================
-
-    cancelForm.addEventListener("submit", function (event) {
-
-        if (!orderIdInput.value) {
-
-            event.preventDefault();
-
-            return;
-        }
-
-        confirmButton.disabled = true;
-
-        confirmButton.innerHTML = `
-            <i class="fas fa-spinner fa-spin me-1"></i>
-            Cancelling...
-        `;
-
-    });
-
-
-    // =====================================================
-    // LIVE ORDER SEARCH
-    // =====================================================
-
-    let searchController = null;
-
-    searchBox.addEventListener("input", async function () {
-
-        const term = this.value.trim();
-
-        // Cancel any previous search request
-        if (searchController) {
-            searchController.abort();
-        }
-
-        searchController = new AbortController();
-
-        try {
-
-            const response = await fetch(
-                '@Url.Action("SearchOrders", "Manager")' +
-                '?term=' + encodeURIComponent(term),
-                {
-                    method: "GET",
-                    signal: searchController.signal
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Search request failed.");
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
             }
+        });
 
-            const data = await response.json();
+        document.addEventListener("keydown", function (event) {
+            if (
+                event.key === "Escape" &&
+                modal.classList.contains("show")
+            ) {
+                closeModal();
+            }
+        });
 
-            if (!data || data.length === 0) {
-
-                orderTable.innerHTML = `
-                    <tr>
-                        <td colspan="6"
-                            class="text-center text-muted py-3">
-                            No orders found.
-                        </td>
-                    </tr>
-                `;
-
+        // Prevent double submission.
+        cancelForm.addEventListener("submit", function (event) {
+            if (!orderIdInput.value) {
+                event.preventDefault();
                 return;
             }
 
-            let rows = "";
+            confirmButton.disabled = true;
+            confirmButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...';
+        });
 
-            data.forEach(function (o) {
+        // Create the correct status badge.
+        function getStatusBadge(status) {
+            const safeStatus = escapeHtml(status);
 
-                const id = Number(o.orderID);
+            switch (status) {
+                case "Ordered":
+                    return '<span class="badge bg-warning text-dark">Ordered</span>';
 
-                const orderNo =
-                    escapeHtml(o.orderNumber);
+                case "Completed":
+                    return '<span class="badge bg-success">Completed</span>';
 
-                const supplier =
-                    escapeHtml(o.supplierName);
+                case "Cancelled":
+                    return '<span class="badge bg-danger">Cancelled</span>';
 
-                const date =
-                    escapeHtml(o.orderDate);
+                case "PartiallyCompleted":
+                    return '<span class="badge bg-info text-dark">Partially Completed</span>';
 
-                const status =
-                    String(o.status ?? "");
+                default:
+                    return `<span class="badge bg-secondary">${safeStatus}</span>`;
+            }
+        }
 
-                const itemCount =
-                    Number(o.itemCount) || 0;
+        // Render search results.
+        function renderOrders(data) {
+            if (!data || data.length === 0) {
+                orderTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            No orders found.
+                        </td>
+                    </tr>`;
+                return;
+            }
 
+            orderTable.innerHTML = data.map(function (order) {
+                const id = Number(order.orderId);
+                const orderNo = escapeHtml(order.orderNumber);
+                const supplier = escapeHtml(order.supplierName);
+                const date = escapeHtml(order.orderDate);
+                const itemCount = Number(order.itemCount) || 0;
+                const status = String(order.status ?? "");
 
-                // =========================================
-                // STATUS BADGE
-                // =========================================
-
-                let badge = "";
-
-                if (status === "Ordered") {
-
-                    badge = `
-                        <span class="badge bg-warning text-dark">
-                            Ordered
-                        </span>
-                    `;
-
-                }
-                else if (status === "Completed") {
-
-                    badge = `
-                        <span class="badge bg-success">
-                            Completed
-                        </span>
-                    `;
-
-                }
-                else if (status === "Cancelled") {
-
-                    badge = `
-                        <span class="badge bg-danger">
-                            Cancelled
-                        </span>
-                    `;
-
-                }
-                else if (status === "PartiallyCompleted") {
-
-                    badge = `
-                        <span class="badge bg-info text-dark">
-                            Partially Completed
-                        </span>
-                    `;
-
-                }
-                else {
-
-                    badge = `
-                        <span class="badge bg-secondary">
-                            ${escapeHtml(status)}
-                        </span>
-                    `;
-
-                }
-
-
-                // =========================================
-                // CANCEL BUTTON
-                // Only for Ordered orders
-                // =========================================
-
-                let cancelButton = "";
-
-                if (
+                const cancelButton =
                     status === "Ordered" &&
                     Number.isSafeInteger(id) &&
                     id > 0
-                ) {
-
-                    cancelButton = `
+                    ? `
                         <button type="button"
                                 class="btn btn-sm btn-outline-danger cancel-order-btn"
                                 data-id="${id}"
                                 data-name="${orderNo}"
                                 title="Cancel order"
                                 aria-label="Cancel order ${orderNo}">
+                            Cancel order
+                        </button>`
+                    : "";
 
-                            <i class="fas fa-ban"></i>
+                // Match the MVC action's conventional ID route.
+                const detailsLink =
+                    `${detailsUrl}/${encodeURIComponent(id)}`;
 
-                        </button>
-                    `;
-
-                }
-
-
-                // =========================================
-                // ORDER ROW
-                // =========================================
-
-                rows += `
+                return `
                     <tr>
-
-                        <td class="fw-semibold">
-                            ${orderNo}
-                        </td>
-
+                        <td class="fw-semibold">${orderNo}</td>
+                        <td>${supplier}</td>
+                        <td>${date}</td>
+                        <td>${itemCount}</td>
+                        <td>${getStatusBadge(status)}</td>
                         <td>
-                            ${supplier}
-                        </td>
-
-                        <td>
-                            ${date}
-                        </td>
-
-                        <td>
-                            ${itemCount}
-                        </td>
-
-                        <td>
-                            ${badge}
-                        </td>
-
-                        <td>
-
-                            <a href="@Url.Action("OrderDetails", "Manager")?id=${id}"
+                            <a href="${detailsLink}"
                                class="btn btn-sm btn-outline-info me-1"
-                               aria-label="View order ${orderNo}">
-
-                                <i class="fas fa-eye"></i>
-
+                               title="View order">
+                                View/Manager
                             </a>
-
                             ${cancelButton}
-
                         </td>
-
-                    </tr>
-                `;
-
-            });
-
-            orderTable.innerHTML = rows;
-
+                    </tr>`;
+            }).join("");
         }
-        catch (error) {
 
-            if (error.name === "AbortError") {
-                return;
+        // Live search by order number.
+        let searchController = null;
+
+        searchBox.addEventListener("input", async function () {
+            const term = this.value.trim();
+
+            if (searchController) {
+                searchController.abort();
             }
 
-            console.error("Order search failed:", error);
+            searchController = new AbortController();
 
             orderTable.innerHTML = `
                 <tr>
-                    <td colspan="6"
-                        class="text-center text-danger py-3">
-                        Search failed. Please try again.
+                    <td colspan="6" class="text-center text-muted py-3">
+                        Searching...
                     </td>
-                </tr>
-            `;
+                </tr>`;
 
-        }
+            try {
+                const response = await fetch(
+                    `${searchUrl}?term=${encodeURIComponent(term)}`,
+                    {
+                        method: "GET",
+                        signal: searchController.signal
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Search request failed.");
+                }
+
+                const data = await response.json();
+                renderOrders(data);
+
+            } catch (error) {
+                if (error.name === "AbortError") return;
+
+                console.error("Order search failed:", error);
+
+                orderTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger py-3">
+                            Search failed. Please try again.
+                        </td>
+                    </tr>`;
+            }
+        });
 
     });
-
-
-    // =====================================================
-    // ESCAPE HTML
-    // =====================================================
-
-    function escapeHtml(value) {
-
-        const div = document.createElement("div");
-
-        div.textContent = String(value ?? "");
-
-        return div.innerHTML;
-
-    }
-
-});
 </script>
