@@ -1,4 +1,5 @@
-﻿@model HemaCore.ViewModels.Patient.EditPatientProfileViewModel
+﻿
+@model HemaCore.ViewModels.Patient.EditPatientProfileViewModel
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
@@ -27,6 +28,20 @@
     .category-group.collapsed .category-chevron {
         transform: rotate(-90deg);
     }
+
+    /* Validation summary: remove the red strip at the top */
+    .profile-validation-summary {
+        display: none;
+        background: transparent;
+        border: none;
+        color: #dc3545;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+
+        .profile-validation-summary:not(:empty) {
+            display: block;
+        }
 </style>
 
 <div class="container-fluid p-4">
@@ -54,7 +69,10 @@
         <form asp-action="EditProfile" method="post" id="editProfileForm" novalidate>
             @Html.AntiForgeryToken()
 
-            <div asp-validation-summary="All" class="alert alert-danger"></div>
+            <!-- VALIDATION SUMMARY: no red background or strip -->
+            <div asp-validation-summary="All"
+                 class="profile-validation-summary text-danger"
+                 role="alert"></div>
 
             <!-- ACCOUNT -->
             <div class="mb-5">
@@ -63,6 +81,7 @@
                     Account Information
                 </h5>
                 <hr />
+
                 <div class="row">
                     <div class="col-md-12">
                         <label asp-for="Email" class="form-label fw-semibold">
@@ -81,38 +100,54 @@
                     Personal Information
                 </h5>
                 <hr />
+
                 <div class="row g-3">
+
                     <div class="col-md-6">
-                        <label asp-for="Name" class="form-label fw-semibold">First Name *</label>
+                        <label asp-for="Name" class="form-label fw-semibold">
+                            First Name *
+                        </label>
                         <input asp-for="Name" class="form-control" />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Surname" class="form-label fw-semibold">Last Name *</label>
+                        <label asp-for="Surname" class="form-label fw-semibold">
+                            Last Name *
+                        </label>
                         <input asp-for="Surname" class="form-control" />
                         <span asp-validation-for="Surname" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="IDNumber" class="form-label fw-semibold">ID Number *</label>
+                        <label asp-for="IDNumber" class="form-label fw-semibold">
+                            ID Number *
+                        </label>
                         <input asp-for="IDNumber" class="form-control" />
                         <span asp-validation-for="IDNumber" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="PhoneNumber" class="form-label fw-semibold">Phone Number *</label>
-                        <input asp-for="PhoneNumber" class="form-control" placeholder="+27XXXXXXXXX" />
+                        <label asp-for="PhoneNumber" class="form-label fw-semibold">
+                            Phone Number *
+                        </label>
+                        <input asp-for="PhoneNumber"
+                               class="form-control"
+                               placeholder="+27XXXXXXXXX" />
                         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="DateOfBirth" class="form-label fw-semibold">Date of Birth</label>
+                        <label asp-for="DateOfBirth" class="form-label fw-semibold">
+                            Date of Birth
+                        </label>
                         <input asp-for="DateOfBirth" type="date" class="form-control" />
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Gender" class="form-label fw-semibold">Gender *</label>
+                        <label asp-for="Gender" class="form-label fw-semibold">
+                            Gender *
+                        </label>
                         <select asp-for="Gender" class="form-select">
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
@@ -132,14 +167,22 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="StreetAddress" class="form-label fw-semibold">Street Address *</label>
-                        <input asp-for="StreetAddress" class="form-control" placeholder="Enter your street address" />
+                        <label asp-for="StreetAddress" class="form-label fw-semibold">
+                            Street Address *
+                        </label>
+                        <input asp-for="StreetAddress"
+                               class="form-control"
+                               placeholder="Enter your street address" />
                         <span asp-validation-for="StreetAddress" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Province" class="form-label fw-semibold">Province *</label>
-                        <select asp-for="Province" id="provinceInput" class="form-select">
+                        <label asp-for="Province" class="form-label fw-semibold">
+                            Province *
+                        </label>
+                        <select asp-for="Province"
+                                id="provinceInput"
+                                class="form-select">
                             <option value="">-- Select Province --</option>
                             <option value="Eastern Cape">Eastern Cape</option>
                             <option value="Free State">Free State</option>
@@ -156,13 +199,16 @@
 
                     <!-- CITY -->
                     <div class="col-md-6">
-                        <label asp-for="City" class="form-label fw-semibold">City / Town *</label>
+                        <label asp-for="City" class="form-label fw-semibold">
+                            City / Town *
+                        </label>
                         <input asp-for="City"
                                id="cityInput"
                                class="form-control"
                                placeholder="Type or select a city"
                                autocomplete="off" />
                         <span asp-validation-for="City" class="text-danger"></span>
+
                         <small class="text-muted d-block mt-1" style="font-size:.78rem;">
                             <i class="fas fa-info-circle"></i>
                             Start typing to see suggestions; selecting one fills the postal code.
@@ -172,13 +218,16 @@
 
                     <!-- SUBURB -->
                     <div class="col-md-6">
-                        <label asp-for="Suburb" class="form-label fw-semibold">Suburb *</label>
+                        <label asp-for="Suburb" class="form-label fw-semibold">
+                            Suburb *
+                        </label>
                         <input asp-for="Suburb"
                                id="suburbInput"
                                class="form-control"
                                placeholder="Type or select a suburb"
                                autocomplete="off" />
                         <span asp-validation-for="Suburb" class="text-danger"></span>
+
                         <small class="text-muted d-block mt-1" style="font-size:.78rem;">
                             <i class="fas fa-info-circle"></i>
                             Start typing to see suburbs. Selecting one fills city and postal code.
@@ -187,7 +236,9 @@
 
                     <!-- POSTAL CODE -->
                     <div class="col-md-6">
-                        <label asp-for="PostalCode" class="form-label fw-semibold">Postal Code *</label>
+                        <label asp-for="PostalCode" class="form-label fw-semibold">
+                            Postal Code *
+                        </label>
                         <input asp-for="PostalCode"
                                id="postalInput"
                                class="form-control"
@@ -195,24 +246,29 @@
                                maxlength="4"
                                inputmode="numeric" />
                         <span asp-validation-for="PostalCode" class="text-danger"></span>
+
                         <small class="text-muted d-block mt-1" style="font-size:.78rem;">
                             <i class="fas fa-info-circle"></i>
                             Auto-filled when you pick a city — you can still edit it.
                         </small>
                     </div>
+
                 </div>
             </div>
 
-            <!-- CONDITIONS - categorised collapsible dropdown -->
+            <!-- MEDICAL CONDITIONS -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-notes-medical me-2"></i>
                     Medical Conditions
                 </h5>
                 <hr />
+
                 <div class="row g-4">
+
                     <div class="col-md-7">
                         <div class="border rounded p-3">
+
                             <div class="input-group mb-3">
                                 <span class="input-group-text bg-transparent">
                                     <i class="fas fa-search text-muted"></i>
@@ -224,7 +280,9 @@
                                        onkeyup="filterOptions('condition')" />
                             </div>
 
-                            <div id="conditionsList" style="max-height:300px; overflow-y:auto;">
+                            <div id="conditionsList"
+                                 style="max-height:300px; overflow-y:auto;">
+
                                 @if (Model.ConditionCategories.Any())
                                 {
                                     foreach (var category in Model.ConditionCategories.OrderBy(c => c.Name))
@@ -236,7 +294,9 @@
 
                                         if (categoryConditions.Any())
                                         {
-                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                            <div class="category-group"
+                                                 data-category="@category.Name.ToLower()">
+
                                                 <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
                                                      role="button"
                                                      onclick="toggleCategory(this)">
@@ -246,19 +306,23 @@
                                                     </span>
                                                     <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
+
                                                 <div class="category-body">
                                                     @foreach (var c in categoryConditions)
                                                     {
                                                         var isChecked = Model.SelectedConditionIds.Contains(c.Id);
+
                                                         <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
                                                              data-name="@c.Name.ToLower()"
                                                              data-category="@category.Name.ToLower()">
+
                                                             <input type="checkbox"
                                                                    name="SelectedConditionIds"
                                                                    value="@c.Id"
                                                                    id="cond_@c.Id"
                                                                    class="form-check-input"
                                                             @(isChecked ? "checked" : "") />
+
                                                             <label for="cond_@c.Id" class="form-check-label">
                                                                 @c.Name
                                                             </label>
@@ -271,8 +335,11 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted text-center py-3">No conditions available.</p>
+                                    <p class="text-muted text-center py-3">
+                                        No conditions available.
+                                    </p>
                                 }
+
                             </div>
                         </div>
                     </div>
@@ -287,19 +354,23 @@
                             <div id="selectedConditionsList"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <!-- ALLERGIES - categorised collapsible dropdown -->
+            <!-- ALLERGIES -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-allergies me-2"></i>
                     Allergies
                 </h5>
                 <hr />
+
                 <div class="row g-4">
+
                     <div class="col-md-7">
                         <div class="border rounded p-3">
+
                             <div class="input-group mb-3">
                                 <span class="input-group-text bg-transparent">
                                     <i class="fas fa-search text-muted"></i>
@@ -311,7 +382,9 @@
                                        onkeyup="filterOptions('allergy')" />
                             </div>
 
-                            <div id="allergiesList" style="max-height:300px; overflow-y:auto;">
+                            <div id="allergiesList"
+                                 style="max-height:300px; overflow-y:auto;">
+
                                 @if (Model.AllergyCategories.Any())
                                 {
                                     foreach (var category in Model.AllergyCategories.OrderBy(c => c.Name))
@@ -323,7 +396,9 @@
 
                                         if (categoryAllergies.Any())
                                         {
-                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                            <div class="category-group"
+                                                 data-category="@category.Name.ToLower()">
+
                                                 <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
                                                      role="button"
                                                      onclick="toggleCategory(this)">
@@ -333,19 +408,23 @@
                                                     </span>
                                                     <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
+
                                                 <div class="category-body">
                                                     @foreach (var a in categoryAllergies)
                                                     {
                                                         var isChecked = Model.SelectedAllergyIds.Contains(a.Id);
+
                                                         <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
                                                              data-name="@a.Name.ToLower()"
                                                              data-category="@category.Name.ToLower()">
+
                                                             <input type="checkbox"
                                                                    name="SelectedAllergyIds"
                                                                    value="@a.Id"
                                                                    id="all_@a.Id"
                                                                    class="form-check-input"
                                                             @(isChecked ? "checked" : "") />
+
                                                             <label for="all_@a.Id" class="form-check-label">
                                                                 @a.Name
                                                             </label>
@@ -358,8 +437,11 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted text-center py-3">No allergies available.</p>
+                                    <p class="text-muted text-center py-3">
+                                        No allergies available.
+                                    </p>
                                 }
+
                             </div>
                         </div>
                     </div>
@@ -374,19 +456,23 @@
                             <div id="selectedAllergiesList"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <!-- MEDICATIONS - categorised collapsible dropdown -->
+            <!-- MEDICATIONS -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-pills me-2"></i>
                     Medications
                 </h5>
                 <hr />
+
                 <div class="row g-4">
+
                     <div class="col-md-7">
                         <div class="border rounded p-3">
+
                             <div class="input-group mb-3">
                                 <span class="input-group-text bg-transparent">
                                     <i class="fas fa-search text-muted"></i>
@@ -398,7 +484,9 @@
                                        onkeyup="filterOptions('medication')" />
                             </div>
 
-                            <div id="medicationsList" style="max-height:300px; overflow-y:auto;">
+                            <div id="medicationsList"
+                                 style="max-height:300px; overflow-y:auto;">
+
                                 @if (Model.MedicationCategories.Any())
                                 {
                                     foreach (var category in Model.MedicationCategories.OrderBy(c => c.Name))
@@ -410,7 +498,9 @@
 
                                         if (categoryMedications.Any())
                                         {
-                                            <div class="category-group" data-category="@category.Name.ToLower()">
+                                            <div class="category-group"
+                                                 data-category="@category.Name.ToLower()">
+
                                                 <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
                                                      role="button"
                                                      onclick="toggleCategory(this)">
@@ -420,19 +510,23 @@
                                                     </span>
                                                     <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
+
                                                 <div class="category-body">
                                                     @foreach (var m in categoryMedications)
                                                     {
                                                         var isChecked = Model.SelectedMedicationIds.Contains(m.Id);
+
                                                         <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
                                                              data-name="@m.Name.ToLower()"
                                                              data-category="@category.Name.ToLower()">
+
                                                             <input type="checkbox"
                                                                    name="SelectedMedicationIds"
                                                                    value="@m.Id"
                                                                    id="med_@m.Id"
                                                                    class="form-check-input"
                                                             @(isChecked ? "checked" : "") />
+
                                                             <label for="med_@m.Id" class="form-check-label">
                                                                 @m.Name
                                                             </label>
@@ -445,8 +539,11 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted text-center py-3">No medications available.</p>
+                                    <p class="text-muted text-center py-3">
+                                        No medications available.
+                                    </p>
                                 }
+
                             </div>
                         </div>
                     </div>
@@ -461,20 +558,25 @@
                             <div id="selectedMedicationsList"></div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
             <!-- ACTIONS -->
             <div class="d-flex justify-content-end gap-2">
-                <a asp-controller="Patient" asp-action="Dashboard" class="btn btn-secondary">
+                <a asp-controller="Patient"
+                   asp-action="Dashboard"
+                   class="btn btn-secondary">
                     <i class="fas fa-times me-2"></i>
                     Cancel
                 </a>
+
                 <button type="submit" class="btn btn-primary-custom">
                     <i class="fas fa-save me-2"></i>
                     Save Changes
                 </button>
             </div>
+
         </form>
     </div>
 </div>
@@ -490,22 +592,34 @@
 
         // City / postal autocomplete
         if (typeof window.attachCityDropdown === "function") {
-        window.attachCityDropdown("cityInput", "postalInput", "provinceInput");
+        window.attachCityDropdown(
+        "cityInput",
+        "postalInput",
+        "provinceInput"
+        );
         }
 
         // Suburb autocomplete
         if (typeof window.attachSuburbDropdown === "function") {
-        window.attachSuburbDropdown("suburbInput", "cityInput", "postalInput", "provinceInput");
+        window.attachSuburbDropdown(
+        "suburbInput",
+        "cityInput",
+        "postalInput",
+        "provinceInput"
+        );
         }
+
+        initSelectedBadges();
         });
 
         // ================================================================
-        // CATEGORY DROPDOWN TOGGLE (no Bootstrap dependency)
+        // CATEGORY DROPDOWN TOGGLE
         // ================================================================
         function toggleCategory(header) {
-        const group = header.closest('.category-group');
+        const group = header.closest(".category-group");
+
         if (group) {
-        group.classList.toggle('collapsed');
+        group.classList.toggle("collapsed");
         }
         }
 
@@ -513,37 +627,65 @@
         // MEDICAL HISTORY – SEARCH FILTER
         // ================================================================
         function filterOptions(type) {
-        const inputId = type === 'condition' ? 'conditionSearch'
-        : type === 'allergy' ? 'allergySearch'
-        : 'medicationSearch';
 
-        const listId = type === 'condition' ? 'conditionsList'
-        : type === 'allergy' ? 'allergiesList'
-        : 'medicationsList';
+        const inputId = type === "condition"
+        ? "conditionSearch"
+        : type === "allergy"
+        ? "allergySearch"
+        : "medicationSearch";
 
-        const term = document.getElementById(inputId).value.toLowerCase().trim();
-        const groups = document.querySelectorAll('#' + listId + ' .category-group');
+        const listId = type === "condition"
+        ? "conditionsList"
+        : type === "allergy"
+        ? "allergiesList"
+        : "medicationsList";
+
+        const searchInput = document.getElementById(inputId);
+
+        if (!searchInput) {
+        return;
+        }
+
+        const term = searchInput.value.toLowerCase().trim();
+
+        const groups = document.querySelectorAll(
+        "#" + listId + " .category-group"
+        );
 
         groups.forEach(group => {
+
         let visibleItems = 0;
-        const items = group.querySelectorAll('.option-item');
-        const categoryName = group.getAttribute('data-category') || '';
+
+        const items = group.querySelectorAll(".option-item");
+        const categoryName = group.getAttribute("data-category") || "";
 
         items.forEach(item => {
-        const name = item.getAttribute('data-name') || '';
-        const matches = term === '' || name.includes(term) || categoryName.includes(term);
-        item.style.display = matches ? 'flex' : 'none';
-        if (matches) visibleItems++;
+
+        const name = item.getAttribute("data-name") || "";
+
+        const matches =
+        term === "" ||
+        name.includes(term) ||
+        categoryName.includes(term);
+
+        item.style.display = matches ? "flex" : "none";
+
+        if (matches) {
+        visibleItems++;
+        }
         });
 
         if (visibleItems > 0) {
-        group.style.display = 'block';
-        // Auto-expand while searching so matches are visible
-        if (term !== '') {
-        group.classList.remove('collapsed');
+
+        group.style.display = "block";
+
+        // Expand categories while searching.
+        if (term !== "") {
+        group.classList.remove("collapsed");
         }
+
         } else {
-        group.style.display = 'none';
+        group.style.display = "none";
         }
         });
         }
@@ -552,65 +694,102 @@
         // MEDICAL HISTORY – SELECTED BADGES
         // ================================================================
         function initSelectedBadges() {
+
         const mappings = [
         {
         checkboxes: 'input[name="SelectedConditionIds"]',
-        container: 'selectedConditionsList',
-        empty: 'No conditions selected'
+        container: "selectedConditionsList",
+        empty: "No conditions selected"
         },
         {
         checkboxes: 'input[name="SelectedAllergyIds"]',
-        container: 'selectedAllergiesList',
-        empty: 'No allergies selected'
+        container: "selectedAllergiesList",
+        empty: "No allergies selected"
         },
         {
         checkboxes: 'input[name="SelectedMedicationIds"]',
-        container: 'selectedMedicationsList',
-        empty: 'No medications selected'
+        container: "selectedMedicationsList",
+        empty: "No medications selected"
         }
         ];
 
         mappings.forEach(map => {
+
         document.querySelectorAll(map.checkboxes).forEach(cb => {
-        cb.addEventListener('change', () => renderBadges(map));
+        cb.addEventListener("change", () => renderBadges(map));
         });
+
         renderBadges(map);
         });
         }
 
         function renderBadges(map) {
+
         const container = document.getElementById(map.container);
-        const checked = Array.from(document.querySelectorAll(map.checkboxes))
-        .filter(cb => cb.checked);
+
+        if (!container) {
+        return;
+        }
+
+        const checked = Array.from(
+        document.querySelectorAll(map.checkboxes)
+        ).filter(cb => cb.checked);
 
         if (checked.length === 0) {
-        container.innerHTML = `<div class="text-muted small">${map.empty}</div>`;
+        container.innerHTML =
+        `<div class="text-muted small">${map.empty}</div>`;
         return;
         }
 
         container.innerHTML = checked.map(cb => {
-        const label = document.querySelector(`label[for="${cb.id}"]`).innerText;
+
+        const labelElement = document.querySelector(
+        `label[for="${cb.id}"]`
+        );
+
+        const label = labelElement
+        ? labelElement.innerText.trim()
+        : "";
+
         return `
         <span class="badge bg-primary me-1 mb-1">
-        ${label}
+        ${escapeHtml(label)}
         <button type="button"
         class="btn btn-sm text-white p-0 ms-1"
+        aria-label="Remove ${escapeHtml(label)}"
         onclick="uncheckById('${cb.id}')">
         ×
         </button>
         </span>
         `;
-        }).join('');
+        }).join("");
+        }
+
+        // Safely encode label text before inserting it into HTML.
+        function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, function (character) {
+        const entities = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+        };
+
+        return entities[character];
+        });
         }
 
         function uncheckById(id) {
-        const cb = document.getElementById(id);
-        if (cb) {
-        cb.checked = false;
-        cb.dispatchEvent(new Event('change'));
-        }
-        }
 
-        document.addEventListener('DOMContentLoaded', initSelectedBadges);
+        const checkbox = document.getElementById(id);
+
+        if (checkbox) {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event("change", {
+        bubbles: true
+        }));
+        }
+        }
     </script>
 }

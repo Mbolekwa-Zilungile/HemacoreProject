@@ -15,6 +15,8 @@ namespace HemaCore.ViewModels
         public string FullName { get; set; } = string.Empty;
 
         [Phone(ErrorMessage = "Invalid phone number format.")]
+        [StringLength(9, ErrorMessage = "Phone number cannot exceed 9 digits.")]
+        [RegularExpression(@"^\d{0,10}$", ErrorMessage = "Phone number must contain only digits and a maximum of 9 digits.")]
         [Display(Name = "Phone Number")]
         public string? PhoneNumber { get; set; }
     }
