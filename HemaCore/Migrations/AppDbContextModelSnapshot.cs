@@ -1553,7 +1553,7 @@ namespace HemaCore.Migrations
             modelBuilder.Entity("HemaCore.Models.Consumable", b =>
                 {
                     b.HasOne("HemaCore.Models.Supplier", "Supplier")
-                        .WithMany()
+                        .WithMany("Consumables")
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1984,6 +1984,11 @@ namespace HemaCore.Migrations
                     b.Navigation("Samples");
 
                     b.Navigation("TestTypes");
+                });
+
+            modelBuilder.Entity("HemaCore.Models.Supplier", b =>
+                {
+                    b.Navigation("Consumables");
                 });
 
             modelBuilder.Entity("HemaCore.Models.TestCategory", b =>

@@ -8,13 +8,12 @@
 <link rel="stylesheet" href="~/css/doctor.css" />
 
 <style>
-
     .alerts-page {
         max-width: 1400px;
         margin: 0 auto;
+        padding-bottom: 2rem;
     }
 
-    /* PAGE HEADER */
     .alerts-header {
         margin-bottom: 1.5rem;
     }
@@ -22,7 +21,7 @@
         .alerts-header h2 {
             color: #1e293b;
             font-weight: 700;
-            margin-bottom: 0.35rem;
+            margin-bottom: .35rem;
         }
 
             .alerts-header h2 i {
@@ -35,18 +34,23 @@
             margin: 0;
         }
 
-    /* FILTER BAR */
     .filter-bar {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 14px;
-        padding: 1rem 1.25rem;
+        padding: 1.1rem 1.25rem;
         margin-bottom: 1.25rem;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
         gap: 1rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+
+    .filter-heading {
+        color: #1e293b;
+        font-size: .95rem;
+        font-weight: 700;
+        margin-bottom: .65rem;
     }
 
     .filter-buttons {
@@ -56,15 +60,18 @@
     }
 
     .filter-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border: 1px solid #dbe3e8;
         background: #f8fafc;
         color: #475569;
         padding: 8px 14px;
         border-radius: 8px;
-        font-size: 0.85rem;
+        font-size: .85rem;
         font-weight: 600;
         text-decoration: none;
-        transition: 0.2s ease;
+        transition: .2s ease;
     }
 
         .filter-btn:hover {
@@ -75,28 +82,103 @@
 
         .filter-btn.active {
             background: #2c7da0;
-            color: white;
+            color: #fff;
             border-color: #2c7da0;
         }
 
-    .btn-outline-custom {
-        border: 1px solid #2c7da0;
-        background: white;
-        color: #2c7da0;
-        padding: 8px 14px;
+    .date-range-form {
+        display: grid;
+        grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto auto;
+        gap: 12px;
+        align-items: end;
+        padding: 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .date-field label {
+        display: block;
+        color: #334155;
+        font-size: .82rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .date-field input {
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
         border-radius: 8px;
+        background: #fff;
+        color: #1e293b;
+        outline: none;
+    }
+
+        .date-field input:focus {
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,.12);
+        }
+
+    .btn-apply-date,
+    .btn-clear-date,
+    .btn-outline-custom {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 42px;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-size: .85rem;
         font-weight: 600;
-        font-size: 0.85rem;
-        transition: 0.2s ease;
+        text-decoration: none;
+        cursor: pointer;
         white-space: nowrap;
+        transition: .2s ease;
+    }
+
+    .btn-apply-date {
+        background: #2c7da0;
+        color: #fff;
+        border: 1px solid #2c7da0;
+    }
+
+        .btn-apply-date:hover {
+            background: #1f5068;
+            border-color: #1f5068;
+        }
+
+    .btn-clear-date {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+
+        .btn-clear-date:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+    .btn-outline-custom {
+        background: #fff;
+        color: #2c7da0;
+        border: 1px solid #2c7da0;
     }
 
         .btn-outline-custom:hover {
             background: #2c7da0;
-            color: white;
+            color: #fff;
         }
 
-    /* STAT CHIPS */
+    .filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
     .alerts-stats-row {
         display: flex;
         flex-wrap: wrap;
@@ -110,7 +192,7 @@
         gap: 8px;
         padding: 9px 14px;
         border-radius: 20px;
-        font-size: 0.85rem;
+        font-size: .85rem;
         font-weight: 600;
     }
 
@@ -129,19 +211,18 @@
             color: #047857;
         }
 
-    /* ALERT CARD */
     .alert-card {
-        background: #ffffff;
+        background: #fff;
         border-radius: 15px;
         border: 1px solid #e2e8f0;
         margin-bottom: 1rem;
         overflow: hidden;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        transition: 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,.04);
+        transition: .2s ease;
     }
 
         .alert-card:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.07);
+            box-shadow: 0 6px 16px rgba(0,0,0,.07);
             transform: translateY(-1px);
         }
 
@@ -153,7 +234,6 @@
             border-left: 4px solid #cbd5e1;
         }
 
-    /* ALERT HEADER */
     .alert-header {
         padding: 1.1rem 1.25rem;
         display: flex;
@@ -167,6 +247,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        min-width: 0;
     }
 
     .alert-icon-wrap {
@@ -193,21 +274,25 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
+        min-width: 0;
     }
 
         .alert-title-text strong {
             color: #1e293b;
-            font-size: 0.95rem;
+            font-size: .95rem;
+            overflow-wrap: anywhere;
         }
 
         .alert-title-text span {
             color: #64748b;
-            font-size: 0.85rem;
+            font-size: .85rem;
         }
 
     .alert-header-right {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
         gap: 12px;
     }
 
@@ -216,17 +301,13 @@
         white-space: nowrap;
     }
 
-        .alert-date i {
-            margin-right: 4px;
-        }
-
     .mark-read-btn {
         border: none;
         background: #ecfdf5;
         color: #047857;
         padding: 7px 11px;
         border-radius: 7px;
-        font-size: 0.8rem;
+        font-size: .8rem;
         font-weight: 600;
         cursor: pointer;
     }
@@ -237,7 +318,7 @@
 
     .read-indicator {
         color: #64748b;
-        font-size: 0.8rem;
+        font-size: .8rem;
         font-weight: 600;
         white-space: nowrap;
     }
@@ -247,7 +328,6 @@
             margin-right: 4px;
         }
 
-    /* RESULT SECTION */
     .alert-body {
         padding: 1.25rem;
         display: flex;
@@ -257,11 +337,12 @@
 
     .result-block {
         flex: 1;
+        min-width: 0;
     }
 
     .result-block-label {
         color: #64748b;
-        font-size: 0.75rem;
+        font-size: .75rem;
         font-weight: 600;
         text-transform: uppercase;
         margin-bottom: 5px;
@@ -270,6 +351,7 @@
     .result-block-value {
         font-size: 1.15rem;
         font-weight: 700;
+        overflow-wrap: anywhere;
     }
 
         .result-block-value.abnormal {
@@ -281,7 +363,7 @@
         }
 
     .result-unit {
-        font-size: 0.8rem;
+        font-size: .8rem;
         font-weight: 500;
         color: #64748b;
         margin-left: 4px;
@@ -292,16 +374,16 @@
         font-size: 1rem;
     }
 
-    /* MESSAGE */
     .alert-message-row {
         background: #f8fafc;
         border-top: 1px solid #f1f5f9;
-        padding: 0.9rem 1.25rem;
+        padding: .9rem 1.25rem;
         display: flex;
         align-items: flex-start;
         gap: 10px;
         color: #475569;
-        font-size: 0.85rem;
+        font-size: .85rem;
+        overflow-wrap: anywhere;
     }
 
         .alert-message-row i {
@@ -309,34 +391,20 @@
             margin-top: 2px;
         }
 
-    /* FOOTER */
     .alert-footer {
-        padding: 0.8rem 1.25rem;
+        padding: .8rem 1.25rem;
         border-top: 1px solid #f1f5f9;
         display: flex;
         justify-content: flex-end;
     }
 
-    .action-link {
-        color: #2c7da0;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-        .action-link:hover {
-            color: #1f5068;
-            text-decoration: underline;
-        }
-
-    /* EMPTY STATE */
     .empty-state {
-        background: white;
+        background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 16px;
         padding: 4rem 2rem;
         text-align: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 6px rgba(0,0,0,.04);
     }
 
     .empty-icon {
@@ -367,7 +435,7 @@
         align-items: center;
         gap: 8px;
         background: #2c7da0;
-        color: white;
+        color: #fff;
         padding: 10px 16px;
         border-radius: 8px;
         text-decoration: none;
@@ -377,15 +445,14 @@
 
         .btn-primary-custom:hover {
             background: #1f5068;
-            color: white;
+            color: #fff;
         }
 
-    /* LEGEND */
     .legend {
         display: flex;
         gap: 1.5rem;
         margin-top: 1.5rem;
-        padding: 0.75rem 0;
+        padding: .75rem 0;
     }
 
     .legend-item {
@@ -393,7 +460,7 @@
         align-items: center;
         gap: 7px;
         color: #64748b;
-        font-size: 0.8rem;
+        font-size: .8rem;
     }
 
     .legend-color {
@@ -410,21 +477,43 @@
         background: #cbd5e1;
     }
 
-    /* MOBILE */
-    @@media (max-width: 768px) {
-
-        .filter-bar {
-            flex-direction: column;
-            align-items: stretch;
+    @@media (max-width: 900px) {
+        .date-range-form {
+            grid-template-columns: 1fr 1fr;
         }
 
+        .filter-actions {
+            justify-content: flex-start;
+        }
+    }
+
+    @@media (max-width: 768px) {
         .filter-buttons {
             width: 100%;
         }
 
-        .btn-outline-custom {
-            width: 100%;
+        .filter-btn {
+            flex: 1 1 auto;
         }
+
+        .date-range-form {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+            .filter-actions button,
+            .filter-actions a,
+            .filter-actions form {
+                width: 100%;
+            }
+
+                .filter-actions form button {
+                    width: 100%;
+                }
 
         .alert-header {
             align-items: flex-start;
@@ -452,136 +541,183 @@
         }
     }
 
-</style>
+    @@media (max-width: 420px) {
+        .alerts-header h2 {
+            font-size: 1.35rem;
+        }
 
+        .filter-bar {
+            padding: .9rem;
+        }
+
+        .alert-header,
+        .alert-body,
+        .alert-message-row,
+        .alert-footer {
+            padding-left: .9rem;
+            padding-right: .9rem;
+        }
+
+        .alert-header-right {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .empty-state {
+            padding: 2.5rem 1rem;
+        }
+    }
+</style>
 
 <div class="alerts-page fade-in">
 
-    <!-- PAGE HEADER -->
     <div class="alerts-header">
-
         <h2>
             <i class="fas fa-bell"></i>
             Abnormal Results Alerts
         </h2>
-
-        <p>
-            Review abnormal test results from your patients.
-        </p>
-
+        <p>Review abnormal test results from your patients and filter alerts by date.</p>
     </div>
 
-
-    <!-- FILTER BAR -->
     <div class="filter-bar">
 
-        <div class="filter-buttons">
+        <div>
+            <div class="filter-heading">
+                <i class="fas fa-calendar-alt me-1"></i>
+                Quick date filters
+            </div>
 
-            <a asp-controller="Doctor"
-               asp-action="Alerts"
-               asp-route-days="5"
-               class="filter-btn @(Model.SelectedDays == 5 ? "active" : "")">
-                Last 5 Days
-            </a>
+            <div class="filter-buttons">
+                <a asp-controller="Doctor"
+                   asp-action="Alerts"
+                   asp-route-days="5"
+                   class="filter-btn @(Model.SelectedDays == 5 ? "active" : "")">
+                    Last 5 Days
+                </a>
 
-            <a asp-controller="Doctor"
-               asp-action="Alerts"
-               asp-route-days="10"
-               class="filter-btn @(Model.SelectedDays == 10 ? "active" : "")">
-                Last 10 Days
-            </a>
+                <a asp-controller="Doctor"
+                   asp-action="Alerts"
+                   asp-route-days="10"
+                   class="filter-btn @(Model.SelectedDays == 10 ? "active" : "")">
+                    Last 10 Days
+                </a>
 
-            <a asp-controller="Doctor"
-               asp-action="Alerts"
-               asp-route-days="30"
-               class="filter-btn @(Model.SelectedDays == 30 ? "active" : "")">
-                Last 30 Days
-            </a>
+                <a asp-controller="Doctor"
+                   asp-action="Alerts"
+                   asp-route-days="30"
+                   class="filter-btn @(Model.SelectedDays == 30 ? "active" : "")">
+                    Last 30 Days
+                </a>
 
-            <a asp-controller="Doctor"
-               asp-action="Alerts"
-               asp-route-days="90"
-               class="filter-btn @(Model.SelectedDays == 90 ? "active" : "")">
-                Last 90 Days
-            </a>
+                <a asp-controller="Doctor"
+                   asp-action="Alerts"
+                   asp-route-days="90"
+                   class="filter-btn @(Model.SelectedDays == 90 ? "active" : "")">
+                    Last 90 Days
+                </a>
 
-            <a asp-controller="Doctor"
-               asp-action="Alerts"
-               asp-route-days="365"
-               class="filter-btn @(Model.SelectedDays == 365 ? "active" : "")">
-                All Time
-            </a>
-
+                <a asp-controller="Doctor"
+                   asp-action="Alerts"
+                   asp-route-days="365"
+                   class="filter-btn @(Model.SelectedDays == 365 ? "active" : "")">
+                    Last 365 Days
+                </a>
+            </div>
         </div>
 
+        <div>
+            <div class="filter-heading">
+                <i class="fas fa-calendar-week me-1"></i>
+                Custom date range
+            </div>
+
+            <form asp-controller="Doctor"
+                  asp-action="Alerts"
+                  method="get"
+                  class="date-range-form"
+                  id="dateRangeForm">
+
+                <div class="date-field">
+                    <label for="startDate">From date</label>
+                    <input type="date"
+                           id="startDate"
+                           name="startDate"
+                           value="@Context.Request.Query["startDate"]"
+                           required />
+                </div>
+
+                <div class="date-field">
+                    <label for="endDate">To date</label>
+                    <input type="date"
+                           id="endDate"
+                           name="endDate"
+                           value="@Context.Request.Query["endDate"]"
+                           required />
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn-apply-date">
+                        <i class="fas fa-filter"></i>
+                        Apply Dates
+                    </button>
+                </div>
+
+                <div class="filter-actions">
+                    <a asp-controller="Doctor"
+                       asp-action="Alerts"
+                       class="btn-clear-date">
+                        <i class="fas fa-times"></i>
+                        Clear Dates
+                    </a>
+                </div>
+            </form>
+        </div>
 
         @if (Model.UnreadCount > 0)
         {
-            <form asp-controller="Doctor"
-                  asp-action="MarkAllAlertsAsRead"
-                  method="post">
+            <div class="filter-actions">
+                <form asp-controller="Doctor"
+                      asp-action="MarkAllAlertsAsRead"
+                      method="post">
+                    @Html.AntiForgeryToken()
 
-                @Html.AntiForgeryToken()
-
-                <button type="submit" class="btn-outline-custom">
-                    <i class="fas fa-check-double"></i>
-                    Mark All as Read (@Model.UnreadCount)
-                </button>
-
-            </form>
+                    <button type="submit" class="btn-outline-custom">
+                        <i class="fas fa-check-double"></i>
+                        Mark All as Read (@Model.UnreadCount)
+                    </button>
+                </form>
+            </div>
         }
-
     </div>
 
-
-    <!-- STAT CHIPS -->
     <div class="alerts-stats-row">
-
         <div class="alert-stat-chip total">
-
             <i class="fas fa-list"></i>
-
             <span>
                 @Model.Alerts.Count
                 alert@(Model.Alerts.Count == 1 ? "" : "s") found
             </span>
-
         </div>
-
 
         @if (Model.UnreadCount > 0)
         {
             <div class="alert-stat-chip unread">
-
                 <i class="fas fa-exclamation-circle"></i>
-
-                <span>
-                    @Model.UnreadCount unread
-                </span>
-
+                <span>@Model.UnreadCount unread</span>
             </div>
         }
         else if (Model.Alerts.Any())
         {
             <div class="alert-stat-chip allread">
-
                 <i class="fas fa-check-circle"></i>
-
-                <span>
-                    All caught up
-                </span>
-
+                <span>All caught up</span>
             </div>
         }
-
     </div>
 
-
-    <!-- EMPTY STATE -->
     @if (!Model.Alerts.Any())
     {
         <div class="empty-state">
-
             <div class="empty-icon">
                 <i class="fas fa-bell-slash"></i>
             </div>
@@ -589,211 +725,173 @@
             <h3>No Alerts</h3>
 
             <p>
-                No abnormal results were found in the selected time period.
+                No abnormal results were found for the selected date period.
+                Try choosing a different date range.
             </p>
 
             <a asp-controller="Doctor"
                asp-action="Index"
                class="btn-primary-custom">
-
                 <i class="fas fa-home"></i>
                 Return to Dashboard
-
             </a>
-
         </div>
     }
     else
     {
-        <!-- ALERT CARDS -->
-        foreach (var alert in Model.Alerts)
+        @foreach (var alert in Model.Alerts)
         {
             <div class="alert-card @(alert.IsRead ? "read" : "unread")">
 
-                <!-- HEADER -->
                 <div class="alert-header">
-
                     <div class="alert-title">
-
                         <div class="alert-icon-wrap @(alert.IsRead ? "read" : "unread")">
-
                             <i class="fas fa-exclamation-triangle"></i>
-
                         </div>
 
                         <div class="alert-title-text">
-
-                            <strong>
-                                @alert.TestName
-                            </strong>
-
-                            <span>
-                                @alert.PatientName
-                            </span>
-
+                            <strong>@alert.TestName</strong>
+                            <span>@alert.PatientName</span>
                         </div>
-
                     </div>
 
-
                     <div class="alert-header-right">
-
                         <small class="alert-date">
-
                             <i class="fas fa-clock"></i>
-
                             @alert.CreatedDateTime.ToString("dd MMM yyyy, HH:mm")
-
                         </small>
-
 
                         @if (!alert.IsRead)
                         {
                             <form asp-controller="Doctor"
                                   asp-action="MarkAlertAsRead"
                                   method="post">
-
                                 @Html.AntiForgeryToken()
 
                                 <input type="hidden"
                                        name="alertId"
                                        value="@alert.AlertId" />
 
-                                <button type="submit"
-                                        class="mark-read-btn">
-
+                                <button type="submit" class="mark-read-btn">
                                     <i class="fas fa-check"></i>
                                     Mark Read
-
                                 </button>
-
                             </form>
                         }
                         else
                         {
                             <span class="read-indicator">
-
                                 <i class="fas fa-check-circle"></i>
                                 Read
-
                             </span>
                         }
-
                     </div>
-
                 </div>
 
-
-                <!-- RESULT -->
                 <div class="alert-body">
-
                     <div class="result-block">
-
-                        <div class="result-block-label">
-                            Abnormal Result
-                        </div>
-
+                        <div class="result-block-label">Abnormal Result</div>
                         <div class="result-block-value abnormal">
-
                             @(alert.ResultValue?.ToString("G") ?? "N/A")
 
                             @if (!string.IsNullOrWhiteSpace(alert.UnitOfMeasurement))
                             {
-                                <span class="result-unit">
-                                    @alert.UnitOfMeasurement
-                                </span>
+                                <span class="result-unit">@alert.UnitOfMeasurement</span>
                             }
-
                         </div>
-
                     </div>
-
 
                     <div class="result-divider">
                         <i class="fas fa-arrows-alt-h"></i>
                     </div>
 
-
                     <div class="result-block">
-
-                        <div class="result-block-label">
-                            Normal Range
-                        </div>
-
+                        <div class="result-block-label">Normal Range</div>
                         <div class="result-block-value normal">
-
                             @(alert.NormalRangeMin?.ToString("G") ?? "?")
                             –
                             @(alert.NormalRangeMax?.ToString("G") ?? "?")
 
                             @if (!string.IsNullOrWhiteSpace(alert.UnitOfMeasurement))
                             {
-                                <span class="result-unit">
-                                    @alert.UnitOfMeasurement
-                                </span>
+                                <span class="result-unit">@alert.UnitOfMeasurement</span>
                             }
-
                         </div>
-
                     </div>
-
                 </div>
 
-
-                <!-- MESSAGE -->
                 @if (!string.IsNullOrWhiteSpace(alert.Message))
                 {
                     <div class="alert-message-row">
-
                         <i class="fas fa-comment-medical"></i>
-
-                        <span>
-                            @alert.Message
-                        </span>
-
+                        <span>@alert.Message</span>
                     </div>
                 }
 
-
-                <!-- FOOTER -->
                 <div class="alert-footer">
-
                     <span class="text-muted small">
                         <i class="fas fa-info-circle me-1"></i>
                         Abnormal laboratory result
                     </span>
-
                 </div>
-
             </div>
         }
 
-
-        <!-- LEGEND -->
         <div class="legend">
-
             <div class="legend-item">
-
                 <div class="legend-color unread-badge"></div>
-
-                <span>
-                    Unread Alert
-                </span>
-
+                <span>Unread Alert</span>
             </div>
 
             <div class="legend-item">
-
                 <div class="legend-color read-badge"></div>
-
-                <span>
-                    Read Alert
-                </span>
-
+                <span>Read Alert</span>
             </div>
-
         </div>
-
     }
-
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("dateRangeForm");
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+
+        if (!form || !startDate || !endDate) {
+            return;
+        }
+
+        startDate.addEventListener("change", function () {
+            endDate.min = startDate.value;
+
+            if (endDate.value && endDate.value < startDate.value) {
+                endDate.value = "";
+            }
+        });
+
+        endDate.addEventListener("change", function () {
+            startDate.max = endDate.value;
+
+            if (startDate.value && startDate.value > endDate.value) {
+                startDate.value = "";
+            }
+        });
+
+        form.addEventListener("submit", function (event) {
+            if (startDate.value && endDate.value &&
+                startDate.value > endDate.value) {
+                event.preventDefault();
+                alert("The start date cannot be after the end date.");
+                startDate.focus();
+            }
+        });
+
+        if (startDate.value) {
+            endDate.min = startDate.value;
+        }
+
+        if (endDate.value) {
+            startDate.max = endDate.value;
+        }
+    });
+</script>

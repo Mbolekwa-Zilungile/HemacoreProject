@@ -5,6 +5,30 @@
     ViewBag.Title = "Edit Profile";
 }
 
+<style>
+    .category-body {
+        display: block;
+    }
+
+    .category-group.collapsed .category-body {
+        display: none;
+    }
+
+    .category-header {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .category-chevron {
+        transition: transform 0.2s ease;
+        font-size: 0.7rem;
+    }
+
+    .category-group.collapsed .category-chevron {
+        transform: rotate(-90deg);
+    }
+</style>
+
 <div class="container-fluid p-4">
 
     <div class="content-card">
@@ -179,7 +203,7 @@
                 </div>
             </div>
 
-            <!-- CONDITIONS -->
+            <!-- CONDITIONS - categorised collapsible dropdown -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-notes-medical me-2"></i>
@@ -213,27 +237,34 @@
                                         if (categoryConditions.Any())
                                         {
                                             <div class="category-group" data-category="@category.Name.ToLower()">
-                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
-                                                    <i class="fas fa-folder me-1"></i>
-                                                    @category.Name
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
+                                                     role="button"
+                                                     onclick="toggleCategory(this)">
+                                                    <span>
+                                                        <i class="fas fa-folder me-1"></i>
+                                                        @category.Name
+                                                    </span>
+                                                    <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
-                                                @foreach (var c in categoryConditions)
-                                                {
-                                                    var isChecked = Model.SelectedConditionIds.Contains(c.Id);
-                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
-                                                         data-name="@c.Name.ToLower()"
-                                                         data-category="@category.Name.ToLower()">
-                                                        <input type="checkbox"
-                                                               name="SelectedConditionIds"
-                                                               value="@c.Id"
-                                                               id="cond_@c.Id"
-                                                               class="form-check-input"
-                                                        @(isChecked ? "checked" : "") />
-                                                        <label for="cond_@c.Id" class="form-check-label">
-                                                            @c.Name
-                                                        </label>
-                                                    </div>
-                                                }
+                                                <div class="category-body">
+                                                    @foreach (var c in categoryConditions)
+                                                    {
+                                                        var isChecked = Model.SelectedConditionIds.Contains(c.Id);
+                                                        <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                             data-name="@c.Name.ToLower()"
+                                                             data-category="@category.Name.ToLower()">
+                                                            <input type="checkbox"
+                                                                   name="SelectedConditionIds"
+                                                                   value="@c.Id"
+                                                                   id="cond_@c.Id"
+                                                                   class="form-check-input"
+                                                            @(isChecked ? "checked" : "") />
+                                                            <label for="cond_@c.Id" class="form-check-label">
+                                                                @c.Name
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                         }
                                     }
@@ -259,7 +290,7 @@
                 </div>
             </div>
 
-            <!-- ALLERGIES -->
+            <!-- ALLERGIES - categorised collapsible dropdown -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-allergies me-2"></i>
@@ -293,27 +324,34 @@
                                         if (categoryAllergies.Any())
                                         {
                                             <div class="category-group" data-category="@category.Name.ToLower()">
-                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
-                                                    <i class="fas fa-folder me-1"></i>
-                                                    @category.Name
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
+                                                     role="button"
+                                                     onclick="toggleCategory(this)">
+                                                    <span>
+                                                        <i class="fas fa-folder me-1"></i>
+                                                        @category.Name
+                                                    </span>
+                                                    <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
-                                                @foreach (var a in categoryAllergies)
-                                                {
-                                                    var isChecked = Model.SelectedAllergyIds.Contains(a.Id);
-                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
-                                                         data-name="@a.Name.ToLower()"
-                                                         data-category="@category.Name.ToLower()">
-                                                        <input type="checkbox"
-                                                               name="SelectedAllergyIds"
-                                                               value="@a.Id"
-                                                               id="all_@a.Id"
-                                                               class="form-check-input"
-                                                        @(isChecked ? "checked" : "") />
-                                                        <label for="all_@a.Id" class="form-check-label">
-                                                            @a.Name
-                                                        </label>
-                                                    </div>
-                                                }
+                                                <div class="category-body">
+                                                    @foreach (var a in categoryAllergies)
+                                                    {
+                                                        var isChecked = Model.SelectedAllergyIds.Contains(a.Id);
+                                                        <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                             data-name="@a.Name.ToLower()"
+                                                             data-category="@category.Name.ToLower()">
+                                                            <input type="checkbox"
+                                                                   name="SelectedAllergyIds"
+                                                                   value="@a.Id"
+                                                                   id="all_@a.Id"
+                                                                   class="form-check-input"
+                                                            @(isChecked ? "checked" : "") />
+                                                            <label for="all_@a.Id" class="form-check-label">
+                                                                @a.Name
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                         }
                                     }
@@ -339,7 +377,7 @@
                 </div>
             </div>
 
-            <!-- MEDICATIONS -->
+            <!-- MEDICATIONS - categorised collapsible dropdown -->
             <div class="mb-5">
                 <h5 class="fw-bold mb-3">
                     <i class="fas fa-pills me-2"></i>
@@ -373,27 +411,34 @@
                                         if (categoryMedications.Any())
                                         {
                                             <div class="category-group" data-category="@category.Name.ToLower()">
-                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted">
-                                                    <i class="fas fa-folder me-1"></i>
-                                                    @category.Name
+                                                <div class="category-header bg-light p-2 rounded mb-1 fw-bold small text-uppercase text-muted d-flex justify-content-between align-items-center"
+                                                     role="button"
+                                                     onclick="toggleCategory(this)">
+                                                    <span>
+                                                        <i class="fas fa-folder me-1"></i>
+                                                        @category.Name
+                                                    </span>
+                                                    <i class="fas fa-chevron-down category-chevron"></i>
                                                 </div>
-                                                @foreach (var m in categoryMedications)
-                                                {
-                                                    var isChecked = Model.SelectedMedicationIds.Contains(m.Id);
-                                                    <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
-                                                         data-name="@m.Name.ToLower()"
-                                                         data-category="@category.Name.ToLower()">
-                                                        <input type="checkbox"
-                                                               name="SelectedMedicationIds"
-                                                               value="@m.Id"
-                                                               id="med_@m.Id"
-                                                               class="form-check-input"
-                                                        @(isChecked ? "checked" : "") />
-                                                        <label for="med_@m.Id" class="form-check-label">
-                                                            @m.Name
-                                                        </label>
-                                                    </div>
-                                                }
+                                                <div class="category-body">
+                                                    @foreach (var m in categoryMedications)
+                                                    {
+                                                        var isChecked = Model.SelectedMedicationIds.Contains(m.Id);
+                                                        <div class="option-item d-flex align-items-center gap-2 p-2 ps-4"
+                                                             data-name="@m.Name.ToLower()"
+                                                             data-category="@category.Name.ToLower()">
+                                                            <input type="checkbox"
+                                                                   name="SelectedMedicationIds"
+                                                                   value="@m.Id"
+                                                                   id="med_@m.Id"
+                                                                   class="form-check-input"
+                                                            @(isChecked ? "checked" : "") />
+                                                            <label for="med_@m.Id" class="form-check-label">
+                                                                @m.Name
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                         }
                                     }
@@ -455,6 +500,16 @@
         });
 
         // ================================================================
+        // CATEGORY DROPDOWN TOGGLE (no Bootstrap dependency)
+        // ================================================================
+        function toggleCategory(header) {
+        const group = header.closest('.category-group');
+        if (group) {
+        group.classList.toggle('collapsed');
+        }
+        }
+
+        // ================================================================
         // MEDICAL HISTORY – SEARCH FILTER
         // ================================================================
         function filterOptions(type) {
@@ -481,7 +536,15 @@
         if (matches) visibleItems++;
         });
 
-        group.style.display = visibleItems > 0 ? 'block' : 'none';
+        if (visibleItems > 0) {
+        group.style.display = 'block';
+        // Auto-expand while searching so matches are visible
+        if (term !== '') {
+        group.classList.remove('collapsed');
+        }
+        } else {
+        group.style.display = 'none';
+        }
         });
         }
 
