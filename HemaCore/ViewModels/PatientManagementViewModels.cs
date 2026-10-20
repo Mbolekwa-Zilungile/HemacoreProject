@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace HemaCore.ViewModels.DoctorViewModels
 {
@@ -17,8 +20,8 @@ namespace HemaCore.ViewModels.DoctorViewModels
         public string PhoneNumber { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;
-
         public int RequestCount { get; set; }
+
         public List<string> Conditions { get; set; } = new();
         public List<string> Allergies { get; set; } = new();
         public List<string> Medications { get; set; } = new();
@@ -33,9 +36,11 @@ namespace HemaCore.ViewModels.DoctorViewModels
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string? Address { get; set; }
+
         public List<string> Conditions { get; set; } = new();
         public List<string> Allergies { get; set; } = new();
         public List<string> Medications { get; set; } = new();
+
         public List<PatientRequestSummaryViewModel> Requests { get; set; } = new();
     }
 
@@ -62,14 +67,13 @@ namespace HemaCore.ViewModels.DoctorViewModels
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; }
 
-
         [Required(ErrorMessage = "Please enter the patient's phone number.")]
         [RegularExpression(
             @"^\+27\d{9}$",
             ErrorMessage = "Enter a valid South African phone number, e.g. +27712345678."
         )]
+        [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; } = string.Empty;
-
 
         [Required(ErrorMessage = "Gender is required")]
         [Display(Name = "Gender")]
@@ -78,11 +82,11 @@ namespace HemaCore.ViewModels.DoctorViewModels
         [Required, EmailAddress, Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
-        // Combined address string saved to the database (built in the controller)
+        // Combined address string saved to the database.
         [Display(Name = "Address")]
         public string? Address { get; set; }
 
-        // ----- Address parts (South Africa) -----
+        // South African address fields.
         [Required(ErrorMessage = "Street address is required.")]
         [Display(Name = "Street Address")]
         public string StreetAddress { get; set; } = string.Empty;
@@ -97,12 +101,16 @@ namespace HemaCore.ViewModels.DoctorViewModels
         [Required(ErrorMessage = "Please select a province.")]
         [RegularExpression(
             @"^(Eastern Cape|Free State|Gauteng|KwaZulu-Natal|Limpopo|Mpumalanga|Northern Cape|North West|Western Cape)$",
-            ErrorMessage = "Please select a valid South African province.")]
+            ErrorMessage = "Please select a valid South African province."
+        )]
         [Display(Name = "Province")]
         public string Province { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Postal code is required.")]
-        [RegularExpression(@"^\d{4}$", ErrorMessage = "Postal code must be 4 digits.")]
+        [RegularExpression(
+            @"^\d{4}$",
+            ErrorMessage = "Postal code must be 4 digits."
+        )]
         [Display(Name = "Postal Code")]
         public string PostalCode { get; set; } = string.Empty;
 
@@ -127,18 +135,23 @@ namespace HemaCore.ViewModels.DoctorViewModels
         public List<CheckOptionViewModel> AllConditions { get; set; } = new();
         public List<CheckOptionViewModel> AllAllergies { get; set; } = new();
         public List<CheckOptionViewModel> AllMedications { get; set; } = new();
+
+        // Use DateOnly? because the PatientCondition model uses DateOnly?.
+        public Dictionary<int, DateOnly?> ConditionDiagnosedDates { get; set; } = new();
+
+        public Dictionary<int, string?> AllergySeverities { get; set; } = new();
+
+        public Dictionary<int, string?> MedicationDosages { get; set; } = new();
+
+        public Dictionary<int, string?> MedicationFrequencies { get; set; } = new();
     }
 
     public class CheckOptionViewModel
     {
         public int Id { get; set; }
-
         public string Name { get; set; } = string.Empty;
-
         public bool IsSelected { get; set; }
-
         public int CategoryId { get; set; }
-
         public string CategoryName { get; set; } = string.Empty;
     }
 }

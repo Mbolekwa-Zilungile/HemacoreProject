@@ -1503,6 +1503,7 @@ namespace HemaCore.Controllers
 
         #region Edit Patient History
 
+
         [HttpGet]
         public async Task<IActionResult> EditPatientHistory(int id)
         {
@@ -1523,39 +1524,57 @@ namespace HemaCore.Controllers
             if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
             {
                 TempData["Error"] =
-                    "You do not have active consent for this patient. Please request consent before editing their medical history.";
+                    "You need active patient consent before editing medical history.";
 
                 return RedirectToAction(nameof(ManagePatients));
             }
 
-            var selectedConditionIds = await _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.PatientID)
-                .Select(pc => pc.ConditionId)
-                .ToListAsync();
-
-            var selectedAllergyIds = await _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.PatientID)
-                .Select(pa => pa.AllergyId)
-                .ToListAsync();
-
-            var selectedMedicationIds = await _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.PatientID)
-                .Select(pm => pm.MedicationId)
-                .ToListAsync();
-
             var model = new EditPatientHistoryViewModel
             {
                 PatientId = patient.PatientID,
-                PatientName = patient.Name + " " + patient.Surname
+                PatientName = $"{patient.Name} {patient.Surname}"
             };
+
+            var conditions = await _context.PatientConditions
+                .Where(x => x.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            var allergies = await _context.PatientAllergies
+                .Where(x => x.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            var medications = await _context.PatientMedications
+                .Where(x => x.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            model.SelectedConditionIds = conditions
+                .Select(x => x.ConditionId).ToList();
+
+            model.SelectedAllergyIds = allergies
+                .Select(x => x.AllergyId).ToList();
+
+            model.SelectedMedicationIds = medications
+                .Select(x => x.MedicationId).ToList();
+
+            foreach (var item in conditions)
+                model.ConditionDiagnosedDates[item.ConditionId] = item.DiagnosedDate;
+
+            foreach (var item in allergies)
+                model.AllergySeverities[item.AllergyId] = item.Severity;
+
+            foreach (var item in medications)
+            {
+                model.MedicationDosages[item.MedicationId] = item.Dosage;
+                model.MedicationFrequencies[item.MedicationId] = item.Frequency;
+            }
 
             await LoadHistoryOptionsAsync(
                 model.AllConditions,
                 model.AllAllergies,
                 model.AllMedications,
-                selectedConditionIds,
-                selectedAllergyIds,
-                selectedMedicationIds);
+                model.SelectedConditionIds,
+                model.SelectedAllergyIds,
+                model.SelectedMedicationIds);
 
             return View(model);
         }
@@ -1582,78 +1601,112 @@ namespace HemaCore.Controllers
             if (!await IsPatientConsentedAsync(doctor.DoctorId, patient.UserId))
             {
                 TempData["Error"] =
-                    "You do not have active consent for this patient. Please request consent before editing their medical history.";
+                    "You need active patient consent before editing medical history.";
 
                 return RedirectToAction(nameof(ManagePatients));
             }
 
-            if (!ModelState.IsValid)
-            {
-                var selectedConditionIds = model.SelectedConditionIds ?? new List<int>();
-                var selectedAllergyIds = model.SelectedAllergyIds ?? new List<int>();
-                var selectedMedicationIds = model.SelectedMedicationIds ?? new List<int>();
+            // Only accept IDs that exist in the relevant catalogues.
+            var conditionIds = (model.SelectedConditionIds ?? new List<int>())
+                .Distinct()
+                .Where(id => id > 0)
+                .ToList();
 
-                model.AllConditions.Clear();
-                model.AllAllergies.Clear();
-                model.AllMedications.Clear();
+            var allergyIds = (model.SelectedAllergyIds ?? new List<int>())
+                .Distinct()
+                .Where(id => id > 0)
+                .ToList();
 
-                await LoadHistoryOptionsAsync(
-                    model.AllConditions,
-                    model.AllAllergies,
-                    model.AllMedications,
-                    selectedConditionIds,
-                    selectedAllergyIds,
-                    selectedMedicationIds);
+            var medicationIds = (model.SelectedMedicationIds ?? new List<int>())
+                .Distinct()
+                .Where(id => id > 0)
+                .ToList();
 
-                model.PatientName = patient.Name + " " + patient.Surname;
+            var validConditionIds = await _context.Conditions
+                .Where(x => x.IsActive && conditionIds.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToListAsync();
 
-                return View(model);
-            }
+            var validAllergyIds = await _context.Allergies
+                .Where(x => x.IsActive && allergyIds.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            var validMedicationIds = await _context.Medications
+                .Where(x => x.IsActive && medicationIds.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToListAsync();
 
             var existingConditions = await _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.PatientID)
+                .Where(x => x.PatientID == patient.PatientID)
                 .ToListAsync();
 
             var existingAllergies = await _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.PatientID)
+                .Where(x => x.PatientID == patient.PatientID)
                 .ToListAsync();
 
             var existingMedications = await _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.PatientID)
+                .Where(x => x.PatientID == patient.PatientID)
                 .ToListAsync();
 
             _context.PatientConditions.RemoveRange(existingConditions);
             _context.PatientAllergies.RemoveRange(existingAllergies);
             _context.PatientMedications.RemoveRange(existingMedications);
 
-            foreach (var conditionId in model.SelectedConditionIds ?? new List<int>())
+            foreach (var conditionId in validConditionIds)
             {
-                _context.PatientConditions.Add(
-                    new PatientCondition
-                    {
-                        PatientID = patient.PatientID,
-                        ConditionId = conditionId
-                    });
+                model.ConditionDiagnosedDates ??= new();
+
+                model.ConditionDiagnosedDates.TryGetValue(
+                    conditionId, out var diagnosedDate);
+
+                _context.PatientConditions.Add(new PatientCondition
+                {
+                    PatientID = patient.PatientID,
+                    ConditionId = conditionId,
+                    DiagnosedDate = diagnosedDate
+                });
             }
 
-            foreach (var allergyId in model.SelectedAllergyIds ?? new List<int>())
+            foreach (var allergyId in validAllergyIds)
             {
-                _context.PatientAllergies.Add(
-                    new PatientAllergy
-                    {
-                        PatientID = patient.PatientID,
-                        AllergyId = allergyId
-                    });
+                model.AllergySeverities ??= new();
+
+                model.AllergySeverities.TryGetValue(
+                    allergyId, out var severity);
+
+                _context.PatientAllergies.Add(new PatientAllergy
+                {
+                    PatientID = patient.PatientID,
+                    AllergyId = allergyId,
+                    Severity = string.IsNullOrWhiteSpace(severity)
+                        ? null
+                        : severity.Trim()
+                });
             }
 
-            foreach (var medicationId in model.SelectedMedicationIds ?? new List<int>())
+            foreach (var medicationId in validMedicationIds)
             {
-                _context.PatientMedications.Add(
-                    new PatientMedication
-                    {
-                        PatientID = patient.PatientID,
-                        MedicationId = medicationId
-                    });
+                model.MedicationDosages ??= new();
+                model.MedicationFrequencies ??= new();
+
+                model.MedicationDosages.TryGetValue(
+                    medicationId, out var dosage);
+
+                model.MedicationFrequencies.TryGetValue(
+                    medicationId, out var frequency);
+
+                _context.PatientMedications.Add(new PatientMedication
+                {
+                    PatientID = patient.PatientID,
+                    MedicationId = medicationId,
+                    Dosage = string.IsNullOrWhiteSpace(dosage)
+                        ? null
+                        : dosage.Trim(),
+                    Frequency = string.IsNullOrWhiteSpace(frequency)
+                        ? null
+                        : frequency.Trim()
+                });
             }
 
             await _context.SaveChangesAsync();
@@ -1664,6 +1717,7 @@ namespace HemaCore.Controllers
                 nameof(PatientDetails),
                 new { id = patient.PatientID });
         }
+
 
         #endregion
 

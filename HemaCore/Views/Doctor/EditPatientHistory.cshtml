@@ -22,23 +22,23 @@
         border-top: 4px solid;
     }
 
-    .history-section.conditions {
-        border-top-color: #1565c0;
-    }
+        .history-section.conditions {
+            border-top-color: #1565c0;
+        }
 
-    .history-section.allergies {
-        border-top-color: #c62828;
-    }
+        .history-section.allergies {
+            border-top-color: #c62828;
+        }
 
-    .history-section.medications {
-        border-top-color: #2e7d32;
-    }
+        .history-section.medications {
+            border-top-color: #2e7d32;
+        }
 
     .history-section-title {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin: 0 0 8px 0;
+        margin: 0 0 8px;
         padding-bottom: 10px;
         border-bottom: 2px solid;
         font-size: 18px;
@@ -62,61 +62,72 @@
 
     .history-description {
         color: var(--gray, #6b7280);
-        font-size: 0.9rem;
+        font-size: .9rem;
         margin-bottom: 1.25rem;
     }
 
     .medical-row {
         display: grid;
-        grid-template-columns: 1fr 1fr auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
         gap: 1rem;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
         align-items: end;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
     }
 
-    .medical-row .form-group {
-        margin-bottom: 0;
-    }
+        .medical-row .form-group {
+            margin-bottom: 0;
+        }
 
-    .medical-row label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-    }
+        .medical-row label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
 
-    .medical-row input {
-        width: 100%;
-        padding: 0.65rem 0.75rem;
-        border: 1px solid #dfe5e8;
-        border-radius: 8px;
-        font-size: 14px;
-        box-sizing: border-box;
-    }
+        .medical-row input,
+        .medical-row select {
+            width: 100%;
+            padding: .65rem .75rem;
+            border: 1px solid #dfe5e8;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background: white;
+        }
 
-    .medical-row input:focus {
-        outline: none;
-        border-color: #2c7da0;
-        box-shadow: 0 0 0 2px rgba(44, 125, 160, 0.1);
-    }
+            .medical-row input:focus,
+            .medical-row select:focus {
+                outline: none;
+                border-color: #2c7da0;
+                box-shadow: 0 0 0 2px rgba(44, 125, 160, .1);
+            }
+
+            .medical-row input[readonly] {
+                background: #f3f6f8;
+                color: #475569;
+            }
 
     .remove-row {
         background: #dc3545;
         color: white;
         border: none;
-        padding: 0.6rem 0.9rem;
+        padding: .65rem .9rem;
         border-radius: 8px;
         cursor: pointer;
     }
 
-    .remove-row:hover {
-        background: #bb2d3b;
-    }
+        .remove-row:hover {
+            background: #bb2d3b;
+        }
 
     .add-row {
-        margin-top: 0.5rem;
-        padding: 0.6rem 1rem;
+        margin-top: .5rem;
+        padding: .6rem 1rem;
         border: 1px solid #2c7da0;
         background: white;
         color: #2c7da0;
@@ -125,8 +136,17 @@
         font-weight: 600;
     }
 
-    .add-row:hover {
-        background: #eef7fa;
+        .add-row:hover {
+            background: #eef7fa;
+        }
+
+    .history-search {
+        width: 100%;
+        padding: .7rem .85rem;
+        border: 1px solid #dfe5e8;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
     }
 
     .history-actions {
@@ -137,41 +157,64 @@
         padding-bottom: 2rem;
     }
 
-    .history-cancel {
-        text-decoration: none;
-        padding: 0.65rem 1.5rem;
-        border-radius: 8px;
-        border: 1px solid #ddd;
-        color: #666;
-        background: white;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-    }
-
-    .history-cancel:hover {
-        background: #f8f8f8;
-        color: #444;
-    }
-
+    .history-cancel,
     .history-save {
-        padding: 0.65rem 1.5rem;
+        text-decoration: none;
+        padding: .65rem 1.5rem;
         border-radius: 8px;
-        border: none;
-        background: #2c7da0;
-        color: white;
-        cursor: pointer;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 7px;
         font-weight: 600;
     }
 
-    .history-save:hover {
-        background: #1f5068;
+    .history-cancel {
+        border: 1px solid #ddd;
+        color: #666;
+        background: white;
     }
 
+    .history-save {
+        border: none;
+        background: #2c7da0;
+        color: white;
+        cursor: pointer;
+    }
+
+        .history-save:hover {
+            background: #1f5068;
+        }
+
+    .empty-message {
+        display: none;
+        padding: 1rem;
+        color: #64748b;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .catalogue-picker {
+        display: flex;
+        gap: .75rem;
+        margin-bottom: 1rem;
+    }
+
+        .catalogue-picker select {
+            flex: 1;
+            min-width: 0;
+            padding: .7rem;
+            border: 1px solid #dfe5e8;
+            border-radius: 8px;
+            background: white;
+        }
+
     @@media (max-width: 700px) {
+        .history-section {
+            padding: 1rem;
+        }
+
         .medical-row {
             grid-template-columns: 1fr;
         }
@@ -187,484 +230,478 @@
         .history-cancel,
         .history-save {
             width: 100%;
-            justify-content: center;
         }
     }
 </style>
 
-
 <div class="fade-in history-page">
-
     <div class="page-header">
-
         <h2>
             <i class="fas fa-edit"></i>
             Edit Medical History — @Model.PatientName
         </h2>
-
-        <p>
-            Update the patient's medical conditions, allergies, and medications
-        </p>
-
+        <p>Update the patient's medical conditions, allergies, and medications.</p>
     </div>
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
 
     <form asp-controller="Doctor"
           asp-action="EditPatientHistory"
           method="post">
 
         @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PatientId" />
 
-        <input type="hidden"
-               asp-for="PatientId" />
-
-
-        <!-- MEDICAL CONDITIONS -->
-
-        <div class="history-section conditions">
-
+        <!-- CONDITIONS -->
+        <section class="history-section conditions">
             <div class="history-section-title">
-
                 <i class="fas fa-heartbeat"></i>
                 Medical Conditions
-
             </div>
 
             <p class="history-description">
-                Update any known chronic conditions the patient has.
+                Select known conditions and optionally update the diagnosis date.
             </p>
 
+            <input type="search"
+                   class="history-search"
+                   placeholder="Search conditions..."
+                   data-catalogue-search="conditions" />
+
+            <div class="catalogue-picker">
+                <select id="conditionPicker">
+                    <option value="">Choose a condition to add...</option>
+                    @foreach (var item in Model.AllConditions)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+                <button type="button"
+                        class="add-row"
+                        data-add="conditions">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
 
             <div id="conditionsContainer">
-
-                @foreach (var condition in Model.AllConditions.Where(x => x.IsSelected))
+                @foreach (var item in Model.AllConditions.Where(x => x.IsSelected))
                 {
+                    DateOnly? diagnosedDate = null;
+                    Model.ConditionDiagnosedDates?.TryGetValue(item.Id, out diagnosedDate);
+
                     <div class="medical-row"
-                         data-id="@condition.Id">
+                         data-row
+                         data-id="@item.Id"
+                         data-search-text="@item.Name">
 
                         <div class="form-group">
-
                             <label>Condition Name</label>
-
-                            <input type="text"
-                                   value="@condition.Name"
-                                   readonly />
-
+                            <input type="text" value="@item.Name" readonly />
                             <input type="hidden"
                                    name="SelectedConditionIds"
-                                   value="@condition.Id" />
-
+                                   value="@item.Id" />
                         </div>
-
 
                         <div class="form-group">
-
-                            <label>Description / Notes</label>
-
-                            <input type="text"
-                                   value=""
-                                   placeholder="Description / Notes"
-                                   readonly />
-
+                            <label>Diagnosis Date (optional)</label>
+                            <input type="date"
+                                   name="ConditionDiagnosedDates[@item.Id]"
+                                   value="@diagnosedDate?.ToString("yyyy-MM-dd")" />
                         </div>
-
 
                         <div>
-
                             <button type="button"
                                     class="remove-row"
-                                    onclick="removeRow(this)">
-
-                                <i class="fas fa-trash"></i>
-
+                                    data-remove
+                                    aria-label="Remove condition">
+                                <i class="fas fa-trash"></i> Remove
                             </button>
-
                         </div>
-
                     </div>
                 }
-
             </div>
 
-
-            <button type="button"
-                    class="add-row"
-                    onclick="addExistingOption(
-                        'conditionsContainer',
-                        'condition',
-                        'Condition Name',
-                        'Description / Notes')">
-
-                <i class="fas fa-plus"></i>
-                Add Condition
-
-            </button>
-
-        </div>
-
-
+            <div class="empty-message" data-empty="conditions">
+                No conditions selected.
+            </div>
+        </section>
 
         <!-- ALLERGIES -->
-
-        <div class="history-section allergies">
-
+        <section class="history-section allergies">
             <div class="history-section-title">
-
                 <i class="fas fa-exclamation-triangle"></i>
                 Allergies
-
             </div>
 
             <p class="history-description">
-                Update any known allergies the patient has.
+                Select known allergies and specify their severity if known.
             </p>
 
+            <input type="search"
+                   class="history-search"
+                   placeholder="Search allergies..."
+                   data-catalogue-search="allergies" />
+
+            <div class="catalogue-picker">
+                <select id="allergyPicker">
+                    <option value="">Choose an allergy to add...</option>
+                    @foreach (var item in Model.AllAllergies)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+                <button type="button"
+                        class="add-row"
+                        data-add="allergies">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
 
             <div id="allergiesContainer">
-
-                @foreach (var allergy in Model.AllAllergies.Where(x => x.IsSelected))
+                @foreach (var item in Model.AllAllergies.Where(x => x.IsSelected))
                 {
+                    string? severity = null;
+                    Model.AllergySeverities?.TryGetValue(item.Id, out severity);
+
                     <div class="medical-row"
-                         data-id="@allergy.Id">
+                         data-row
+                         data-id="@item.Id"
+                         data-search-text="@item.Name">
 
                         <div class="form-group">
-
                             <label>Allergy Name</label>
-
-                            <input type="text"
-                                   value="@allergy.Name"
-                                   readonly />
-
+                            <input type="text" value="@item.Name" readonly />
                             <input type="hidden"
                                    name="SelectedAllergyIds"
-                                   value="@allergy.Id" />
-
+                                   value="@item.Id" />
                         </div>
-
 
                         <div class="form-group">
-
-                            <label>Description / Notes</label>
-
-                            <input type="text"
-                                   value=""
-                                   placeholder="Description / Notes"
-                                   readonly />
-
+                            <label>Severity</label>
+                            <select name="AllergySeverities[@item.Id]">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(severity))">
+                                    Not specified
+                                </option>
+                                <option value="Mild" selected="@(severity == "Mild")">Mild</option>
+                                <option value="Moderate" selected="@(severity == "Moderate")">Moderate</option>
+                                <option value="Severe" selected="@(severity == "Severe")">Severe</option>
+                            </select>
                         </div>
-
 
                         <div>
-
                             <button type="button"
                                     class="remove-row"
-                                    onclick="removeRow(this)">
-
-                                <i class="fas fa-trash"></i>
-
+                                    data-remove
+                                    aria-label="Remove allergy">
+                                <i class="fas fa-trash"></i> Remove
                             </button>
-
                         </div>
-
                     </div>
                 }
-
             </div>
 
-
-            <button type="button"
-                    class="add-row"
-                    onclick="addExistingOption(
-                        'allergiesContainer',
-                        'allergy',
-                        'Allergy Name',
-                        'Description / Notes')">
-
-                <i class="fas fa-plus"></i>
-                Add Allergy
-
-            </button>
-
-        </div>
-
-
+            <div class="empty-message" data-empty="allergies">
+                No allergies selected.
+            </div>
+        </section>
 
         <!-- MEDICATIONS -->
-
-        <div class="history-section medications">
-
+        <section class="history-section medications">
             <div class="history-section-title">
-
                 <i class="fas fa-pills"></i>
                 Current Medications
-
             </div>
 
             <p class="history-description">
-                Update any medications the patient is currently taking.
+                Select current medications and update their dosage and frequency.
             </p>
 
+            <input type="search"
+                   class="history-search"
+                   placeholder="Search medications..."
+                   data-catalogue-search="medications" />
 
-            <div id="medicationsContainer">
-
-                @foreach (var medication in Model.AllMedications.Where(x => x.IsSelected))
-                {
-                    <div class="medical-row"
-                         data-id="@medication.Id">
-
-                        <div class="form-group">
-
-                            <label>Medication Name</label>
-
-                            <input type="text"
-                                   value="@medication.Name"
-                                   readonly />
-
-                            <input type="hidden"
-                                   name="SelectedMedicationIds"
-                                   value="@medication.Id" />
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label>Dosage / Notes</label>
-
-                            <input type="text"
-                                   value=""
-                                   placeholder="Dosage / Notes"
-                                   readonly />
-
-                        </div>
-
-
-                        <div>
-
-                            <button type="button"
-                                    class="remove-row"
-                                    onclick="removeRow(this)">
-
-                                <i class="fas fa-trash"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-                }
-
+            <div class="catalogue-picker">
+                <select id="medicationPicker">
+                    <option value="">Choose a medication to add...</option>
+                    @foreach (var item in Model.AllMedications)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+                <button type="button"
+                        class="add-row"
+                        data-add="medications">
+                    <i class="fas fa-plus"></i> Add
+                </button>
             </div>
 
+            <div id="medicationsContainer">
+                @foreach (var item in Model.AllMedications.Where(x => x.IsSelected))
+                {
+                    string? dosage = null;
+                    string? frequency = null;
 
-            <button type="button"
-                    class="add-row"
-                    onclick="addExistingOption(
-                        'medicationsContainer',
-                        'medication',
-                        'Medication Name',
-                        'Dosage / Notes')">
+                    Model.MedicationDosages?.TryGetValue(item.Id, out dosage);
+                    Model.MedicationFrequencies?.TryGetValue(item.Id, out frequency);
 
-                <i class="fas fa-plus"></i>
-                Add Medication
+                    <div class="medical-row"
+                         data-row
+                         data-id="@item.Id"
+                         data-search-text="@item.Name">
 
-            </button>
+                        <div class="form-group">
+                            <label>Medication Name</label>
+                            <input type="text" value="@item.Name" readonly />
+                            <input type="hidden"
+                                   name="SelectedMedicationIds"
+                                   value="@item.Id" />
+                        </div>
 
-        </div>
+                        <div class="form-group">
+                            <label>Dosage</label>
+                            <input type="text"
+                                   name="MedicationDosages[@item.Id]"
+                                   value="@dosage"
+                                   maxlength="100"
+                                   placeholder="e.g. 500 mg" />
 
+                            <label style="margin-top:10px;">Frequency</label>
+                            <input type="text"
+                                   name="MedicationFrequencies[@item.Id]"
+                                   value="@frequency"
+                                   maxlength="100"
+                                   placeholder="e.g. Twice daily" />
+                        </div>
 
+                        <div>
+                            <button type="button"
+                                    class="remove-row"
+                                    data-remove
+                                    aria-label="Remove medication">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
 
-        <!-- ACTIONS -->
+            <div class="empty-message" data-empty="medications">
+                No medications selected.
+            </div>
+        </section>
 
         <div class="history-actions">
-
             <a asp-controller="Doctor"
                asp-action="PatientDetails"
                asp-route-id="@Model.PatientId"
                class="history-cancel">
-
-                <i class="fas fa-times"></i>
-                Cancel
-
+                <i class="fas fa-times"></i> Cancel
             </a>
 
-
-            <button type="submit"
-                    class="history-save">
-
-                <i class="fas fa-save"></i>
-                Save Changes
-
+            <button type="submit" class="history-save">
+                <i class="fas fa-save"></i> Save Changes
             </button>
-
         </div>
-
     </form>
-
 </div>
 
-
 <script>
-
-    function removeRow(button) {
-
-        const row = button.closest(".medical-row");
-
-        if (row) {
-            row.remove();
-        }
-
-    }
-
-
-    function addExistingOption(
-        containerId,
-        type,
-        nameLabel,
-        descriptionLabel) {
-
-        const container =
-            document.getElementById(containerId);
-
-        if (!container) {
-            return;
-        }
-
-        /*
-         * Get the available options from the checkbox
-         * data already rendered by Razor.
-         */
-
-        let options = [];
-
-
-        if (type === "condition") {
-
-            options = [
-                @foreach (var item in Model.AllConditions.Where(x => !x.IsSelected))
-                {
-                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+    document.addEventListener("DOMContentLoaded", function() {
+        var configurations = {
+            conditions: {
+                container: "conditionsContainer",
+                picker: "conditionPicker",
+                idField: "SelectedConditionIds",
+                details: function(id) {
+                    return '<div class="form-group">' +
+                        '<label>Diagnosis Date (optional)</label>' +
+                        '<input type="date" name="ConditionDiagnosedDates[' + id + ']" />' +
+                        '</div>';
                 }
-            ];
-
-        }
-        else if (type === "allergy") {
-
-            options = [
-                @foreach (var item in Model.AllAllergies.Where(x => !x.IsSelected))
-                {
-                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+            },
+            allergies: {
+                container: "allergiesContainer",
+                picker: "allergyPicker",
+                idField: "SelectedAllergyIds",
+                details: function(id) {
+                    return '<div class="form-group">' +
+                        '<label>Severity</label>' +
+                        '<select name="AllergySeverities[' + id + ']">' +
+                        '<option value="">Not specified</option>' +
+                        '<option value="Mild">Mild</option>' +
+                        '<option value="Moderate">Moderate</option>' +
+                        '<option value="Severe">Severe</option>' +
+                        '</select></div>';
                 }
-            ];
-
-        }
-        else if (type === "medication") {
-
-            options = [
-                @foreach (var item in Model.AllMedications.Where(x => !x.IsSelected))
-                {
-                    @: { id: @item.Id, name: "@Html.Raw(item.Name.Replace("\"", "\\\""))" },
+            },
+            medications: {
+                container: "medicationsContainer",
+                picker: "medicationPicker",
+                idField: "SelectedMedicationIds",
+                details: function(id) {
+                    return '<div class="form-group">' +
+                        '<label>Dosage</label>' +
+                        '<input type="text" name="MedicationDosages[' + id + ']" ' +
+                        'maxlength="100" placeholder="e.g. 500 mg" />' +
+                        '<label style="margin-top:10px;">Frequency</label>' +
+                        '<input type="text" name="MedicationFrequencies[' + id + ']" ' +
+                        'maxlength="100" placeholder="e.g. Twice daily" />' +
+                        '</div>';
                 }
-            ];
+            }
+        };
 
+        function updateEmptyMessage(type) {
+            var config = configurations[type];
+            var container = document.getElementById(config.container);
+            var empty = document.querySelector('[data-empty="' + type + '"]');
+
+            if (empty && container) {
+                empty.style.display =
+                    container.querySelector("[data-row]") ? "none" : "block";
+            }
         }
 
+        function addItem(type) {
+            var config = configurations[type];
+            var container = document.getElementById(config.container);
+            var picker = document.getElementById(config.picker);
+            var id = picker.value;
 
-        if (options.length === 0) {
+            if (!id) {
+                alert("Please choose an item first.");
+                return;
+            }
 
-            alert("There are no more available options.");
+            var duplicate = Array.from(
+                container.querySelectorAll("[data-row]")
+            ).some(function(row) {
+                return row.getAttribute("data-id") === id;
+            });
 
-            return;
+            if (duplicate) {
+                alert("This item has already been selected.");
+                return;
+            }
+
+            var selectedOption = picker.options[picker.selectedIndex];
+            var name = selectedOption.text;
+
+            var row = document.createElement("div");
+            row.className = "medical-row";
+            row.setAttribute("data-row", "");
+            row.setAttribute("data-id", id);
+            row.setAttribute("data-search-text", name);
+
+            var nameColumn = document.createElement("div");
+            nameColumn.className = "form-group";
+
+            var label = document.createElement("label");
+            label.textContent = type === "conditions" ? "Condition Name" :
+                type === "allergies" ? "Allergy Name" : "Medication Name";
+
+            var nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.value = name;
+            nameInput.readOnly = true;
+
+            var hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = config.idField;
+            hidden.value = id;
+
+            nameColumn.appendChild(label);
+            nameColumn.appendChild(nameInput);
+            nameColumn.appendChild(hidden);
+
+            var detailsColumn = document.createElement("div");
+            detailsColumn.className = "form-group";
+            detailsColumn.innerHTML = config.details(id);
+
+            var actionsColumn = document.createElement("div");
+            var removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "remove-row";
+            removeButton.setAttribute("data-remove", "");
+            removeButton.innerHTML = '<i class="fas fa-trash"></i> Remove';
+
+            actionsColumn.appendChild(removeButton);
+
+            row.appendChild(nameColumn);
+            row.appendChild(detailsColumn);
+            row.appendChild(actionsColumn);
+
+            container.appendChild(row);
+            picker.value = "";
+
+            updateEmptyMessage(type);
+            applySearch(type);
         }
 
-
-        const row =
-            document.createElement("div");
-
-        row.className = "medical-row";
-
-
-        const usedIds =
-            Array.from(
-                container.querySelectorAll(
-                    'input[type="hidden"]'
-                )
-            ).map(input => input.value);
-
-
-        const available =
-            options.find(option =>
-                !usedIds.includes(option.id.toString())
+        function applySearch(type) {
+            var config = configurations[type];
+            var search = document.querySelector(
+                '[data-catalogue-search="' + type + '"]'
             );
 
+            if (!search) return;
 
-        if (!available) {
+            var query = search.value.trim().toLowerCase();
+            var picker = document.getElementById(config.picker);
 
-            alert("All available options have already been added.");
+            Array.from(picker.options).forEach(function(option, index) {
+                if (index === 0) return;
 
-            return;
+                option.hidden = !option.text.toLowerCase().includes(query);
+            });
+
+            var container = document.getElementById(config.container);
+
+            container.querySelectorAll("[data-row]").forEach(function(row) {
+                var text = (row.getAttribute("data-search-text") || "").toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
         }
 
+        document.querySelectorAll("[data-add]").forEach(function(button) {
+            button.addEventListener("click", function() {
+                addItem(button.getAttribute("data-add"));
+            });
+        });
 
-        let inputName;
+        document.addEventListener("click", function(event) {
+            var button = event.target.closest("[data-remove]");
 
+            if (!button) return;
 
-        if (type === "condition") {
-            inputName = "SelectedConditionIds";
-        }
-        else if (type === "allergy") {
-            inputName = "SelectedAllergyIds";
-        }
-        else {
-            inputName = "SelectedMedicationIds";
-        }
+            var row = button.closest("[data-row]");
+            if (!row) return;
 
+            var container = row.parentElement;
+            row.remove();
 
-        row.innerHTML = `
+            Object.keys(configurations).forEach(function(type) {
+                if (container.id === configurations[type].container) {
+                    updateEmptyMessage(type);
+                }
+            });
+        });
 
-            <div class="form-group">
+        document.querySelectorAll("[data-catalogue-search]").forEach(function(search) {
+            search.addEventListener("input", function() {
+                applySearch(search.getAttribute("data-catalogue-search"));
+            });
+        });
 
-                <label>${nameLabel}</label>
-
-                <input type="text"
-                       value="${available.name}"
-                       readonly />
-
-                <input type="hidden"
-                       name="${inputName}"
-                       value="${available.id}" />
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>${descriptionLabel}</label>
-
-                <input type="text"
-                       placeholder="${descriptionLabel}"
-                       readonly />
-
-            </div>
-
-
-            <div>
-
-                <button type="button"
-                        class="remove-row"
-                        onclick="removeRow(this)">
-
-                    <i class="fas fa-trash"></i>
-
-                </button>
-
-            </div>
-
-        `;
-
-
-        container.appendChild(row);
-
-    }
-
+        Object.keys(configurations).forEach(updateEmptyMessage);
+    });
 </script>
