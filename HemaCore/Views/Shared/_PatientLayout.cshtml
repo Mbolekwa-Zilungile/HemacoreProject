@@ -274,12 +274,33 @@
         </nav>
 
 
-        <!-- ================= CONTENT ================= -->
-        <div id="content">
+            <!-- MAIN CONTENT -->
+            <div id="content">
 
-            @RenderBody()
+                <!-- TOP RIGHT MANAGER ACCOUNT -->
+                <div class="top-manager-account">
+                    <div class="top-manager-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
 
-        </div>
+                    <div class="top-manager-info">
+                        <span class="top-manager-name">
+                            @(User.FindFirst("FullName")?.Value
+                                ?? User.Identity?.Name
+                                ?? "Manager")
+                        </span>
+
+                        <small>Patient</small>
+                    </div>
+                </div>
+
+                <!-- PAGE CONTENT -->
+                <div class="page-content">
+                    @RenderBody()
+                </div>
+
+            </div>
+
 
     </div>
 

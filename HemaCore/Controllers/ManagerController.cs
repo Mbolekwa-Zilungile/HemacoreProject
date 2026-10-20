@@ -33,9 +33,7 @@ namespace HemaCore.Controllers
         #region Index
         public async Task<IActionResult> Index()
         {
-            // =====================================================
-            // STOCK ALERTS
-            // =====================================================
+            
 
             var outOfStockConsumables = await _context.Consumables
                 .Include(c => c.Supplier)
@@ -3716,7 +3714,7 @@ namespace HemaCore.Controllers
         }
         #endregion
 
-        #region
+        #region Reports
 
 
         [HttpGet]
@@ -4079,6 +4077,214 @@ namespace HemaCore.Controllers
 
 
 
+        #endregion
+
+        #region Manager Profile
+    
+        [HttpGet]
+        public async Task<IActionResult> ManagerProfile()
+        {
+            var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
+            var manager = managerUsers.FirstOrDefault();
+
+            if (manager == null)
+            {
+                TempData["Error"] = "Manager account was not found.";
+                return RedirectToAction("Index");
+            }
+
+            // Load the latest account information from Identity.
+            var latestManager = await _userManager.FindByIdAsync(manager.Id);
+
+            if (latestManager == null)
+            {
+                TempData["Error"] = "Manager account was not found.";
+                return RedirectToAction("Index");
+            }
+
+            var model = new ManagerProfileVM
+            {
+                Id = latestManager.Id,
+                FullName = latestManager.FullName,
+                Email = latestManager.Email ?? string.Empty,
+                PhoneNumber = latestManager.PhoneNumber
+            };
+
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ManagerProfile(ManagerProfileVM model)
+        {
+            bool changingPassword =
+                !string.IsNullOrWhiteSpace(model.NewPassword);
+
+            // Password fields are optional when not changing the password.
+            if (!changingPassword)
+            {
+                ModelState.Remove(nameof(model.CurrentPassword));
+                ModelState.Remove(nameof(model.NewPassword));
+                ModelState.Remove(nameof(model.ConfirmNewPassword));
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Find the manager's existing Identity account.
+            var manager = await _userManager.FindByIdAsync(model.Id);
+
+            if (manager == null ||
+                !await _userManager.IsInRoleAsync(manager, "Manager"))
+            {
+                TempData["Error"] = "Manager account was not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check whether another account uses this email.
+            var newEmail = model.Email.Trim();
+
+            var existingUser = await _userManager.FindByEmailAsync(newEmail);
+
+            if (existingUser != null && existingUser.Id != manager.Id)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "This email address is already in use.");
+
+                return View(model);
+            }
+
+            // Validate password fields only if a new password was entered.
+            if (changingPassword)
+            {
+                if (string.IsNullOrWhiteSpace(model.CurrentPassword))
+                {
+                    ModelState.AddModelError(
+                        nameof(model.CurrentPassword),
+                        "Enter your current password.");
+                }
+
+                if (string.IsNullOrWhiteSpace(model.ConfirmNewPassword))
+                {
+                    ModelState.AddModelError(
+                        nameof(model.ConfirmNewPassword),
+                        "Confirm your new password.");
+                }
+                else if (model.NewPassword != model.ConfirmNewPassword)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.ConfirmNewPassword),
+                        "The new passwords do not match.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+            }
+
+            // Update the manager's profile details.
+            manager.FullName = model.FullName.Trim();
+            manager.PhoneNumber = model.PhoneNumber;
+
+            var updateResult = await _userManager.UpdateAsync(manager);
+
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
+            // Update the email address.
+            var emailResult = await _userManager.SetEmailAsync(manager, newEmail);
+
+            if (!emailResult.Succeeded)
+            {
+                foreach (var error in emailResult.Errors)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.Email),
+                        error.Description);
+                }
+
+                return View(model);
+            }
+
+            // Keep the username in sync with the email address.
+            var usernameResult =
+                await _userManager.SetUserNameAsync(manager, newEmail);
+
+            if (!usernameResult.Succeeded)
+            {
+                foreach (var error in usernameResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
+            // Change the password only if the manager entered a new password.
+            if (changingPassword)
+            {
+                var passwordResult = await _userManager.ChangePasswordAsync(
+                    manager,
+                    model.CurrentPassword!,
+                    model.NewPassword!);
+
+                if (!passwordResult.Succeeded)
+                {
+                    foreach (var error in passwordResult.Errors)
+                    {
+                        ModelState.AddModelError(
+                            nameof(model.NewPassword),
+                            error.Description);
+                    }
+
+                    return View(model);
+                }
+            }
+
+            TempData["Success"] = changingPassword
+                ? "Profile and password updated successfully."
+                : "Profile updated successfully.";
+
+            return RedirectToAction(nameof(ManagerDetails));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManagerDetails()
+        {
+            // Get the logged-in user's account
+            var manager = await _userManager.GetUserAsync(User);
+
+            // Check that the account exists and has the Manager role
+            if (manager == null ||
+                !await _userManager.IsInRoleAsync(manager, "Manager"))
+            {
+                TempData["Error"] = "Manager account was not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Pass the manager's details to the view
+            var model = new ManagerProfileVM
+            {
+                Id = manager.Id,
+                FullName = manager.FullName,
+                Email = manager.Email ?? string.Empty,
+                PhoneNumber = manager.PhoneNumber
+            };
+
+            return View(model);
+        }
         #endregion
     }
 }
