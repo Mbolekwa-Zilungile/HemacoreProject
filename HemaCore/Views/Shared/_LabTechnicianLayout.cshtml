@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿```cshtml
+@using Microsoft.AspNetCore.Identity
 @inject UserManager<HemaCore.Models.Users> UserManager
 
 @{
@@ -7,15 +8,16 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html data-theme="midnight">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HemaCore</title>
 
-    <link rel="stylesheet" href="~/css/Layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
 </head>
 
 <body>
@@ -24,7 +26,7 @@
         <!-- SIDEBAR -->
         <nav id="sidebar">
 
-            <!-- BRAND AND USER -->
+            <!-- SIDEBAR HEADER -->
             <div class="sidebar-header">
                 <div class="header-top">
                     <button id="sidebarToggle"
@@ -37,18 +39,15 @@
                     <h3>HemaCore</h3>
                 </div>
 
-                <div class="technician-name">
-                    <i class="fas fa-user-circle"></i>
-                    <span>@(currentUser?.FullName ?? "Lab Technician")</span>
-                </div>
+                <p>LAB TECHNICIAN PORTAL</p>
             </div>
 
-            <!-- NAVIGATION -->
+            <!-- NAVIGATION MENU -->
             <ul class="list-unstyled components">
 
+                <!-- OVERVIEW -->
                 <li class="section-label">OVERVIEW</li>
 
-                <!-- DASHBOARD -->
                 <li class="@(currentAction == "Index" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="Index">
                         <i class="fas fa-chart-pie"></i>
@@ -56,9 +55,9 @@
                     </a>
                 </li>
 
+                <!-- LABORATORY WORK -->
                 <li class="section-label">LABORATORY WORK</li>
 
-                <!-- RECEIVE SAMPLES -->
                 <li class="@(currentAction == "ReceiveSample" ||
                                                   currentAction == "ReceiveSampleDetails"
                                                   ? "active" : "")">
@@ -68,7 +67,6 @@
                     </a>
                 </li>
 
-                <!-- TESTS AWAITING PROCESSING -->
                 <li class="@(currentAction == "ProcessTests" ||
                                                   currentAction == "StartProcessing"
                                                   ? "active" : "")">
@@ -78,7 +76,6 @@
                     </a>
                 </li>
 
-                <!-- MY SELECTED TESTS -->
                 <li class="@(currentAction == "MyTests" ||
                                                   currentAction == "CaptureTestResult"
                                                   ? "active" : "")">
@@ -88,40 +85,33 @@
                     </a>
                 </li>
 
-              
-
+                <!-- RESULTS MANAGEMENT -->
                 <li class="section-label">RESULTS MANAGEMENT</li>
 
-                <!-- VERIFY RESULTS -->
-                <li class="@(currentAction == "VerifyResults"
-                                                  ? "active" : "")">
+                <li class="@(currentAction == "VerifyResults" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="VerifyResults">
                         <i class="fas fa-shield-halved"></i>
                         <span class="menu-text">Verify Results</span>
                     </a>
                 </li>
 
-                <!-- REVIEW RESULTS -->
-                <li class="@(currentAction == "ReviewResults"
-                                                  ? "active" : "")">
+                <li class="@(currentAction == "ReviewResults" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="ReviewResults">
                         <i class="fas fa-clipboard-list"></i>
                         <span class="menu-text">Review Results</span>
                     </a>
                 </li>
 
-                <!-- REVIEW RESULTS -->
-                <li class="@(currentAction == "ReviewResults"
-                                                                      ? "active" : "")">
+                <li class="@(currentAction == "MyCompletedTests" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="MyCompletedTests">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span class="menu-text">Completed tests</span>
+                        <i class="fas fa-check-circle"></i>
+                        <span class="menu-text">Completed Tests</span>
                     </a>
                 </li>
 
+                <!-- REPORTING -->
                 <li class="section-label">REPORTING</li>
 
-                <!-- REPORTS -->
                 <li class="@(currentAction == "Reports" ? "active" : "")">
                     <a asp-controller="LabTechnician" asp-action="Reports">
                         <i class="fas fa-chart-column"></i>
@@ -129,14 +119,15 @@
                     </a>
                 </li>
 
+                <!-- ACCOUNT -->
                 <li class="section-label">ACCOUNT</li>
 
-                <!-- MY ACCOUNT -->
                 <li class="@(currentAction == "TechnicianProfile" ||
                                                   currentAction == "EditProfile" ||
                                                   currentAction == "ChangePassword"
                                                   ? "active" : "")">
-                    <a asp-controller="LabTechnician" asp-action="TechnicianProfile">
+                    <a asp-controller="LabTechnician"
+                       asp-action="TechnicianProfile">
                         <i class="fas fa-id-card"></i>
                         <span class="menu-text">Profile</span>
                     </a>
@@ -158,12 +149,42 @@
 
         <!-- MAIN CONTENT -->
         <div id="content">
-            @RenderBody()
+
+            <!-- TOP RIGHT TECHNICIAN ACCOUNT -->
+            <div class="top-manager-account">
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TechnicianProfile"
+                   class="top-manager-account"
+                   style="text-decoration: none; border: none; color: inherit;">
+
+                    <div class="top-manager-avatar">
+                        <i class="fas fa-user-nurse"></i>
+                    </div>
+
+                    <div class="top-manager-info">
+                        <span class="top-manager-name">
+                            @(currentUser?.FullName
+                                ?? User.Identity?.Name
+                                ?? "Lab Technician")
+                        </span>
+
+                        <small>Laboratory Technician</small>
+                    </div>
+
+                </a>
+            </div>
+
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+
         </div>
 
     </div>
 
-    <!-- LOGOUT CONFIRMATION -->
+    <!-- LOGOUT CONFIRMATION MODAL -->
     <div class="modal fade"
          id="logoutModal"
          tabindex="-1"
@@ -189,7 +210,9 @@
                         <i class="fas fa-right-from-bracket fa-2x text-secondary"></i>
                     </div>
 
-                    <h6 class="fw-bold">Are you sure you want to logout?</h6>
+                    <h6 class="fw-bold">
+                        Are you sure you want to logout?
+                    </h6>
 
                     <p class="text-muted mb-0">
                         You will be signed out of HemaCore.
@@ -203,12 +226,16 @@
                         Cancel
                     </button>
 
-                    <a asp-controller="Account"
-                       asp-action="Logout"
-                       class="btn btn-danger">
-                        <i class="fas fa-right-from-bracket me-1"></i>
-                        Logout
-                    </a>
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-right-from-bracket me-1"></i>
+                            Logout
+                        </button>
+                    </form>
                 </div>
 
             </div>
@@ -216,33 +243,35 @@
     </div>
 
     <!-- JAVASCRIPT -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- SIDEBAR TOGGLE -->
     <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const sidebar = document.getElementById("sidebar");
-                const content = document.getElementById("content");
-                const toggleBtn = document.getElementById("sidebarToggle");
+        document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const toggleBtn = document.getElementById("sidebarToggle");
 
-                if (!sidebar || !content || !toggleBtn) return;
+        if (!sidebar || !content || !toggleBtn) {
+        return;
+        }
 
-                const icon = toggleBtn.querySelector("i");
+        const icon = toggleBtn.querySelector("i");
 
-                toggleBtn.addEventListener("click", function() {
-                    sidebar.classList.toggle("collapsed");
-                    content.classList.toggle("expanded");
+        toggleBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("collapsed");
+        content.classList.toggle("expanded");
 
-                    if (sidebar.classList.contains("collapsed")) {
-                        icon.classList.replace("fa-angle-left", "fa-angle-right");
-                    } else {
-                        icon.classList.replace("fa-angle-right", "fa-angle-left");
-                    }
-                });
-            });
+        if (sidebar.classList.contains("collapsed")) {
+        icon.classList.replace("fa-angle-left", "fa-angle-right");
+        } else {
+        icon.classList.replace("fa-angle-right", "fa-angle-left");
+        }
+        });
+        });
     </script>
 
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

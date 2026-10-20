@@ -1,38 +1,40 @@
-﻿<!DOCTYPE html>
-<html>
+﻿
+<!DOCTYPE html>
+<html data-theme="midnight">
 <head>
-    <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - HemaCore</title>
 
-    <link rel="stylesheet" href="~/css/Layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
 </head>
 
 <body>
-
     <div class="wrapper">
 
         <!-- SIDEBAR -->
         <nav id="sidebar">
 
+            <!-- SIDEBAR HEADER -->
             <div class="sidebar-header">
-
                 <div class="header-top">
-
-                    <button id="sidebarToggle" class="toggle-btn">
+                    <button id="sidebarToggle"
+                            class="toggle-btn"
+                            type="button"
+                            aria-label="Toggle sidebar">
                         <i class="fas fa-angle-left"></i>
                     </button>
 
                     <h3>HemaCore</h3>
-
                 </div>
 
-                <p>Admin PORTAL</p>
-
+                <p>ADMIN PORTAL</p>
             </div>
 
+            <!-- NAVIGATION MENU -->
             <ul class="list-unstyled components">
 
                 <!-- OVERVIEW -->
@@ -44,7 +46,6 @@
                         <span class="menu-text">Dashboard</span>
                     </a>
                 </li>
-
 
                 <!-- CLINICAL -->
                 <li class="section-label">CLINICAL</li>
@@ -70,7 +71,6 @@
                     </a>
                 </li>
 
-
                 <!-- CATEGORIES -->
                 <li class="section-label">CATEGORIES</li>
 
@@ -95,16 +95,16 @@
                     </a>
                 </li>
 
-
                 <!-- REPORTING -->
-                
+                <li class="section-label">REPORTING</li>
+
                 <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
                     <a asp-controller="Admin" asp-action="Reports">
                         <i class="fas fa-chart-bar"></i>
                         <span class="menu-text">Reports</span>
                     </a>
                 </li>
-               
+
                 <!-- ACCOUNT -->
                 <li class="section-label">ACCOUNT</li>
 
@@ -117,66 +117,83 @@
 
             </ul>
 
-
             <!-- LOGOUT -->
             <div class="logout">
-
                 <a asp-controller="Account" asp-action="Logout">
-
                     <i class="fas fa-sign-out-alt"></i>
-
-                    <span class="menu-text">
-                        Logout
-                    </span>
-
+                    <span class="menu-text">Logout</span>
                 </a>
-
             </div>
 
         </nav>
 
-
-        <!-- CONTENT -->
+        <!-- MAIN CONTENT -->
         <div id="content">
 
-            @RenderBody()
+            <!-- TOP RIGHT ADMIN ACCOUNT -->
+            <div class="top-manager-account">
+
+                <a asp-controller="Admin"
+                   asp-action="Profile"
+                   class="top-manager-account"
+                   style="text-decoration: none; border: none; color: inherit;">
+
+                    <div class="top-manager-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+
+                    <div class="top-manager-info">
+                        <span class="top-manager-name">
+                            @(User.FindFirst("FullName")?.Value
+                                ?? User.Identity?.Name
+                                ?? "Administrator")
+                        </span>
+
+                        <small>Administrator</small>
+                    </div>
+
+                </a>
+            </div>
+
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
 
         </div>
 
     </div>
 
+    <!-- BOOTSTRAP -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- SCRIPT -->
+    <!-- SIDEBAR TOGGLE -->
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const toggleBtn = document.getElementById("sidebarToggle");
 
-            const sidebar = document.getElementById("sidebar");
-            const content = document.getElementById("content");
-            const toggleBtn = document.getElementById("sidebarToggle");
-            const icon = toggleBtn.querySelector("i");
+        if (!sidebar || !content || !toggleBtn) {
+        return;
+        }
 
-            toggleBtn.addEventListener("click", function () {
+        const icon = toggleBtn.querySelector("i");
 
-                sidebar.classList.toggle("collapsed");
-                content.classList.toggle("expanded");
+        toggleBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("collapsed");
+        content.classList.toggle("expanded");
 
-                if (sidebar.classList.contains("collapsed")) {
-
-                    icon.classList.remove("fa-angle-left");
-                    icon.classList.add("fa-angle-right");
-
-                }
-                else {
-
-                    icon.classList.remove("fa-angle-right");
-                    icon.classList.add("fa-angle-left");
-
-                }
-
-            });
-
+        if (sidebar.classList.contains("collapsed")) {
+        icon.classList.replace("fa-angle-left", "fa-angle-right");
+        } else {
+        icon.classList.replace("fa-angle-right", "fa-angle-left");
+        }
+        });
+        });
     </script>
 
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

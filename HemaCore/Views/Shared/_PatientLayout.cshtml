@@ -1,355 +1,301 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿
+@using Microsoft.AspNetCore.Identity
 @using HemaCore.Data
 @using Microsoft.EntityFrameworkCore
+
 @inject UserManager<HemaCore.Models.Users> UserManager
 @inject AppDbContext Context
+
 @{
     var currentUser = await UserManager.GetUserAsync(User);
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var pendingConsentCount = 0;
 
     if (currentUser != null)
     {
-        // Count how many pending consent requests the patient has
         pendingConsentCount = await Context.ConsentRequests
-            .CountAsync(r => r.PatientID == currentUser.Id && r.Status == "Pending");
+            .CountAsync(r => r.PatientID == currentUser.Id
+                          && r.Status == "Pending");
     }
 }
+
 <!DOCTYPE html>
-<html>
+<html data-theme="midnight">
 <head>
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewBag.Title - HemaCore</title>
-
-    <!-- SAME CSS AS ADMIN LAYOUT -->
-    <link rel="stylesheet" href="~/css/Layout.css" />
+    <title>@ViewData["Title"] - HemaCore</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
 </head>
 
 <body>
-
     <div class="wrapper">
 
-        <!-- ================= SIDEBAR ================= -->
+        <!-- SIDEBAR -->
         <nav id="sidebar">
 
             <!-- SIDEBAR HEADER -->
             <div class="sidebar-header">
-
                 <div class="header-top">
-
-                    <button id="sidebarToggle" class="toggle-btn">
+                    <button id="sidebarToggle"
+                            class="toggle-btn"
+                            type="button"
+                            aria-label="Toggle sidebar">
                         <i class="fas fa-angle-left"></i>
                     </button>
 
                     <h3>HemaCore</h3>
-
                 </div>
 
-                <p>Patient PORTAL</p>
-
+                <p>PATIENT PORTAL</p>
             </div>
 
-
-            <!-- ================= MENU ================= -->
+            <!-- NAVIGATION MENU -->
             <ul class="list-unstyled components">
 
                 <!-- OVERVIEW -->
-                <li class="section-label">
-                    OVERVIEW
-                </li>
+                <li class="section-label">OVERVIEW</li>
 
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="Index">
-
+                <li class="@(currentAction == "Index" || currentAction == "Dashboard"
+                                                  ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="Index">
                         <i class="fas fa-home"></i>
-
-                        <span class="menu-text">
-                            Dashboard
-                        </span>
-
+                        <span class="menu-text">Dashboard</span>
                     </a>
-
                 </li>
-
 
                 <!-- LABORATORY -->
-                <li class="section-label">
-                    LABORATORY
-                </li>
+                <li class="section-label">LABORATORY</li>
 
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MyTestRequests" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="MyTestRequests">
-
+                <li class="@(currentAction == "MyTestRequests" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="MyTestRequests">
                         <i class="fas fa-vials"></i>
-
-                        <span class="menu-text">
-                            Test Requests
-                        </span>
-
+                        <span class="menu-text">Test Requests</span>
                     </a>
-
                 </li>
 
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Result" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="Result">
-
+                <li class="@(currentAction == "Result" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="Result">
                         <i class="fas fa-file-medical"></i>
-
-                        <span class="menu-text">
-                            My Results
-                        </span>
-
+                        <span class="menu-text">My Results</span>
                     </a>
-
                 </li>
 
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Health" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="Health">
-
+                <li class="@(currentAction == "Health" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="Health">
                         <i class="fas fa-heartbeat"></i>
-
-                        <span class="menu-text">
-                            My Health
-                        </span>
-
+                        <span class="menu-text">My Health</span>
                     </a>
-
                 </li>
 
+                <!-- CONSENT MANAGEMENT -->
+                <li class="section-label">CONSENT MANAGEMENT</li>
 
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Consent" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="Consent">
-
+                <li class="@(currentAction == "Consent" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="Consent">
                         <i class="fas fa-file-signature"></i>
+                        <span class="menu-text">Consent</span>
+                    </a>
+                </li>
 
-                        <span class="menu-text">
-                            Consent
+                <li class="@(currentAction == "ConsentRequests" ? "active" : "")">
+                    <a asp-controller="Patient"
+                       asp-action="ConsentRequests"
+                       class="d-flex justify-content-between align-items-center w-100">
+
+                        <span>
+                            <i class="fas fa-user-check"></i>
+                            <span class="menu-text">Consent Requests</span>
                         </span>
 
+                        @if (pendingConsentCount > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill notification-badge">
+                                @pendingConsentCount
+                            </span>
+                        }
                     </a>
-
-                    <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ConsentRequests" ? "active" : "")">
-                        <a asp-controller="Patient" asp-action="ConsentRequests" class="d-flex justify-content-between align-items-center w-100">
-                            <div>
-                                <i class="fas fa-user-check"></i>
-                                <span class="menu-text">Consent Requests</span>
-                            </div>
-
-                            @if (pendingConsentCount > 0)
-                            {
-                                <span class="badge bg-danger rounded-pill notification-badge">
-                                    @pendingConsentCount
-                                </span>
-                            }
-                        </a>
-                    </li>
+                </li>
 
                 <!-- PROFILE -->
-                <li class="section-label">
-                    PROFILE
-                </li>
+                <li class="section-label">PROFILE</li>
 
-
-               @*  <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "CompleteProfile" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="CompleteProfile">
-
-                        <i class="fas fa-user-plus"></i>
-
-                        <span class="menu-text">
-                            Complete Profile
-                        </span>
-
-                    </a>
-
-                </li> *@
-
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "PatientDetails" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="PatientDetails">
-
+                <li class="@(currentAction == "PatientDetails" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="PatientDetails">
                         <i class="fas fa-id-card"></i>
-
-                        <span class="menu-text">
-                            My Details
-                        </span>
-
+                        <span class="menu-text">My Details</span>
                     </a>
-
                 </li>
 
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "EditProfile" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="EditProfile">
-
+                <li class="@(currentAction == "EditProfile" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="EditProfile">
                         <i class="fas fa-user-edit"></i>
-
-                        <span class="menu-text">
-                            Edit Profile
-                        </span>
-
+                        <span class="menu-text">Edit Profile</span>
                     </a>
-
                 </li>
 
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ChangePassword" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="ChangePassword">
-
+                <li class="@(currentAction == "ChangePassword" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="ChangePassword">
                         <i class="fas fa-key"></i>
-
-                        <span class="menu-text">
-                            Change Password
-                        </span>
-
+                        <span class="menu-text">Change Password</span>
                     </a>
-
                 </li>
-
 
                 <!-- REPORTING -->
-                <li class="section-label">
-                    REPORTING
-                </li>
+                <li class="section-label">REPORTING</li>
 
-
-                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Report" ? "active" : "")">
-
-                    <a asp-controller="Patient"
-                       asp-action="Report">
-
+                <li class="@(currentAction == "Report" ? "active" : "")">
+                    <a asp-controller="Patient" asp-action="Report">
                         <i class="fas fa-chart-bar"></i>
-
-                        <span class="menu-text">
-                            Reports
-                        </span>
-
+                        <span class="menu-text">Reports</span>
                     </a>
-
                 </li>
 
             </ul>
 
-
-            <!-- ================= LOGOUT ================= -->
+            <!-- LOGOUT -->
             <div class="logout">
-
-                <a asp-controller="Account"
-                   asp-action="Logout">
-
+                <a href="#"
+                   data-bs-toggle="modal"
+                   data-bs-target="#logoutModal">
                     <i class="fas fa-sign-out-alt"></i>
-
-                    <span class="menu-text">
-                        Logout
-                    </span>
-
+                    <span class="menu-text">Logout</span>
                 </a>
-
             </div>
 
         </nav>
 
+        <!-- MAIN CONTENT -->
+        <div id="content">
 
-            <!-- MAIN CONTENT -->
-            <div id="content">
+            <!-- TOP RIGHT PATIENT ACCOUNT -->
+            <div class="top-manager-account">
 
-                <!-- TOP RIGHT MANAGER ACCOUNT -->
-                <div class="top-manager-account">
+                <a asp-controller="Patient"
+                   asp-action="PatientDetails"
+                   class="top-manager-account"
+                   style="text-decoration: none; border: none; color: inherit;">
+
                     <div class="top-manager-avatar">
-                        <i class="fas fa-user-tie"></i>
+                        <i class="fas fa-user"></i>
                     </div>
 
                     <div class="top-manager-info">
                         <span class="top-manager-name">
-                            @(User.FindFirst("FullName")?.Value
+                            @(currentUser?.FullName
                                 ?? User.Identity?.Name
-                                ?? "Manager")
+                                ?? "Patient")
                         </span>
 
                         <small>Patient</small>
                     </div>
-                </div>
 
-                <!-- PAGE CONTENT -->
-                <div class="page-content">
-                    @RenderBody()
-                </div>
-
+                </a>
             </div>
 
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+
+        </div>
 
     </div>
 
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div class="modal fade"
+         id="logoutModal"
+         tabindex="-1"
+         aria-labelledby="logoutModalLabel"
+         aria-hidden="true">
 
-    <!-- ================= SIDEBAR TOGGLE ================= -->
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="logoutModalLabel">
+                        Confirm Logout
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-sign-out-alt fa-2x text-secondary"></i>
+                    </div>
+
+                    <h6 class="fw-bold">
+                        Are you sure you want to logout?
+                    </h6>
+
+                    <p class="text-muted mb-0">
+                        You will be signed out of HemaCore.
+                    </p>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOTSTRAP -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SIDEBAR TOGGLE -->
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const toggleBtn = document.getElementById("sidebarToggle");
 
-            (function () {
+        if (!sidebar || !content || !toggleBtn) {
+        return;
+        }
 
-                const sidebar = document.getElementById("sidebar");
-                const content = document.getElementById("content");
-                const toggleBtn = document.getElementById("sidebarToggle");
+        const icon = toggleBtn.querySelector("i");
 
-                if (!sidebar || !content || !toggleBtn) {
-                    return;
-                }
+        toggleBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("collapsed");
+        content.classList.toggle("expanded");
 
-                const icon = toggleBtn.querySelector("i");
-
-                toggleBtn.addEventListener("click", function () {
-
-                    sidebar.classList.toggle("collapsed");
-
-                    content.classList.toggle("expanded");
-
-
-                    if (sidebar.classList.contains("collapsed")) {
-
-                        icon.classList.remove("fa-angle-left");
-
-                        icon.classList.add("fa-angle-right");
-
-                    }
-                    else {
-
-                        icon.classList.remove("fa-angle-right");
-
-                        icon.classList.add("fa-angle-left");
-
-                    }
-
-                });
-
-            })();
-
+        if (sidebar.classList.contains("collapsed")) {
+        icon.classList.replace("fa-angle-left", "fa-angle-right");
+        } else {
+        icon.classList.replace("fa-angle-right", "fa-angle-left");
+        }
+        });
+        });
     </script>
 
-
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

@@ -1,29 +1,15 @@
-﻿@using Microsoft.EntityFrameworkCore
-@inject HemaCore.Data.AppDbContext DbContext
-@inject Microsoft.AspNetCore.Identity.UserManager<HemaCore.Models.Users> UserManager
-
-@{
-    int unreadAlertCount = 0;
-    var currentUser = await UserManager.GetUserAsync(User);
-    if (currentUser != null)
-    {
-        var currentDoctor = await DbContext.Doctors.FirstOrDefaultAsync(d => d.UserId == currentUser.Id);
-        if (currentDoctor != null)
-        {
-            unreadAlertCount = await DbContext.Alerts.CountAsync(a => a.DoctorID == currentDoctor.DoctorId && !a.IsRead);
-        }
-    }
-}
+﻿```cshtml
 <!DOCTYPE html>
-<html>
+<html data-theme="midnight">
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title - Doctor Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/doctor.css" />
-    <link rel="stylesheet" href="~/css/Layout.css" />
+    <title>@ViewBag.Title</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/doctor.css" asp-append-version="true" />
 </head>
 
 <body>
@@ -32,85 +18,89 @@
         <!-- SIDEBAR -->
         <nav id="sidebar">
 
+            <!-- SIDEBAR HEADER -->
             <div class="sidebar-header">
                 <div class="header-top">
-                    <button id="sidebarToggle" class="toggle-btn">
+                    <button id="sidebarToggle" class="toggle-btn" type="button">
                         <i class="fas fa-angle-left"></i>
                     </button>
+
                     <h3>HemaCore</h3>
                 </div>
+
                 <p>DOCTOR PORTAL</p>
             </div>
 
+            <!-- NAVIGATION MENU -->
             <ul class="list-unstyled components">
 
+                <!-- OVERVIEW -->
                 <li class="section-label">OVERVIEW</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="Index">
                         <i class="fas fa-home"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
                 </li>
 
-                <li class="section-label">PATIENTS</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "ManagePatients" ? "active" : "")">
+                <!-- PATIENT MANAGEMENT -->
+                <li class="section-label">PATIENT MANAGEMENT</li>
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "ManagePatients" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="ManagePatients">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage Patients</span>
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "AddPatient" ? "active" : "")">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "AddPatient" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="AddPatient">
                         <i class="fas fa-user-plus"></i>
                         <span class="menu-text">Add New Patient</span>
                     </a>
                 </li>
 
+                <!-- TEST REQUESTS -->
                 <li class="section-label">TEST REQUESTS</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "MyRequests" ? "active" : "")">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MyRequests" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="MyRequests">
-                        <i class="fas fa-list-alt"></i>
+                        <i class="fas fa-file-medical"></i>
                         <span class="menu-text">My Requests</span>
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "CreateTestRequest" ? "active" : "")">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "CreateTestRequest" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="CreateTestRequest">
                         <i class="fas fa-plus-circle"></i>
                         <span class="menu-text">New Request</span>
                     </a>
                 </li>
 
-                <li class="section-label">RESULTS & ALERTS</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Alerts" ? "active" : "")">
+                <!-- NOTIFICATIONS -->
+                <li class="section-label">NOTIFICATIONS</li>
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Alerts" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="Alerts">
                         <i class="fas fa-bell"></i>
-                        <span class="menu-text">
-                            Alerts
-                            @if (unreadAlertCount > 0)
-                            {
-                                <span style="background: #dc3545; color: white; border-radius: 50%; padding: 0.2rem 0.5rem; font-size: 0.7rem; margin-left: 0.5rem;">@unreadAlertCount</span>
-                            }
-                        </span>
+                        <span class="menu-text">Alerts</span>
                     </a>
                 </li>
 
+                <!-- REPORTING -->
                 <li class="section-label">REPORTING</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Reports" ? "active" : "")">
+
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
                     <a asp-controller="Doctor" asp-action="Reports">
-                        <i class="fas fa-chart-bar"></i>
+                        <i class="fas fa-chart-column"></i>
                         <span class="menu-text">My Reports</span>
-                    </a>
-                </li>
-                <li class="section-label">ACCOUNT</li>
-                <li class="@(ViewContext.RouteData.Values["action"].ToString() == "Profile" ? "active" : "")">
-                    <a asp-controller="Doctor" asp-action="Profile">
-                        <i class="fas fa-user-circle"></i>
-                        <span class="menu-text">My Profile</span>
                     </a>
                 </li>
 
             </ul>
 
+            <!-- LOGOUT -->
             <div class="logout">
                 <a asp-controller="Account" asp-action="Logout">
                     <i class="fas fa-sign-out-alt"></i>
@@ -120,35 +110,75 @@
 
         </nav>
 
-        <!-- CONTENT -->
+        <!-- MAIN CONTENT -->
         <div id="content">
-            @RenderBody()
+
+            <!-- TOP RIGHT DOCTOR ACCOUNT -->
+            <div class="top-manager-account">
+
+                <a asp-controller="Doctor"
+                   asp-action="Profile"
+                   class="top-manager-account"
+                   style="text-decoration: none; border: none; color: inherit;">
+
+                    <div class="top-manager-avatar">
+                        <i class="fas fa-user-doctor"></i>
+                    </div>
+
+                    <div class="top-manager-info">
+                        <span class="top-manager-name">
+                            @(User.FindFirst("FullName")?.Value
+                                ?? User.Identity?.Name
+                                ?? "Doctor")
+                        </span>
+
+                        <small>Doctor</small>
+                    </div>
+
+                </a>
+            </div>
+
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+
         </div>
 
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- BOOTSTRAP -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SIDEBAR TOGGLE -->
     <script>
-            const sidebar = document.getElementById("sidebar");
-            const content = document.getElementById("content");
-            const toggleBtn = document.getElementById("sidebarToggle");
-            const icon = toggleBtn.querySelector("i");
+        document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const toggleBtn = document.getElementById("sidebarToggle");
 
-            toggleBtn.addEventListener("click", function () {
-                sidebar.classList.toggle("collapsed");
-                content.classList.toggle("expanded");
+        if (!sidebar || !content || !toggleBtn) {
+        return;
+        }
 
-                if (sidebar.classList.contains("collapsed")) {
-                    icon.classList.remove("fa-angle-left");
-                    icon.classList.add("fa-angle-right");
-                } else {
-                    icon.classList.remove("fa-angle-right");
-                    icon.classList.add("fa-angle-left");
-                }
-            });
+        const icon = toggleBtn.querySelector("i");
+
+        toggleBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("collapsed");
+        content.classList.toggle("expanded");
+
+        if (sidebar.classList.contains("collapsed")) {
+        icon.classList.remove("fa-angle-left");
+        icon.classList.add("fa-angle-right");
+        } else {
+        icon.classList.remove("fa-angle-right");
+        icon.classList.add("fa-angle-left");
+        }
+        });
+        });
     </script>
 
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

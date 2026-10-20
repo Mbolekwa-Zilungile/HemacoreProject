@@ -1,4 +1,5 @@
-﻿@model List<HemaCore.Models.ConditionCategory>
+﻿
+@model List<HemaCore.Models.ConditionCategory>
 
 @{
     Layout = "_AdminLayout";
@@ -7,189 +8,279 @@
 
 <link rel="stylesheet" href="~/css/doctor.css" />
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        @TempData["Success"] <button type="button"
-                                     class="btn-close"
-                                     data-bs-dismiss="alert"> </button>
-    </div>
-}
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        @TempData["Error"] <button type="button"
-                                   class="btn-close"
-                                   data-bs-dismiss="alert"> </button>
-    </div>
-}
-
 <div class="content-card">
 
-    ```
-    <div class="section-title d-flex justify-content-between align-items-center">
-        <div>
+    @* ALERT MESSAGES *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* PAGE HEADER *@
+    <div class="section-title d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
             <i class="fas fa-folder me-2"></i>
-            <span>Condition Categories</span>
+            <span>
+                Condition Categories (@(Model?.Count ?? 0))
+            </span>
         </div>
 
         <a asp-controller="Admin"
            asp-action="AddConditionCategory"
-           class="btn btn-primary-custom">
-            <i class="fas fa-plus me-2"></i>
-            Add Category
+           class="btn btn-primary-custom btn-sm">
+            + Add Category
         </a>
+
     </div>
 
-    <div class="table-responsive mt-3">
+    @* SEARCH AND STATUS FILTER *@
+    <div class="search-toolbar">
 
-        <table class="table table-hover align-middle">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
 
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Category Name</th>
-                    <th>Description</th>
-                    <th>Conditions</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search categories..."
+                   autocomplete="off" />
+        </div>
 
-            <tbody>
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
 
-                @if (Model != null && Model.Any())
-                {
-                    var number = 1;
+            <div class="select-wrapper">
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">All Categories</option>
+                    <option value="active">Active Categories</option>
+                    <option value="inactive">Inactive Categories</option>
+                </select>
 
-                    foreach (var category in Model.OrderBy(c => c.Name))
-                    {
-                        var conditionCount = 0;
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+        </div>
 
-                        if (ViewBag.ConditionCountByCategory != null &&
-                            ViewBag.ConditionCountByCategory.ContainsKey(category.Id))
+    </div>
+
+    @* CATEGORY TABLE *@
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>Conditions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="categoryTable">
+
+                        @if (Model != null && Model.Any())
                         {
-                            conditionCount =
-                                ViewBag.ConditionCountByCategory[category.Id];
-                        }
+                            var number = 1;
 
-                        <tr class="@(category.IsActive ? "" : "table-secondary")">
+                            foreach (var category in Model.OrderBy(c => c.Name))
+                            {
+                                var conditionCount = 0;
 
-                            <td>
-                                @number
-                            </td>
-
-                            <td>
-                                <strong>@category.Name</strong>
-                            </td>
-
-                            <td>
-                                @if (!string.IsNullOrWhiteSpace(category.Description))
+                                if (ViewBag.ConditionCountByCategory != null &&
+                                    ViewBag.ConditionCountByCategory.ContainsKey(category.Id))
                                 {
-                                    <span>
-                                        @category.Description
-                                    </span>
+                                    conditionCount =
+                                        ViewBag.ConditionCountByCategory[category.Id];
                                 }
-                                else
-                                {
-                                    <span class="text-muted">
-                                        No description provided
-                                    </span>
-                                }
-                            </td>
 
-                            <td>
-                                <span class="badge bg-primary">
-                                    @conditionCount
-                                </span>
-                            </td>
+                                <tr data-status="@(category.IsActive ? "active" : "inactive")">
 
-                            <td>
-                                @if (category.IsActive)
-                                {
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle me-1"></i>
-                                        Active
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-ban me-1"></i>
-                                        Inactive
-                                    </span>
-                                }
-                            </td>
+                                    <td>@number</td>
 
-                            <td class="text-end">
+                                    <td class="fw-semibold blue-text">
+                                        @category.Name
+                                    </td>
 
-                                <div class="d-flex justify-content-end gap-2">
-
-                                    <a asp-controller="Admin"
-                                       asp-action="EditConditionCategory"
-                                       asp-route-id="@category.Id"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Edit Category">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-
-                                    <form asp-controller="Admin"
-                                          asp-action="ToggleCategoryStatus"
-                                          asp-route-id="@category.Id"
-                                          method="post"
-                                          class="d-inline">
-
-                                        @Html.AntiForgeryToken()
-
-                                        @if (category.IsActive)
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(category.Description))
                                         {
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-outline-warning"
-                                                    title="Deactivate"
-                                                    onclick="return confirm('Are you sure you want to deactivate this category?');">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
+                                            @category.Description
                                         }
                                         else
                                         {
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-outline-success"
-                                                    title="Activate">
-                                                <i class="fas fa-check"></i>
-                                            </button>
+                                            <span class="text-muted">
+                                                No description provided
+                                            </span>
                                         }
+                                    </td>
 
-                                    </form>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            @conditionCount
+                                        </span>
+                                    </td>
 
-                                </div>
+                                    <td>
+                                        @if (category.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
 
-                            </td>
+                                    <td>
+                                        <a asp-controller="Admin"
+                                           asp-action="EditConditionCategory"
+                                           asp-route-id="@category.Id"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit Category">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
 
-                        </tr>
+                                        <form asp-controller="Admin"
+                                              asp-action="ToggleCategoryStatus"
+                                              asp-route-id="@category.Id"
+                                              method="post"
+                                              class="d-inline">
 
-                        number++;
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">
-                                No condition categories found.
-                            </p>
-                        </td>
-                    </tr>
-                }
+                                            @Html.AntiForgeryToken()
 
-            </tbody>
+                                            @if (category.IsActive)
+                                            {
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Deactivate Category"
+                                                        onclick="return confirm('Are you sure you want to deactivate this category?');">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        title="Activate Category">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            }
 
-        </table>
+                                        </form>
+                                    </td>
 
+                                </tr>
+
+                                number++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6"
+                                    class="text-center text-muted py-3">
+                                    No condition categories available.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
     </div>
-    ```
 
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const searchBox = document.getElementById("searchBox");
+            const statusFilter = document.getElementById("statusFilter");
+            const categoryTable = document.getElementById("categoryTable");
+
+            function filterCategories() {
+
+                const term = searchBox.value.trim().toLowerCase();
+                const status = statusFilter.value;
+
+                const rows = categoryTable.querySelectorAll("tr");
+                let visibleCount = 0;
+
+                rows.forEach(function (row) {
+
+                    if (!row.hasAttribute("data-status")) {
+                        return;
+                    }
+
+                    const rowText = row.textContent.toLowerCase();
+                    const rowStatus = row.getAttribute("data-status");
+
+                    const matchesSearch = rowText.includes(term);
+                    const matchesStatus =
+                        status === "all" || rowStatus === status;
+
+                    const visible = matchesSearch && matchesStatus;
+
+                    row.style.display = visible ? "" : "none";
+
+                    if (visible) {
+                        visibleCount++;
+                    }
+                });
+
+                let noResults =
+                    document.getElementById("noCategoryResults");
+
+                if (visibleCount === 0) {
+
+                    if (!noResults) {
+                        noResults = document.createElement("tr");
+                        noResults.id = "noCategoryResults";
+
+                        noResults.innerHTML = `
+                            <td colspan="6"
+                                class="text-center text-muted py-3">
+                                No condition categories found.
+                            </td>`;
+
+                        categoryTable.appendChild(noResults);
+                    }
+
+                    noResults.style.display = "";
+                }
+                else if (noResults) {
+                    noResults.remove();
+                }
+            }
+
+            searchBox.addEventListener("input", filterCategories);
+            statusFilter.addEventListener("change", filterCategories);
+
+        });
+    </script>
+}
+

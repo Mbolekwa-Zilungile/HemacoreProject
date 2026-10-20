@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html>
+<html data-theme="midnight">
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="~/css/Layout.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
 </head>
 
 <body>
@@ -135,11 +136,11 @@
 
             <!-- TOP RIGHT MANAGER ACCOUNT -->
             <div class="top-manager-account">
-                
+
                 <a asp-controller="Manager"
                    asp-action="ManagerDetails"
                    class="top-manager-account"
-                   style="text-decoration: none; border: none; color: inherit;">       
+                   style="text-decoration: none; border: none; color: inherit;">
                     <div class="top-manager-avatar">
                         <i class="fas fa-user-tie"></i>
                     </div>
@@ -162,40 +163,40 @@
             </div>
 
         </div>
+
       
+        <!-- BOOTSTRAP -->
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- BOOTSTRAP -->
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- SIDEBAR TOGGLE -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.getElementById("sidebar");
+            const content = document.getElementById("content");
+            const toggleBtn = document.getElementById("sidebarToggle");
 
-    <!-- SIDEBAR TOGGLE -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-        const sidebar = document.getElementById("sidebar");
-        const content = document.getElementById("content");
-        const toggleBtn = document.getElementById("sidebarToggle");
+            if (!sidebar || !content || !toggleBtn) {
+            return;
+            }
 
-        if (!sidebar || !content || !toggleBtn) {
-        return;
-        }
+            const icon = toggleBtn.querySelector("i");
 
-        const icon = toggleBtn.querySelector("i");
+            toggleBtn.addEventListener("click", function () {
+            sidebar.classList.toggle("collapsed");
+            content.classList.toggle("expanded");
 
-        toggleBtn.addEventListener("click", function () {
-        sidebar.classList.toggle("collapsed");
-        content.classList.toggle("expanded");
+            if (sidebar.classList.contains("collapsed")) {
+            icon.classList.remove("fa-angle-left");
+            icon.classList.add("fa-angle-right");
+            } else {
+            icon.classList.remove("fa-angle-right");
+            icon.classList.add("fa-angle-left");
+            }
+            });
+            });
+        </script>
 
-        if (sidebar.classList.contains("collapsed")) {
-        icon.classList.remove("fa-angle-left");
-        icon.classList.add("fa-angle-right");
-        } else {
-        icon.classList.remove("fa-angle-right");
-        icon.classList.add("fa-angle-left");
-        }
-        });
-        });
-    </script>
+        @RenderSection("Scripts", required: false)
 
-    @RenderSection("Scripts", required: false)
-
-</body>
+    </body>
 </html>

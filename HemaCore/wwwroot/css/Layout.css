@@ -13,7 +13,7 @@ body {
     width: 250px;
     height: 100vh;
     /*background: #3b5bb5;*/
-    background: #2c7da0;
+    background: var(--hc-sidebar);
     color: #f1f5f9;
     position: fixed;
     top: 0;
@@ -26,7 +26,10 @@ body {
     #sidebar.collapsed {
         width: 70px;
     }
-
+    #sidebar,
+    #sidebar * {
+        border-radius: 0 !important;
+    }
 /* HEADER */
 .sidebar-header {
     padding: 20px;
@@ -36,7 +39,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #93c5fd;
+    color: var(--hc-on-dark);
 }
 
 /* REMOVE EXTRA SPACE */
@@ -60,7 +63,7 @@ body {
     .toggle-btn i {
         font-size: 18px;
         line-height: 1;
-        color: #93c5fd;
+        color: var(--hc-on-dark);
     }
 
 .sidebar-header p {
@@ -85,13 +88,13 @@ body {
 
         #sidebar ul li a:hover,
         #sidebar ul li.active > a {
-            background: #0f172a;
+            background: var(--hc-sidebar-active);
             color: #ffffff;
         }
 
     /* ACTIVE LEFT BORDER (PRO LOOK) */
     #sidebar ul li.active > a {
-        border-left: 4px solid #93c5fd;
+        border-left: 4px solid var(--hc-on-dark);
     }
 
     /* ICON */
@@ -104,14 +107,14 @@ body {
 .section-label {
     padding: 15px 20px 5px;
     font-size: 0.65rem;
-    color: #93c5fd;
+    color: var(--hc-on-dark);
     letter-spacing: 2px;
 }
 
 /* LOGOUT */
 .logout {
     padding: 20px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
     .logout a {
@@ -149,7 +152,7 @@ body {
         margin-right: 0;
         font-size: 1.3rem;
     }
-    /*new css for alerts patient*/
+/*new css for alerts patient*/
 .notification-badge {
     font-size: 0.75rem;
     padding: 0.25em 0.6em;

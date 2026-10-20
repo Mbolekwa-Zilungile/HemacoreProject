@@ -1,4 +1,5 @@
-﻿@model List<HemaCore.Models.Medication>
+﻿```cshtml
+@model List<HemaCore.Models.Medication>
 
 @{
     Layout = "_AdminLayout";
@@ -6,462 +7,284 @@
 }
 
 <link rel="stylesheet" href="~/css/doctor.css" />
-
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
-        @TempData["Error"]
-
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="alert">
-        </button>
-
-    </div>
-}
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-
-        @TempData["Success"]
-
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="alert">
-        </button>
-
-    </div>
-}
-
+<link rel="stylesheet" href="~/css/delete.css" />
 
 <div class="content-card">
 
-    <!-- HEADER -->
-    <div class="section-title d-flex align-items-center justify-content-between">
+    @* ALERT MESSAGES *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* PAGE HEADER *@
+    <div class="section-title d-flex align-items-center justify-content-between flex-wrap gap-2">
 
         <div class="d-flex align-items-center">
-
             <i class="fas fa-pills me-2"></i>
-
             <span>
-                All Medications
+                All Medications (@(Model?.Count ?? 0))
             </span>
-
-            <span class="badge blue-badge ms-2">
-                @ViewBag.MedicationCount
-            </span>
-
         </div>
 
-
         <div class="d-flex gap-2">
-
             <a asp-controller="Admin"
                asp-action="AddMedicationCategory"
-               class="btn btn-success btn-sm">
-
+               class="btn btn-primary-custom btn-sm">
                 <i class="fas fa-plus me-1"></i>
                 Add Category
-
             </a>
-
 
             <a asp-controller="Admin"
                asp-action="AddMedication"
                class="btn btn-primary-custom btn-sm">
-
                 <i class="fas fa-plus me-1"></i>
                 Add Medication
-
             </a>
-
         </div>
 
     </div>
 
+    @* SEARCH AND STATUS FILTER *@
+    <div class="search-toolbar">
 
-    <!-- SEARCH AND FILTER -->
-    <div class="row mb-3">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
 
-        <div class="col-md-8">
-
-            <div class="input-group">
-
-                <span class="input-group-text bg-transparent border-end-0">
-
-                    <i class="fas fa-search text-muted"></i>
-
-                </span>
-
-
-                <input type="text"
-                       id="searchBox"
-                       class="form-control border-start-0 ps-0"
-                       placeholder="Search medications..." />
-
-            </div>
-
+            <input type="text"
+                   id="searchBox"
+                   class="search-input"
+                   placeholder="Search medications..."
+                   autocomplete="off" />
         </div>
 
+        <div class="filter-box">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter me-1"></i>
+            </label>
 
-        <div class="col-md-4">
-
-            <div class="input-group">
-
-                <span class="input-group-text bg-transparent border-end-0">
-
-                    <i class="fas fa-filter text-muted"></i>
-
-                </span>
-
-
-                <select id="categoryFilter"
-                        class="form-select border-start-0 ps-0">
-
-                    <option value="">
-                        All Categories
-                    </option>
-
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var category in ViewBag.Categories)
-                        {
-                            <option value="@category.Id">
-                                @category.Name
-                            </option>
-                        }
-                    }
-
+            <div class="select-wrapper">
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">All Medications</option>
+                    <option value="active">Active Medications</option>
+                    <option value="inactive">Inactive Medications</option>
                 </select>
 
+                <i class="fas fa-chevron-down dropdown-icon"></i>
             </div>
-
         </div>
 
     </div>
 
+    @* MEDICATIONS TABLE *@
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
 
-    <!-- TABLE -->
-    <div class="table-responsive">
+            <div class="table-responsive">
+                <table class="modern-table w-100">
 
-        <table class="modern-table w-100">
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Medication Name
-                    </th>
-
-                    <th>
-                        Category
-                    </th>
-
-                    <th>
-                        Description
-                    </th>
-
-                    <th>
-                        Status
-                    </th>
-
-                    <th>
-                        Actions
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody id="medicationTable">
-
-                @if (Model == null || !Model.Any())
-                {
-                    <tr>
-
-                        <td colspan="5"
-                            class="text-center text-muted">
-
-                            No medications available.
-                            Click "Add Medication" to create one.
-
-                        </td>
-
-                    </tr>
-                }
-                else
-                {
-                    foreach (var medication in Model)
-                    {
-                        <tr data-category-id="@medication.CategoryId">
-
-                            <!-- NAME -->
-                            <td class="fw-semibold blue-text">
-
-                                @medication.Name
-
-                            </td>
-
-
-                            <!-- CATEGORY -->
-                            <td>
-
-                                @(medication.Category?.Name ?? "No Category")
-
-                            </td>
-
-
-                            <!-- DESCRIPTION -->
-                            <td>
-
-                                @(string.IsNullOrWhiteSpace(medication.Description)
-                                    ? "—"
-                                    : medication.Description)
-
-                            </td>
-
-
-                            <!-- STATUS -->
-                            <td>
-
-                                @if (medication.IsActive)
-                                {
-                                    <span class="badge bg-success">
-                                        Active
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">
-                                        Inactive
-                                    </span>
-                                }
-
-                            </td>
-
-
-                            <!-- ACTIONS -->
-                            <td>
-
-                                <a asp-controller="Admin"
-                                   asp-action="EditMedication"
-                                   asp-route-id="@medication.Id"
-                                   class="btn btn-sm btn-primary me-1">
-
-                                    <i class="fas fa-edit me-1"></i>
-                                    Edit
-
-                                </a>
-
-
-                                <form asp-controller="Admin"
-                                      asp-action="ToggleMedicationStatus"
-                                      method="post"
-                                      class="d-inline">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <input type="hidden"
-                                           name="id"
-                                           value="@medication.Id" />
-
-
-                                    @if (medication.IsActive)
-                                    {
-                                        <button type="submit"
-                                                class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Are you sure you want to deactivate this medication?');">
-
-                                            <i class="fas fa-ban me-1"></i>
-
-                                            Deactivate
-
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button type="submit"
-                                                class="btn btn-sm btn-success"
-                                                onclick="return confirm('Are you sure you want to activate this medication?');">
-
-                                            <i class="fas fa-check me-1"></i>
-
-                                            Activate
-
-                                        </button>
-                                    }
-
-                                </form>
-
-                            </td>
-
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Medication Name</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
-                    }
-                }
+                    </thead>
 
-            </tbody>
+                    <tbody id="medicationTable">
 
-        </table>
+                        @if (Model != null && Model.Any())
+                        {
+                            var number = 1;
 
+                            foreach (var medication in Model.OrderBy(m => m.Name))
+                            {
+                                <tr data-status="@(medication.IsActive ? "active" : "inactive")">
+
+                                    <td>@number</td>
+
+                                    <td class="fw-semibold blue-text">
+                                        @medication.Name
+                                    </td>
+
+                                    <td>
+                                        @(medication.Category?.Name ?? "No Category")
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(medication.Description))
+                                        {
+                                            @medication.Description
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                No description provided
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (medication.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <a asp-controller="Admin"
+                                           asp-action="EditMedication"
+                                           asp-route-id="@medication.Id"
+                                           class="btn btn-sm btn-outline-primary me-1"
+                                           title="Edit Medication">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <form asp-controller="Admin"
+                                              asp-action="ToggleMedicationStatus"
+                                              method="post"
+                                              class="d-inline">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@medication.Id" />
+
+                                            @if (medication.IsActive)
+                                            {
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Deactivate Medication"
+                                                        onclick="return confirm('Are you sure you want to deactivate this medication?');">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        title="Activate Medication"
+                                                        onclick="return confirm('Are you sure you want to activate this medication?');">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            }
+
+                                        </form>
+                                    </td>
+
+                                </tr>
+
+                                number++;
+                            }
+                        }
+                        else
+                        {
+                            <tr id="emptyMedicationRow">
+                                <td colspan="6"
+                                    class="text-center text-muted py-3">
+                                    No medications available. Click "Add Medication" to create one.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
     </div>
 
 </div>
 
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-<script>
+            const searchBox = document.getElementById("searchBox");
+            const statusFilter = document.getElementById("statusFilter");
+            const medicationTable = document.getElementById("medicationTable");
 
-    document.addEventListener("DOMContentLoaded", function() {
+            function filterMedications() {
 
-        const searchBox =
-            document.getElementById("searchBox");
+                const term = searchBox.value.trim().toLowerCase();
+                const status = statusFilter.value;
 
-        const categoryFilter =
-            document.getElementById("categoryFilter");
-
-
-        function filterTable() {
-
-            const searchTerm =
-                searchBox.value
-                    .toLowerCase()
-                    .trim();
-
-            const categoryId =
-                categoryFilter.value;
-
-
-            const rows =
-                document.querySelectorAll(
-                    "#medicationTable tr"
+                const rows = medicationTable.querySelectorAll(
+                    "tr[data-status]"
                 );
 
+                let visibleCount = 0;
 
-            let visibleCount = 0;
+                rows.forEach(function (row) {
 
+                    const rowText = row.textContent.toLowerCase();
+                    const rowStatus = row.getAttribute("data-status");
 
-            rows.forEach(function(row) {
+                    const matchesSearch = rowText.includes(term);
 
-                if (row.id === "noResultsRow") {
-                    return;
+                    const matchesStatus =
+                        status === "all" || rowStatus === status;
+
+                    const visible = matchesSearch && matchesStatus;
+
+                    row.style.display = visible ? "" : "none";
+
+                    if (visible) {
+                        visibleCount++;
+                    }
+                });
+
+                let noResults =
+                    document.getElementById("noMedicationResults");
+
+                if (visibleCount === 0 && rows.length > 0) {
+
+                    if (!noResults) {
+                        noResults = document.createElement("tr");
+                        noResults.id = "noMedicationResults";
+
+                        noResults.innerHTML = `
+                            <td colspan="6"
+                                class="text-center text-muted py-3">
+                                No medications found.
+                            </td>`;
+
+                        medicationTable.appendChild(noResults);
+                    }
+
+                    noResults.style.display = "";
                 }
-
-                if (row.querySelector("td[colspan]")) {
-                    return;
+                else if (noResults) {
+                    noResults.remove();
                 }
-
-
-                const medicationName =
-                    row.querySelector(
-                        "td:nth-child(1)"
-                    )?.textContent
-                        ?.toLowerCase() || "";
-
-
-                const categoryName =
-                    row.querySelector(
-                        "td:nth-child(2)"
-                    )?.textContent
-                        ?.toLowerCase() || "";
-
-
-                const description =
-                    row.querySelector(
-                        "td:nth-child(3)"
-                    )?.textContent
-                        ?.toLowerCase() || "";
-
-
-                const rowCategoryId =
-                    row.getAttribute(
-                        "data-category-id"
-                    );
-
-
-                const matchesSearch =
-                    medicationName.includes(searchTerm) ||
-                    categoryName.includes(searchTerm) ||
-                    description.includes(searchTerm);
-
-
-                const matchesCategory =
-                    categoryId === "" ||
-                    rowCategoryId === categoryId;
-
-
-                if (matchesSearch && matchesCategory) {
-
-                    row.style.display = "";
-
-                    visibleCount++;
-
-                }
-                else {
-
-                    row.style.display = "none";
-
-                }
-
-            });
-
-
-            let noResultsRow =
-                document.getElementById(
-                    "noResultsRow"
-                );
-
-
-            if (visibleCount === 0 && searchTerm !== "") {
-
-                if (!noResultsRow) {
-
-                    noResultsRow =
-                        document.createElement("tr");
-
-                    noResultsRow.id =
-                        "noResultsRow";
-
-
-                    noResultsRow.innerHTML = `
-                            <td colspan="5"
-                                class="text-center text-muted">
-                                No results found.
-                            </td>
-                        `;
-
-
-                    document
-                        .getElementById("medicationTable")
-                        .appendChild(noResultsRow);
-
-                }
-
-            }
-            else {
-
-                if (noResultsRow) {
-                    noResultsRow.remove();
-                }
-
             }
 
-        }
+            searchBox.addEventListener("input", filterMedications);
+            statusFilter.addEventListener("change", filterMedications);
 
-
-        searchBox.addEventListener(
-            "input",
-            filterTable
-        );
-
-
-        categoryFilter.addEventListener(
-            "change",
-            filterTable
-        );
-
-    });
-
-</script>
+        });
+    </script>
+}
+```
