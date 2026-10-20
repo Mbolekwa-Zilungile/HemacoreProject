@@ -131,7 +131,7 @@ namespace HemaCore.Services
                 {
                     labTech2User = new Users
                     {
-                        FullName = "Test Technician",
+                        FullName = "Didintle Lecoge",
                         UserName = labTech2Email,
                         NormalizedUserName = labTech2Email.ToUpper(),
                         Email = labTech2Email,

@@ -4410,63 +4410,13 @@ namespace HemaCore.Controllers
         #endregion
 
         #region Manager Profile
-    
+
+
         [HttpGet]
         public async Task<IActionResult> ManagerProfile()
         {
-            var managerUsers = await _userManager.GetUsersInRoleAsync("Manager");
-            var manager = managerUsers.FirstOrDefault();
-
-            if (manager == null)
-            {
-                TempData["Error"] = "Manager account was not found.";
-                return RedirectToAction("Index");
-            }
-
-            // Load the latest account information from Identity.
-            var latestManager = await _userManager.FindByIdAsync(manager.Id);
-
-            if (latestManager == null)
-            {
-                TempData["Error"] = "Manager account was not found.";
-                return RedirectToAction("Index");
-            }
-
-            var model = new ManagerProfileVM
-            {
-                Id = latestManager.Id,
-                FullName = latestManager.FullName,
-                Email = latestManager.Email ?? string.Empty,
-                PhoneNumber = latestManager.PhoneNumber
-            };
-
-            return View(model);
-        }
-
-
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ManagerProfile(ManagerProfileVM model)
-        {
-            bool changingPassword =
-                !string.IsNullOrWhiteSpace(model.NewPassword);
-
-            // Password fields are optional unless changing the password.
-            if (!changingPassword)
-            {
-                ModelState.Remove(nameof(model.CurrentPassword));
-                ModelState.Remove(nameof(model.NewPassword));
-                ModelState.Remove(nameof(model.ConfirmNewPassword));
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // Find the manager's Identity account.
-            var manager = await _userManager.FindByIdAsync(model.Id);
+            // Always load the currently signed-in manager.
+            var manager = await _userManager.GetUserAsync(User);
 
             if (manager == null ||
                 !await _userManager.IsInRoleAsync(manager, "Manager"))
@@ -4475,31 +4425,48 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (string.IsNullOrWhiteSpace(model.Email))
+            var model = new ManagerProfileVM
             {
-                ModelState.AddModelError(
-                    nameof(model.Email),
-                    "Email address is required.");
+                Id = manager.Id,
+                FullName = manager.FullName ?? string.Empty,
+                Email = manager.Email ?? string.Empty,
+                PhoneNumber = manager.PhoneNumber ?? string.Empty
+            };
 
-                return View(model);
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ManagerProfile(ManagerProfileVM model)
+        {
+            // Get the authenticated manager rather than trusting the posted ID.
+            var manager = await _userManager.GetUserAsync(User);
+
+            if (manager == null ||
+                !await _userManager.IsInRoleAsync(manager, "Manager"))
+            {
+                TempData["Error"] = "Manager account was not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            var newEmail = model.Email.Trim();
-
-            // Prevent another account from using this email.
-            var existingUser = await _userManager.FindByEmailAsync(newEmail);
-
-            if (existingUser != null && existingUser.Id != manager.Id)
+            // Prevent editing another user's account by changing the hidden ID.
+            if (!string.Equals(model.Id, manager.Id, StringComparison.Ordinal))
             {
-                ModelState.AddModelError(
-                    nameof(model.Email),
-                    "This email address is already in use.");
-
-                return View(model);
+                return Forbid();
             }
 
-            // Validate the password only if a new password was entered.
-            if (changingPassword)
+            bool changingPassword =
+                !string.IsNullOrWhiteSpace(model.NewPassword);
+
+            // Password fields are optional when the password is unchanged.
+            if (!changingPassword)
+            {
+                ModelState.Remove(nameof(model.CurrentPassword));
+                ModelState.Remove(nameof(model.NewPassword));
+                ModelState.Remove(nameof(model.ConfirmNewPassword));
+            }
+            else
             {
                 if (string.IsNullOrWhiteSpace(model.CurrentPassword))
                 {
@@ -4520,55 +4487,109 @@ namespace HemaCore.Controllers
                         nameof(model.ConfirmNewPassword),
                         "The new passwords do not match.");
                 }
+            }
 
-                if (!ModelState.IsValid)
+            // Normalize values before validating or saving.
+            model.FullName = model.FullName?.Trim() ?? string.Empty;
+            model.Email = model.Email?.Trim() ?? string.Empty;
+            model.PhoneNumber = model.PhoneNumber?.Trim() ?? string.Empty;
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Ensure another account is not using this email.
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+
+            if (existingUser != null && existingUser.Id != manager.Id)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "This email address is already in use.");
+
+                return View(model);
+            }
+
+            // Check the current password before making profile changes.
+            if (changingPassword)
+            {
+                var passwordIsCorrect = await _userManager.CheckPasswordAsync(
+                    manager, model.CurrentPassword!);
+
+                if (!passwordIsCorrect)
                 {
+                    ModelState.AddModelError(
+                        nameof(model.CurrentPassword),
+                        "Your current password is incorrect.");
+
                     return View(model);
                 }
             }
 
-            // Update the manager's personal information.
-            manager.FullName = model.FullName.Trim();
+            string oldEmail = manager.Email ?? string.Empty;
+            string oldUserName = manager.UserName ?? string.Empty;
+            string newEmail = model.Email;
+
+            bool emailChanged = !string.Equals(
+                oldEmail, newEmail, StringComparison.OrdinalIgnoreCase);
+
+            bool userNameChanged = !string.Equals(
+                oldUserName, newEmail, StringComparison.OrdinalIgnoreCase);
+
+            // Update the username first if the application uses email for login.
+            if (userNameChanged)
+            {
+                var userNameResult = await _userManager.SetUserNameAsync(
+                    manager, newEmail);
+
+                if (!userNameResult.Succeeded)
+                {
+                    foreach (var error in userNameResult.Errors)
+                    {
+                        ModelState.AddModelError(
+                            nameof(model.Email), error.Description);
+                    }
+
+                    return View(model);
+                }
+            }
+
+            // Update the email through Identity, not just the view model.
+            if (emailChanged)
+            {
+                var emailResult = await _userManager.SetEmailAsync(
+                    manager, newEmail);
+
+                if (!emailResult.Succeeded)
+                {
+                    // Attempt to restore the original username if the email update fails.
+                    if (userNameChanged)
+                    {
+                        await _userManager.SetUserNameAsync(manager, oldUserName);
+                    }
+
+                    foreach (var error in emailResult.Errors)
+                    {
+                        ModelState.AddModelError(
+                            nameof(model.Email), error.Description);
+                    }
+
+                    return View(model);
+                }
+            }
+
+            // Update the remaining profile properties.
+            manager.FullName = model.FullName;
             manager.PhoneNumber = model.PhoneNumber;
 
-            var updateResult = await _userManager.UpdateAsync(manager);
+            var profileResult = await _userManager.UpdateAsync(manager);
 
-            if (!updateResult.Succeeded)
+            if (!profileResult.Succeeded)
             {
-                foreach (var error in updateResult.Errors)
+                foreach (var error in profileResult.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
-                }
-
-                return View(model);
-            }
-
-            // Update the email address.
-            var emailResult = await _userManager.SetEmailAsync(
-                manager, newEmail);
-
-            if (!emailResult.Succeeded)
-            {
-                foreach (var error in emailResult.Errors)
-                {
-                    ModelState.AddModelError(
-                        nameof(model.Email),
-                        error.Description);
-                }
-
-                return View(model);
-            }
-
-            // Keep the username synchronized with the email.
-            var usernameResult = await _userManager.SetUserNameAsync(
-                manager, newEmail);
-
-            if (!usernameResult.Succeeded)
-            {
-                foreach (var error in usernameResult.Errors)
-                {
-                    ModelState.AddModelError(
-                        string.Empty, error.Description);
                 }
 
                 return View(model);
@@ -4587,22 +4608,15 @@ namespace HemaCore.Controllers
                     foreach (var error in passwordResult.Errors)
                     {
                         ModelState.AddModelError(
-                            nameof(model.NewPassword),
-                            error.Description);
+                            nameof(model.NewPassword), error.Description);
                     }
 
                     return View(model);
                 }
             }
 
-            // Refresh the authentication cookie if this is the
-            // currently signed-in manager.
-            var currentUser = await _userManager.GetUserAsync(User);
-
-            if (currentUser != null && currentUser.Id == manager.Id)
-            {
-                await _signInManager.RefreshSignInAsync(manager);
-            }
+            // Refresh the current manager's authentication cookie.
+            await _signInManager.RefreshSignInAsync(manager);
 
             TempData["Success"] = changingPassword
                 ? "Profile and password updated successfully."
@@ -4614,10 +4628,8 @@ namespace HemaCore.Controllers
         [HttpGet]
         public async Task<IActionResult> ManagerDetails()
         {
-            // Get the logged-in user's account
             var manager = await _userManager.GetUserAsync(User);
 
-            // Check that the account exists and has the Manager role
             if (manager == null ||
                 !await _userManager.IsInRoleAsync(manager, "Manager"))
             {
@@ -4625,17 +4637,17 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Pass the manager's details to the view
             var model = new ManagerProfileVM
             {
                 Id = manager.Id,
-                FullName = manager.FullName,
+                FullName = manager.FullName ?? string.Empty,
                 Email = manager.Email ?? string.Empty,
-                PhoneNumber = manager.PhoneNumber
+                PhoneNumber = manager.PhoneNumber ?? string.Empty
             };
 
             return View(model);
         }
+
         #endregion
     }
 }
