@@ -1374,15 +1374,7 @@ namespace HemaCore.Controllers
                         return RedirectToAction(nameof(VerifyResults));
                     }
 
-                    var doctorEmailResult = await _context.Database
-     .SqlQuery<string>($"""
-        SELECT Email AS [Value]
-        FROM dbo.Doctors
-        WHERE DoctorId = {request.DoctorId}
-    """)
-     .FirstOrDefaultAsync();
-
-                    string doctorEmail = doctorEmailResult ?? "";
+                    string doctorEmail = request.Doctor?.User?.Email ?? "";
 
                     string doctorName = (
                         (request.Doctor?.Name ?? "") + " " +
