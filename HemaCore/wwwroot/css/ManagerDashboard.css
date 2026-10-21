@@ -686,3 +686,47 @@ VERY SMALL DEVICES
         max-width: 120px;
     }
 }
+/* Completed - Green */
+.status-badge.status-completed {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+/* Cancelled - Red */
+.status-badge.status-cancelled {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+/* Ordered - Yellow */
+.status-badge.status-ordered {
+    background-color: #fef3c7;
+    color: #a16207;
+    border: 1px solid #fde68a;
+}
+
+/* Make Stock Alerts and Recent Orders equal in height */
+.dashboard-wrapper > .row.g-4 > .col-xl-5,
+.dashboard-wrapper > .row.g-4 > .col-xl-7 {
+    display: flex;
+}
+
+    .dashboard-wrapper > .row.g-4 > .col-xl-5 > a,
+    .dashboard-wrapper > .row.g-4 > .col-xl-7 > .dashboard-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+    }
+
+        .dashboard-wrapper > .row.g-4 > .col-xl-5 > a > .dashboard-card {
+            width: 100%;
+            height: 100%;
+        }
+
+    .dashboard-wrapper > .row.g-4 > .col-xl-7 > .dashboard-card {
+        width: 100%;
+        height: 100%;
+    }

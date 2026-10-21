@@ -6,479 +6,389 @@
 }
 
 <link rel="stylesheet" href="~/css/ManagerDashboard.css" asp-append-version="true" />
+
 <div class="container-fluid dashboard-wrapper">
-    <!-- =====================================================
-     DASHBOARD HEADER
-     ===================================================== -->
 
+    <!-- HEADER -->
     <div class="dashboard-header">
-
         <div>
             <h2>
                 <i class="fas fa-chart-line me-2"></i>
                 Manager Dashboard
             </h2>
-
-            <p>
-                Overview of laboratory stock, orders and system activity.
-            </p>
+            <p>Overview of laboratory stock, orders and system activity.</p>
         </div>
-
     </div>
 
-
-    <!-- =====================================================
-     STATISTICS
-     ===================================================== -->
-
+    <!-- STATISTICS -->
     <div class="row g-4 mb-4">
 
-
-        <!-- TEST CATEGORIES -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-            <a asp-asp-controller="Manager" asp-action="TestCategories">
+            <a asp-controller="Manager" asp-action="TestCategories" class="text-decoration-none">
                 <div class="stat-card blue-card">
-
-                    <div class="stat-icon">
-                        <i class="fas fa-layer-group"></i>
-                    </div>
-
-                    <div class="stat-title">
-                        Test Categories
-                    </div>
-
-                    <div class="stat-number">
-                        @Model.TestCategoryCount
-                    </div>
-
+                    <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="stat-title">Test Categories</div>
+                    <div class="stat-number">@Model.TestCategoryCount</div>
                 </div>
             </a>
-
         </div>
 
-
-        <!-- TEST TYPES -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-              <a asp-asp-controller="Manager" asp-action="TestTypes">      
-                    <div class="stat-card purple-card">
-
-                        <div class="stat-icon">
-                            <i class="fas fa-flask"></i>
-                        </div>
-
-                        <div class="stat-title">
-                            Test Types
-                        </div>
-
-                        <div class="stat-number">
-                            @Model.TestTypeCount
-                        </div>
-
-                    </div>
-              </a>
+            <a asp-controller="Manager" asp-action="TestTypes" class="text-decoration-none">
+                <div class="stat-card purple-card">
+                    <div class="stat-icon"><i class="fas fa-flask"></i></div>
+                    <div class="stat-title">Test Types</div>
+                    <div class="stat-number">@Model.TestTypeCount</div>
+                </div>
+            </a>
         </div>
 
-
-        <!-- DOCTORS -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-            <a asp-asp-controller="Manager" asp-action="Doctors">
-                    <div class="stat-card green-card">
-
-                        <div class="stat-icon">
-                            <i class="fas fa-user-doctor"></i>
-                        </div>
-
-                        <div class="stat-title">
-                            Doctors
-                        </div>
-
-                        <div class="stat-number">
-                            @Model.DoctorCount
-                        </div>
-
-                    </div>
-               </a>
+            <a asp-controller="Manager" asp-action="Doctors" class="text-decoration-none">
+                <div class="stat-card green-card">
+                    <div class="stat-icon"><i class="fas fa-user-doctor"></i></div>
+                    <div class="stat-title">Doctors</div>
+                    <div class="stat-number">@Model.DoctorCount</div>
+                </div>
+            </a>
         </div>
 
-
-        <!-- TECHNICIANS -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-            <a asp-asp-controller="Manager" asp-action="LabTechnician">
-                    <div class="stat-card teal-card">
-
-                        <div class="stat-icon">
-                            <i class="fas fa-user-nurse"></i>
-                        </div>
-
-                        <div class="stat-title">
-                            Technicians
-                        </div>
-
-                        <div class="stat-number">
-                            @Model.TechnicianCount
-                        </div>
-
-                    </div>
-               </a>
+            <a asp-controller="Manager" asp-action="LabTechnician" class="text-decoration-none">
+                <div class="stat-card teal-card">
+                    <div class="stat-icon"><i class="fas fa-user-nurse"></i></div>
+                    <div class="stat-title">Technicians</div>
+                    <div class="stat-number">@Model.TechnicianCount</div>
+                </div>
+            </a>
         </div>
 
-
-        <!-- LOW STOCK -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-            <a asp-controller="Manager" asp-action="Consumables">
+            <a asp-controller="Manager" asp-action="Consumables" class="text-decoration-none">
                 <div class="stat-card orange-card">
-
-                    <div class="stat-icon">
-                        <i class="fas fa-triangle-exclamation"></i>
-                    </div>
-
-                    <div class="stat-title">
-                        Low Stock
-                    </div>
-
-                    <div class="stat-number">
-                        @Model.LowStockCount
-                    </div>
-
+                    <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="stat-title">Low Stock</div>
+                    <div class="stat-number">@Model.LowStockCount</div>
                 </div>
             </a>
         </div>
 
-
-        <!-- OUT OF STOCK -->
-
         <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
-            <a asp-controller="Manager" asp-action="Consumables">
+            <a asp-controller="Manager" asp-action="Consumables" class="text-decoration-none">
                 <div class="stat-card red-card">
-
-                    <div class="stat-icon">
-                        <i class="fas fa-circle-xmark"></i>
-                    </div>
-
-                    <div class="stat-title">
-                        Out of Stock
-                    </div>
-
-                    <div class="stat-number">
-                        @Model.OutOfStockCount
-                    </div>
-
+                    <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
+                    <div class="stat-title">Out of Stock</div>
+                    <div class="stat-number">@Model.OutOfStockCount</div>
                 </div>
             </a>
         </div>
 
     </div>
 
-
-    <!-- =====================================================
-     MAIN DASHBOARD
-     ===================================================== -->
-
+    <!-- STOCK ALERTS AND RECENT ORDERS -->
     <div class="row g-4">
 
+        <!-- STOCK ALERTS -->
+        <div class="col-xl-5 col-lg-12">
+            <a asp-controller="Manager"
+               asp-action="Consumables"
+               class="text-decoration-none text-reset d-block">
 
-        <!-- =================================================
-         STOCK ALERTS
-         ================================================= -->
+                <div class="dashboard-card">
 
-        <div class="col-xl-5">
+                    <div class="dashboard-card-header">
+                        <h5>
+                            <i class="fas fa-boxes-stacked text-danger me-2"></i>
+                            Stock Alerts
+                        </h5>
+                        <span class="badge bg-danger">@Model.TotalStockAlerts</span>
+                    </div>
 
-            <div class="dashboard-card">
+                    <div class="dashboard-card-body">
 
-                <div class="dashboard-card-header">
-
-                    <h5>
-
-                        <i class="fas fa-boxes-stacked text-danger"></i>
-
-                        Stock Alerts
-
-                    </h5>
-
-                    <span class="badge bg-danger">
-
-                        @Model.TotalStockAlerts
-
-                    </span>
-
-                </div>
-
-
-                <div class="dashboard-card-body">
-
-                    
-                    @if (Model.OutOfStockConsumables != null &&
-                                         Model.OutOfStockConsumables.Any())
-                    {
-                        foreach (var item in Model.OutOfStockConsumables)
+                        @if (Model.OutOfStockConsumables?.Any() == true)
                         {
-                            <div class="stock-item">
-
-                                <div class="stock-left">
-
-                                    <div class="stock-icon danger">
-
-                                        <i class="fas fa-box-open"></i>
-
-                                    </div>
-
-                                    <div>
-
-                                        <div class="stock-name">
-
-                                            @item.ConsumableName
-
+                            foreach (var item in Model.OutOfStockConsumables)
+                            {
+                                <div class="stock-item">
+                                    <div class="stock-left">
+                                        <div class="stock-icon danger">
+                                            <i class="fas fa-box-open"></i>
                                         </div>
-
-                                        <div class="stock-supplier">
-
-                                            <i class="fas fa-truck me-1"></i>
-
-                                            @(item.Supplier?.SupplierName ?? "Unknown")
-
+                                        <div>
+                                            <div class="stock-name">@item.ConsumableName</div>
+                                            <div class="stock-supplier">
+                                                <i class="fas fa-truck me-1"></i>
+                                                @(item.Supplier?.SupplierName ?? "No supplier")
+                                            </div>
                                         </div>
-
                                     </div>
-
+                                    <span class="quantity-badge quantity-danger">Out of stock</span>
                                 </div>
+                            }
+                        }
 
+                        @if (Model.LowStockConsumables?.Any() == true)
+                        {
+                            foreach (var item in Model.LowStockConsumables)
+                            {
+                                <div class="stock-item">
+                                    <div class="stock-left">
+                                        <div class="stock-icon warning">
+                                            <i class="fas fa-triangle-exclamation"></i>
+                                        </div>
+                                        <div>
+                                            <div class="stock-name">@item.ConsumableName</div>
+                                            <div class="stock-supplier">
+                                                <i class="fas fa-truck me-1"></i>
+                                                @(item.Supplier?.SupplierName ?? "No supplier")
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="quantity-badge quantity-warning">
+                                        @item.QuantityInHand left
+                                    </span>
+                                </div>
+                            }
+                        }
 
-                                <span class="quantity-badge quantity-danger">
-
-                                    Out of stock
-
-                                </span>
-
+                        @if (Model.OutOfStockConsumables?.Any() != true &&
+                             Model.LowStockConsumables?.Any() != true)
+                        {
+                            <div class="empty-state">
+                                <i class="fas fa-circle-check"></i>
+                                <div>All consumables are sufficiently stocked.</div>
                             </div>
                         }
-                    }
 
-
-                    <!-- =====================================
-                     LOW STOCK
-                     ===================================== -->
-                    @if (Model.LowStockConsumables != null &&
-                                         Model.LowStockConsumables.Any())
-                    {
-                        foreach (var item in Model.LowStockConsumables)
-                        {
-                            <div class="stock-item">
-
-                                <div class="stock-left">
-
-                                    <div class="stock-icon warning">
-
-                                        <i class="fas fa-triangle-exclamation"></i>
-
-                                    </div>
-
-                                    <div>
-
-                                        <div class="stock-name">
-
-                                            @item.ConsumableName
-
-                                        </div>
-
-                                        <div class="stock-supplier">
-
-                                            <i class="fas fa-truck me-1"></i>
-
-                                            @(item.Supplier?.SupplierName ?? "Unknown")
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-
-                                <span class="quantity-badge quantity-warning">
-
-                                    @item.QuantityInHand left
-
-                                </span>
-
-                            </div>
-                        }
-                    }
-
-
-                    <!-- =====================================
-                     NO ALERTS
-                     ===================================== -->
-                    @if (
-                                        (Model.OutOfStockConsumables == null ||
-                                         !Model.OutOfStockConsumables.Any())
-                                        &&
-                                        (Model.LowStockConsumables == null ||
-                                         !Model.LowStockConsumables.Any())
-                                    )
-                    {
-                        <div class="empty-state">
-
-                            <i class="fas fa-circle-check"></i>
-
-                            <div>
-                                All consumables are sufficiently stocked.
-                            </div>
-
-                        </div>
-                    }
-
+                    </div>
                 </div>
-
-            </div>
-
+            </a>
         </div>
 
-
-        <!-- =================================================
-         RECENT ORDERS
-         ================================================= -->
-
-        <div class="col-xl-7">
-
+        <!-- RECENT ORDERS -->
+        <div class="col-xl-7 col-lg-12">
             <div class="dashboard-card">
 
                 <div class="dashboard-card-header">
-
                     <h5>
-
-                        <i class="fas fa-truck text-primary"></i>
-
+                        <i class="fas fa-truck text-primary me-2"></i>
                         Recent Orders
-
                     </h5>
-
-                    <span class="badge bg-primary">
-
-                        @Model.PendingOrdersCount Pending
-
-                    </span>
-
+                    <span class="badge bg-primary">@Model.PendingOrdersCount Pending</span>
                 </div>
 
-
                 <div class="table-responsive">
-
-                    @if (Model.RecentOrders != null &&
-                         Model.RecentOrders.Any())
+                    @if (Model.RecentOrders?.Any() == true)
                     {
                         <table class="modern-dashboard-table">
-
                             <thead>
-
                                 <tr>
-
-                                    <th>
-                                        Order
-                                    </th>
-
-                                    <th>
-                                        Supplier
-                                    </th>
-
-                                    <th>
-                                        Date
-                                    </th>
-
-                                    <th>
-                                        Status
-                                    </th>
-
+                                    <th>Order</th>
+                                    <th>Supplier</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
                                 </tr>
-
                             </thead>
-
-
                             <tbody>
-
                                 @foreach (var order in Model.RecentOrders)
                                 {
-                                    <tr>
+                                    <tr class="order-row"
+                                        onclick="window.location.href='@Url.Action("OrderDetails", "Manager", new { id = order.OrderId })'"
+                                        style="cursor: pointer;">
 
-                                        <td class="order-id">
-
-                                            #@order.OrderId
-
-                                        </td>
-
+                                        <td class="order-id">#@order.OrderNumber</td>
 
                                         <td>
-
                                             <i class="fas fa-building me-1 text-muted"></i>
-
                                             @(order.Supplier?.SupplierName ?? "Unknown")
-
                                         </td>
-
 
                                         <td class="order-date">
-
                                             <i class="far fa-calendar me-1"></i>
-
                                             @order.OrderDate.ToString("dd MMM yyyy")
-
                                         </td>
-
 
                                         <td>
-
-                                            @if (order.Status.ToString() == "Ordered")
+                                            @switch (order.Status.ToString().ToLowerInvariant())
                                             {
-                                                <span class="status-badge status-ordered">
+                                                case "completed":
+                                                    <span class="status-badge status-completed">
+                                                        <i class="fas fa-circle-check me-1"></i>
+                                                        @order.Status
+                                                    </span>
+                                                    break;
 
-                                                    <i class="fas fa-clock me-1"></i>
+                                                case "cancelled":
+                                                case "canceled":
+                                                    <span class="status-badge status-cancelled">
+                                                        <i class="fas fa-circle-xmark me-1"></i>
+                                                        @order.Status
+                                                    </span>
+                                                    break;
 
-                                                    @order.Status
+                                                case "ordered":
+                                                    <span class="status-badge status-ordered">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        @order.Status
+                                                    </span>
+                                                    break;
 
-                                                </span>
+                                                default:
+                                                    <span class="status-badge status-other">
+                                                        @order.Status
+                                                    </span>
+                                                    break;
                                             }
-                                            else
-                                            {
-                                                <span class="status-badge status-other">
-
-                                                    @order.Status
-
-                                                </span>
-                                            }
-
                                         </td>
-
                                     </tr>
                                 }
-
                             </tbody>
-
                         </table>
                     }
                     else
                     {
                         <div class="empty-state">
-
                             <i class="fas fa-clipboard-list"></i>
-
-                            <div>
-                                No recent orders found.
-                            </div>
-
+                            <div>No recent orders found.</div>
                         </div>
                     }
-
                 </div>
 
             </div>
+        </div>
 
+    </div>     
+
+           
+        <div class="row g-4 mt-1">
+
+            <!-- CONSUMABLES WITHOUT SUPPLIERS -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="dashboard-card">
+
+                    <div class="dashboard-card-header">
+                        <h5>
+                            <i class="fas fa-truck-ramp-box text-danger me-2"></i>
+                            Consumables Without Suppliers
+                        </h5>
+
+                        <span class="badge bg-danger">
+                            @(Model.ConsumablesWithoutSupplier?.Count ?? 0)
+                        </span>
+                    </div>
+
+                    <div class="dashboard-card-body">
+
+                        @if (Model.ConsumablesWithoutSupplier?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="modern-dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Consumable</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach (var item in Model.ConsumablesWithoutSupplier)
+                                        {
+                                            <tr class="consumable-row"
+                                                onclick="window.location.href='@Url.Action("EditConsumable", "Manager", new { id = item.ConsumableId })'"
+                                                style="cursor: pointer;">
+
+                                                <td>
+                                                    @item.ConsumableName
+                                                </td>
+
+                                                <td>
+                                                    <span class="status-badge status-other">
+                                                        Supplier Required
+                                                    </span>
+                                                </td>
+
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fas fa-circle-check"></i>
+                                <div>
+                                    All active consumables have suppliers assigned.
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+
+        
+
+
+        
+  
+        <!-- TEST TYPES WITHOUT TECHNICIANS -->
+        <div class="col-xl-6 col-lg-12">
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+                    <h5>
+                        <i class="fas fa-user-slash text-danger me-2"></i>
+                        Test Types Without Technicians
+                    </h5>
+
+                    <span class="badge bg-danger">
+                        @(Model.TestTypesWithoutTechnician?.Count ?? 0)
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    @if (Model.TestTypesWithoutTechnician?.Any() == true)
+                    {
+                        <table class="modern-dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Test Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var test in Model.TestTypesWithoutTechnician)
+                                {
+                                    <tr class="test-type-row"
+                                        onclick="window.location.href='@Url.Action("EditTestType", "Manager", new { id = test.TestTypeId })'"
+                                        style="cursor: pointer;">
+
+                                        <td>@test.TestTypeName</td>
+
+                                        <td>
+                                            <span class="status-badge status-other">
+                                                Technician Required
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-circle-check"></i>
+                            <div>All active test types have technicians assigned.</div>
+                        </div>
+                    }
+                </div>
+
+            </div>
         </div>
 
     </div>
 
-
-    
-    

@@ -19,8 +19,8 @@
             </h3>
 
             <p class="text-muted mb-0">
-                Transfer test type responsibilities to another qualified
-                technician before deactivation.
+                Transfer test type assignments to another qualified technician
+                before deactivating the current technician.
             </p>
 
         </div>
@@ -32,12 +32,14 @@
         {
             <div class="alert alert-success alert-dismissible fade show"
                  role="alert">
+
                 @TempData["Success"]
 
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="alert"
                         aria-label="Close"></button>
+
             </div>
         }
 
@@ -45,20 +47,22 @@
         {
             <div class="alert alert-danger alert-dismissible fade show"
                  role="alert">
+
                 @TempData["Error"]
 
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="alert"
                         aria-label="Close"></button>
+
             </div>
         }
 
-        <!-- ORIGINAL TECHNICIAN -->
-        <div class="bg-light rounded-3 p-4 mb-4">
+        <!-- TECHNICIAN DETAILS -->
+        <div >
 
             <h5 class="fw-semibold mb-3">
-                Original Technician
+                Technician Details
             </h5>
 
             <div class="d-flex align-items-center gap-3">
@@ -72,34 +76,38 @@
                 </div>
 
                 <div>
+
                     <h5 class="fw-bold mb-1">
                         @Model.TechnicianName
                     </h5>
 
                     <p class="text-muted small mb-0">
-                        Review and reassign the technician's remaining
-                        test type responsibilities.
+                        Review the assigned test types and transfer
+                        responsibilities to another qualified technician.
                     </p>
+
                 </div>
 
             </div>
 
         </div>
 
-        <!-- ASSIGNMENTS -->
+        <!-- ASSIGNED TEST TYPES HEADER -->
         <div class="mb-3">
-
+            <hr />
+            <br />
             <h5 class="fw-semibold mb-1">
-                Test Type Assignments
+                Assigned Test Types
             </h5>
 
             <p class="text-muted small mb-0">
-                Select an eligible active technician for each test type
-                that requires reassignment.
+                Assign each test type to an eligible, active technician
+                who is qualified to perform it.
             </p>
 
         </div>
 
+        <!-- NO ASSIGNMENTS -->
         @if (Model.TestTypes == null || !Model.TestTypes.Any())
         {
             <div class="border rounded-3 p-5 text-center">
@@ -112,29 +120,34 @@
                 </h5>
 
                 <p class="text-muted mb-4">
-                    All remaining test types are covered, or no
-                    assignments remain.
+                    No outstanding test type assignments require reassignment.
                 </p>
 
             </div>
         }
         else
         {
+            <!-- ASSIGNMENT SUMMARY -->
             <div class="alert alert-info py-3" role="status">
 
                 <i class="bi bi-info-circle me-2"></i>
 
                 <strong>@Model.TestTypes.Count</strong>
-                test type(s) require reassignment.
+                @(Model.TestTypes.Count == 1
+                    ? "test type requires"
+                    : "test types require")
+                reassignment.
 
             </div>
 
+            <!-- TEST TYPE ASSIGNMENT CARDS -->
             @foreach (var testType in Model.TestTypes)
             {
                 <div class="border rounded-3 mb-3">
 
                     <div class="p-4">
 
+                        <!-- TEST TYPE TITLE AND AVAILABILITY -->
                         <div class="d-flex justify-content-between
                             align-items-center flex-wrap gap-2 mb-3">
 
@@ -158,6 +171,7 @@
 
                         </div>
 
+                        <!-- NO ELIGIBLE TECHNICIAN -->
                         @if (testType.AvailableTechnicians == null ||
                              !testType.AvailableTechnicians.Any())
                         {
@@ -169,17 +183,21 @@
                                     <i class="bi bi-exclamation-triangle mt-1"></i>
 
                                     <div>
+
                                         <strong>
-                                            No eligible technician found
+                                            No Eligible Technician Available
                                         </strong>
 
                                         <p class="small mb-0 mt-1">
-                                            Add or activate a qualified
-                                            technician for this test type.
-                                            The existing assignment remains
-                                            unchanged until a replacement
-                                            becomes available.
+                                            No active technician is currently
+                                            available to take responsibility
+                                            for this test type. Add or activate
+                                            a qualified technician before
+                                            proceeding. The existing assignment
+                                            will remain unchanged until a
+                                            suitable replacement is available.
                                         </p>
+
                                     </div>
 
                                 </div>
@@ -188,6 +206,7 @@
                         }
                         else
                         {
+                            <!-- REASSIGNMENT FORM -->
                             <form asp-controller="Manager"
                                   asp-action="ReassignTechnician"
                                   method="post">
@@ -257,7 +276,7 @@
             }
         }
 
-        <!-- FOOTER -->
+        <!-- FOOTER NAVIGATION -->
         <div class="d-flex justify-content-between align-items-center
             flex-wrap gap-3 mt-4 pt-4 border-top">
 
@@ -268,7 +287,6 @@
                 Back to Technicians
 
             </a>
-
 
         </div>
 

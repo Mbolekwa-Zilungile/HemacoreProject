@@ -1136,6 +1136,7 @@ namespace HemaCore.Controllers
             return RedirectToAction(nameof(ManagePatients));
         }
 
+
         [HttpGet]
         public async Task<IActionResult> PatientDetails(int id)
         {
@@ -1161,42 +1162,70 @@ namespace HemaCore.Controllers
                 return RedirectToAction(nameof(ManagePatients));
             }
 
+            // Load medical conditions.
             var conditions = await _context.PatientConditions
                 .Where(pc => pc.PatientID == patient.PatientID)
-                .Include(pc => pc.Condition)
-                .Select(pc => pc.Condition.Name)
+                .Where(pc => pc.Condition != null)
+                .Select(pc => pc.Condition!.Name)
                 .ToListAsync();
 
+            // Load allergies.
             var allergies = await _context.PatientAllergies
                 .Where(pa => pa.PatientID == patient.PatientID)
-                .Include(pa => pa.Allergy)
-                .Select(pa => pa.Allergy.Name)
+                .Where(pa => pa.Allergy != null)
+                .Select(pa => pa.Allergy!.Name)
                 .ToListAsync();
 
+            // Load current medications.
             var medications = await _context.PatientMedications
                 .Where(pm => pm.PatientID == patient.PatientID)
-                .Include(pm => pm.Medication)
-                .Select(pm => pm.Medication.Name)
+                .Where(pm => pm.Medication != null)
+                .Select(pm => pm.Medication!.Name)
+                .ToListAsync();
+
+            // Load all existing test requests for this patient.
+            var requests = await _context.TestRequests
+                .Where(r => r.PatientID == patient.PatientID)
+                .OrderByDescending(r => r.RequestDate)
+                .Select(r => new PatientRequestSummaryViewModel
+                {
+                    TestRequestId = r.TestRequestId,
+                    RequestDate = r.RequestDate,
+                    Urgency = r.Urgency,
+                    Status = r.Status
+                })
                 .ToListAsync();
 
             var model = new PatientDetailsViewModel
             {
                 PatientId = patient.PatientID,
-                FullName = patient.Name + " " + patient.Surname,
+                FullName = $"{patient.Name} {patient.Surname}",
                 IDNumber = patient.IDNumber,
                 DateOfBirth = patient.DateOfBirth,
                 PhoneNumber = patient.PhoneNumber,
 
-                Address = $"{patient.StreetAddress}, {patient.Suburb}, " +
-                          $"{patient.City}, {patient.Province}, {patient.PostalCode}",
+                // Email is stored on the existing Identity user, not Patient.
+                Email = string.Empty,
+
+                Address = string.Join(", ",
+                    new[]
+                    {
+                patient.StreetAddress,
+                patient.Suburb,
+                patient.City,
+                patient.Province,
+                patient.PostalCode
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))),
 
                 Conditions = conditions,
                 Allergies = allergies,
-                Medications = medications
+                Medications = medications,
+                Requests = requests
             };
 
             return View(model);
         }
+
 
         #endregion
 

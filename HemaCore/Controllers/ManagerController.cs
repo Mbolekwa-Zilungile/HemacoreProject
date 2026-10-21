@@ -39,77 +39,101 @@ namespace HemaCore.Controllers
 
 
         #region Index
+
         public async Task<IActionResult> Index()
         {
-            
-
+            // 1. ACTIVE OUT-OF-STOCK CONSUMABLES
             var outOfStockConsumables = await _context.Consumables
                 .Include(c => c.Supplier)
                 .Where(c =>
                     c.IsActive &&
                     c.QuantityInHand == 0)
+                .OrderBy(c => c.ConsumableName)
                 .ToListAsync();
 
-
+            // 2. ACTIVE LOW-STOCK CONSUMABLES
             var lowStockConsumables = await _context.Consumables
                 .Include(c => c.Supplier)
                 .Where(c =>
                     c.IsActive &&
                     c.QuantityInHand > 0 &&
                     c.QuantityInHand <= c.ReorderLevel)
+                .OrderBy(c => c.ConsumableName)
                 .ToListAsync();
 
+            // 3. ACTIVE CONSUMABLES WITHOUT AN ACTIVE SUPPLIER
+            var consumablesWithoutSupplier = await _context.Consumables
+                .Where(c =>
+                    c.IsActive &&
+                    (
+                        c.SupplierId == null ||
+                        !_context.Suppliers.Any(s =>
+                            s.SupplierId == c.SupplierId &&
+                            s.IsActive)
+                    ))
+                .OrderBy(c => c.ConsumableName)
+                .ToListAsync();
 
+            // 4. ACTIVE TEST TYPES WITHOUT ASSIGNED TECHNICIANS
+            var testTypesWithoutTechnician = await _context.TestTypes
+                .Where(t =>
+                    t.IsActive &&
+                    !t.TechnicianTestType.Any())
+                .OrderBy(t => t.TestTypeName)
+                .ToListAsync();
+
+            // 5. RECENT ORDERS
+            // Only include orders associated with an active supplier.
             var recentOrders = await _context.Orders
-                .Include(o => o.Supplier)
-                .OrderByDescending(o => o.OrderDate)
-                .Take(10)
-                .ToListAsync();
+             .Include(o => o.Supplier)
+             .Where(o =>
+                 o.Supplier != null &&
+                 o.Supplier.IsActive &&
+                 o.Status == HemaCore.Models.Enums.OrderStatus.Ordered)
+             .OrderByDescending(o => o.OrderDate)
+             .Take(5)
+             .ToListAsync();
 
-
-
-
+            // 6. PENDING ORDERS COUNT
             var pendingOrdersCount = await _context.Orders
                 .CountAsync(o =>
-                    o.Status == HemaCore.Models.Enums.OrderStatus.Ordered);
+                    o.Status == HemaCore.Models.Enums.OrderStatus.Ordered &&
+                    o.Supplier != null &&
+                    o.Supplier.IsActive);
 
-
+            // 7. ACTIVE TEST CATEGORIES COUNT
             var testCategoryCount = await _context.TestCategories
                 .CountAsync(c => c.IsActive);
 
-
+            // 8. ACTIVE TEST TYPES COUNT
             var testTypeCount = await _context.TestTypes
-                .CountAsync(c => c.IsActive);
+                .CountAsync(t => t.IsActive);
 
+            // 9. ACTIVE DOCTORS COUNT
+            var doctorCount = await _context.Doctors
+                .CountAsync(d => d.IsActive);
 
-            var doctorCount = await _context.Doctors.CountAsync(d => d.IsActive);
-
-
-
+            // 10. ACTIVE LAB TECHNICIANS COUNT
             var technicianCount = await _context.LabTechnicians
                 .CountAsync(t => t.IsActive);
 
-
+            // 11. BUILD DASHBOARD VIEW MODEL
             var vm = new ManagerDashboardVM
             {
                 LowStockConsumables = lowStockConsumables,
-
                 OutOfStockConsumables = outOfStockConsumables,
-
+                ConsumablesWithoutSupplier = consumablesWithoutSupplier,
+                TestTypesWithoutTechnician = testTypesWithoutTechnician,
                 RecentOrders = recentOrders,
 
                 PendingOrdersCount = pendingOrdersCount,
 
                 TestCategoryCount = testCategoryCount,
-
                 TestTypeCount = testTypeCount,
-
                 DoctorCount = doctorCount,
-
                 TechnicianCount = technicianCount,
 
                 LowStockCount = lowStockConsumables.Count,
-
                 OutOfStockCount = outOfStockConsumables.Count,
 
                 TotalStockAlerts =
@@ -117,10 +141,8 @@ namespace HemaCore.Controllers
                     outOfStockConsumables.Count
             };
 
-
+            // 12. RETURN DASHBOARD VIEW
             return View(vm);
-
-
         }
 
         #endregion
