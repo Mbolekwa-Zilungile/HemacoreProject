@@ -19,7 +19,9 @@ namespace HemaCore.ViewModels.Patient
         [Required] public string IDNumber { get; set; } = "";
         [Required] public string PhoneNumber { get; set; } = "";
         [Required] public string Gender { get; set; } = "";
-        public DateTime DateOfBirth { get; set; }
+        [Required(ErrorMessage = "Date of birth is required")]
+        [DataType(DataType.Date)]
+        public DateTime? DateOfBirth { get; set; }
         [Required(ErrorMessage = "Street address is required")]
         [StringLength(150)]
         [Display(Name = "Street Address")]

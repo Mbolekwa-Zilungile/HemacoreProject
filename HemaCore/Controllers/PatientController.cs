@@ -54,155 +54,6 @@ namespace HemaCore.Controllers
         }
         #endregion
 
-        #region Complete Profile
-        // ---------------------------------------------------------------------
-        // Complete Profile (GET)
-        // ---------------------------------------------------------------------
-        [HttpGet]
-        public async Task<IActionResult> CompleteProfile()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
-
-            // If patient record already exists, prefill
-            var existing = await _context.Patients
-                .FirstOrDefaultAsync(p => p.UserId == user.Id);
-
-            var vm = new CompleteProfileViewModel
-            {
-                AvailableConditions = await _context.Conditions
-                    .Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync(),
-                AvailableAllergies = await _context.Allergies
-                    .Where(a => a.IsActive).OrderBy(a => a.Name).ToListAsync(),
-                AvailableMedications = await _context.Medications
-                    .Where(m => m.IsActive).OrderBy(m => m.Name).ToListAsync()
-            };
-
-            if (existing != null)
-            {
-                vm.Name = existing.Name;
-                vm.Surname = existing.Surname;
-                vm.IDNumber = existing.IDNumber;
-                vm.Gender = existing.Gender;
-                vm.PhoneNumber = existing.PhoneNumber;
-                vm.DateOfBirth = existing.DateOfBirth;
-                vm.StreetAddress = existing.StreetAddress;
-                vm.Suburb = existing.Suburb;
-                vm.City = existing.City;
-                vm.Province = existing.Province;
-                vm.PostalCode = existing.PostalCode;
-
-                vm.SelectedConditionIds = await _context.PatientConditions
-                    .Where(pc => pc.PatientID == existing.PatientID)
-                    .Select(pc => pc.ConditionId).ToListAsync();
-
-                vm.SelectedAllergyIds = await _context.PatientAllergies
-                    .Where(pa => pa.PatientID == existing.PatientID)
-                    .Select(pa => pa.AllergyId).ToListAsync();
-
-                vm.SelectedMedicationIds = await _context.PatientMedications
-                    .Where(pm => pm.PatientID == existing.PatientID)
-                    .Select(pm => pm.MedicationId).ToListAsync();
-            }
-
-            return View(vm);
-        }
-
-        
-        // ---------------------------------------------------------------------
-        // Complete Profile (POST)
-        // ---------------------------------------------------------------------
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CompleteProfile(CompleteProfileViewModel model)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
-
-            if (!ModelState.IsValid)
-            {
-                model.AvailableConditions = await _context.Conditions
-                    .Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync();
-                model.AvailableAllergies = await _context.Allergies
-                    .Where(a => a.IsActive).OrderBy(a => a.Name).ToListAsync();
-                model.AvailableMedications = await _context.Medications
-                    .Where(m => m.IsActive).OrderBy(m => m.Name).ToListAsync();
-                return View(model);
-            }
-
-            // 1. Create or update the Patient
-            var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.UserId == user.Id);
-
-            if (patient == null)
-            {
-                patient = new Patient { UserId = user.Id };
-                _context.Patients.Add(patient);
-            }
-
-            patient.Name = model.Name;
-            patient.Surname = model.Surname;
-            patient.IDNumber = model.IDNumber;
-            patient.Gender = model.Gender;
-            patient.PhoneNumber = model.PhoneNumber;
-            patient.DateOfBirth = model.DateOfBirth;
-            patient.StreetAddress = model.StreetAddress;
-            patient.Suburb = model.Suburb;
-            patient.City = model.City;
-            patient.Province = model.Province;
-            patient.PostalCode = model.PostalCode;
-
-            await _context.SaveChangesAsync();  // ensures PatientID is set
-
-            // 2. Sync conditions
-            var existingConditions = _context.PatientConditions
-                .Where(pc => pc.PatientID == patient.PatientID);
-            _context.PatientConditions.RemoveRange(existingConditions);
-
-            foreach (var cid in model.SelectedConditionIds.Distinct())
-            {
-                _context.PatientConditions.Add(new PatientCondition
-                {
-                    PatientID = patient.PatientID,
-                    ConditionId = cid
-                });
-            }
-
-            // 3. Sync allergies
-            var existingAllergies = _context.PatientAllergies
-                .Where(pa => pa.PatientID == patient.PatientID);
-            _context.PatientAllergies.RemoveRange(existingAllergies);
-
-            foreach (var aid in model.SelectedAllergyIds.Distinct())
-            {
-                _context.PatientAllergies.Add(new PatientAllergy
-                {
-                    PatientID = patient.PatientID,
-                    AllergyId = aid
-                });
-            }
-
-            // 4. Sync medications
-            var existingMeds = _context.PatientMedications
-                .Where(pm => pm.PatientID == patient.PatientID);
-            _context.PatientMedications.RemoveRange(existingMeds);
-
-            foreach (var mid in model.SelectedMedicationIds.Distinct())
-            {
-                _context.PatientMedications.Add(new PatientMedication
-                {
-                    PatientID = patient.PatientID,
-                    MedicationId = mid
-                });
-            }
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Profile saved successfully!";
-            return RedirectToAction(nameof(Dashboard));
-        }
-#endregion
-
         #region Patient Details
         // ---------------------------------------------------------------------
         // Patient Details
@@ -210,7 +61,7 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> PatientDetails()
         {
             var patient = await GetCurrentPatientAsync();
-            if (patient == null) return RedirectToAction(nameof(CompleteProfile));
+            if (patient == null) return RedirectToAction(nameof(EditProfile));
 
             // Eager-load the reference data so the view can display names
             var conditions = await _context.PatientConditions
@@ -249,7 +100,7 @@ namespace HemaCore.Controllers
             var patient = await _context.Patients
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
 
-            if (patient == null) return RedirectToAction(nameof(CompleteProfile));
+            // A missing patient record is handled by EditProfile itself, so new patients can create their profile here.
 
             // Load categories with their items (active only, ordered alphabetically)
             var conditionCategories = await _context.ConditionCategories
@@ -273,27 +124,27 @@ namespace HemaCore.Controllers
             var vm = new EditPatientProfileViewModel
             {
                 Email = user.Email ?? "",
-                Name = patient.Name,
-                Surname = patient.Surname,
-                IDNumber = patient.IDNumber,
-                PhoneNumber = patient.PhoneNumber,
-                Gender = patient.Gender,
-                DateOfBirth = patient.DateOfBirth,
-                StreetAddress = patient.StreetAddress,
-                Suburb = patient.Suburb,
-                City = patient.City,
-                Province = patient.Province,
-                PostalCode = patient.PostalCode,
+                Name = patient?.Name,
+                Surname = patient?.Surname,
+                IDNumber = patient?.IDNumber,
+                PhoneNumber = patient?.PhoneNumber,
+                Gender = patient?.Gender,
+                DateOfBirth = patient?.DateOfBirth,
+                StreetAddress = patient?.StreetAddress,
+                Suburb = patient?.Suburb,
+                City = patient?.City,
+                Province = patient?.Province,
+                PostalCode = patient?.PostalCode,
 
-                SelectedConditionIds = await _context.PatientConditions
+                SelectedConditionIds = patient == null ? new List<int>() : await _context.PatientConditions
                     .Where(pc => pc.PatientID == patient.PatientID)
                     .Select(pc => pc.ConditionId).ToListAsync(),
 
-                SelectedAllergyIds = await _context.PatientAllergies
+                SelectedAllergyIds = patient == null ? new List<int>() : await _context.PatientAllergies
                     .Where(pa => pa.PatientID == patient.PatientID)
                     .Select(pa => pa.AllergyId).ToListAsync(),
 
-                SelectedMedicationIds = await _context.PatientMedications
+                SelectedMedicationIds = patient == null ? new List<int>() : await _context.PatientMedications
                     .Where(pm => pm.PatientID == patient.PatientID)
                     .Select(pm => pm.MedicationId).ToListAsync(),
 
@@ -321,89 +172,179 @@ namespace HemaCore.Controllers
 
             return View(vm);
         }
-        #endregion
 
-        #region Edit Profile
         // ---------------------------------------------------------------------
         // Edit Profile (POST)
         // ---------------------------------------------------------------------
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(EditPatientProfileViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
 
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            // Validate date of birth.
+            if (!model.DateOfBirth.HasValue)
+            {
+                ModelState.AddModelError(
+                    nameof(model.DateOfBirth),
+                    "Date of birth is required.");
+            }
+
+            // Reload data if validation fails.
             if (!ModelState.IsValid)
             {
                 model.AvailableConditions = await _context.Conditions
-                    .Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync();
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
                 model.AvailableAllergies = await _context.Allergies
-                    .Where(a => a.IsActive).OrderBy(a => a.Name).ToListAsync();
+                    .Where(a => a.IsActive)
+                    .OrderBy(a => a.Name)
+                    .ToListAsync();
+
                 model.AvailableMedications = await _context.Medications
-                    .Where(m => m.IsActive).OrderBy(m => m.Name).ToListAsync();
+                    .Where(m => m.IsActive)
+                    .OrderBy(m => m.Name)
+                    .ToListAsync();
+
                 return View(model);
             }
 
+            // Find the patient's record.
             var patient = await _context.Patients
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
 
-            if (patient == null) return NotFound();
+            // Create a patient record if it does not exist.
+            if (patient == null)
+            {
+                patient = new Patient
+                {
+                    UserId = user.Id
+                };
 
-            // Update patient
+                _context.Patients.Add(patient);
+            }
+
+            // Update patient details.
             patient.Name = model.Name;
             patient.Surname = model.Surname;
             patient.IDNumber = model.IDNumber;
             patient.PhoneNumber = model.PhoneNumber;
             patient.Gender = model.Gender;
-            patient.DateOfBirth = model.DateOfBirth;
+            patient.DateOfBirth = model.DateOfBirth.Value;
             patient.StreetAddress = model.StreetAddress;
             patient.Suburb = model.Suburb;
             patient.City = model.City;
             patient.Province = model.Province;
             patient.PostalCode = model.PostalCode;
 
-            // Update Identity email if changed
-            if (user.Email != model.Email)
+            // Update Identity user details.
+            user.FullName = $"{model.Name} {model.Surname}".Trim();
+            user.PhoneNumber = model.PhoneNumber;
+
+            // Update Identity email and username if changed.
+            if (!string.Equals(user.Email, model.Email,
+                               StringComparison.OrdinalIgnoreCase))
             {
                 user.Email = model.Email;
                 user.UserName = model.Email;
-                await _userManager.UpdateAsync(user);
             }
 
-            // Sync selected reference data
-            _context.PatientConditions.RemoveRange(
-                _context.PatientConditions.Where(pc => pc.PatientID == patient.PatientID));
-            foreach (var cid in model.SelectedConditionIds.Distinct())
+            var identityResult = await _userManager.UpdateAsync(user);
+
+            if (!identityResult.Succeeded)
+            {
+                foreach (var error in identityResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                model.AvailableConditions = await _context.Conditions
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
+                model.AvailableAllergies = await _context.Allergies
+                    .Where(a => a.IsActive)
+                    .OrderBy(a => a.Name)
+                    .ToListAsync();
+
+                model.AvailableMedications = await _context.Medications
+                    .Where(m => m.IsActive)
+                    .OrderBy(m => m.Name)
+                    .ToListAsync();
+
+                return View(model);
+            }
+
+            // Save patient details and obtain PatientID for a new record.
+            await _context.SaveChangesAsync();
+
+            // Update selected medical conditions.
+            var existingConditions = await _context.PatientConditions
+                .Where(pc => pc.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            _context.PatientConditions.RemoveRange(existingConditions);
+
+            foreach (var conditionId in
+                     (model.SelectedConditionIds ?? new List<int>()).Distinct())
+            {
                 _context.PatientConditions.Add(new PatientCondition
                 {
                     PatientID = patient.PatientID,
-                    ConditionId = cid
+                    ConditionId = conditionId
                 });
+            }
 
-            _context.PatientAllergies.RemoveRange(
-                _context.PatientAllergies.Where(pa => pa.PatientID == patient.PatientID));
-            foreach (var aid in model.SelectedAllergyIds.Distinct())
+            // Update selected allergies.
+            var existingAllergies = await _context.PatientAllergies
+                .Where(pa => pa.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            _context.PatientAllergies.RemoveRange(existingAllergies);
+
+            foreach (var allergyId in
+                     (model.SelectedAllergyIds ?? new List<int>()).Distinct())
+            {
                 _context.PatientAllergies.Add(new PatientAllergy
                 {
                     PatientID = patient.PatientID,
-                    AllergyId = aid
+                    AllergyId = allergyId
                 });
+            }
 
-            _context.PatientMedications.RemoveRange(
-                _context.PatientMedications.Where(pm => pm.PatientID == patient.PatientID));
-            foreach (var mid in model.SelectedMedicationIds.Distinct())
+            // Update selected medications.
+            var existingMedications = await _context.PatientMedications
+                .Where(pm => pm.PatientID == patient.PatientID)
+                .ToListAsync();
+
+            _context.PatientMedications.RemoveRange(existingMedications);
+
+            foreach (var medicationId in
+                     (model.SelectedMedicationIds ?? new List<int>()).Distinct())
+            {
                 _context.PatientMedications.Add(new PatientMedication
                 {
                     PatientID = patient.PatientID,
-                    MedicationId = mid
+                    MedicationId = medicationId
                 });
+            }
 
+            // Save medical history.
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Profile updated successfully.";
+
             return RedirectToAction(nameof(EditProfile));
         }
+
         #endregion
 
         #region Change Password
@@ -452,7 +393,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             var requests = await _context.TestRequests
@@ -477,7 +418,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             var requests = await _context.TestRequests
@@ -515,7 +456,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             // ---------------------------------------------------------
@@ -674,7 +615,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             // Active doctors
@@ -768,7 +709,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -1009,7 +950,7 @@ namespace HemaCore.Controllers
             var patient = await GetCurrentPatientAsync();
 
             if (patient == null)
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -1081,7 +1022,7 @@ namespace HemaCore.Controllers
             var patient = await GetCurrentPatientAsync();
 
             if (patient == null)
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -1328,7 +1269,7 @@ namespace HemaCore.Controllers
             var patient = await GetCurrentPatientAsync();
 
             if (patient == null)
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -1392,7 +1333,7 @@ namespace HemaCore.Controllers
 
             if (patient == null)
             {
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
             }
 
             var reports = await _context.PatientReports
@@ -1406,7 +1347,7 @@ namespace HemaCore.Controllers
         public async Task<IActionResult> ExportHealthReportPdf(DateTime? fromDate, DateTime? toDate)
         {
             var patient = await GetCurrentPatientAsync();
-            if (patient == null) return RedirectToAction(nameof(CompleteProfile));
+            if (patient == null) return RedirectToAction(nameof(EditProfile));
 
             var generatedAt = DateTime.Now;
 
@@ -1593,7 +1534,7 @@ namespace HemaCore.Controllers
             var patient = await GetCurrentPatientAsync();
 
             if (patient == null)
-                return RedirectToAction(nameof(CompleteProfile));
+                return RedirectToAction(nameof(EditProfile));
 
             // Load the released request with every navigation we need.
             var request = await _context.TestRequests
@@ -1882,8 +1823,8 @@ namespace HemaCore.Controllers
         // Stub pages
         // ---------------------------------------------------------------------
         public IActionResult Tests() => View();
-       // public IActionResult Result() => View();
-       // public IActionResult Health() => View();
+        // public IActionResult Result() => View();
+        // public IActionResult Health() => View();
         //public IActionResult Consent() => View();
         //public IActionResult Report() => View();
         public IActionResult Index() => View();

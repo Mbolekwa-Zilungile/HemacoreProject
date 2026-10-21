@@ -6,7 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HemaCore.Migrations
 {
     /// <inheritdoc />
+<<<<<<<< HEAD:HemaCore/Migrations/20261021092108_CreateDB.cs
     public partial class CreateDB : Migration
+========
+    public partial class CreateDatabase : Migration
+>>>>>>>> 69524637a7b2b56dfa1a9c12c12f84c0e07f10dc:HemaCore/Migrations/20261021090624_CreateDatabase.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
