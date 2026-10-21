@@ -319,6 +319,7 @@ namespace HemaCore.Services
             message.Body = body.ToMessageBody();
 
             await SendEmailAsync(message);
+
         }
     }
 }

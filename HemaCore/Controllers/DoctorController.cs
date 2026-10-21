@@ -1220,7 +1220,7 @@ namespace HemaCore.Controllers
                 Conditions = conditions,
                 Allergies = allergies,
                 Medications = medications,
-                Requests = requests
+                Requests = requests 
             };
 
             return View(model);
