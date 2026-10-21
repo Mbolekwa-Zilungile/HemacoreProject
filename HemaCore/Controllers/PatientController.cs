@@ -108,7 +108,7 @@ namespace HemaCore.Controllers
             return View(vm);
         }
 
-        
+
         // ---------------------------------------------------------------------
         // Complete Profile (POST)
         // ---------------------------------------------------------------------
@@ -201,7 +201,7 @@ namespace HemaCore.Controllers
             TempData["Success"] = "Profile saved successfully!";
             return RedirectToAction(nameof(Dashboard));
         }
-#endregion
+        #endregion
 
         #region Patient Details
         // ---------------------------------------------------------------------
