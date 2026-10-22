@@ -9,6 +9,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
+
 namespace HemaCore.Controllers
 {
     public class DoctorController : Controller
@@ -16,15 +17,17 @@ namespace HemaCore.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<Users> _userManager;
         private readonly IEmailService _emailService;
-
+        private readonly ILogger<DoctorController> _logger;
         public DoctorController(
-            AppDbContext context,
-            UserManager<Users> userManager,
-            IEmailService emailService)
+         AppDbContext context,
+         UserManager<Users> userManager,
+         IEmailService emailService,
+         ILogger<DoctorController> logger)
         {
             _context = context;
             _userManager = userManager;
             _emailService = emailService;
+            _logger = logger;
         }
 
         // ============================================================
@@ -984,99 +987,126 @@ namespace HemaCore.Controllers
             return View(model);
         }
 
+
         [HttpGet]
         public async Task<IActionResult> SearchPatientById(string? idNumber)
         {
-            var doctor = await GetCurrentDoctorAsync();
-
-            if (doctor == null)
-                return Unauthorized();
-
-            if (string.IsNullOrWhiteSpace(idNumber) ||
-                idNumber.Length != 13 ||
-                !idNumber.All(char.IsDigit))
+            try
             {
-                return BadRequest(new
+                var doctor = await GetCurrentDoctorAsync();
+
+                if (doctor == null)
                 {
-                    found = false,
-                    hasConsent = false,
-                    message = "Please enter the full 13-digit ID number."
-                });
-            }
+                    return Unauthorized(new
+                    {
+                        found = false,
+                        hasConsent = false,
+                        message = "Your doctor account could not be verified. Please sign in again."
+                    });
+                }
 
-            var patient = await _context.Patients
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.IDNumber == idNumber);
+                idNumber = idNumber?.Trim();
 
-            if (patient == null)
-            {
-                return NotFound(new
+                if (string.IsNullOrWhiteSpace(idNumber) ||
+                    idNumber.Length != 13 ||
+                    !idNumber.All(char.IsDigit))
                 {
-                    found = false,
-                    hasConsent = false,
-                    message = "No patient was found with this ID number. You can add the patient if they are not registered."
-                });
-            }
+                    return BadRequest(new
+                    {
+                        found = false,
+                        hasConsent = false,
+                        message = "Please enter the full 13-digit ID number."
+                    });
+                }
 
-            var hasConsent = await IsPatientConsentedAsync(
-                doctor.DoctorId,
-                patient.UserId);
+                var patient = await _context.Patients
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.IDNumber == idNumber);
 
-            if (!hasConsent)
-            {
+                if (patient == null)
+                {
+                    return NotFound(new
+                    {
+                        found = false,
+                        hasConsent = false,
+                        message = "No patient was found with this ID number. You can add the patient if they are not registered."
+                    });
+                }
+
+                var hasConsent = await IsPatientConsentedAsync(
+                    doctor.DoctorId,
+                    patient.UserId);
+
+                if (!hasConsent)
+                {
+                    return Ok(new
+                    {
+                        found = true,
+                        hasConsent = false,
+                        patientId = patient.PatientID,
+                        fullName = patient.Name + " " + patient.Surname,
+                        message = "This patient is registered, but you do not have active consent. Please request consent before accessing their medical history."
+                    });
+                }
+
+                var conditions = await _context.PatientConditions
+                    .AsNoTracking()
+                    .Where(pc => pc.PatientID == patient.PatientID)
+                    .Select(pc => pc.Condition.Name)
+                    .ToListAsync();
+
+                var allergies = await _context.PatientAllergies
+                    .AsNoTracking()
+                    .Where(pa => pa.PatientID == patient.PatientID)
+                    .Select(pa => pa.Allergy.Name)
+                    .ToListAsync();
+
+                var medications = await _context.PatientMedications
+                    .AsNoTracking()
+                    .Where(pm => pm.PatientID == patient.PatientID)
+                    .Select(pm => pm.Medication.Name)
+                    .ToListAsync();
+
+                var address = string.Join(", ", new[]
+                {
+            patient.StreetAddress,
+            patient.Suburb,
+            patient.City,
+            patient.Province,
+            patient.PostalCode
+        }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
                 return Ok(new
                 {
                     found = true,
-                    hasConsent = false,
+                    hasConsent = true,
                     patientId = patient.PatientID,
                     fullName = patient.Name + " " + patient.Surname,
-                    message = "This patient is registered, but you do not have active consent. Please request consent from the patient before accessing their medical history."
+                    idNumber = patient.IDNumber,
+                    dateOfBirth = patient.DateOfBirth,
+                    phoneNumber = patient.PhoneNumber,
+                    address,
+                    conditions,
+                    allergies,
+                    medications,
+                    message = "Active consent confirmed. The patient's medical history is available."
                 });
             }
-
-            var conditions = await _context.PatientConditions
-                .AsNoTracking()
-                .Where(pc => pc.PatientID == patient.PatientID)
-                .Select(pc => pc.Condition.Name)
-                .ToListAsync();
-
-            var allergies = await _context.PatientAllergies
-                .AsNoTracking()
-                .Where(pa => pa.PatientID == patient.PatientID)
-                .Select(pa => pa.Allergy.Name)
-                .ToListAsync();
-
-            var medications = await _context.PatientMedications
-                .AsNoTracking()
-                .Where(pm => pm.PatientID == patient.PatientID)
-                .Select(pm => pm.Medication.Name)
-                .ToListAsync();
-
-            var address = string.Join(", ", new[]
+            catch (Exception ex)
             {
-                patient.StreetAddress,
-                patient.Suburb,
-                patient.City,
-                patient.Province,
-                patient.PostalCode
-            }.Where(part => !string.IsNullOrWhiteSpace(part)));
+                _logger.LogError(
+                    ex,
+                    "An error occurred in SearchPatientById.");
 
-            return Ok(new
-            {
-                found = true,
-                hasConsent = true,
-                patientId = patient.PatientID,
-                fullName = patient.Name + " " + patient.Surname,
-                idNumber = patient.IDNumber,
-                dateOfBirth = patient.DateOfBirth,
-                phoneNumber = patient.PhoneNumber,
-                address,
-                conditions,
-                allergies,
-                medications,
-                message = "Active consent confirmed. The patient's medical history is available."
-            });
+                return StatusCode(500, new
+                {
+                    found = false,
+                    hasConsent = false,
+                    message = "The patient search could not be completed. Please try again or contact the system administrator."
+                });
+            }
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
