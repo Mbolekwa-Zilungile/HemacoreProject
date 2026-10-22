@@ -312,14 +312,14 @@
     document.addEventListener("DOMContentLoaded", function () {
 
         // =========================================
-        // MODAL ELEMENTS
+        // DELETE / DEACTIVATE MODAL ELEMENTS
         // =========================================
-        const modal = document.getElementById("activateModal");
-        const technicianIdInput = document.getElementById("activateTechnicianId");
-        const technicianName = document.getElementById("activateTechnicianName");
-        const cancelButton = document.getElementById("cancelActivateBtn");
-        const confirmButton = document.getElementById("confirmActivateBtn");
-        const activateForm = document.getElementById("activateForm");
+        const modal = document.getElementById("deleteModal");
+        const technicianIdInput = document.getElementById("deleteTechnicianId");
+        const technicianName = document.getElementById("deleteTechnicianName");
+        const cancelButton = document.getElementById("cancelDeleteBtn");
+        const confirmButton = document.getElementById("confirmDeleteBtn");
+        const deleteForm = document.getElementById("deleteForm");
 
         // =========================================
         // SEARCH ELEMENTS
@@ -332,11 +332,19 @@
         let latestSearchId = 0;
 
         // =========================================
-        // OPEN ACTIVATION MODAL
+        // URLS BUILT FROM ASP.NET ROUTING
+        // (works under any deployment alias)
+        // =========================================
+        const searchUrl = '@Url.Action("SearchTechniciansLive", "Manager")';
+        const detailsUrl = '@Url.Action("TechnicianDetails", "Manager")';
+        const editUrl = '@Url.Action("EditTechnician", "Manager")';
+
+        // =========================================
+        // OPEN DEACTIVATE MODAL
         // =========================================
         document.addEventListener("click", function (event) {
 
-            const button = event.target.closest(".activate-technician-btn");
+            const button = event.target.closest(".deactivate-technician-btn");
 
             if (!button) {
                 return;
@@ -351,7 +359,6 @@
             document.body.classList.add("modal-open");
 
             cancelButton.focus();
-
         });
 
         // =========================================
@@ -370,32 +377,27 @@
             cancelButton.disabled = false;
 
             confirmButton.innerHTML =
-                '<i class="fas fa-check-circle me-1"></i> Yes, Activate';
-
+                '<i class="fas fa-ban me-1"></i> Yes, Deactivate';
         }
 
         cancelButton.addEventListener("click", closeModal);
 
         modal.addEventListener("click", function (event) {
-
             if (event.target === modal) {
                 closeModal();
             }
-
         });
 
         document.addEventListener("keydown", function (event) {
-
             if (event.key === "Escape" && modal.classList.contains("show")) {
                 closeModal();
             }
-
         });
 
         // =========================================
         // PREVENT EMPTY ID AND DOUBLE SUBMISSION
         // =========================================
-        activateForm.addEventListener("submit", function (event) {
+        deleteForm.addEventListener("submit", function (event) {
 
             if (!technicianIdInput.value) {
                 event.preventDefault();
@@ -406,8 +408,7 @@
             cancelButton.disabled = true;
 
             confirmButton.innerHTML =
-                '<i class="fas fa-spinner fa-spin me-1"></i> Activating...';
-
+                '<i class="fas fa-spinner fa-spin me-1"></i> Deactivating...';
         });
 
         // =========================================
@@ -426,13 +427,12 @@
                 };
 
                 return entities[character];
-
             });
-
         }
 
         // =========================================
         // LIVE SEARCH
+        // (this page shows ACTIVE technicians)
         // =========================================
         searchBox.addEventListener("input", function () {
 
@@ -450,9 +450,9 @@
             searchTimeout = setTimeout(function () {
 
                 const url =
-                    '@Url.Action("SearchTechniciansLive", "Manager")'
+                    searchUrl
                     + '?term=' + encodeURIComponent(term)
-                    + '&inactive=true';
+                    + '&status=active';
 
                 const controller = new AbortController();
                 searchRequest = controller;
@@ -485,12 +485,11 @@
                             <tr>
                                 <td colspan="8"
                                     class="text-center text-muted py-3">
-                                    No inactive technicians found.
+                                    No technicians found.
                                 </td>
                             </tr>`;
 
                         return;
-
                     }
 
                     let rows = "";
@@ -553,22 +552,21 @@
 
                             testTypes =
                                 '<span class="text-muted">No test types assigned</span>';
-
                         }
 
                         const statusBadge = isActive
                             ? '<span class="badge bg-success">Active</span>'
                             : '<span class="badge bg-danger">Inactive</span>';
 
-                        // This page lists inactive technicians.
-                        const activateButton = !isActive
+                        // This page lists ACTIVE technicians.
+                        const deactivateButton = isActive
                             ? `
                                 <button type="button"
-                                        class="btn btn-sm btn-outline-success activate-technician-btn"
+                                        class="btn btn-sm btn-outline-danger deactivate-technician-btn"
                                         data-id="${escapeHtml(id)}"
                                         data-name="${escapeHtml(rawName + " " + rawSurname)}"
-                                        title="Activate technician">
-                                    <i class="fas fa-check-circle"></i>
+                                        title="Deactivate Technician">
+                                    <i class="fas fa-ban"></i>
                                 </button>`
                             : "";
 
@@ -585,7 +583,7 @@
                                 <td>
                                     ${email
                                         ? `<a href="mailto:${email}">${email}</a>`
-                                        : '<span class="text-muted">Not provided</span>'}
+                                        : '<span class="text-muted">No email</span>'}
                                 </td>
 
                                 <td>
@@ -599,24 +597,23 @@
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
 
-                                        <a href="/Manager/TechnicianDetails/${encodeURIComponent(id ?? "")}"
+                                        <a href="${detailsUrl}/${encodeURIComponent(id ?? "")}"
                                            class="btn btn-sm btn-outline-info"
-                                           title="View technician">
+                                           title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
 
-                                        <a href="/Manager/EditTechnician/${encodeURIComponent(id ?? "")}"
+                                        <a href="${editUrl}/${encodeURIComponent(id ?? "")}"
                                            class="btn btn-sm btn-outline-primary"
-                                           title="Edit technician">
+                                           title="Edit Technician">
                                             <i class="fas fa-edit"></i>
                                         </a>
 
-                                        ${activateButton}
+                                        ${deactivateButton}
 
                                     </div>
                                 </td>
                             </tr>`;
-
                     });
 
                     technicianTable.innerHTML = rows;

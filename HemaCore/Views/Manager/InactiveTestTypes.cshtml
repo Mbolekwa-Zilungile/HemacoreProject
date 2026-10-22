@@ -163,31 +163,6 @@
 
                                     <td class="text-center">
 
-                                        <!-- DETAILS -->
-
-                                        <a asp-action="TestTypeDetails"
-                                           asp-controller="Manager"
-                                           asp-route-id="@test.TestTypeId"
-                                           class="btn btn-sm btn-outline-info me-1"
-                                           title="View details">
-
-                                            <i class="fas fa-eye"></i>
-
-                                        </a>
-
-                                        <!-- EDIT -->
-
-                                        <a asp-action="EditTestType"
-                                           asp-controller="Manager"
-                                           asp-route-id="@test.TestTypeId"
-                                           class="btn btn-sm btn-outline-primary me-1"
-                                           title="Edit test type">
-
-                                            <i class="fas fa-edit"></i>
-
-                                        </a>
-
-                                        <!-- ACTIVATE -->
                                         @if (!test.IsActive)
                                         {
                                             <button type="button"

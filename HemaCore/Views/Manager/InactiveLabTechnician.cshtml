@@ -220,21 +220,7 @@
 
                                         <div class="d-flex justify-content-center gap-2">
 
-                                            <a asp-action="TechnicianDetails"
-                                               asp-controller="Manager"
-                                               asp-route-id="@technician.LabTechnicianId"
-                                               class="btn btn-sm btn-outline-info"
-                                               title="View technician">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-
-                                            <a asp-action="EditTechnician"
-                                               asp-controller="Manager"
-                                               asp-route-id="@technician.LabTechnicianId"
-                                               class="btn btn-sm btn-outline-primary"
-                                               title="Edit technician">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                          
 
                                             @if (!technician.IsActive)
                                             {

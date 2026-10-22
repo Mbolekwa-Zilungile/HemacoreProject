@@ -3001,11 +3001,6 @@ namespace HemaCore.Controllers
             return View(model);
         }
 
-
-
-
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditDoctor(EditDoctorViewModel model)
@@ -3061,19 +3056,13 @@ namespace HemaCore.Controllers
                 return View(model);
             }
 
-            // ============================
-            // UPDATE DOCTOR
-            // ============================
+      
 
             doctor.Name = model.Name;
             doctor.Surname = model.Surname;
             doctor.PhoneNumber = model.PhoneNumber;
             doctor.HPCSANumber = model.HPCSANumber;
-            doctor.IsActive = model.IsActive;
-
-            // ============================
-            // UPDATE IDENTITY USER
-            // ============================
+         
 
             if (doctor.User != null)
             {

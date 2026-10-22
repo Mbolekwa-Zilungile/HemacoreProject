@@ -183,20 +183,6 @@
                                     <td>
                                         <div class="d-flex gap-2 flex-nowrap">
 
-                                            <a asp-action="AdjustStock"
-                                               asp-route-id="@item.ConsumableId"
-                                               class="btn btn-sm btn-outline-info"
-                                               title="Adjust stock">
-                                                Adjust
-                                            </a>
-
-                                            <a asp-action="EditConsumable"
-                                               asp-route-id="@item.ConsumableId"
-                                               class="btn btn-sm btn-outline-primary"
-                                               title="Edit consumable">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-success activate-consumable-btn"
                                                     data-id="@item.ConsumableId"
